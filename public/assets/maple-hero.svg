@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Maple style decorative scene</title>
+  <desc id="desc">Stylized maple leaves and stars for project cover art</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3558"/>
+      <stop offset="100%" stop-color="#0f1a2f"/>
+    </linearGradient>
+    <linearGradient id="leafA" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd86b"/>
+      <stop offset="100%" stop-color="#ff8f4e"/>
+    </linearGradient>
+    <linearGradient id="leafB" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#82ffe3"/>
+      <stop offset="100%" stop-color="#27b7c8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="520" fill="url(#bg)"/>
+  <circle cx="760" cy="120" r="80" fill="#ffffff10"/>
+  <circle cx="120" cy="390" r="120" fill="#ffffff08"/>
+
+  <g opacity="0.95">
+    <path d="M220 125l30 54 52-28-25 50 59 16-60 12 20 57-47-32-37 48 7-63-61-6 55-22-23-53 49 29z" fill="url(#leafA)"/>
+    <path d="M594 184l26 47 46-25-22 42 52 14-53 10 18 50-42-28-33 42 6-55-54-5 48-20-20-46 43 25z" fill="url(#leafB)"/>
+    <path d="M420 300l22 40 40-22-19 36 45 12-45 9 16 43-36-24-28 36 5-48-46-4 41-17-17-40 36 22z" fill="#7cc2ff"/>
+  </g>
+
+  <g fill="#ffffffb0">
+    <circle cx="125" cy="120" r="3"/>
+    <circle cx="168" cy="148" r="2"/>
+    <circle cx="760" cy="280" r="3"/>
+    <circle cx="812" cy="248" r="2"/>
+    <circle cx="699" cy="322" r="2"/>
+  </g>
+
+  <text x="46" y="474" font-size="34" font-family="Segoe UI, Arial, sans-serif" fill="#cfe0ff">
+    MapleStory M API
+  </text>
+</svg>
