@@ -8,7 +8,11 @@ async function connectMongo() {
   }
 
   try {
-    await mongoose.connect(env.mongoUri, { serverSelectionTimeoutMS: 3000 });
+    await mongoose.connect(env.mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,
+      retryWrites: true
+    });
     console.log("[MongoDB] Connected.");
   } catch (error) {
     console.error("[MongoDB] Connection failed:", error.message);

@@ -13,6 +13,9 @@ const requestLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+requestLogSchema.index({ ocid: 1, endpoint: 1, createdAt: -1 });
+requestLogSchema.index({ characterName: 1, worldName: 1, createdAt: -1 });
+
 const RequestLog = mongoose.model("RequestLog", requestLogSchema);
 
 module.exports = { RequestLog };

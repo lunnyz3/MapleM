@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapleM 캐릭터 상세</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body data-page="character">
+    <main class="page page--character">
+      <header class="character-top">
+        <a class="back-link" href="/">검색으로 돌아가기</a>
+        <p id="characterRoute" class="character-route"></p>
+      </header>
+
+      <section id="pageMessage" class="notice">캐릭터 데이터를 불러오는 중입니다...</section>
+
+      <section id="profileCard" class="profile-card" hidden></section>
+
+      <nav id="tabNav" class="tab-nav" hidden>
+        <button type="button" data-tab="equipment" class="tab-btn is-active">장비</button>
+        <button type="button" data-tab="exp" class="tab-btn">경험치 그래프</button>
+        <button type="button" data-tab="jewelSymbolVmatrix" class="tab-btn">쥬얼·심볼·V매트릭스</button>
+        <button type="button" data-tab="hexamatrix" class="tab-btn">헥사매트릭스</button>
+        <button type="button" data-tab="hyperStat" class="tab-btn">하이퍼스탯</button>
+        <button type="button" data-tab="skillLink" class="tab-btn">스킬셋·링크</button>
+        <button type="button" data-tab="android" class="tab-btn">안드로이드</button>
+        <button type="button" data-tab="guild" class="tab-btn">길드</button>
+        <button type="button" data-tab="union" class="tab-btn">유니온</button>
+      </nav>
+
+      <section id="tabContent" class="tab-content">
+        <article class="data-card data-card--wide">
+          <h3>로딩 중</h3>
+          <p class="empty">캐릭터 정보를 불러오는 중입니다. 표시가 없으면 Ctrl+F5로 새로고침해 주세요.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="/js/main.js?v=20260223j"></script>
+  </body>
+</html>

@@ -18,6 +18,13 @@ function createApp() {
     });
   });
 
+  app.get("/character/:worldName/:characterName", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "character.html"));
+  });
+  app.get(/^\/character\/[^/]+\/.+$/, (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "character.html"));
+  });
+
   app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "index.html"));
   });

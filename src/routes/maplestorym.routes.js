@@ -1,10 +1,17 @@
 const express = require("express");
 const {
   getCharacterId,
+  getAllCharacterDetails,
+  getCharacterPageData,
+  getCharacterExpHistory,
   getCharacterBasic,
   getCharacterStat,
   getCharacterHyperStat,
   getCharacterGuild,
+  getUserUnionController,
+  getUserUnionRaiderController,
+  getGuildIdController,
+  getGuildBasicController,
   getCharacterItemEquipment,
   getCharacterCashItemEquipment,
   getCharacterSymbol,
@@ -23,10 +30,17 @@ const {
 const router = express.Router();
 
 router.get("/id", getCharacterId);
+router.get("/character/all", getAllCharacterDetails);
+router.get("/character/page-data", getCharacterPageData);
+router.get("/character/exp-history", getCharacterExpHistory);
 router.get("/character/basic", getCharacterBasic);
 router.get("/character/stat", getCharacterStat);
 router.get("/character/hyper-stat", getCharacterHyperStat);
 router.get("/character/guild", getCharacterGuild);
+router.get("/user/union", getUserUnionController);
+router.get("/user/union-raider", getUserUnionRaiderController);
+router.get("/guild/id", getGuildIdController);
+router.get("/guild/basic", getGuildBasicController);
 router.get("/character/item-equipment", getCharacterItemEquipment);
 router.get("/character/cashitem-equipment", getCharacterCashItemEquipment);
 router.get("/character/symbol", getCharacterSymbol);

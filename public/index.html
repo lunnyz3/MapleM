@@ -1,87 +1,47 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MapleStory M API Hub</title>
+    <title>MapleM 캐릭터 검색</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
-  <body>
-    <main class="page">
-      <section class="hero">
-        <div class="hero__content">
-          <p class="eyebrow">MapleStory M</p>
-          <h1>Open API Control Panel</h1>
-          <p class="hero__desc">
-            This starter is designed for growth: separate routes, controllers, services, styles, scripts, and assets.
-          </p>
-        </div>
-        <img
-          class="hero__image"
-          src="/assets/maple-hero.svg"
-          alt="MapleStory themed decorative artwork"
-        />
+  <body data-page="index">
+    <main class="page page--index">
+      <section class="hero hero--search">
+        <div class="hero__label">MAPLEM</div>
+        <h1>캐릭터 정보를 바로 조회하세요</h1>
+        <p>
+          서버명과 캐릭터명을 입력하면 캐릭터 전용 페이지에서 기본정보와 장비, 하이퍼스탯,
+          V매트릭스, 헥사매트릭스 등을 탭으로 확인할 수 있습니다.
+        </p>
       </section>
 
-      <section class="panel">
-        <h2>Character OCID Test</h2>
-        <p class="panel__desc">Call <code>/api/maplestorym/id</code> through your server key safely.</p>
-
-        <form id="apiForm" class="form">
+      <section class="panel panel--search">
+        <h2>캐릭터 조회</h2>
+        <form id="searchForm" class="search-form">
           <label>
-            <span>character_name</span>
-            <input id="characterName" name="character_name" value="Dena" required />
-          </label>
-          <label>
-            <span>world_name</span>
-            <input id="worldName" name="world_name" value="Union" required />
-          </label>
-          <button type="submit">Run API Test</button>
-        </form>
-
-        <p id="status" class="status"></p>
-        <pre id="result">Response will be displayed here.</pre>
-      </section>
-
-      <section class="panel">
-        <h2>Character Detail by OCID</h2>
-        <p class="panel__desc">Call character detail endpoints with ocid.</p>
-
-        <form id="ocidForm" class="form form--ocid">
-          <label>
-            <span>endpoint</span>
-            <select id="detailEndpoint" name="detail_endpoint">
-              <option value="basic">character/basic</option>
-              <option value="stat">character/stat</option>
-              <option value="hyper-stat">character/hyper-stat</option>
-              <option value="guild">character/guild</option>
-              <option value="item-equipment">character/item-equipment</option>
-              <option value="cashitem-equipment">character/cashitem-equipment</option>
-              <option value="symbol">character/symbol</option>
-              <option value="set-effect">character/set-effect</option>
-              <option value="android-equipment">character/android-equipment</option>
-              <option value="jewel">character/jewel</option>
-              <option value="beauty-equipment">character/beauty-equipment</option>
-              <option value="pet-equipment">character/pet-equipment</option>
-              <option value="skill-equipment">character/skill-equipment</option>
-              <option value="link-skill">character/link-skill</option>
-              <option value="vmatrix">character/vmatrix</option>
-              <option value="hexamatrix-skill">character/hexamatrix-skill</option>
-              <option value="hexamatrix-stat">character/hexamatrix-stat</option>
+            <span>서버명</span>
+            <select id="worldName" name="world_name" required>
+              <option value="스카니아">스카니아</option>
+              <option value="루나">루나</option>
+              <option value="엘리시움">엘리시움</option>
+              <option value="유니온" selected>유니온</option>
+              <option value="제니스">제니스</option>
+              <option value="아케인">아케인</option>
             </select>
           </label>
           <label>
-            <span>ocid</span>
-            <input id="ocid" name="ocid" placeholder="Paste ocid here" required />
+            <span>캐릭터명</span>
+            <input id="characterName" name="character_name" placeholder="캐릭터명을 입력하세요" required />
           </label>
-          <button type="submit">Run Detail API</button>
+          <button type="submit">캐릭터 페이지 열기</button>
         </form>
 
-        <p id="statusOcid" class="status"></p>
-        <pre id="resultOcid">Response will be displayed here.</pre>
+        <p class="route-preview" id="routePreview">/character/유니온/캐릭터명</p>
       </section>
     </main>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js?v=20260223j"></script>
   </body>
 </html>
