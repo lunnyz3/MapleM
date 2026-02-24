@@ -8,23 +8,7 @@ const unionEndpointPath = "/maplestorym/v1/user/union";
 const unionRaiderEndpointPath = "/maplestorym/v1/user/union-raider";
 const guildIdEndpointPath = "/maplestorym/v1/guild/id";
 const guildBasicEndpointPath = "/maplestorym/v1/guild/basic";
-const defaultRetryMs = 1200;
 const maxRetryCount = 2;
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function getRetryDelayMs(headers, attempt) {
-  const retryAfterHeader = headers?.["retry-after"];
-  const retryAfterSec = Number(retryAfterHeader);
-
-  if (Number.isFinite(retryAfterSec) && retryAfterSec > 0) {
-    return retryAfterSec * 1000;
-  }
-
-  return defaultRetryMs * attempt;
-}
 
 async function requestNexon(endpoint, params) {
   for (let attempt = 1; attempt <= maxRetryCount + 1; attempt += 1) {
@@ -49,9 +33,6 @@ async function requestNexon(endpoint, params) {
       if (!canRetry) {
         throw error;
       }
-
-      const delayMs = getRetryDelayMs(error.response?.headers, attempt);
-      await sleep(delayMs);
     }
   }
 }
@@ -104,13 +85,38 @@ async function saveRequestLog({
   responseBody
 }) {
   if (mongoose.connection.readyState !== 1) {
-    return;
+    return null;
   }
 
-  await RequestLog.create({
-    characterName: characterName || "",
-    worldName: worldName || "",
-    ocid: ocid || "",
+  const normalizedCharacterName = characterName || "";
+  const normalizedWorldName = worldName || "";
+  const normalizedOcid = ocid || "";
+  const logMode = responseBody?.mode ? String(responseBody.mode) : "";
+  const throttleMs = Number.isFinite(env.mongoLogThrottleMs) ? Math.max(0, env.mongoLogThrottleMs) : 120000;
+
+  if (throttleMs > 0) {
+    const filter = {
+      characterName: normalizedCharacterName,
+      worldName: normalizedWorldName,
+      ocid: normalizedOcid,
+      endpoint
+    };
+
+    if (logMode) {
+      filter["responseBody.mode"] = logMode;
+    }
+
+    const latest = await RequestLog.findOne(filter).sort({ createdAt: -1 }).select({ createdAt: 1 }).lean();
+    const latestAt = latest?.createdAt instanceof Date ? latest.createdAt.getTime() : Number.NaN;
+    if (Number.isFinite(latestAt) && Date.now() - latestAt < throttleMs) {
+      return null;
+    }
+  }
+
+  return RequestLog.create({
+    characterName: normalizedCharacterName,
+    worldName: normalizedWorldName,
+    ocid: normalizedOcid,
     endpoint,
     statusCode,
     success,

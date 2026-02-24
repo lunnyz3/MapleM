@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -7,12 +7,36 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body data-page="character">
-    <main class="page page--character">
-      <header class="character-top">
-        <a class="back-link" href="/">검색으로 돌아가기</a>
-        <p id="characterRoute" class="character-route"></p>
-      </header>
+    <header class="topbar">
+      <div class="topbar__left">
+        <a class="topbar__brand" href="/">MAPLEM</a>
+        <a class="topbar__menu" href="/">메인</a>
+      </div>
+      <div class="topbar__right">
+        <div class="theme-switch">
+          <label for="themeMode">테마</label>
+          <select id="themeMode" data-theme-select>
+            <option value="system">시스템</option>
+            <option value="dark">다크</option>
+            <option value="light">라이트</option>
+          </select>
+        </div>
+        <form id="quickSearchForm" class="topbar-search">
+          <select id="topWorldName" name="world_name" aria-label="서버명">
+            <option value="스카니아">스카니아</option>
+            <option value="루나">루나</option>
+            <option value="엘리시움">엘리시움</option>
+            <option value="유니온" selected>유니온</option>
+            <option value="제니스">제니스</option>
+            <option value="아케인">아케인</option>
+          </select>
+          <input id="topCharacterName" name="character_name" placeholder="캐릭터명" aria-label="캐릭터명" />
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </header>
 
+    <main class="page page--character">
       <section id="pageMessage" class="notice">캐릭터 데이터를 불러오는 중입니다...</section>
 
       <section id="profileCard" class="profile-card" hidden></section>
@@ -32,11 +56,11 @@
       <section id="tabContent" class="tab-content">
         <article class="data-card data-card--wide">
           <h3>로딩 중</h3>
-          <p class="empty">캐릭터 정보를 불러오는 중입니다. 표시가 없으면 Ctrl+F5로 새로고침해 주세요.</p>
+          <p class="empty">캐릭터 데이터를 불러오는 중입니다...</p>
         </article>
       </section>
     </main>
 
-    <script src="/js/main.js?v=20260223j"></script>
+    <script src="/js/main.js?v=20260224b"></script>
   </body>
 </html>

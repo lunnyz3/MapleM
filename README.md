@@ -49,6 +49,7 @@ PORT=3000
 NEXON_OPEN_API_KEY=your_nexon_open_api_key
 NEXON_API_BASE_URL=https://open.api.nexon.com
 MONGODB_URI=mongodb+srv://<db_username>:<db_password>@maplem.gmvdmys.mongodb.net/maplem?retryWrites=true&w=majority&appName=mapleM
+MONGODB_LOG_THROTTLE_MS=120000
 ```
 
 ## UI Flow

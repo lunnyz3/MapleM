@@ -4,6 +4,7 @@ const {
   getAllCharacterDetails,
   getCharacterPageData,
   getCharacterExpHistory,
+  getCharacterLogStatus,
   getCharacterBasic,
   getCharacterStat,
   getCharacterHyperStat,
@@ -33,6 +34,7 @@ router.get("/id", getCharacterId);
 router.get("/character/all", getAllCharacterDetails);
 router.get("/character/page-data", getCharacterPageData);
 router.get("/character/exp-history", getCharacterExpHistory);
+router.get("/character/log-status", getCharacterLogStatus);
 router.get("/character/basic", getCharacterBasic);
 router.get("/character/stat", getCharacterStat);
 router.get("/character/hyper-stat", getCharacterHyperStat);

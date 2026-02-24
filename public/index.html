@@ -1,25 +1,45 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MapleM 캐릭터 검색</title>
+    <title>MapleM 캐릭터 조회</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body data-page="index">
-    <main class="page page--index">
-      <section class="hero hero--search">
-        <div class="hero__label">MAPLEM</div>
-        <h1>캐릭터 정보를 바로 조회하세요</h1>
-        <p>
-          서버명과 캐릭터명을 입력하면 캐릭터 전용 페이지에서 기본정보와 장비, 하이퍼스탯,
-          V매트릭스, 헥사매트릭스 등을 탭으로 확인할 수 있습니다.
-        </p>
-      </section>
+    <header class="topbar">
+      <div class="topbar__left">
+        <a class="topbar__brand" href="/">MAPLEM</a>
+        <a class="topbar__menu is-active" href="/">메인</a>
+      </div>
+      <div class="topbar__right">
+        <div class="theme-switch">
+          <label for="themeMode">테마</label>
+          <select id="themeMode" data-theme-select>
+            <option value="system">시스템</option>
+            <option value="dark">다크</option>
+            <option value="light">라이트</option>
+          </select>
+        </div>
+        <form id="quickSearchForm" class="topbar-search">
+          <select id="topWorldName" name="world_name" aria-label="서버명">
+            <option value="스카니아">스카니아</option>
+            <option value="루나">루나</option>
+            <option value="엘리시움">엘리시움</option>
+            <option value="유니온" selected>유니온</option>
+            <option value="제니스">제니스</option>
+            <option value="아케인">아케인</option>
+          </select>
+          <input id="topCharacterName" name="character_name" placeholder="캐릭터명" aria-label="캐릭터명" />
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </header>
 
-      <section class="panel panel--search">
-        <h2>캐릭터 조회</h2>
-        <form id="searchForm" class="search-form">
+    <main class="page page--index">
+      <section class="index-search">
+        <h1>캐릭터 조회</h1>
+        <form id="searchForm" class="index-form">
           <label>
             <span>서버명</span>
             <select id="worldName" name="world_name" required>
@@ -33,15 +53,13 @@
           </label>
           <label>
             <span>캐릭터명</span>
-            <input id="characterName" name="character_name" placeholder="캐릭터명을 입력하세요" required />
+            <input id="characterName" name="character_name" placeholder="캐릭터명을 입력하세요" required autofocus />
           </label>
-          <button type="submit">캐릭터 페이지 열기</button>
+          <button type="submit">조회</button>
         </form>
-
-        <p class="route-preview" id="routePreview">/character/유니온/캐릭터명</p>
       </section>
     </main>
 
-    <script src="/js/main.js?v=20260223j"></script>
+    <script src="/js/main.js?v=20260224b"></script>
   </body>
 </html>

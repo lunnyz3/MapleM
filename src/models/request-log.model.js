@@ -15,6 +15,8 @@ const requestLogSchema = new mongoose.Schema(
 
 requestLogSchema.index({ ocid: 1, endpoint: 1, createdAt: -1 });
 requestLogSchema.index({ characterName: 1, worldName: 1, createdAt: -1 });
+requestLogSchema.index({ ocid: 1, endpoint: 1, success: 1, createdAt: -1 });
+requestLogSchema.index({ ocid: 1, endpoint: 1, "responseBody.mode": 1, createdAt: -1 });
 
 const RequestLog = mongoose.model("RequestLog", requestLogSchema);
 

@@ -38,8 +38,8 @@ const userDetailEndpoints = [
   { key: "unionRaider", path: "/maplestorym/v1/user/union-raider" }
 ];
 
-const detailRequestIntervalMs = 220;
 const aggregateLogEndpoint = `${env.nexonBaseUrl}/maplestorym/v1/character/all`;
+const presetFallbackLookbackLimit = 30;
 
 const majorStatKeys = Object.freeze([
   "physicalAttack",
@@ -208,10 +208,6 @@ const magicalJobNames = new Set(
     "일리움"
   ].map((name) => normalizeForMatch(name))
 );
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function normalizeForMatch(text) {
   return String(text || "")
@@ -1237,57 +1233,57 @@ async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, 
   const settledDetails = [];
   const ocidDetailEndpoints = [...characterDetailEndpoints, ...userDetailEndpoints];
 
-  for (const { key, path } of ocidDetailEndpoints) {
-    if (settledDetails.length > 0) {
-      await sleep(detailRequestIntervalMs);
-    }
+  const initialResults = await Promise.all(
+    ocidDetailEndpoints.map(async ({ key, path }) => {
+      try {
+        const result = await getCharacterByOcid(path, ocid);
 
-    try {
-      const result = await getCharacterByOcid(path, ocid);
+        if (shouldLog) {
+          await saveRequestLog({
+            characterName,
+            worldName: worldNameCanonical,
+            ocid,
+            endpoint: result.endpoint,
+            statusCode: result.statusCode,
+            success: true,
+            responseBody: result.data
+          });
+        }
 
-      if (shouldLog) {
-        await saveRequestLog({
-          characterName,
-          worldName: worldNameCanonical,
-          ocid,
-          endpoint: result.endpoint,
+        return {
+          key,
+          ok: true,
           statusCode: result.statusCode,
-          success: true,
-          responseBody: result.data
-        });
-      }
+          endpoint: result.endpoint,
+          data: result.data
+        };
+      } catch (error) {
+        const { statusCode, errorBody, endpoint } = getErrorInfo(error, path);
 
-      settledDetails.push({
-        key,
-        ok: true,
-        statusCode: result.statusCode,
-        endpoint: result.endpoint,
-        data: result.data
-      });
-    } catch (error) {
-      const { statusCode, errorBody, endpoint } = getErrorInfo(error, path);
+        if (shouldLog) {
+          await saveRequestLog({
+            characterName,
+            worldName: worldNameCanonical,
+            ocid,
+            endpoint,
+            statusCode,
+            success: false,
+            responseBody: errorBody
+          });
+        }
 
-      if (shouldLog) {
-        await saveRequestLog({
-          characterName,
-          worldName: worldNameCanonical,
-          ocid,
-          endpoint,
+        return {
+          key,
+          ok: false,
           statusCode,
-          success: false,
-          responseBody: errorBody
-        });
+          endpoint,
+          error: errorBody
+        };
       }
+    })
+  );
 
-      settledDetails.push({
-        key,
-        ok: false,
-        statusCode,
-        endpoint,
-        error: errorBody
-      });
-    }
-  }
+  settledDetails.push(...initialResults);
 
   const draftDetails = settledDetails.reduce((acc, item) => {
     acc[item.key] = item.ok
@@ -1310,10 +1306,6 @@ async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, 
   const guildName = String(draftDetails?.guild?.data?.guild_name || draftDetails?.basic?.data?.guild_name || "").trim();
 
   if (guildName) {
-    if (settledDetails.length > 0) {
-      await sleep(detailRequestIntervalMs);
-    }
-
     let guildIdResult = null;
 
     try {
@@ -1364,8 +1356,6 @@ async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, 
 
     const oguildId = String(guildIdResult?.data?.oguild_id || "").trim();
     if (oguildId) {
-      await sleep(detailRequestIntervalMs);
-
       try {
         const guildBasicResult = await getGuildBasicById(oguildId);
 
@@ -1453,15 +1443,21 @@ async function saveAggregatedCharacterLog({
   success,
   responseBody
 }) {
-  await saveRequestLog({
-    characterName,
-    worldName: worldNameCanonical,
-    ocid,
-    endpoint: aggregateLogEndpoint,
-    statusCode,
-    success,
-    responseBody
-  });
+  try {
+    const saved = await saveRequestLog({
+      characterName,
+      worldName: worldNameCanonical,
+      ocid,
+      endpoint: aggregateLogEndpoint,
+      statusCode,
+      success,
+      responseBody
+    });
+
+    return Boolean(saved);
+  } catch (error) {
+    return false;
+  }
 }
 
 function buildExpHistoryFilter(ocid) {
@@ -1534,6 +1530,787 @@ function parseNumericValue(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function toIsoString(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+}
+
+function normalizePresetNo(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isMongoConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
+async function loadRecentPageDataDetailsByOcid(ocid, limit = presetFallbackLookbackLimit) {
+  if (!ocid || !isMongoConnected()) {
+    return [];
+  }
+
+  const lookback = Number.isFinite(limit) ? Math.max(1, Math.min(200, Math.floor(limit))) : presetFallbackLookbackLimit;
+  const docs = await RequestLog.find({
+    ocid,
+    endpoint: aggregateLogEndpoint,
+    success: true,
+    "responseBody.mode": "page-data"
+  })
+    .sort({ createdAt: -1 })
+    .limit(lookback)
+    .select({ createdAt: 1, responseBody: 1, _id: 0 })
+    .lean();
+
+  return docs
+    .map((doc) => ({
+      createdAt: doc.createdAt,
+      details: doc?.responseBody?.details || null
+    }))
+    .filter((entry) => entry.details && typeof entry.details === "object");
+}
+
+function sortPresetEntries(entries, activePresetNo) {
+  const activeNo = normalizePresetNo(activePresetNo);
+
+  return [...entries].sort((left, right) => {
+    const leftNo = normalizePresetNo(left?.presetNo);
+    const rightNo = normalizePresetNo(right?.presetNo);
+    const leftIsActive = activeNo !== null && leftNo === activeNo;
+    const rightIsActive = activeNo !== null && rightNo === activeNo;
+
+    if (leftIsActive !== rightIsActive) {
+      return leftIsActive ? -1 : 1;
+    }
+
+    if (leftNo !== null && rightNo !== null && leftNo !== rightNo) {
+      return leftNo - rightNo;
+    }
+
+    return String(left?.presetNo || "").localeCompare(String(right?.presetNo || ""), "ko-KR");
+  });
+}
+
+function mergePresetResult(currentResult, fallbackDetails, extractor) {
+  const mergedMap = new Map();
+  const extras = { ...(currentResult?.extras || {}) };
+  let fallbackUsed = false;
+  let activePresetNo = normalizePresetNo(currentResult?.activePresetNo);
+
+  const addRecord = (record, isFallback = false) => {
+    const presetNo = normalizePresetNo(record?.presetNo);
+    if (presetNo === null) {
+      return;
+    }
+
+    if (mergedMap.has(presetNo)) {
+      return;
+    }
+
+    mergedMap.set(presetNo, {
+      presetNo,
+      source: record?.source || (isFallback ? "mongo" : "api"),
+      sourceTimestamp: toIsoString(record?.sourceTimestamp),
+      summary: record?.summary || {},
+      data: record?.data || {}
+    });
+
+    if (isFallback) {
+      fallbackUsed = true;
+    }
+  };
+
+  toArray(currentResult?.records).forEach((record) => {
+    addRecord(record, false);
+  });
+
+  toArray(fallbackDetails).forEach((entry) => {
+    const extracted = extractor(entry?.details, "mongo", toIsoString(entry?.createdAt));
+    const candidateActiveNo = normalizePresetNo(extracted?.activePresetNo);
+    if (activePresetNo === null && candidateActiveNo !== null) {
+      activePresetNo = candidateActiveNo;
+    }
+
+    toArray(extracted?.records).forEach((record) => {
+      addRecord(record, true);
+    });
+  });
+
+  const mergedEntries = sortPresetEntries([...mergedMap.values()], activePresetNo);
+  if (activePresetNo === null && mergedEntries.length) {
+    activePresetNo = normalizePresetNo(mergedEntries[0].presetNo);
+  }
+
+  const presets = mergedEntries.map((entry) => ({
+    ...entry,
+    isActive: activePresetNo !== null && normalizePresetNo(entry.presetNo) === activePresetNo
+  }));
+
+  return {
+    activePresetNo: activePresetNo ?? "-",
+    presets,
+    fallbackUsed,
+    ...extras
+  };
+}
+
+function mapOptionEntry(option) {
+  return {
+    name: String(option?.option_name || option?.stat_type || "").trim() || "-",
+    value: String(option?.option_value || option?.stat_increase || "").trim()
+  };
+}
+
+function mapEquipmentItemForView(item) {
+  return {
+    itemName: item?.item_name || "-",
+    slotName: item?.item_equipment_slot_name || "-",
+    pageName: item?.item_equipment_page_name || "",
+    itemGrade: item?.item_grade || "-",
+    itemIcon: item?.item_icon || "",
+    starforceUpgrade: item?.starforce_upgrade ?? "-",
+    equipmentLevel: item?.equipment_level ?? "-",
+    combatPower: item?.item_combat_power ?? "-",
+    itemOptionText: item?.item_option || "",
+    basicOption: toArray(item?.item_basic_option).map(mapOptionEntry),
+    additionalOption: toArray(item?.item_additional_option).map(mapOptionEntry),
+    potentialOption: toArray(item?.item_potential_option).map(mapOptionEntry),
+    additionalPotentialOption: toArray(item?.item_additional_potential_option).map(mapOptionEntry),
+    soulInfo: {
+      soulName: item?.soul_info?.soul_name || "",
+      soulOption: item?.soul_info?.soul_option || ""
+    },
+    emblemInfo: item?.emblem_info || null
+  };
+}
+
+function mapCashEquipmentItemForView(item) {
+  return {
+    cashItemName: item?.cash_item_name || item?.item_name || "-",
+    cashItemIcon: item?.cash_item_icon || item?.miracle_anvil_item_icon || item?.item_icon || "",
+    slotName: item?.cash_item_equipment_slot_name || item?.item_equipment_slot_name || "-"
+  };
+}
+
+function extractEquipmentPresetResult(details, source, sourceTimestamp) {
+  const itemData = details?.itemEquipment?.data || {};
+  const cashData = details?.cashitemEquipment?.data || {};
+  const itemPresets = toArray(itemData.equipment_preset);
+  const cashPresets = toArray(cashData.cash_equipment_preset);
+  const additionalCashPresets = toArray(cashData.additional_cash_equipment_preset);
+
+  const activeItemPresetNo = normalizePresetNo(itemData.use_preset_no);
+  const activeCashPresetNo = normalizePresetNo(cashData.use_preset_no);
+  const activeAdditionalCashPresetNo = normalizePresetNo(cashData.use_additional_preset_no);
+  const recordsByPreset = new Map();
+  const mapCashList = (list) => toArray(list).map(mapCashEquipmentItemForView);
+  const resolvePresetCashList = (preset) => {
+    const direct = toArray(preset?.cash_item_equipment);
+    if (direct.length) {
+      return direct;
+    }
+
+    return toArray(preset?.additional_cash_item_equipment);
+  };
+
+  const ensureRecord = (presetNo) => {
+    const numericPresetNo = normalizePresetNo(presetNo);
+    if (numericPresetNo === null) {
+      return null;
+    }
+
+    if (!recordsByPreset.has(numericPresetNo)) {
+      recordsByPreset.set(numericPresetNo, {
+        presetNo: numericPresetNo,
+        source,
+        sourceTimestamp,
+        data: {
+          itemEquipment: [],
+          cashItemEquipment: [],
+          additionalCashItemEquipment: [],
+          soulSetOption: "",
+          characterClass: itemData.character_class || "",
+          characterGender: cashData.character_gender || ""
+        }
+      });
+    }
+
+    return recordsByPreset.get(numericPresetNo);
+  };
+
+  itemPresets.forEach((preset) => {
+    const record = ensureRecord(preset?.preset_no);
+    if (!record) {
+      return;
+    }
+
+    record.data.itemEquipment = toArray(preset?.item_equipment).map(mapEquipmentItemForView);
+    record.data.soulSetOption = preset?.soul_set_option || "";
+  });
+
+  if (!itemPresets.length) {
+    const record = ensureRecord(activeItemPresetNo ?? 1);
+    if (record) {
+      record.data.itemEquipment = toArray(itemData.item_equipment).map(mapEquipmentItemForView);
+      record.data.soulSetOption = itemData.soul_set_option || "";
+    }
+  }
+
+  cashPresets.forEach((preset) => {
+    const record = ensureRecord(preset?.preset_no);
+    if (!record) {
+      return;
+    }
+
+    record.data.cashItemEquipment = mapCashList(resolvePresetCashList(preset));
+  });
+
+  if (!cashPresets.length) {
+    const fallbackCashItems = mapCashList(cashData.cash_item_equipment);
+    if (fallbackCashItems.length && recordsByPreset.size) {
+      recordsByPreset.forEach((record) => {
+        record.data.cashItemEquipment = [...fallbackCashItems];
+      });
+    } else {
+      const record = ensureRecord(activeCashPresetNo ?? activeItemPresetNo ?? 1);
+      if (record) {
+        record.data.cashItemEquipment = fallbackCashItems;
+      }
+    }
+  }
+
+  additionalCashPresets.forEach((preset) => {
+    const record = ensureRecord(preset?.preset_no);
+    if (!record) {
+      return;
+    }
+
+    record.data.additionalCashItemEquipment = mapCashList(resolvePresetCashList(preset));
+  });
+
+  if (!additionalCashPresets.length) {
+    const fallbackAdditionalCashItems = mapCashList(cashData.additional_cash_item_equipment);
+    if (fallbackAdditionalCashItems.length && recordsByPreset.size) {
+      recordsByPreset.forEach((record) => {
+        record.data.additionalCashItemEquipment = [...fallbackAdditionalCashItems];
+      });
+    } else {
+      const record = ensureRecord(activeAdditionalCashPresetNo ?? activeCashPresetNo ?? activeItemPresetNo ?? 1);
+      if (record) {
+        record.data.additionalCashItemEquipment = fallbackAdditionalCashItems;
+      }
+    }
+  }
+
+  const topLevelCashItems = mapCashList(cashData.cash_item_equipment);
+  const topLevelAdditionalCashItems = mapCashList(cashData.additional_cash_item_equipment);
+  const firstPresetCashItems =
+    [...recordsByPreset.values()].find((record) => toArray(record?.data?.cashItemEquipment).length > 0)?.data
+      ?.cashItemEquipment || [];
+  const firstPresetAdditionalCashItems =
+    [...recordsByPreset.values()].find((record) => toArray(record?.data?.additionalCashItemEquipment).length > 0)?.data
+      ?.additionalCashItemEquipment || [];
+
+  recordsByPreset.forEach((record) => {
+    if (!toArray(record?.data?.cashItemEquipment).length) {
+      if (topLevelCashItems.length) {
+        record.data.cashItemEquipment = [...topLevelCashItems];
+      } else if (firstPresetCashItems.length) {
+        record.data.cashItemEquipment = [...firstPresetCashItems];
+      }
+    }
+
+    if (!toArray(record?.data?.additionalCashItemEquipment).length) {
+      if (topLevelAdditionalCashItems.length) {
+        record.data.additionalCashItemEquipment = [...topLevelAdditionalCashItems];
+      } else if (firstPresetAdditionalCashItems.length) {
+        record.data.additionalCashItemEquipment = [...firstPresetAdditionalCashItems];
+      }
+    }
+  });
+
+  const records = [...recordsByPreset.values()].map((record) => ({
+    presetNo: record.presetNo,
+    source: record.source,
+    sourceTimestamp: record.sourceTimestamp,
+    summary: {
+      itemCount: record.data.itemEquipment.length,
+      cashCount: record.data.cashItemEquipment.length,
+      additionalCashCount: record.data.additionalCashItemEquipment.length,
+      soulSetOption: record.data.soulSetOption || "-"
+    },
+    data: record.data
+  }));
+
+  return {
+    activePresetNo: activeItemPresetNo ?? activeCashPresetNo ?? activeAdditionalCashPresetNo ?? null,
+    extras: {
+      activeCashPresetNo: activeCashPresetNo ?? "-",
+      activeAdditionalCashPresetNo: activeAdditionalCashPresetNo ?? "-"
+    },
+    records
+  };
+}
+
+function extractUnionPresetResult(details, source, sourceTimestamp) {
+  const unionRaiderData = details?.unionRaider?.data || {};
+  const activePresetNo = normalizePresetNo(unionRaiderData.use_preset_no);
+  const battleMaps = toArray(unionRaiderData.battle_map);
+  const occupiedOptions = toArray(unionRaiderData.use_union_occupied_option).map(mapOptionEntry);
+  const raiderOptions = toArray(unionRaiderData.use_union_raider_option).map(mapOptionEntry);
+  const records = [];
+
+  battleMaps.forEach((battleMap) => {
+    const presetNo = normalizePresetNo(battleMap?.preset_no);
+    if (presetNo === null) {
+      return;
+    }
+
+    const isActive = activePresetNo !== null && presetNo === activePresetNo;
+    const unionRaiders = toArray(battleMap?.union_raider).map((raider) => ({
+      blockRank: raider?.block_rank || "-",
+      blockType: raider?.block_type || "-",
+      blockPosition: toArray(raider?.block_position).map((position) => ({
+        cellNo: position?.cell_no ?? "-",
+        x: position?.cell_x ?? "-",
+        y: position?.cell_y ?? "-"
+      }))
+    }));
+
+    records.push({
+      presetNo,
+      source,
+      sourceTimestamp,
+      summary: {
+        occupiedCount: isActive ? occupiedOptions.length : 0,
+        raiderOptionCount: isActive ? raiderOptions.length : 0,
+        blockCount: unionRaiders.length
+      },
+      data: {
+        optionSetting: battleMap?.option_setting || {},
+        unionRaiders,
+        occupiedOptions: isActive ? occupiedOptions : [],
+        raiderOptions: isActive ? raiderOptions : []
+      }
+    });
+  });
+
+  if (!records.length && (occupiedOptions.length || raiderOptions.length || activePresetNo !== null)) {
+    records.push({
+      presetNo: activePresetNo ?? 1,
+      source,
+      sourceTimestamp,
+      summary: {
+        occupiedCount: occupiedOptions.length,
+        raiderOptionCount: raiderOptions.length,
+        blockCount: 0
+      },
+      data: {
+        optionSetting: {},
+        unionRaiders: [],
+        occupiedOptions,
+        raiderOptions
+      }
+    });
+  }
+
+  return {
+    activePresetNo,
+    records
+  };
+}
+
+function mapAndroidEquipmentForView(androidEquipment) {
+  return {
+    androidName: androidEquipment?.android_name || "-",
+    androidNickname: androidEquipment?.android_nickname || "",
+    androidIcon: androidEquipment?.android_icon || "",
+    androidDescription: androidEquipment?.android_description || "",
+    androidGrade: androidEquipment?.android_grade || "-",
+    androidGender: androidEquipment?.android_gender || "-",
+    warehouseUsableFlag: androidEquipment?.android_warehouse_usable_flag ?? "-",
+    earSensorClipFlag: androidEquipment?.android_ear_sensor_clip_flag ?? "-",
+    cashItemEquipment: toArray(androidEquipment?.android_cash_item_equipment).map((item) => ({
+      name: item?.cash_item_name || "-",
+      icon: item?.cash_item_icon || "",
+      slotName: item?.cash_item_equipment_slot_name || "-"
+    }))
+  };
+}
+
+function mapHeartEquipmentForView(heartEquipment) {
+  return {
+    heartName: heartEquipment?.heart_name || "-",
+    heartIcon: heartEquipment?.heart_icon || "",
+    heartDescription: heartEquipment?.heart_description || "",
+    additionalOption: toArray(heartEquipment?.item_additional_option).map(mapOptionEntry),
+    potentialOption: toArray(heartEquipment?.item_potential_option).map(mapOptionEntry),
+    additionalPotentialOption: toArray(heartEquipment?.item_additional_potential_option).map(mapOptionEntry)
+  };
+}
+
+function extractAndroidPresetResult(details, source, sourceTimestamp) {
+  const androidData = details?.androidEquipment?.data || {};
+  const activePresetNo = normalizePresetNo(androidData.use_preset_no);
+  const presetList = toArray(androidData.android_heart_equipment_preset);
+  const records = [];
+
+  presetList.forEach((preset) => {
+    const presetNo = normalizePresetNo(preset?.preset_no);
+    if (presetNo === null) {
+      return;
+    }
+
+    const androidEquipment = mapAndroidEquipmentForView(preset?.android_equipment || {});
+    const heartEquipment = mapHeartEquipmentForView(preset?.heart_equipment || {});
+    records.push({
+      presetNo,
+      source,
+      sourceTimestamp,
+      summary: {
+        androidName: androidEquipment.androidName,
+        heartName: heartEquipment.heartName
+      },
+      data: {
+        androidEquipment,
+        heartEquipment
+      }
+    });
+  });
+
+  if (!records.length && (androidData.android_equipment || androidData.heart_equipment || activePresetNo !== null)) {
+    const androidEquipment = mapAndroidEquipmentForView(androidData.android_equipment || {});
+    const heartEquipment = mapHeartEquipmentForView(androidData.heart_equipment || {});
+    records.push({
+      presetNo: activePresetNo ?? 1,
+      source,
+      sourceTimestamp,
+      summary: {
+        androidName: androidEquipment.androidName,
+        heartName: heartEquipment.heartName
+      },
+      data: {
+        androidEquipment,
+        heartEquipment
+      }
+    });
+  }
+
+  return {
+    activePresetNo,
+    records
+  };
+}
+
+function extractJewelPresetResult(details, source, sourceTimestamp) {
+  const jewelData = details?.jewel?.data || {};
+  const activePresetNo = normalizePresetNo(jewelData.use_jewel_page_no);
+  const pages = toArray(jewelData.jewel_equipment);
+  const records = pages.map((page) => {
+    const presetNo = normalizePresetNo(page?.jewel_page_no);
+    return {
+      presetNo,
+      source,
+      sourceTimestamp,
+      summary: {
+        jewelCount: toArray(page?.jewel_info).length
+      },
+      data: {
+        jewelPageNo: page?.jewel_page_no ?? "-",
+        jewelInfo: toArray(page?.jewel_info).map((jewelInfo) => ({
+          slotNo: jewelInfo?.slot_no ?? "-",
+          jewelName: jewelInfo?.jewel_name || "-",
+          jewelGrade: jewelInfo?.jewel_grade || "-",
+          jewelColor: jewelInfo?.jewel_color || "-",
+          jewelOption: jewelInfo?.jewel_option || "",
+          jewelIcon: jewelInfo?.jewel_icon || ""
+        }))
+      }
+    };
+  }).filter((entry) => normalizePresetNo(entry.presetNo) !== null);
+
+  if (!records.length && activePresetNo !== null) {
+    records.push({
+      presetNo: activePresetNo,
+      source,
+      sourceTimestamp,
+      summary: { jewelCount: 0 },
+      data: {
+        jewelPageNo: activePresetNo,
+        jewelInfo: []
+      }
+    });
+  }
+
+  return {
+    activePresetNo,
+    extras: {
+      activeSetOption: jewelData.use_jewel_set_option || "-"
+    },
+    records
+  };
+}
+
+function extractHyperStatPresetResult(details, source, sourceTimestamp) {
+  const hyperData = details?.hyperStat?.data || {};
+  const activePresetNo = normalizePresetNo(hyperData.use_preset_no);
+  const presets = toArray(hyperData.hyper_stat);
+  const records = presets.map((preset) => {
+    const presetNo = normalizePresetNo(preset?.preset_no);
+    const hyperStatInfo = toArray(preset?.hyper_stat_info).map((info) => ({
+      statType: info?.stat_type || "-",
+      statLevel: info?.stat_level ?? "-",
+      statIncrease: info?.stat_increase || "-"
+    }));
+
+    return {
+      presetNo,
+      source,
+      sourceTimestamp,
+      summary: {
+        statCount: hyperStatInfo.length
+      },
+      data: {
+        hyperStatInfo,
+        remainHyperStat: presetNo === activePresetNo ? hyperData.use_preset_remain_hyper_stat ?? "-" : "-"
+      }
+    };
+  }).filter((entry) => normalizePresetNo(entry.presetNo) !== null);
+
+  if (!records.length && activePresetNo !== null) {
+    records.push({
+      presetNo: activePresetNo,
+      source,
+      sourceTimestamp,
+      summary: { statCount: 0 },
+      data: {
+        hyperStatInfo: [],
+        remainHyperStat: hyperData.use_preset_remain_hyper_stat ?? "-"
+      }
+    });
+  }
+
+  return {
+    activePresetNo,
+    extras: {
+      presetCount: hyperData.preset_count ?? "-"
+    },
+    records
+  };
+}
+
+function extractLinkSkillPresetResult(details, source, sourceTimestamp) {
+  const linkData = details?.linkSkill?.data || {};
+  const activePresetNo = normalizePresetNo(linkData.use_prest_no ?? linkData.use_preset_no);
+  const presets = toArray(linkData.link_skill);
+  const records = presets.map((preset) => {
+    const presetNo = normalizePresetNo(preset?.preset_no);
+    const linkSkillInfo = toArray(preset?.link_skill_info).map((skill) => ({
+      skillName: skill?.skill_name || "-",
+      skillLevel: skill?.skill_level ?? "-",
+      skillDescription: skill?.skill_description || "",
+      skillEffect: skill?.skill_effect || "",
+      skillEffectNext: skill?.skill_effect_next || "",
+      skillIcon: skill?.skill_icon || ""
+    }));
+
+    return {
+      presetNo,
+      source,
+      sourceTimestamp,
+      summary: {
+        skillCount: linkSkillInfo.length
+      },
+      data: {
+        linkSkillInfo
+      }
+    };
+  }).filter((entry) => normalizePresetNo(entry.presetNo) !== null);
+
+  if (!records.length && activePresetNo !== null) {
+    records.push({
+      presetNo: activePresetNo,
+      source,
+      sourceTimestamp,
+      summary: { skillCount: 0 },
+      data: {
+        linkSkillInfo: []
+      }
+    });
+  }
+
+  return {
+    activePresetNo,
+    records
+  };
+}
+
+function buildEquipmentTab(details, fallbackDetails) {
+  const current = extractEquipmentPresetResult(details, "api", new Date().toISOString());
+  const merged = mergePresetResult(current, fallbackDetails, extractEquipmentPresetResult);
+  const setEffects = toArray(details?.setEffect?.data?.set_info).map((setInfo) => ({
+    setName: setInfo?.set_name || "-",
+    setCount: setInfo?.set_count ?? "-",
+    setOption: setInfo?.set_option || "-"
+  }));
+  const petData = details?.petEquipment?.data || {};
+  const petSetOptions = toArray(petData.pet_set_option).map((setOption) => ({
+    setName: setOption?.set_name || "-",
+    setOption: setOption?.set_option || "-"
+  }));
+
+  return {
+    ...merged,
+    setEffects,
+    petSetOptions,
+    petAutoSkillOption: petData.pet_auto_skill_option || "-"
+  };
+}
+
+function buildUnionTab(details, fallbackDetails) {
+  const current = extractUnionPresetResult(details, "api", new Date().toISOString());
+  const merged = mergePresetResult(current, fallbackDetails, extractUnionPresetResult);
+  const unionData = details?.union?.data || {};
+  const unionRaiderData = details?.unionRaider?.data || {};
+  const activeOccupiedOptions = toArray(unionRaiderData.use_union_occupied_option).map(mapOptionEntry);
+  const activeRaiderOptions = toArray(unionRaiderData.use_union_raider_option).map(mapOptionEntry);
+
+  return {
+    ...merged,
+    summary: {
+      unionLevel: unionData.union_level ?? "-",
+      unionGrade: unionData.union_grade || "-",
+      unionGradeIcon: unionData.union_grade_icon || "",
+      unionLevelTotalOption: unionData.union_level_total_option || "-",
+      unionLevelTotalOptionSegments: splitStatSegments(unionData.union_level_total_option || "")
+    },
+    activeOccupiedOptions,
+    activeRaiderOptions
+  };
+}
+
+function buildAndroidTab(details, fallbackDetails) {
+  const current = extractAndroidPresetResult(details, "api", new Date().toISOString());
+  return mergePresetResult(current, fallbackDetails, extractAndroidPresetResult);
+}
+
+function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
+  const current = extractJewelPresetResult(details, "api", new Date().toISOString());
+  const merged = mergePresetResult(current, fallbackDetails, extractJewelPresetResult);
+  const symbolData = details?.symbol?.data || {};
+  const vmatrixData = details?.vmatrix?.data || {};
+
+  const arcaneSymbols = toArray(symbolData.arcane_symbol).map((symbol) => ({
+    symbolName: symbol?.symbol_name || "-",
+    symbolIcon: symbol?.symbol_icon || "",
+    symbolLevel: symbol?.symbol_level ?? "-",
+    symbolGrowthValue: symbol?.symbol_growth_value ?? "-",
+    symbolOption: symbol?.symbol_option || "-"
+  }));
+
+  const authenticSymbols = toArray(symbolData.authentic_symbol).map((symbol) => ({
+    symbolName: symbol?.symbol_name || "-",
+    symbolIcon: symbol?.symbol_icon || "",
+    symbolLevel: symbol?.symbol_level ?? "-",
+    symbolGrowthValue: symbol?.symbol_growth_value ?? "-",
+    symbolOption: symbol?.symbol_option || "-"
+  }));
+
+  const vCores = toArray(vmatrixData.character_v_core_equipment).map((core) => ({
+    slotId: core?.slot_id ?? "-",
+    slotLevel: core?.slot_level ?? "-",
+    vcoreName: core?.vcore_name || "-",
+    vcoreLevel: core?.vcore_level ?? "-",
+    vcoreType: core?.vcore_type || "-",
+    skills: [core?.vcore_skill_name1, core?.vcore_skill_name2, core?.vcore_skill_name3].filter(Boolean)
+  }));
+
+  return {
+    ...merged,
+    symbol: {
+      arcaneSymbols,
+      authenticSymbols
+    },
+    vmatrix: {
+      characterClass: vmatrixData.character_class || "-",
+      vCores
+    }
+  };
+}
+
+function buildHexamatrixTab(details) {
+  const hexaSkillData = details?.hexamatrixSkill?.data || {};
+  const hexaStatData = details?.hexamatrixStat?.data || {};
+  const hexaSkills = toArray(hexaSkillData.hexamatrix_skill).map((skill) => ({
+    skillName: skill?.skill_name || "-",
+    skillLevel: skill?.skill_level ?? skill?.slot_level ?? "-",
+    slotLevel: skill?.slot_level ?? "-",
+    skillType: skill?.skill_type || "-",
+    skillEffect: skill?.skill_effect || "-",
+    skillIcon: skill?.skill_icon || ""
+  }));
+
+  const hexaStatCoreList = toArray(hexaStatData.hexamatrix_stat).map((core) => ({
+    statCoreSlot: core?.stat_core_slot ?? "-",
+    statInfo: toArray(core?.stat_info).map((info) => ({
+      pageNo: info?.page_no ?? "-",
+      activateFlag: info?.activate_flag ?? "0",
+      mainStat: info?.main_stat || "-",
+      mainStatLevel: info?.main_stat_level ?? "-",
+      slotLevel: info?.slot_level ?? "-",
+      sub1Stat: info?.sub_1_stat || "-",
+      sub1StatLevel: info?.sub_1_stat_level ?? "-",
+      sub2Stat: info?.sub_2_stat || "-",
+      sub2StatLevel: info?.sub_2_stat_level ?? "-"
+    }))
+  }));
+
+  return {
+    hexaSkills,
+    hexaStatCoreList
+  };
+}
+
+function buildHyperStatTab(details, fallbackDetails) {
+  const current = extractHyperStatPresetResult(details, "api", new Date().toISOString());
+  return mergePresetResult(current, fallbackDetails, extractHyperStatPresetResult);
+}
+
+function buildSkillLinkTab(details, fallbackDetails) {
+  const current = extractLinkSkillPresetResult(details, "api", new Date().toISOString());
+  const merged = mergePresetResult(current, fallbackDetails, extractLinkSkillPresetResult);
+  const skillEquipmentData = details?.skillEquipment?.data || {};
+  const skillSetSource =
+    toArray(skillEquipmentData.skill).length
+      ? toArray(skillEquipmentData.skill)
+      : toArray(skillEquipmentData.skill_equipment).length
+        ? toArray(skillEquipmentData.skill_equipment)
+        : toArray(skillEquipmentData.character_skill).length
+          ? toArray(skillEquipmentData.character_skill)
+          : toArray(skillEquipmentData.character_skill_info);
+  const skillSet = toArray(skillSetSource).map((skill) => ({
+    skillName: skill?.skill_name || "-",
+    skillLevel: skill?.skill_level ?? "-",
+    skillDescription: skill?.skill_description || "",
+    skillEffect: skill?.skill_effect || "",
+    skillType: skill?.skill_type || "",
+    skillIcon: skill?.skill_icon || ""
+  }));
+
+  return {
+    ...merged,
+    skillSet,
+    skillSetRaw: skillSet.length ? null : skillEquipmentData
+  };
+}
+
 async function hasExpHistory(ocid) {
   if (mongoose.connection.readyState !== 1) {
     return false;
@@ -1559,12 +2336,33 @@ function buildGuildTab(details, characterName, worldNameCanonical) {
   const guildIdData = details?.guildId?.data || {};
   const guildBasicData = details?.guildBasic?.data || {};
   const memberSelf = findGuildMemberForCharacter(guildBasicData, characterName);
+  const guildSkills = toArray(guildBasicData.guild_skill).map((skill) => ({
+    skillName: skill?.skill_name || "-",
+    skillLevel: skill?.skill_level ?? "-",
+    skillOption: skill?.skill_option || "",
+    skillIcon: skill?.skill_icon || ""
+  }));
+  const guildAbilities = toArray(guildBasicData.guild_ability).map((ability) => ({
+    abilityNo: ability?.ability_no ?? "-",
+    abilityName: ability?.ability_name || "-",
+    abilityLevel: ability?.ability_level ?? "-",
+    abilityOption: ability?.ability_option || "",
+    abilityIcon: ability?.ability_icon || ""
+  }));
+  const guildBuildings = toArray(guildBasicData.guild_building).map((building) => ({
+    buildingName: building?.building_name || "-",
+    buildingLevel: building?.building_level ?? "-"
+  }));
+  const memberPreview = toArray(guildBasicData.guild_member)
+    .slice(0, 20)
+    .map((member) => ({
+      characterName: member?.character_name || "-",
+      characterLevel: member?.character_level ?? "-",
+      guildActivity: member?.guild_activity ?? "-"
+    }));
 
   return {
-    characterGuild: details.guild,
-    guildId: details.guildId,
-    guildBasic: details.guildBasic,
-    guildSummary: {
+    summary: {
       guildName: guildBasicData.guild_name || characterGuildData.guild_name || "-",
       worldName: guildBasicData.world_name || worldNameCanonical || "-",
       guildLevel: guildBasicData.guild_level ?? "-",
@@ -1574,41 +2372,28 @@ function buildGuildTab(details, characterName, worldNameCanonical) {
       guildMemberCount: guildBasicData.guild_member_count ?? "-",
       oguildId: guildIdData.oguild_id || ""
     },
-    memberSelf
-  };
-}
-
-function buildUnionTab(details) {
-  const unionData = details?.union?.data || {};
-  const unionRaiderData = details?.unionRaider?.data || {};
-
-  return {
-    union: details.union,
-    unionRaider: details.unionRaider,
-    unionSummary: {
-      unionLevel: unionData.union_level ?? "-",
-      unionGrade: unionData.union_grade || "-",
-      unionLevelTotalOption: unionData.union_level_total_option || "-",
-      usePresetNo: unionRaiderData.use_preset_no ?? "-",
-      occupiedOptionCount: Array.isArray(unionRaiderData.use_union_occupied_option) ? unionRaiderData.use_union_occupied_option.length : 0,
-      raiderOptionCount: Array.isArray(unionRaiderData.use_union_raider_option) ? unionRaiderData.use_union_raider_option.length : 0
-    }
-  };
-}
-
-function buildAndroidTab(details) {
-  const androidEndpoint = details?.androidEquipment;
-  const androidData = androidEndpoint?.data || {};
-  const activePreset = resolveActiveAndroidPreset(androidData);
-  const activeAndroidEquipment = androidData.android_equipment || activePreset?.android_equipment || {};
-  const activeHeartEquipment = resolveActiveAndroidHeartEquipment(androidData) || {};
-
-  return {
-    androidEquipment: androidEndpoint,
-    usePresetNo: androidData.use_preset_no ?? activePreset?.preset_no ?? "-",
-    active: {
-      androidEquipment: activeAndroidEquipment,
-      heartEquipment: activeHeartEquipment
+    memberSelf: memberSelf
+      ? {
+          characterName: memberSelf.character_name || "-",
+          characterLevel: memberSelf.character_level ?? "-",
+          guildActivity: memberSelf.guild_activity ?? "-",
+          guildPersonalSkill: toArray(memberSelf.guild_personal_skill).map((skill) => ({
+            skillName: skill?.skill_name || "-",
+            skillLevel: skill?.skill_level ?? "-",
+            skillOption: skill?.skill_option || "",
+            skillIcon: skill?.skill_icon || ""
+          }))
+        }
+      : null,
+    guildSkills,
+    guildAbilities,
+    guildBuildings,
+    guildKeywords: toArray(guildBasicData.guild_keyword).filter(Boolean),
+    memberPreview,
+    status: {
+      characterGuildOk: Boolean(details?.guild?.ok),
+      guildIdOk: Boolean(details?.guildId?.ok),
+      guildBasicOk: Boolean(details?.guildBasic?.ok)
     }
   };
 }
@@ -1627,22 +2412,39 @@ function resolveMajorStatOrderByClassName(jobNameOrClassName) {
   return [...physicalMajorStatOrder];
 }
 
-function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid, details }) {
+function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid, details, fallbackDetails }) {
   const basic = details?.basic?.data || {};
   const stat = details?.stat?.data || {};
   const guild = details?.guild?.data || {};
-
+  const fallbackList = toArray(fallbackDetails);
   const expRaw = basic.character_exp ?? stat.character_exp;
   const expRateRaw = basic.character_exp_rate ?? stat.character_exp_rate;
-  const expText = expRateRaw || expRaw || "-";
+  const expRateValue = parseNumericValue(expRateRaw);
+  const expText = expRateValue === null
+    ? "-"
+    : `${expRateValue.toLocaleString("ko-KR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
   const majorStats = buildMajorStats(details);
   const profileName = basic.character_name || characterName;
   const guildTab = buildGuildTab(details, profileName, worldNameCanonical);
-  const unionTab = buildUnionTab(details);
-  const androidTab = buildAndroidTab(details);
+  const equipmentTab = buildEquipmentTab(details, fallbackList);
+  const unionTab = buildUnionTab(details, fallbackList);
+  const androidTab = buildAndroidTab(details, fallbackList);
+  const jewelSymbolVmatrixTab = buildJewelSymbolVmatrixTab(details, fallbackList);
+  const hexamatrixTab = buildHexamatrixTab(details);
+  const hyperStatTab = buildHyperStatTab(details, fallbackList);
+  const skillLinkTab = buildSkillLinkTab(details, fallbackList);
+  const presetFallbackUsed = [
+    equipmentTab?.fallbackUsed,
+    unionTab?.fallbackUsed,
+    androidTab?.fallbackUsed,
+    jewelSymbolVmatrixTab?.fallbackUsed,
+    hyperStatTab?.fallbackUsed,
+    skillLinkTab?.fallbackUsed
+  ].some(Boolean);
 
   const profile = {
     name: profileName,
+    jobName: basic.character_job_name || "",
     className: basic.character_class || "-",
     level: basic.character_level || "-",
     imageUrl: basic.character_image || basic.character_icon || "",
@@ -1663,40 +2465,23 @@ function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid
     ocid,
     profile,
     tabs: {
-      equipment: {
-        itemEquipment: details.itemEquipment,
-        cashitemEquipment: details.cashitemEquipment,
-        setEffect: details.setEffect,
-        androidEquipment: details.androidEquipment,
-        petEquipment: details.petEquipment,
-        beautyEquipment: details.beautyEquipment
-      },
+      equipment: equipmentTab,
       exp: {
-        stat: details.stat,
-        basic: details.basic,
         currentExp: parseNumericValue(expRaw),
-        currentExpRate: parseNumericValue(expRateRaw)
+        currentExpRate: parseNumericValue(expRateRaw),
+        expText: expText || "-"
       },
-      jewelSymbolVmatrix: {
-        jewel: details.jewel,
-        symbol: details.symbol,
-        vmatrix: details.vmatrix
-      },
-      hexamatrix: {
-        skill: details.hexamatrixSkill,
-        stat: details.hexamatrixStat
-      },
-      hyperStat: details.hyperStat,
-      skillLink: {
-        skillEquipment: details.skillEquipment,
-        linkSkill: details.linkSkill
-      },
+      jewelSymbolVmatrix: jewelSymbolVmatrixTab,
+      hexamatrix: hexamatrixTab,
+      hyperStat: hyperStatTab,
+      skillLink: skillLinkTab,
       android: androidTab,
       guild: guildTab,
       union: unionTab
     },
     meta: {
-      dataTimestamp: new Date().toISOString()
+      dataTimestamp: new Date().toISOString(),
+      presetFallbackUsed
     }
   };
 }
@@ -1839,6 +2624,7 @@ async function getCharacterPageData(req, res) {
   }
 
   const { characterName, worldNameInput, worldNameCanonical, nexonWorldName } = parsed;
+  const mongoConnected = isMongoConnected();
 
   try {
     const ocidResult = await resolveOcid(characterName, worldNameCanonical, nexonWorldName, { shouldLog: false });
@@ -1876,18 +2662,21 @@ async function getCharacterPageData(req, res) {
     });
 
     const historyAvailable = await hasExpHistory(ocid);
+    const fallbackDetails = await loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit);
 
     const pageData = buildPageData({
       characterName,
       worldNameInput,
       worldNameCanonical,
       ocid,
-      details
+      details,
+      fallbackDetails
     });
 
     pageData.meta.historyAvailable = historyAvailable;
+    pageData.meta.mongoConnected = mongoConnected;
 
-    await saveAggregatedCharacterLog({
+    const aggregateSaved = await saveAggregatedCharacterLog({
       characterName,
       worldNameCanonical,
       ocid,
@@ -1900,6 +2689,7 @@ async function getCharacterPageData(req, res) {
         details
       }
     });
+    pageData.meta.aggregateSaved = aggregateSaved;
 
     return res.json(pageData);
   } catch (error) {
@@ -1940,7 +2730,7 @@ async function getCharacterExpHistory(req, res) {
     });
   }
 
-  if (mongoose.connection.readyState !== 1) {
+  if (!isMongoConnected()) {
     return res.json({
       ok: true,
       ocid,
@@ -1981,6 +2771,60 @@ async function getCharacterExpHistory(req, res) {
     ocid,
     points,
     historyAvailable: points.length > 0
+  });
+}
+
+async function getCharacterLogStatus(req, res) {
+  const ocid = String(req.query.ocid || "").trim();
+
+  if (!ocid) {
+    return res.status(400).json({
+      ok: false,
+      message: "ocid is required"
+    });
+  }
+
+  if (!isMongoConnected()) {
+    return res.json({
+      ok: true,
+      ocid,
+      mongoConnected: false,
+      latestAggregateLogAt: null,
+      hasUnion: false,
+      hasGuild: false,
+      hasAndroid: false,
+      aggregateCount: 0
+    });
+  }
+
+  const filter = {
+    ocid,
+    endpoint: aggregateLogEndpoint,
+    "responseBody.mode": "page-data"
+  };
+
+  const [latestLog, aggregateCount] = await Promise.all([
+    RequestLog.findOne(filter)
+      .sort({ createdAt: -1 })
+      .select({ createdAt: 1, responseBody: 1, _id: 0 })
+      .lean(),
+    RequestLog.countDocuments(filter)
+  ]);
+
+  const latestDetails = latestLog?.responseBody?.details || {};
+  const hasUnion = Boolean(latestDetails?.union || latestDetails?.unionRaider);
+  const hasGuild = Boolean(latestDetails?.guild || latestDetails?.guildId || latestDetails?.guildBasic);
+  const hasAndroid = Boolean(latestDetails?.androidEquipment);
+
+  return res.json({
+    ok: true,
+    ocid,
+    mongoConnected: true,
+    latestAggregateLogAt: latestLog?.createdAt ? toIsoString(latestLog.createdAt) : null,
+    hasUnion,
+    hasGuild,
+    hasAndroid,
+    aggregateCount
   });
 }
 
@@ -2222,6 +3066,7 @@ module.exports = {
   getAllCharacterDetails,
   getCharacterPageData,
   getCharacterExpHistory,
+  getCharacterLogStatus,
   getCharacterBasic,
   getCharacterStat,
   getCharacterHyperStat,
