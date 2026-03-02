@@ -8,6 +8,12 @@ const unionEndpointPath = "/maplestorym/v1/user/union";
 const unionRaiderEndpointPath = "/maplestorym/v1/user/union-raider";
 const guildIdEndpointPath = "/maplestorym/v1/guild/id";
 const guildBasicEndpointPath = "/maplestorym/v1/guild/basic";
+const rankingLevelEndpointPath = "/maplestorym/v1/ranking/level";
+const rankingUnionEndpointPath = "/maplestorym/v1/ranking/union";
+const rankingAchievementEndpointPath = "/maplestorym/v1/ranking/achievement";
+const rankingSharenianBattlefieldEndpointPath = "/maplestorym/v1/ranking/sharenian-battlefield";
+const rankingSharenianWaterwayEndpointPath = "/maplestorym/v1/ranking/sharenian-waterway";
+const rankingRootOfTimeEndpointPath = "/maplestorym/v1/ranking/root-of-time";
 const maxRetryCount = 2;
 
 async function requestNexon(endpoint, params) {
@@ -75,6 +81,36 @@ async function getGuildBasic(oguildId) {
   });
 }
 
+async function getRankingLevel(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingLevelEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
+async function getRankingUnion(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingUnionEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
+async function getRankingAchievement(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingAchievementEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
+async function getRankingSharenianBattlefield(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingSharenianBattlefieldEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
+async function getRankingSharenianWaterway(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingSharenianWaterwayEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
+async function getRankingRootOfTime(params) {
+  const endpoint = `${env.nexonBaseUrl}${rankingRootOfTimeEndpointPath}`;
+  return requestNexon(endpoint, params);
+}
+
 async function saveRequestLog({
   characterName,
   worldName,
@@ -131,5 +167,11 @@ module.exports = {
   getUserUnionRaider,
   getGuildId,
   getGuildBasic,
+  getRankingLevel,
+  getRankingUnion,
+  getRankingAchievement,
+  getRankingSharenianBattlefield,
+  getRankingSharenianWaterway,
+  getRankingRootOfTime,
   saveRequestLog
 };

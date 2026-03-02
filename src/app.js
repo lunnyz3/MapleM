@@ -24,6 +24,12 @@ function createApp() {
   app.get(/^\/character\/[^/]+\/.+$/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "character.html"));
   });
+  app.get("/ranking", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "ranking.html"));
+  });
+  app.get("/ranking/:rankingType", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "ranking.html"));
+  });
 
   app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "index.html"));

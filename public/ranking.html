@@ -1,0 +1,109 @@
+﻿<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapleM 랭킹 조회</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body data-page="ranking">
+    <header class="topbar">
+      <div class="topbar__left">
+        <a class="topbar__brand" href="/">MAPLEM</a>
+        <nav class="topbar__nav" aria-label="주요 메뉴">
+          <a class="topbar__menu" href="/">메인</a>
+          <div class="topbar__dropdown">
+            <button type="button" class="topbar__menu topbar__dropdown-toggle is-active" aria-haspopup="true">랭킹</button>
+            <div class="topbar__dropdown-menu">
+              <a class="topbar__dropdown-item" href="/ranking.html?type=level">종합 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=union">유니온 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=achievement">업적 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-battlefield">샤레니안의 전장 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-waterway">샤레니안의 지하수로 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=root-of-time">시간의근원 랭킹</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div class="topbar__right">
+        <div class="theme-switch">
+          <label for="themeMode">테마</label>
+          <select id="themeMode" data-theme-select>
+            <option value="system">시스템</option>
+            <option value="dark">다크</option>
+            <option value="light">라이트</option>
+          </select>
+        </div>
+        <form id="quickSearchForm" class="topbar-search">
+          <select id="topWorldName" name="world_name" aria-label="월드명">
+            <option value="스카니아">스카니아</option>
+            <option value="루나">루나</option>
+            <option value="제니스">제니스</option>
+            <option value="크로아">크로아</option>
+            <option value="유니온" selected>유니온</option>
+            <option value="엘리시움">엘리시움</option>
+            <option value="아케인">아케인</option>
+          </select>
+          <input id="topCharacterName" name="character_name" placeholder="캐릭터명" aria-label="캐릭터명" />
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="page page--ranking">
+      <section class="data-card data-card--wide ranking-panel">
+        <form id="rankingSearchForm" class="ranking-form">
+          <label>
+            <span>랭킹 종류</span>
+            <select id="rankingType" name="type" required>
+              <option value="level">종합 랭킹</option>
+              <option value="union">유니온 랭킹</option>
+              <option value="achievement">업적 랭킹</option>
+              <option value="sharenian-battlefield">샤레니안의 전장 랭킹</option>
+              <option value="root-of-time">시간의근원 랭킹</option>
+            </select>
+          </label>
+          <label>
+            <span>조회일</span>
+            <input id="rankingDate" type="date" name="date" min="2025-12-01" required />
+          </label>
+          <label>
+            <span>월드명</span>
+            <select id="rankingWorldName" name="world_name">
+              <option value="" selected>전체</option>
+              <option value="스카니아">스카니아</option>
+              <option value="루나">루나</option>
+              <option value="제니스">제니스</option>
+              <option value="크로아">크로아</option>
+              <option value="유니온">유니온</option>
+              <option value="엘리시움">엘리시움</option>
+              <option value="아케인">아케인</option>
+            </select>
+          </label>
+          <button type="submit">조회</button>
+        </form>
+      </section>
+
+      <section id="rankingMessage" class="notice"></section>
+
+      <section class="tab-content">
+        <article class="data-card data-card--wide">
+          <h3 id="rankingResultTitle">랭킹 조회 결과</h3>
+          <div id="rankingTableWrap" class="ranking-table-wrap">
+            <p class="empty">조회 조건을 입력한 뒤 랭킹을 조회하세요.</p>
+          </div>
+          <div class="ranking-pagination">
+            <div id="rankingPageButtons" class="ranking-page-buttons"></div>
+            <form id="rankingPageJumpForm" class="ranking-page-jump">
+              <label for="rankingPageJumpInput">페이지 이동</label>
+              <input id="rankingPageJumpInput" type="number" min="1" step="1" value="1" />
+              <button type="submit">이동</button>
+            </form>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/js/main.js?v=20260303d"></script>
+  </body>
+</html>

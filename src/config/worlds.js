@@ -1,5 +1,6 @@
 ﻿const worldDefinitions = Object.freeze([
   { canonical: "스카니아", nexon: "Scania", aliases: ["스카니아", "scania"] },
+  { canonical: "크로아", nexon: "Croa", aliases: ["크로아", "croa"] },
   { canonical: "루나", nexon: "Luna", aliases: ["루나", "luna"] },
   { canonical: "엘리시움", nexon: "Elysium", aliases: ["엘리시움", "elysium"] },
   { canonical: "유니온", nexon: "Union", aliases: ["유니온", "union"] },
@@ -14,7 +15,7 @@ for (const world of worldDefinitions) {
   }
 }
 
-const allowedWorldNames = Object.freeze(["스카니아", "루나", "엘리시움", "유니온", "제니스", "아케인"]);
+const allowedWorldNames = Object.freeze(["스카니아", "크로아", "루나", "엘리시움", "유니온", "제니스", "아케인"]);
 
 function normalizeWorldName(input) {
   const raw = String(input || "").trim();

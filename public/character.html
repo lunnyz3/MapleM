@@ -10,7 +10,20 @@
     <header class="topbar">
       <div class="topbar__left">
         <a class="topbar__brand" href="/">MAPLEM</a>
-        <a class="topbar__menu" href="/">메인</a>
+        <nav class="topbar__nav" aria-label="주요 메뉴">
+          <a class="topbar__menu" href="/">메인</a>
+          <div class="topbar__dropdown">
+            <button type="button" class="topbar__menu topbar__dropdown-toggle" aria-haspopup="true">랭킹</button>
+            <div class="topbar__dropdown-menu">
+              <a class="topbar__dropdown-item" href="/ranking.html?type=level">종합 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=union">유니온 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=achievement">업적 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-battlefield">샤레니안의 전장 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-waterway">샤레니안의 지하수로 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=root-of-time">시간의근원 랭킹</a>
+            </div>
+          </div>
+        </nav>
       </div>
       <div class="topbar__right">
         <div class="theme-switch">
@@ -25,9 +38,10 @@
           <select id="topWorldName" name="world_name" aria-label="서버명">
             <option value="스카니아">스카니아</option>
             <option value="루나">루나</option>
-            <option value="엘리시움">엘리시움</option>
-            <option value="유니온" selected>유니온</option>
             <option value="제니스">제니스</option>
+            <option value="크로아">크로아</option>
+            <option value="유니온" selected>유니온</option>
+            <option value="엘리시움">엘리시움</option>
             <option value="아케인">아케인</option>
           </select>
           <input id="topCharacterName" name="character_name" placeholder="캐릭터명" aria-label="캐릭터명" />
@@ -61,6 +75,6 @@
       </section>
     </main>
 
-    <script src="/js/main.js?v=20260224b"></script>
+    <script src="/js/main.js?v=20260303d"></script>
   </body>
 </html>

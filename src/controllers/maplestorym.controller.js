@@ -10,6 +10,12 @@ const {
   getUserUnionRaider,
   getGuildId: getGuildIdByName,
   getGuildBasic: getGuildBasicById,
+  getRankingLevel,
+  getRankingUnion,
+  getRankingAchievement,
+  getRankingSharenianBattlefield,
+  getRankingSharenianWaterway,
+  getRankingRootOfTime,
   saveRequestLog
 } = require("../services/maplestorym.service");
 
@@ -40,6 +46,7 @@ const userDetailEndpoints = [
 
 const aggregateLogEndpoint = `${env.nexonBaseUrl}/maplestorym/v1/character/all`;
 const presetFallbackLookbackLimit = 30;
+const rankingDateFloor = "2025-12-01";
 
 const majorStatKeys = Object.freeze([
   "physicalAttack",
@@ -1158,6 +1165,122 @@ function parseGuildQuery(req, res) {
   };
 }
 
+function normalizeRankingDateInput(value) {
+  return String(value || "").trim().replace(/[./\s]+/g, "-");
+}
+
+function isValidDateText(dateText) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
+    return false;
+  }
+
+  const [year, month, day] = dateText.split("-").map((part) => Number(part));
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
+}
+
+function parseRankingQuery(req, res) {
+  const dateInput = normalizeRankingDateInput(req.query.date);
+  const worldNameInputRaw = String(req.query.world_name || "").trim();
+  const worldNameInput = worldNameInputRaw === "전체" ? "" : worldNameInputRaw;
+  const ocid = String(req.query.ocid || "").trim();
+  const pageRaw = String(req.query.page || "").trim();
+
+  if (!dateInput) {
+    res.status(400).json({
+      ok: false,
+      message: "date is required"
+    });
+    return null;
+  }
+
+  if (!isValidDateText(dateInput)) {
+    res.status(400).json({
+      ok: false,
+      message: "date must be YYYY-MM-DD"
+    });
+    return null;
+  }
+
+  if (dateInput < rankingDateFloor) {
+    res.status(400).json({
+      ok: false,
+      message: `date must be ${rankingDateFloor} or later`
+    });
+    return null;
+  }
+
+  if (worldNameInput && ocid) {
+    res.status(400).json({
+      ok: false,
+      message: "world_name and ocid cannot be used together"
+    });
+    return null;
+  }
+
+  let worldNameCanonical = "";
+  let worldNameNexon = "";
+  if (worldNameInput) {
+    const worldValidation = normalizeWorldName(worldNameInput);
+    if (!worldValidation.ok) {
+      res.status(400).json({
+        ok: false,
+        message: "world_name must be one of the supported worlds.",
+        worldNameInput: worldValidation.worldNameInput,
+        allowedWorldNames: worldValidation.allowedWorldNames
+      });
+      return null;
+    }
+
+    worldNameCanonical = worldValidation.worldNameCanonical;
+    worldNameNexon = worldValidation.nexonWorldName;
+  }
+
+  let page = 1;
+  if (pageRaw) {
+    const parsedPage = Number(pageRaw);
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+      res.status(400).json({
+        ok: false,
+        message: "page must be a positive integer"
+      });
+      return null;
+    }
+    page = parsedPage;
+  }
+
+  const params = {
+    date: dateInput,
+    page
+  };
+
+  if (worldNameNexon) {
+    params.world_name = worldNameNexon;
+  }
+
+  if (ocid) {
+    params.ocid = ocid;
+  }
+
+  return {
+    params,
+    worldNameCanonical,
+    ocid,
+    query: {
+      date: dateInput,
+      page,
+      worldNameInput: worldNameInputRaw || null,
+      worldNameCanonical: worldNameCanonical || null,
+      ocid: ocid || null
+    }
+  };
+}
+
 function getErrorInfo(error, endpointPath) {
   const statusCode = error.response?.status || 500;
   const errorBody = error.response?.data || { message: error.message };
@@ -1479,24 +1602,31 @@ function extractExpInfoFromLog(responseBody) {
     return null;
   }
 
-  if (responseBody.character_exp !== undefined || responseBody.character_exp_rate !== undefined) {
+  if (
+    responseBody.character_exp !== undefined ||
+    responseBody.character_exp_rate !== undefined ||
+    responseBody.character_level !== undefined
+  ) {
     return {
       exp: responseBody.character_exp,
-      expRate: responseBody.character_exp_rate
+      expRate: responseBody.character_exp_rate,
+      level: responseBody.character_level
     };
   }
 
   if (responseBody.details?.basic?.data) {
     return {
       exp: responseBody.details.basic.data.character_exp,
-      expRate: responseBody.details.basic.data.character_exp_rate
+      expRate: responseBody.details.basic.data.character_exp_rate,
+      level: responseBody.details.basic.data.character_level
     };
   }
 
   if (responseBody.details?.stat?.data) {
     return {
       exp: responseBody.details.stat.data.character_exp,
-      expRate: responseBody.details.stat.data.character_exp_rate
+      expRate: responseBody.details.stat.data.character_exp_rate,
+      level: responseBody.details.stat.data.character_level
     };
   }
 
@@ -1505,7 +1635,8 @@ function extractExpInfoFromLog(responseBody) {
     const statData = responseBody.tabs.exp.stat?.data || {};
     return {
       exp: basicData.character_exp ?? statData.character_exp ?? responseBody.tabs.exp.currentExp,
-      expRate: basicData.character_exp_rate ?? statData.character_exp_rate ?? responseBody.tabs.exp.currentExpRate
+      expRate: basicData.character_exp_rate ?? statData.character_exp_rate ?? responseBody.tabs.exp.currentExpRate,
+      level: basicData.character_level ?? statData.character_level ?? responseBody.tabs.exp.currentLevel
     };
   }
 
@@ -1543,6 +1674,88 @@ function toIsoString(value) {
   return date.toISOString();
 }
 
+function toKstDateText(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+function toKstDateTimeKey(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  })
+    .format(date)
+    .replace(" ", "T");
+}
+
+function buildRecentKstDateRange(limit = 7) {
+  const maxDays = Number.isFinite(limit) ? Math.max(1, Math.min(30, Math.floor(limit))) : 7;
+  const now = new Date();
+  const dates = [];
+
+  for (let offset = 0; offset < maxDays; offset += 1) {
+    const base = new Date(now.getTime() - offset * 24 * 60 * 60 * 1000);
+    const dateText = toKstDateText(base);
+    if (dateText) {
+      dates.push(dateText);
+    }
+  }
+
+  return dates;
+}
+
+async function resolveLatestOverallRankingByOcid(ocid, options = {}) {
+  const normalizedOcid = String(ocid || "").trim();
+  if (!normalizedOcid) {
+    return null;
+  }
+
+  const days = Number.isFinite(options.days) ? options.days : 7;
+  const dateCandidates = buildRecentKstDateRange(days).filter((date) => date >= rankingDateFloor);
+
+  for (const date of dateCandidates) {
+    try {
+      const result = await getRankingLevel({
+        date,
+        ocid: normalizedOcid,
+        page: 1
+      });
+      const first = toArray(result?.data?.ranking)[0];
+      const rankingValue = parseNumericValue(first?.ranking);
+      if (rankingValue !== null) {
+        return {
+          date,
+          ranking: Math.max(1, Math.floor(rankingValue))
+        };
+      }
+    } catch (error) {
+      // Ignore lookup failures and continue with older dates.
+    }
+  }
+
+  return null;
+}
+
 function normalizePresetNo(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -1567,6 +1780,7 @@ async function loadRecentPageDataDetailsByOcid(ocid, limit = presetFallbackLookb
     .sort({ createdAt: -1 })
     .limit(lookback)
     .select({ createdAt: 1, responseBody: 1, _id: 0 })
+    .allowDiskUse(true)
     .lean();
 
   return docs
@@ -1662,13 +1876,175 @@ function mergePresetResult(currentResult, fallbackDetails, extractor) {
 }
 
 function mapOptionEntry(option) {
+  const optionGrade = String(
+    option?.option_grade ||
+      option?.potential_option_grade ||
+      option?.item_potential_option_grade ||
+      option?.additional_potential_option_grade ||
+      option?.item_additional_potential_option_grade ||
+      option?.grade ||
+      ""
+  ).trim();
+
   return {
     name: String(option?.option_name || option?.stat_type || "").trim() || "-",
-    value: String(option?.option_value || option?.stat_increase || "").trim()
+    value: String(option?.option_value || option?.stat_increase || "").trim(),
+    optionGrade
   };
 }
 
+const expHistoryBatchSize = 400;
+const expHistoryMaxBatchCount = 8;
+const expHistorySortHint = Object.freeze({
+  ocid: 1,
+  success: 1,
+  createdAt: -1
+});
+
+function isHintNotUsableError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("hint") &&
+    (
+      message.includes("bad hint") ||
+      message.includes("provided hint") ||
+      message.includes("failed to use hint") ||
+      message.includes("does not correspond")
+    )
+  );
+}
+
+function normalizeCreatedAtForCursor(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function fetchExpHistoryLogBatch({
+  ocid,
+  beforeCreatedAt = null,
+  batchLimit = expHistoryBatchSize,
+  useHint = true
+}) {
+  const filter = {
+    ocid,
+    success: true
+  };
+  if (beforeCreatedAt instanceof Date && !Number.isNaN(beforeCreatedAt.getTime())) {
+    filter.createdAt = { $lt: beforeCreatedAt };
+  }
+
+  let query = RequestLog.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(batchLimit)
+    .select({ createdAt: 1, responseBody: 1, _id: 0 })
+    .allowDiskUse(true)
+    .lean();
+
+  if (useHint) {
+    query = query.hint(expHistorySortHint);
+  }
+
+  return query;
+}
+
+function pickItemFieldValue(item, preferredKeys = [], matcher) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  for (const key of preferredKeys) {
+    const value = item[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+
+  if (typeof matcher === "function") {
+    for (const [key, value] of Object.entries(item)) {
+      if (value === undefined || value === null || value === "") {
+        continue;
+      }
+
+      if (matcher(key, value)) {
+        return value;
+      }
+    }
+  }
+
+  return null;
+}
+
 function mapEquipmentItemForView(item) {
+  const potentialGrade = pickItemFieldValue(
+    item,
+    [
+      "item_potential_option_grade",
+      "item_potential_grade",
+      "potential_option_grade",
+      "potential_grade"
+    ],
+    (key) => {
+      const normalized = String(key || "").toLowerCase();
+      return /potential/.test(normalized) && /grade/.test(normalized) && !/additional/.test(normalized);
+    }
+  );
+  const additionalPotentialGrade = pickItemFieldValue(
+    item,
+    [
+      "item_additional_potential_option_grade",
+      "item_additional_potential_grade",
+      "additional_potential_option_grade",
+      "additional_potential_grade"
+    ],
+    (key) => {
+      const normalized = String(key || "").toLowerCase();
+      return /additional/.test(normalized) && /potential/.test(normalized) && /grade/.test(normalized);
+    }
+  );
+  const karmaScissorsRemaining = pickItemFieldValue(
+    item,
+    [
+      "remaining_karma_scissors_count",
+      "remain_karma_scissors_count",
+      "karma_scissors_count",
+      "karma_scissor_count",
+      "scissors_count",
+      "scissor_count",
+      "remaining_scissors_count",
+      "remain_scissors_count",
+      "cuttable_count",
+      "remaining_cuttable_count"
+    ],
+    (key) => {
+      const normalized = String(key || "").toLowerCase();
+      const hasKeyword = /karma|scissor|scissors|cuttable|cut/.test(normalized);
+      const hasCount = /count|remain|remaining|left|usable|use/.test(normalized);
+      return hasKeyword && hasCount;
+    }
+  );
+  const remainingStarforceExpansion = pickItemFieldValue(
+    item,
+    [
+      "remaining_starforce_expansion_count",
+      "remain_starforce_expansion_count",
+      "starforce_expansion_count",
+      "starforce_extend_count",
+      "remaining_starforce_extend_count",
+      "starforce_extension_count"
+    ],
+    (key) => {
+      const normalized = String(key || "").toLowerCase();
+      const hasStarforce = /starforce/.test(normalized);
+      const hasExpansion = /expand|extension|extend|remain|remaining|count|left/.test(normalized);
+      const isUpgrade = /upgrade/.test(normalized);
+      return hasStarforce && hasExpansion && !isUpgrade;
+    }
+  );
+
   return {
     itemName: item?.item_name || "-",
     slotName: item?.item_equipment_slot_name || "-",
@@ -1683,10 +2059,14 @@ function mapEquipmentItemForView(item) {
     additionalOption: toArray(item?.item_additional_option).map(mapOptionEntry),
     potentialOption: toArray(item?.item_potential_option).map(mapOptionEntry),
     additionalPotentialOption: toArray(item?.item_additional_potential_option).map(mapOptionEntry),
+    potentialGrade: String(potentialGrade || "").trim(),
+    additionalPotentialGrade: String(additionalPotentialGrade || "").trim(),
     soulInfo: {
       soulName: item?.soul_info?.soul_name || "",
       soulOption: item?.soul_info?.soul_option || ""
     },
+    karmaScissorsRemaining,
+    remainingStarforceExpansion,
     emblemInfo: item?.emblem_info || null
   };
 }
@@ -2412,7 +2792,15 @@ function resolveMajorStatOrderByClassName(jobNameOrClassName) {
   return [...physicalMajorStatOrder];
 }
 
-function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid, details, fallbackDetails }) {
+function buildPageData({
+  characterName,
+  worldNameInput,
+  worldNameCanonical,
+  ocid,
+  details,
+  fallbackDetails,
+  overallRankingResult
+}) {
   const basic = details?.basic?.data || {};
   const stat = details?.stat?.data || {};
   const guild = details?.guild?.data || {};
@@ -2425,6 +2813,7 @@ function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid
     : `${expRateValue.toLocaleString("ko-KR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
   const majorStats = buildMajorStats(details);
   const profileName = basic.character_name || characterName;
+  const fallbackOverallRanking = parseNumericValue(basic.ranking ?? stat.ranking);
   const guildTab = buildGuildTab(details, profileName, worldNameCanonical);
   const equipmentTab = buildEquipmentTab(details, fallbackList);
   const unionTab = buildUnionTab(details, fallbackList);
@@ -2449,8 +2838,18 @@ function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid
     level: basic.character_level || "-",
     imageUrl: basic.character_image || basic.character_icon || "",
     guildName: guild.guild_name || basic.guild_name || "-",
+    guildMarkIcon: guildTab?.summary?.guildMarkIcon || "",
     expText,
+    expRate: expRateValue,
+    currentExp: parseNumericValue(expRaw),
     ranking: basic.ranking || stat.ranking || "-",
+    overallRanking: overallRankingResult?.ranking ?? fallbackOverallRanking ?? null,
+    overallRankingText:
+      overallRankingResult?.ranking !== null && overallRankingResult?.ranking !== undefined
+        ? `\uC804\uCCB4\uB7AD\uD0B9 - ${Number(overallRankingResult.ranking).toLocaleString("ko-KR")}\uC704`
+        : fallbackOverallRanking !== null
+          ? `\uC804\uCCB4\uB7AD\uD0B9 - ${Number(fallbackOverallRanking).toLocaleString("ko-KR")}\uC704`
+        : "\uC804\uCCB4\uB7AD\uD0B9 - -",
     majorStats,
     majorStatOrder: resolveMajorStatOrderByClassName(basic.character_job_name || basic.character_class || "")
   };
@@ -2469,6 +2868,7 @@ function buildPageData({ characterName, worldNameInput, worldNameCanonical, ocid
       exp: {
         currentExp: parseNumericValue(expRaw),
         currentExpRate: parseNumericValue(expRateRaw),
+        currentLevel: parseNumericValue(basic.character_level ?? stat.character_level),
         expText: expText || "-"
       },
       jewelSymbolVmatrix: jewelSymbolVmatrixTab,
@@ -2663,6 +3063,7 @@ async function getCharacterPageData(req, res) {
 
     const historyAvailable = await hasExpHistory(ocid);
     const fallbackDetails = await loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit);
+    const overallRankingResult = await resolveLatestOverallRankingByOcid(ocid, { days: 7 });
 
     const pageData = buildPageData({
       characterName,
@@ -2670,7 +3071,8 @@ async function getCharacterPageData(req, res) {
       worldNameCanonical,
       ocid,
       details,
-      fallbackDetails
+      fallbackDetails,
+      overallRankingResult
     });
 
     pageData.meta.historyAvailable = historyAvailable;
@@ -2739,39 +3141,146 @@ async function getCharacterExpHistory(req, res) {
     });
   }
 
-  const docs = await RequestLog.find(buildExpHistoryFilter(ocid))
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .select({ createdAt: 1, responseBody: 1, _id: 0 })
-    .lean();
+  const startedAt = Date.now();
+  const pointsDescending = [];
+  let cursorCreatedAt = null;
+  let scannedDocs = 0;
+  let batchCount = 0;
+  let hintEnabled = true;
+  let hintFallbackUsed = false;
 
-  const points = docs
-    .map((doc) => {
-      const expInfo = extractExpInfoFromLog(doc.responseBody);
-      if (!expInfo) {
-        return null;
+  try {
+    while (pointsDescending.length < limit && batchCount < expHistoryMaxBatchCount) {
+      batchCount += 1;
+      const remaining = limit - pointsDescending.length;
+      const batchLimit = Math.max(expHistoryBatchSize, remaining * 2);
+
+      let docs = [];
+      try {
+        docs = await fetchExpHistoryLogBatch({
+          ocid,
+          beforeCreatedAt: cursorCreatedAt,
+          batchLimit,
+          useHint: hintEnabled
+        });
+      } catch (error) {
+        if (hintEnabled && isHintNotUsableError(error)) {
+          hintEnabled = false;
+          hintFallbackUsed = true;
+          docs = await fetchExpHistoryLogBatch({
+            ocid,
+            beforeCreatedAt: cursorCreatedAt,
+            batchLimit,
+            useHint: false
+          });
+        } else {
+          throw error;
+        }
       }
 
-      const exp = parseNumericValue(expInfo.exp);
-      const expRate = parseNumericValue(expInfo.expRate);
-      const ts = doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date(doc.createdAt).toISOString();
+      if (!docs.length) {
+        break;
+      }
 
-      return {
+      scannedDocs += docs.length;
+
+      docs.forEach((doc) => {
+        if (pointsDescending.length >= limit) {
+          return;
+        }
+
+        const expInfo = extractExpInfoFromLog(doc.responseBody);
+        if (!expInfo) {
+          return;
+        }
+
+        const createdAt = normalizeCreatedAtForCursor(doc.createdAt);
+        if (!createdAt) {
+          return;
+        }
+
+        const exp = parseNumericValue(expInfo.exp);
+        const expRate = parseNumericValue(expInfo.expRate);
+        const level = parseNumericValue(expInfo.level);
+        if (exp === null && expRate === null && level === null) {
+          return;
+        }
+
+        pointsDescending.push({
+          ts: createdAt.toISOString(),
+          exp,
+          expRate,
+          level
+        });
+      });
+
+      const lastCreatedAt = normalizeCreatedAtForCursor(docs[docs.length - 1]?.createdAt);
+      if (!lastCreatedAt) {
+        break;
+      }
+      cursorCreatedAt = lastCreatedAt;
+
+      if (docs.length < batchLimit) {
+        break;
+      }
+    }
+
+    const points = pointsDescending.slice(0, limit).reverse();
+    const dailySnapshotMap = new Map();
+    points.forEach((point) => {
+      const dateKst = toKstDateText(point.ts);
+      if (!dateKst) {
+        return;
+      }
+
+      const candidateTime = toKstDateTimeKey(point.ts);
+      const current = dailySnapshotMap.get(dateKst);
+      if (!current || candidateTime > current.kstDateTimeKey) {
+        dailySnapshotMap.set(dateKst, {
+          dateKst,
+          ts: point.ts,
+          exp: point.exp,
+          expRate: point.expRate,
+          level: point.level,
+          kstDateTimeKey: candidateTime
+        });
+      }
+    });
+
+    const dailySnapshots = [...dailySnapshotMap.values()]
+      .sort((left, right) => left.dateKst.localeCompare(right.dateKst))
+      .map(({ dateKst, ts, exp, expRate, level }) => ({
+        dateKst,
         ts,
         exp,
-        expRate
-      };
-    })
-    .filter(Boolean)
-    .filter((point) => point.exp !== null || point.expRate !== null)
-    .reverse();
+        expRate,
+        level
+      }));
 
-  return res.json({
-    ok: true,
-    ocid,
-    points,
-    historyAvailable: points.length > 0
-  });
+    const durationMs = Date.now() - startedAt;
+    console.info(
+      `[ExpHistory] ok ocid=${ocid} limit=${limit} batches=${batchCount} scanned=${scannedDocs} points=${points.length} durationMs=${durationMs} hint=${hintEnabled ? "on" : "off"} hintFallback=${hintFallbackUsed ? "yes" : "no"}`
+    );
+
+    return res.json({
+      ok: true,
+      ocid,
+      points,
+      dailySnapshots,
+      historyAvailable: points.length > 0
+    });
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+    console.error(
+      `[ExpHistory] failed ocid=${ocid} limit=${limit} batches=${batchCount} scanned=${scannedDocs} durationMs=${durationMs}`,
+      error
+    );
+
+    return res.status(500).json({
+      ok: false,
+      message: "경험치 히스토리 조회 중 오류가 발생했습니다."
+    });
+  }
 }
 
 async function getCharacterLogStatus(req, res) {
@@ -3061,6 +3570,84 @@ async function getCharacterHexamatrixStat(req, res) {
   return getCharacterByOcidController(req, res, "/maplestorym/v1/character/hexamatrix-stat");
 }
 
+async function getRankingController(req, res, endpointPath, fetchRanking) {
+  if (!env.nexonApiKey) {
+    return res.status(500).json(buildApiKeyError());
+  }
+
+  const parsed = parseRankingQuery(req, res);
+  if (!parsed) {
+    return;
+  }
+
+  try {
+    const result = await fetchRanking(parsed.params);
+
+    await saveRequestLog({
+      worldName: parsed.worldNameCanonical,
+      ocid: parsed.ocid,
+      endpoint: result.endpoint,
+      statusCode: result.statusCode,
+      success: true,
+      responseBody: result.data
+    });
+
+    return res.json({
+      ok: true,
+      endpoint: result.endpoint,
+      query: parsed.query,
+      data: result.data
+    });
+  } catch (error) {
+    const { statusCode, errorBody, endpoint } = getErrorInfo(error, endpointPath);
+
+    await saveRequestLog({
+      worldName: parsed.worldNameCanonical,
+      ocid: parsed.ocid,
+      endpoint,
+      statusCode,
+      success: false,
+      responseBody: errorBody
+    });
+
+    return res.status(statusCode).json({
+      ok: false,
+      endpoint,
+      query: parsed.query,
+      error: errorBody
+    });
+  }
+}
+
+async function getRankingLevelController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/level", getRankingLevel);
+}
+
+async function getRankingUnionController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/union", getRankingUnion);
+}
+
+async function getRankingAchievementController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/achievement", getRankingAchievement);
+}
+
+async function getRankingSharenianBattlefieldController(req, res) {
+  return getRankingController(
+    req,
+    res,
+    "/maplestorym/v1/ranking/sharenian-battlefield",
+    getRankingSharenianBattlefield
+  );
+}
+
+async function getRankingSharenianWaterwayController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/sharenian-waterway", getRankingSharenianWaterway);
+}
+
+async function getRankingRootOfTimeController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/root-of-time", getRankingRootOfTime);
+}
+
 module.exports = {
   getCharacterId,
   getAllCharacterDetails,
@@ -3087,5 +3674,11 @@ module.exports = {
   getCharacterLinkSkill,
   getCharacterVmatrix,
   getCharacterHexamatrixSkill,
-  getCharacterHexamatrixStat
+  getCharacterHexamatrixStat,
+  getRankingLevelController,
+  getRankingUnionController,
+  getRankingAchievementController,
+  getRankingSharenianBattlefieldController,
+  getRankingSharenianWaterwayController,
+  getRankingRootOfTimeController
 };

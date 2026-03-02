@@ -33,6 +33,58 @@ const formatTimestamp = (ts) => {
     ? "-"
     : d.toLocaleString("ko-KR", { hour12: false });
 };
+const formatKstTooltipDateTime = (ts) => {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return "-";
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const month = parts.find((part) => part.type === "month")?.value || "-";
+  const day = parts.find((part) => part.type === "day")?.value || "-";
+  const hour = parts.find((part) => part.type === "hour")?.value || "-";
+  return `${month}월 ${day}일 ${hour}시`;
+};
+const formatKstDateKey = (ts) => {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
+const formatKstDateLabel = (ts) => {
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return "-";
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+  const month = parts.find((part) => part.type === "month")?.value || "-";
+  const day = parts.find((part) => part.type === "day")?.value || "-";
+  return `${month}월 ${day}일`;
+};
+const formatExpRateText = (value) => {
+  const parsed = parseNumericValue(value);
+  if (parsed === null) return "-";
+  return `${Number(parsed).toLocaleString("ko-KR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}%`;
+};
+const sanitizeEquipmentText = (value) =>
+  String(value ?? "")
+    .replace(/\b\d+\s*급\b/g, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+\|/g, " |")
+    .replace(/\|\s+\|/g, "|")
+    .trim();
 async function parseResponseSafely(r) {
   const ct = r.headers.get("content-type") || "";
   if (ct.includes("application/json")) return r.json();
@@ -65,6 +117,13 @@ function initThemeControls() {
   if (!sel) return;
   sel.value = saved;
   sel.addEventListener("change", () => applyTheme(sel.value));
+}
+function removeDisabledRankingMenuLinks() {
+  disabledRankingTypes.forEach((type) => {
+    document
+      .querySelectorAll(`a[href*="type=${type}"]`)
+      .forEach((linkEl) => linkEl.remove());
+  });
 }
 function navigateToCharacterPage(worldName, characterName) {
   const p = new URLSearchParams({
@@ -123,6 +182,42 @@ const renderLoadingCard = (m) =>
   `<section class="tab-grid"><article class="data-card data-card--wide"><h3>로딩 중</h3><p class="empty">${escapeHtml(m || "캐릭터 데이터를 불러오는 중입니다...")}</p></article></section>`;
 const renderErrorCard = (m) =>
   `<section class="tab-grid"><article class="data-card data-card--wide"><h3>조회 실패</h3><p class="empty">${escapeHtml(m || "캐릭터 정보를 불러오지 못했습니다.")}</p></article></section>`;
+const rankingDateFloor = "2025-12-01";
+const rankingPageSize = 50;
+const rankingApiPageSize = 200;
+const rankingTypes = Object.freeze({
+  level: { label: "종합 랭킹", endpoint: "level" },
+  union: { label: "유니온 랭킹", endpoint: "union" },
+  achievement: { label: "업적 랭킹", endpoint: "achievement" },
+  "sharenian-battlefield": {
+    label: "샤레니안의 전장 랭킹",
+    endpoint: "sharenian-battlefield",
+  },
+  "root-of-time": { label: "시간의근원 랭킹", endpoint: "root-of-time" },
+});
+const disabledRankingTypes = Object.freeze(new Set(["sharenian-waterway"]));
+const worldIconByName = Object.freeze({
+  스카니아: "/assets/scania.png",
+  Scania: "/assets/scania.png",
+  크로아: "/assets/croa.png",
+  Croa: "/assets/croa.png",
+  루나: "/assets/luna.png",
+  Luna: "/assets/luna.png",
+  엘리시움: "/assets/elysium.png",
+  Elysium: "/assets/elysium.png",
+  유니온: "/assets/union.png",
+  Union: "/assets/union.png",
+  제니스: "/assets/zenith.png",
+  Zenith: "/assets/zenith.png",
+  아케인: "/assets/arcane.png",
+  Arcane: "/assets/arcane.png",
+});
+const potentialTierAssets = Object.freeze({
+  legendary: { icon: "/assets/ico-potential-legendary.png", letter: "L" },
+  unique: { icon: "/assets/ico-potential-unique.png", letter: "U" },
+  epic: { icon: "/assets/ico-potential-epic.png", letter: "E" },
+  rare: { icon: "/assets/ico-potential-rare.png", letter: "R" },
+});
 const physicalJobNames = new Set(
   [
     "히어로",
@@ -310,10 +405,24 @@ function compareEquipmentItems(l, r) {
   );
 }
 function collectDamageAndBossOptions(list) {
-  const t = { physicalDamage: 0, magicalDamage: 0, bossDamage: 0 };
+  const t = {
+    physicalDamage: 0,
+    magicalDamage: 0,
+    bossDamage: 0,
+    expGain: 0,
+    maxHp: 0,
+    itemDrop: 0,
+    expGainPercent: false,
+    maxHpPercent: false,
+    itemDropPercent: false,
+  };
   toArray(list).forEach((o) => {
-    const n = normalizeForMatch(o?.name || o?.option_name || "");
-    const v = parseNumericValue(o?.value || o?.option_value);
+    const optionName = String(o?.name || o?.option_name || "");
+    const optionValue = String(o?.value || o?.option_value || "");
+    const rawOption = `${optionName} ${optionValue}`;
+    const n = normalizeForMatch(optionName);
+    const v = parseNumericValue(optionValue);
+    const hasPercent = rawOption.includes("%");
     if (!Number.isFinite(v)) return;
     if (
       n.includes(normalizeForMatch("물리대미지")) ||
@@ -329,9 +438,36 @@ function collectDamageAndBossOptions(list) {
       t.magicalDamage += v;
       return;
     }
-    if (n.includes(normalizeForMatch("보스공격력"))) t.bossDamage += v;
+    if (n.includes(normalizeForMatch("보스공격력"))) {
+      t.bossDamage += v;
+      return;
+    }
+    if (n.includes(normalizeForMatch("경험치획득량"))) {
+      t.expGain += v;
+      t.expGainPercent = t.expGainPercent || hasPercent;
+      return;
+    }
+    if (
+      n.includes(normalizeForMatch("최대hp")) ||
+      n.includes(normalizeForMatch("최대체력"))
+    ) {
+      t.maxHp += v;
+      t.maxHpPercent = t.maxHpPercent || hasPercent;
+      return;
+    }
+    if (
+      n.includes(normalizeForMatch("아이템드롭률")) ||
+      n.includes(normalizeForMatch("드롭률"))
+    ) {
+      t.itemDrop += v;
+      t.itemDropPercent = t.itemDropPercent || hasPercent;
+    }
   });
   return t;
+}
+function formatPotentialValue(value, hasPercent) {
+  if (!Number.isFinite(value)) return "-";
+  return hasPercent ? formatPercentValue(value) : formatNumber(value);
 }
 function buildPotentialSummary(label, list, mode) {
   const t = collectDamageAndBossOptions(list);
@@ -342,10 +478,37 @@ function buildPotentialSummary(label, list, mode) {
   } else if (t.physicalDamage > 0)
     p.push(`물뎀 ${formatPercentValue(t.physicalDamage)}`);
   if (t.bossDamage > 0) p.push(`보공 ${formatPercentValue(t.bossDamage)}`);
+  if (t.expGain > 0)
+    p.push(`경획 ${formatPotentialValue(t.expGain, t.expGainPercent)}`);
+  if (t.maxHp > 0)
+    p.push(`최대 HP ${formatPotentialValue(t.maxHp, t.maxHpPercent)}`);
+  if (t.itemDrop > 0)
+    p.push(`드롭 ${formatPotentialValue(t.itemDrop, t.itemDropPercent)}`);
   return p.length ? `${label}: ${p.join(" / ")}` : "";
 }
+function buildPotentialOptionPreview(list, maxCount = 3) {
+  return toArray(list)
+    .map((option) => {
+      const name = sanitizeEquipmentText(option?.name || "").trim();
+      const value = sanitizeEquipmentText(option?.value || "").trim();
+      return `${name} ${value}`.trim();
+    })
+    .filter(Boolean)
+    .slice(0, maxCount)
+    .join(" ");
+}
+function renderEquipmentPotentialLine(label, list, tierKey) {
+  const preview = buildPotentialOptionPreview(list);
+  if (!preview) return "";
+  return `<span class="equip-option-line ${tierKey ? `is-${escapeHtml(tierKey)}` : "is-none"}"><em>${escapeHtml(label)}</em><span>${escapeHtml(preview)}</span></span>`;
+}
+function renderEquipmentSoulLine(text, mode) {
+  const summary = String(buildSoulSummary(text, mode) || "").replace(/^소울:\s*/u, "").trim();
+  if (!summary) return "";
+  return `<span class="equip-option-line equip-option-line--soul"><em>소울</em><span>${escapeHtml(summary)}</span></span>`;
+}
 function buildSoulSummary(text, mode) {
-  const s = String(text || "").trim();
+  const s = sanitizeEquipmentText(text).trim();
   if (!s) return "";
   const t = {
     physicalDamage: 0,
@@ -399,7 +562,7 @@ const renderOptionList = (list) => {
   return items
     .map(
       (o) =>
-        `<li><span>${escapeHtml(o?.name || o?.option_name || "-")}</span><strong>${escapeHtml(o?.value || o?.option_value || "-")}</strong></li>`,
+        `<li><span>${escapeHtml(sanitizeEquipmentText(o?.name || o?.option_name || "-") || "-")}</span><strong>${escapeHtml(sanitizeEquipmentText(o?.value || o?.option_value || "-") || "-")}</strong></li>`,
     )
     .join("");
 };
@@ -464,10 +627,16 @@ function parseSetCountMeta(setCount) {
     ratio: Math.max(0, Math.min(1, current / total))
   };
 }
-function renderMajorStats(profile) {
+function renderMajorStats(profile, options = {}) {
   const majorStats = profile?.majorStats || {};
   const mode = resolveJobMode(profile);
   const modeLabel = mode === "magical" ? "마법" : "물리";
+  const collapseLimitRaw = Number(options?.collapseLimit || 0);
+  const collapseLimit =
+    Number.isFinite(collapseLimitRaw) && collapseLimitRaw > 0
+      ? Math.floor(collapseLimitRaw)
+      : 0;
+  const listId = String(options?.listId || "").trim();
   const order = toArray(profile?.majorStatOrder).length
     ? profile.majorStatOrder
     : [
@@ -480,7 +649,7 @@ function renderMajorStats(profile) {
         "maxDamage",
         "ignoreDefense",
       ];
-  const rows = order
+  const rowList = order
     .map((key) => {
       const stat = majorStats[key];
       if (!stat) return "";
@@ -495,15 +664,69 @@ function renderMajorStats(profile) {
       return `<details class="major-row"><summary class="major-row__summary"><span class="major-row__label">${escapeHtml(stat.label || key)}</span><strong class="major-row__value">${escapeHtml(stat.displayValue || "-")}</strong></summary><ul class="major-row__list">${list}</ul></details>`;
     })
     .filter(Boolean)
-    .join("");
-  if (!rows) return "";
-  return `<section class="major-stats major-stats--compact"><h3>주요 스탯 <span>(${escapeHtml(modeLabel)})</span></h3><div class="major-stats__list">${rows}</div></section>`;
+  if (!rowList.length) return "";
+  const rows = rowList.join("");
+  const listClass = [
+    "major-stats__list",
+    collapseLimit > 0 && rowList.length > collapseLimit ? "is-collapsed" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const listAttrs = [
+    listId ? `id="${escapeHtml(listId)}"` : "",
+    `class="${escapeHtml(listClass)}"`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const moreButton =
+    collapseLimit > 0 && rowList.length > collapseLimit && listId
+      ? `<button type="button" class="section-more-btn" data-expand-target="#${escapeHtml(listId)}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
+      : "";
+
+  return `<section class="major-stats major-stats--compact"><h3>주요 스탯 <span>(${escapeHtml(modeLabel)})</span></h3><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
 }
 function renderProfile(profile, query) {
-  const image = profile.imageUrl
-    ? `<img class="profile-avatar" src="${escapeHtml(profile.imageUrl)}" alt="${escapeHtml(profile.name || "캐릭터")} 이미지" />`
-    : '<div class="profile-avatar profile-avatar--empty">NO IMAGE</div>';
-  return `<article class="profile-main"><div class="profile-visual">${image}</div><div class="profile-body"><h1>${escapeHtml(profile.name || "-")}</h1><p class="profile-world">서버: ${escapeHtml(query.worldNameCanonical || "-")}</p><div class="profile-stats"><div><span>직업</span><strong>${escapeHtml(profile.className || "-")}</strong></div><div><span>랭킹</span><strong>${escapeHtml(profile.ranking || "-")}</strong></div><div><span>레벨</span><strong>${escapeHtml(profile.level || "-")}</strong></div><div><span>길드</span><strong>${escapeHtml(profile.guildName || "-")}</strong></div><div><span>경험치</span><strong>${escapeHtml(profile.expText || "-")}</strong></div></div></div></article>${renderMajorStats(profile)}`;
+  const profileImage = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
+  const profileName = String(profile?.name || "-");
+  const worldName = query.worldNameCanonical || "-";
+  const worldIcon = resolveWorldIcon(worldName);
+  const guildMark = String(profile?.guildMarkIcon || "").trim();
+  const guildName = String(profile?.guildName || "-").trim() || "-";
+  const rankingValueFromProfile = parseNumericValue(profile?.overallRanking);
+  const rankingValueFromText = parseNumericValue(profile?.overallRankingText);
+  const rankingValueFallback = parseNumericValue(profile?.ranking);
+  const overallRankingValue =
+    rankingValueFromProfile !== null
+      ? rankingValueFromProfile
+      : rankingValueFromText !== null
+        ? rankingValueFromText
+        : rankingValueFallback;
+  const overallRankingText = overallRankingValue !== null && overallRankingValue > 0
+    ? `전체랭킹 ${formatNumber(overallRankingValue)}위`
+    : "전체랭킹 -";
+  const expRateText = formatExpRateText(profile?.expRate ?? profile?.expText);
+  const levelText = `Lv.${String(profile?.level || "-")}`;
+  const percentText = expRateText === "-" ? "" : expRateText;
+  const progressValueRaw = parseNumericValue(profile?.expRate);
+  const progressValue =
+    progressValueRaw === null
+      ? 0
+      : Math.max(0, Math.min(100, Number(progressValueRaw)));
+  const rankingHref = (() => {
+    const dateCandidate = getKstDateString();
+    const date = dateCandidate < rankingDateFloor ? rankingDateFloor : dateCandidate;
+    const queryParams = new URLSearchParams({
+      type: "level",
+      date,
+    });
+    if (worldName && worldName !== "-") {
+      queryParams.set("world_name", worldName);
+    }
+    const queryText = queryParams.toString();
+    return `/ranking.html?${queryText}`;
+  })();
+
+  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(profileImage)}" alt="${escapeHtml(profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(profileName)}</h1><span class="char-hero-world">${worldIcon ? `<img src="${escapeHtml(worldIcon)}" alt="${escapeHtml(worldName)}" />` : ""}${escapeHtml(worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(levelText)}</span>${percentText ? `<span class="char-hero__level-rate">${escapeHtml(percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${expRateText}`)}"><span style="width:${escapeHtml(progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(overallRankingText)}</span><b>›</b></a><span class="char-hero__chip char-hero__chip--guild">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(guildMark)}" alt="${escapeHtml(guildName)} 마크" loading="lazy" />` : ""}<span>${escapeHtml(guildName)}</span><b>›</b></span></div></div></div></article></section>`;
 }
 function resolveSelectedPresetNo(tabKey, tabData, state) {
   const selected = parseNumericValue(state.selectedPresetByTab[tabKey]);
@@ -542,29 +765,73 @@ function renderEquipmentTab(tabData, profile, state) {
   const data = selected?.data || {};
   const mode = resolveJobMode(profile || {});
   const items = toArray(data.itemEquipment).sort(compareEquipmentItems);
-  const rows = items.length
+  const equipmentCardLimit = 9;
+  const equipmentGridId = "equipCardGrid";
+  const equipmentCards = items.length
     ? items
         .map((item) => {
           const slot = classifyEquipmentSlot(item);
+          const slotLabel = sanitizeEquipmentText(slot.label) || "-";
+          const itemName = sanitizeEquipmentText(item.itemName || "-") || "-";
+          const itemGrade = sanitizeEquipmentText(item.itemGrade || "-") || "-";
+          const itemGradeClass = resolveEquipmentGradeClass(itemGrade);
           const icon = item.itemIcon
-            ? `<img src="${escapeHtml(item.itemIcon)}" alt="${escapeHtml(item.itemName || "아이템")}" />`
+            ? `<img src="${escapeHtml(item.itemIcon)}" alt="${escapeHtml(itemName || "아이템")}" />`
             : '<div class="item-icon-empty">NO</div>';
           const sf = parseNumericValue(item?.starforceUpgrade);
           const sfTag = Number.isFinite(sf)
             ? `<span class="item-sf">+${escapeHtml(String(Math.round(sf)))}</span>`
             : "";
-          const p1 = buildPotentialSummary("잠재", item.potentialOption, mode);
-          const p2 = buildPotentialSummary(
-            "에디",
-            item.additionalPotentialOption,
-            mode,
+          const potentialTierKey = resolvePotentialTierKey(
+            item?.potentialOption,
+            item?.potentialGrade,
           );
-          const p3 = buildSoulSummary(item?.soulInfo?.soulOption, mode);
-          const chips = [p1, p2, p3].filter(Boolean);
-          return `<details class="equip-row"><summary class="equip-row__summary"><div class="equip-col equip-col--slot">${escapeHtml(slot.label)}</div><div class="equip-col equip-col--item"><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(item.itemName || "-")}</strong><p>${escapeHtml(item.itemGrade || "-")} | 스타포스 ${escapeHtml(item.starforceUpgrade ?? "-")}</p></div></div></div><div class="equip-col equip-col--opts"><div class="equip-option-chips">${chips.length ? chips.map((c) => `<span class="equip-option-chip">${escapeHtml(c)}</span>`).join("") : '<span class="equip-option-empty">표시할 주요 옵션이 없습니다.</span>'}</div></div></summary><div class="equip-row__detail"><div class="equip-detail-meta"><span>장비 레벨: <strong>${escapeHtml(item.equipmentLevel ?? "-")}</strong></span><span>전투력: <strong>${escapeHtml(item.combatPower ?? "-")}</strong></span><span>부위: <strong>${escapeHtml(item.slotName || "-")}</strong></span></div><div class="equip-detail-grid"><article><h4>기본 옵션</h4><ul class="equip-option-list">${renderOptionList(item.basicOption)}</ul></article><article><h4>추가 옵션</h4><ul class="equip-option-list">${renderOptionList(item.additionalOption)}</ul></article><article><h4>잠재 옵션</h4><ul class="equip-option-list">${renderOptionList(item.potentialOption)}</ul></article><article><h4>에디셔널 잠재 옵션</h4><ul class="equip-option-list">${renderOptionList(item.additionalPotentialOption)}</ul></article><article class="equip-detail-soul"><h4>소울</h4><p>${escapeHtml(item?.soulInfo?.soulOption || "소울 정보 없음")}</p></article></div></div></details>`;
+          const additionalPotentialTierKey = resolvePotentialTierKey(
+            item.additionalPotentialOption,
+            item.additionalPotentialGrade,
+          );
+          const potentialLine = renderEquipmentPotentialLine(
+            "잠재",
+            item?.potentialOption,
+            potentialTierKey,
+          );
+          const additionalPotentialLine = renderEquipmentPotentialLine(
+            "에디",
+            item?.additionalPotentialOption,
+            additionalPotentialTierKey,
+          );
+          const soulLine = renderEquipmentSoulLine(item?.soulInfo?.soulOption, mode);
+          const summaryLines = [potentialLine, additionalPotentialLine, soulLine].filter(Boolean);
+          const starforceText = Number.isFinite(sf)
+            ? `⭐ ${Math.round(sf)}`
+            : `⭐ ${item.starforceUpgrade ?? "-"}`;
+          const summaryBlock =
+            summaryLines.length
+              ? summaryLines.join("")
+              : '<span class="equip-option-empty">표시할 주요 옵션이 없습니다.</span>';
+
+          const hoverTemplate = renderEquipmentHoverCard(item);
+
+          return `<article class="equip-card"><div class="equip-card__summary"><p class="equip-card__slot">${escapeHtml(
+            slotLabel,
+          )}</p><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(
+            itemName,
+          )}</strong><p><span class="equip-item-grade ${escapeHtml(
+            itemGradeClass,
+          )}">${escapeHtml(itemGrade)}</span> | ${escapeHtml(starforceText)}</p></div></div><div class="equip-option-chips">${summaryBlock}</div></div><template class="equip-hover-template">${hoverTemplate}</template></article>`;
         })
         .join("")
     : '<p class="empty">장비 데이터가 없습니다.</p>';
+  const equipmentGridClass = [
+    "equip-card-grid",
+    items.length > equipmentCardLimit ? "is-collapsed" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const equipmentMoreButton =
+    items.length > equipmentCardLimit
+      ? `<button type="button" class="section-more-btn" data-expand-target="#${equipmentGridId}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
+      : "";
   const cashFromSelected = toArray(data.cashItemEquipment);
   const firstPresetWithCash =
     toArray(tabData?.presets)
@@ -576,7 +843,7 @@ function renderEquipmentTab(tabData, profile, state) {
       ? list
           .map(
             (it) =>
-              `<li><div class="item-main">${it.cashItemIcon ? `<img src="${escapeHtml(it.cashItemIcon)}" alt="${escapeHtml(it.cashItemName || "캐시 장비")}" />` : ""}<div><strong>${escapeHtml(it.cashItemName || "-")}</strong><p>${escapeHtml(it.slotName || "-")}</p></div></div></li>`,
+              `<li><div class="item-main">${it.cashItemIcon ? `<img src="${escapeHtml(it.cashItemIcon)}" alt="${escapeHtml(sanitizeEquipmentText(it.cashItemName || "캐시 장비") || "캐시 장비")}" />` : ""}<div><strong>${escapeHtml(sanitizeEquipmentText(it.cashItemName || "-") || "-")}</strong><p>${escapeHtml(sanitizeEquipmentText(it.slotName || "-") || "-")}</p></div></div></li>`,
           )
           .join("")
       : `<li class="empty">${escapeHtml(empty)}</li>`;
@@ -588,7 +855,7 @@ function renderEquipmentTab(tabData, profile, state) {
       return `<p class="empty">${escapeHtml(emptyMessage)}</p>`;
     }
 
-    return `<ul class="option-chip-list">${options.map((option) => `<li>${escapeHtml(option)}</li>`).join("")}</ul>`;
+    return `<ul class="option-chip-list">${options.map((option) => `<li>${escapeHtml(sanitizeEquipmentText(option) || "-")}</li>`).join("")}</ul>`;
   };
   const renderSetEffectCard = (setInfo) => {
     const setName = setInfo?.setName || "-";
@@ -602,56 +869,256 @@ function renderEquipmentTab(tabData, profile, state) {
   const renderPetEffectCard = (petInfo) =>
     `<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">${escapeHtml(petInfo?.setName || "-")}</strong><span class="set-effect__meta">펫 세트</span></summary><div class="set-effect__detail">${renderOptionChips(petInfo?.setOption, "펫 세트 옵션 정보가 없습니다.")}</div></details>`;
 
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>장비 프리셋</h3>${renderPresetSelector("equipment", tabData, state)}<div class="equip-head"><span>부위</span><span>아이템</span><span>주요 옵션</span></div><div class="equip-table">${rows}</div></article><article class="data-card"><h3>캐시 장비</h3><ul class="simple-list">${renderCash(cash, "캐시 장비 데이터가 없습니다.")}</ul></article><article class="data-card"><h3>세트 효과</h3><div class="set-effect-list">${sets.length ? sets.map(renderSetEffectCard).join("") : '<p class="empty">세트 효과 데이터가 없습니다.</p>'}</div></article><article class="data-card"><h3>펫 효과</h3><div class="set-effect-list">${pets.length ? pets.map(renderPetEffectCard).join("") : '<p class="empty">펫 세트 효과 데이터가 없습니다.</p>'}<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">자동 스킬</strong><span class="set-effect__meta">펫 자동 스킬</span></summary><div class="set-effect__detail">${renderOptionChips(tabData?.petAutoSkillOption, "자동 스킬 정보가 없습니다.")}</div></details></div></article></section>`;
+  const statsPanel = renderMajorStats(profile);
+  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
+    "equipment",
+    tabData,
+    state,
+  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><article class="data-card"><h3>캐시 장비</h3><ul class="simple-list">${renderCash(
+    cash,
+    "캐시 장비 데이터가 없습니다.",
+  )}</ul></article><article class="data-card"><h3>세트 효과</h3><div class="set-effect-list">${sets.length ? sets.map(renderSetEffectCard).join("") : '<p class="empty">세트 효과 데이터가 없습니다.</p>'}</div></article><article class="data-card"><h3>펫 효과</h3><div class="set-effect-list">${pets.length ? pets.map(renderPetEffectCard).join("") : '<p class="empty">펫 세트 효과 데이터가 없습니다.</p>'}<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">자동 스킬</strong><span class="set-effect__meta">펫 자동 스킬</span></summary><div class="set-effect__detail">${renderOptionChips(
+    tabData?.petAutoSkillOption,
+    "자동 스킬 정보가 없습니다.",
+  )}</div></details></div></article></section>`;
 }
-function renderLineChart(points) {
-  const samples = toArray(points)
-    .map((p) => ({
-      ts: p.ts,
-      value: parseNumericValue(p.expRate),
+function buildDailySnapshotsFromHistory(expHistoryState) {
+  const sourcePoints = toArray(expHistoryState?.data?.points)
+    .map((point) => ({
+      ts: point?.ts,
+      exp: parseNumericValue(point?.exp),
+      expRate: parseNumericValue(point?.expRate),
+      level: parseNumericValue(point?.level),
     }))
-    .filter((p) => typeof p.value === "number" && Number.isFinite(p.value));
-  if (samples.length < 2)
-    return '<p class="empty">그래프를 그리려면 경험치 히스토리가 2개 이상 필요합니다.</p>';
-  const width = 900,
-    height = 300,
-    padding = 34,
-    values = samples.map((s) => s.value),
-    min = Math.min(...values),
-    max = Math.max(...values),
-    range = max - min || 1;
-  const pts = samples
-    .map((s, i) => {
-      const x = padding + (i / (samples.length - 1)) * (width - padding * 2);
-      const y =
-        height - padding - ((s.value - min) / range) * (height - padding * 2);
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    .filter((point) => point.ts && !Number.isNaN(new Date(point.ts).getTime()))
+    .sort(
+      (left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime(),
+    );
+  const pointByTs = new Map(
+    sourcePoints.map((point) => [String(point.ts), point]),
+  );
+
+  const apiSnapshots = toArray(expHistoryState?.data?.dailySnapshots)
+    .map((point) => ({
+      dateKst: String(point?.dateKst || "").trim(),
+      ts: point?.ts,
+      exp: parseNumericValue(point?.exp),
+      expRate:
+        parseNumericValue(point?.expRate) ??
+        parseNumericValue(pointByTs.get(String(point?.ts || ""))?.expRate),
+      level: parseNumericValue(point?.level),
+    }))
+    .filter((point) => point.ts && !Number.isNaN(new Date(point.ts).getTime()))
+    .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+
+  if (apiSnapshots.length) {
+    return apiSnapshots;
+  }
+
+  const grouped = new Map();
+  sourcePoints.forEach((point) => {
+    const dateKst = formatKstDateKey(point.ts);
+    if (!dateKst) {
+      return;
+    }
+
+    const current = grouped.get(dateKst);
+    if (!current || new Date(point.ts).getTime() >= new Date(current.ts).getTime()) {
+      grouped.set(dateKst, {
+        dateKst,
+        ts: point.ts,
+        exp: point.exp,
+        expRate: point.expRate,
+        level: point.level,
+      });
+    }
+  });
+
+  return [...grouped.values()].sort(
+    (left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime(),
+  );
+}
+
+function buildExpSeriesForChart(snapshots, expTab, profile) {
+  const snapshotItems = toArray(snapshots).filter(
+    (item) => Number.isFinite(item?.exp) && item.exp > 0,
+  );
+  if (snapshotItems.length) {
+    return snapshotItems;
+  }
+
+  const currentExp = parseNumericValue(expTab?.currentExp);
+  if (currentExp === null || currentExp <= 0) {
+    return [];
+  }
+
+  return [
+    {
+      ts: new Date().toISOString(),
+      exp: currentExp,
+      expRate: parseNumericValue(expTab?.currentExpRate ?? profile?.expRate),
+      level: parseNumericValue(expTab?.currentLevel ?? profile?.level),
+    },
+  ];
+}
+
+function buildLevelSeriesForChart(snapshots, expTab, profile) {
+  const items = toArray(snapshots).filter((item) => Number.isFinite(item?.level));
+  if (items.length >= 2) {
+    return items;
+  }
+
+  const now = new Date();
+  const previous = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  if (items.length === 1) {
+    const first = items[0];
+    const fallbackLevel = parseNumericValue(first.level);
+    if (fallbackLevel === null) {
+      return [];
+    }
+
+    return [
+      {
+        ...first,
+        ts: previous.toISOString(),
+        level: fallbackLevel,
+      },
+      {
+        ...first,
+        ts: first.ts || now.toISOString(),
+        level: fallbackLevel,
+      },
+    ];
+  }
+
+  const currentLevel = parseNumericValue(expTab?.currentLevel ?? profile?.level);
+  if (currentLevel === null) {
+    return [];
+  }
+
+  const currentExp = parseNumericValue(expTab?.currentExp);
+  const currentExpRate = parseNumericValue(expTab?.currentExpRate ?? profile?.expRate);
+
+  return [
+    {
+      ts: previous.toISOString(),
+      level: currentLevel,
+      exp: currentExp,
+      expRate: currentExpRate,
+    },
+    {
+      ts: now.toISOString(),
+      level: currentLevel,
+      exp: currentExp,
+      expRate: currentExpRate,
+    },
+  ];
+}
+
+function renderExpBarChart(snapshots, expTab, profile) {
+  const items = buildExpSeriesForChart(snapshots, expTab, profile);
+  if (!items.length) {
+    return '<p class="empty">경험치 히스토리가 부족하여 그래프를 표시할 수 없습니다.</p>';
+  }
+
+  const maxExp = Math.max(...items.map((item) => item.exp), 1);
+  return `<div class="exp-chart-wrap"><div class="exp-bar-chart">${items
+    .map((item, index) => {
+      const ratio = Math.max(0.08, item.exp / maxExp);
+      const height = Math.round(ratio * 220);
+      const dateLabel = formatKstDateLabel(item.ts);
+      const levelLabel = Number.isFinite(item.level)
+        ? `레벨 Lv.${formatNumber(item.level)}`
+        : "레벨 -";
+      const expRateLabel =
+        item.expRate !== null && item.expRate !== undefined
+          ? `경험치율 ${formatExpRateText(item.expRate)}`
+          : "경험치율 -";
+      const tooltip = `${formatKstTooltipDateTime(item.ts)} | 총 경험치 ${formatNumber(item.exp)} | ${levelLabel} | ${expRateLabel}`;
+      const metaLabel = [
+        Number.isFinite(item.level) ? `Lv.${formatNumber(item.level)}` : "",
+        item.expRate !== null && item.expRate !== undefined
+          ? formatExpRateText(item.expRate)
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      return `<div class="exp-bar-item"><div class="exp-bar ${index === items.length - 1 ? "is-current" : ""}" style="height:${height}px" title="${escapeHtml(tooltip)}"></div><p>${escapeHtml(dateLabel)}</p>${metaLabel ? `<small>${escapeHtml(metaLabel)}</small>` : ""}</div>`;
     })
-    .join(" ");
-  const circles = samples
-    .map((s, i) => {
-      const x = padding + (i / (samples.length - 1)) * (width - padding * 2);
-      const y =
-        height - padding - ((s.value - min) / range) * (height - padding * 2);
-      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4" />`;
+    .join("")}</div></div>`;
+}
+
+function renderLevelLineChart(snapshots, expTab, profile) {
+  const items = buildLevelSeriesForChart(snapshots, expTab, profile);
+  if (!items.length) {
+    return '<p class="empty">레벨 히스토리를 표시할 데이터가 없습니다.</p>';
+  }
+
+  const width = 920;
+  const height = 260;
+  const paddingX = 34;
+  const paddingTop = 26;
+  const paddingBottom = 44;
+  const values = items.map((item) => item.level);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+
+  const points = items.map((item, index) => {
+    const x = paddingX + (index / (items.length - 1)) * (width - paddingX * 2);
+    const y =
+      height -
+      paddingBottom -
+      ((item.level - min) / range) * (height - paddingTop - paddingBottom);
+    return {
+      ...item,
+      x,
+      y,
+    };
+  });
+
+  const polyline = points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
+  const labels = points
+    .map(
+      (point) =>
+        `<text x="${point.x.toFixed(2)}" y="${(height - 14).toFixed(2)}" text-anchor="middle" class="level-chart__label">${escapeHtml(
+          formatKstDateLabel(point.ts),
+        )}</text>`,
+    )
+    .join("");
+  const nodes = points
+    .map((point) => {
+      const expRateText =
+        point.expRate !== null && point.expRate !== undefined
+          ? formatExpRateText(point.expRate)
+          : "-";
+      const tooltip = `${formatKstTooltipDateTime(point.ts)} | 총 경험치 ${formatNumber(point.exp)} | 레벨 Lv.${formatNumber(point.level)} | 경험치율 ${expRateText}`;
+      return `<g><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="4.5" class="level-chart__point"><title>${escapeHtml(
+        tooltip,
+      )}</title></circle><text x="${point.x.toFixed(2)}" y="${(point.y - 10).toFixed(2)}" text-anchor="middle" class="level-chart__value">Lv.${escapeHtml(
+        formatNumber(point.level),
+      )}</text></g>`;
     })
     .join("");
-  return `<div class="chart-wrap"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="경험치 변화 그래프"><line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" class="axis" /><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" class="axis" /><polyline points="${pts}" class="line" />${circles}</svg><div class="chart-meta"><span>최소값 ${escapeHtml(formatPercentValue(min))}</span><span>최대값 ${escapeHtml(formatPercentValue(max))}</span></div></div>`;
+
+  return `<div class="level-chart-wrap"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="레벨 그래프"><defs><linearGradient id="levelLineGradientChart" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7ec5ff"></stop><stop offset="100%" stop-color="#2f6bff"></stop></linearGradient></defs><line x1="${paddingX}" y1="${paddingTop}" x2="${paddingX}" y2="${height - paddingBottom}" class="level-chart__axis" /><line x1="${paddingX}" y1="${height - paddingBottom}" x2="${width - paddingX}" y2="${height - paddingBottom}" class="level-chart__axis" /><polyline points="${polyline}" class="level-chart__line" />${nodes}${labels}</svg></div>`;
 }
-function renderExpTab(expTab, expHistoryState) {
+
+function renderExpTab(expTab, expHistoryState, profile) {
   if (expHistoryState.loading)
-    return '<section class="tab-grid"><article class="data-card data-card--wide"><h3>경험치 그래프</h3><p class="empty">히스토리를 불러오는 중입니다...</p></article></section>';
-  const points = toArray(expHistoryState?.data?.points);
-  const rows = points.length
-    ? points
-        .slice(-10)
-        .reverse()
-        .map((p) => {
-          return `<tr><td>${escapeHtml(formatTimestamp(p.ts))}</td><td>${escapeHtml(formatPercentValue(parseNumericValue(p.expRate)))}</td></tr>`;
-        })
-        .join("")
-    : '<tr><td colspan="2">저장된 히스토리가 없습니다.</td></tr>';
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>경험치 그래프</h3><p class="exp-now">현재 경험치율 <strong>${escapeHtml(formatPercentValue(parseNumericValue(expTab?.currentExpRate)))}</strong></p>${renderLineChart(points)}</article><article class="data-card"><h3>최근 기록</h3><table class="history-table"><thead><tr><th>시각</th><th>경험치율</th></tr></thead><tbody>${rows}</tbody></table></article></section>`;
+    return '<section class="tab-grid exp-grid"><article class="data-card"><h3>경험치 그래프</h3><p class="empty">히스토리를 불러오는 중입니다...</p></article><article class="data-card"><h3>레벨 그래프</h3><p class="empty">히스토리를 불러오는 중입니다...</p></article></section>';
+
+  const snapshots = buildDailySnapshotsFromHistory(expHistoryState);
+
+  return `<section class="tab-grid exp-grid"><article class="data-card"><h3>경험치 그래프</h3>${renderExpBarChart(
+    snapshots,
+    expTab,
+    profile,
+  )}</article><article class="data-card"><h3>레벨 그래프</h3>${renderLevelLineChart(
+    snapshots,
+    expTab,
+    profile,
+  )}</article></section>`;
 }
 function renderUnionTab(tabData, state) {
   const selected = resolveSelectedPreset("union", tabData, state);
@@ -800,7 +1267,11 @@ function renderTabContent(state) {
       state,
     );
   if (state.activeTab === "exp")
-    return renderExpTab(tabs.exp || {}, state.expHistory);
+    return renderExpTab(
+      tabs.exp || {},
+      state.expHistory,
+      state.pageData?.profile || {},
+    );
   if (state.activeTab === "jewelSymbolVmatrix")
     return renderJewelSymbolVmatrixTab(tabs.jewelSymbolVmatrix || {}, state);
   if (state.activeTab === "hexamatrix")
@@ -835,6 +1306,926 @@ function initIndexPage() {
   bindCharacterSearchForm(document.getElementById("quickSearchForm"));
   bindCharacterSearchForm(document.getElementById("searchForm"));
 }
+
+function getKstDateString(date = new Date()) {
+  const formatted = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+  return String(formatted).replaceAll("-", "-");
+}
+
+function normalizeRankingType(type) {
+  const key = String(type || "").trim();
+  if (disabledRankingTypes.has(key)) return "level";
+  return rankingTypes[key] ? key : "level";
+}
+
+function normalizeRankingDate(dateText) {
+  const date = String(dateText || "").trim().replace(/[./\s]+/g, "-");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+  return date;
+}
+
+function normalizeRankingPage(value) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return 1;
+  return parsed;
+}
+
+function getRankingWorldOrderIndex(worldName) {
+  const normalized = normalizeForMatch(worldName);
+  if (!normalized) return 0;
+  if (normalized === normalizeForMatch("스카니아") || normalized === "scania")
+    return 1;
+  if (normalized === normalizeForMatch("루나") || normalized === "luna") return 2;
+  if (normalized === normalizeForMatch("제니스") || normalized === "zenith")
+    return 3;
+  if (normalized === normalizeForMatch("크로아") || normalized === "croa") return 4;
+  if (normalized === normalizeForMatch("유니온") || normalized === "union")
+    return 5;
+  if (
+    normalized === normalizeForMatch("엘리시움") ||
+    normalized === "elysium"
+  )
+    return 6;
+  if (normalized === normalizeForMatch("아케인") || normalized === "arcane")
+    return 7;
+  return 99;
+}
+
+function configureRankingTypeSelect(typeSelectEl) {
+  if (!typeSelectEl) return;
+  [...typeSelectEl.querySelectorAll("option")].forEach((optionEl) => {
+    const value = String(optionEl.value || "").trim();
+    if (disabledRankingTypes.has(value)) {
+      optionEl.remove();
+    }
+  });
+}
+
+function configureRankingWorldSelect(worldSelectEl) {
+  if (!worldSelectEl) return;
+  const options = [...worldSelectEl.querySelectorAll("option")];
+  options.sort((left, right) => {
+    const leftOrder = getRankingWorldOrderIndex(left.value);
+    const rightOrder = getRankingWorldOrderIndex(right.value);
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+    return 0;
+  });
+  worldSelectEl.replaceChildren(...options);
+}
+
+const rankingCharacterImageCache = new Map();
+const rankingGuildMarkCache = new Map();
+const rankingThumbDefaultSrc = "/assets/maple-hero.svg";
+
+function shiftDateText(dateText, dayOffset) {
+  const parts = String(dateText || "")
+    .split("-")
+    .map((part) => Number(part));
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) {
+    return "";
+  }
+  const [year, month, day] = parts;
+  const shifted = new Date(Date.UTC(year, month - 1, day + dayOffset));
+  if (Number.isNaN(shifted.getTime())) {
+    return "";
+  }
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}-${String(shifted.getUTCDate()).padStart(2, "0")}`;
+}
+
+function isRankingDataNotReadyMessage(message) {
+  const text = String(message || "").toLowerCase();
+  return text.includes("please wait until the data is ready");
+}
+
+async function resolveRankingCharacterImage(worldName, characterName) {
+  const world = String(worldName || "").trim();
+  const name = String(characterName || "").trim();
+  if (!world || !name || name === "-") {
+    return "";
+  }
+
+  const cacheKey = `${world}::${name}`;
+  if (rankingCharacterImageCache.has(cacheKey)) {
+    return rankingCharacterImageCache.get(cacheKey);
+  }
+
+  const pending = (async () => {
+    try {
+      const idQuery = new URLSearchParams({
+        world_name: world,
+        character_name: name,
+      });
+      const idRes = await fetch(`/api/maplestorym/id?${idQuery.toString()}`);
+      const idPayload = await parseResponseSafely(idRes);
+      if (!idRes.ok || !idPayload?.ok) {
+        return "";
+      }
+      const ocid = String(idPayload?.data?.ocid || "").trim();
+      if (!ocid) {
+        return "";
+      }
+
+      const basicQuery = new URLSearchParams({ ocid });
+      const basicRes = await fetch(`/api/maplestorym/character/basic?${basicQuery.toString()}`);
+      const basicPayload = await parseResponseSafely(basicRes);
+      if (!basicRes.ok || !basicPayload?.ok) {
+        return "";
+      }
+
+      return String(
+        basicPayload?.data?.character_image ||
+          basicPayload?.data?.character_icon ||
+          "",
+      ).trim();
+    } catch (_error) {
+      return "";
+    }
+  })();
+
+  rankingCharacterImageCache.set(cacheKey, pending);
+  return pending;
+}
+
+async function hydrateRankingCharacterThumbs(containerEl) {
+  if (!containerEl) return;
+  const targets = [
+    ...containerEl.querySelectorAll(
+      "img.js-ranking-char-thumb[data-world-name][data-char-name]",
+    ),
+  ];
+  if (!targets.length) return;
+
+  let cursor = 0;
+  const workerSize = Math.min(2, targets.length);
+  const workers = Array.from({ length: workerSize }, async () => {
+    while (cursor < targets.length) {
+      const currentIndex = cursor;
+      cursor += 1;
+      const imgEl = targets[currentIndex];
+      if (!imgEl || imgEl.dataset.thumbResolved === "1") {
+        continue;
+      }
+
+      const currentSrc = String(imgEl.getAttribute("src") || "");
+      if (currentSrc && !currentSrc.includes(rankingThumbDefaultSrc)) {
+        imgEl.dataset.thumbResolved = "1";
+        continue;
+      }
+
+      const worldName = String(imgEl.dataset.worldName || "").trim();
+      const characterName = String(imgEl.dataset.charName || "").trim();
+      const resolvedImage = await resolveRankingCharacterImage(
+        worldName,
+        characterName,
+      );
+      if (resolvedImage) {
+        imgEl.src = resolvedImage;
+      }
+      imgEl.dataset.thumbResolved = "1";
+    }
+  });
+
+  await Promise.all(workers);
+}
+
+function buildCharacterProfileHref(worldName, characterName) {
+  const world = String(worldName || "").trim();
+  const name = String(characterName || "").trim();
+  if (!world || !name || name === "-") {
+    return "";
+  }
+  const query = new URLSearchParams({
+    world_name: world,
+    character_name: name,
+  });
+  return `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}?${query.toString()}`;
+}
+
+function renderRankingCharacterNameLink(characterName, worldName) {
+  const name = String(characterName || "-");
+  const href = buildCharacterProfileHref(worldName, name);
+  if (!href) {
+    return `<span>${escapeHtml(name)}</span>`;
+  }
+  return `<a class="ranking-char-link" href="${escapeHtml(href)}">${escapeHtml(name)}</a>`;
+}
+
+async function resolveRankingGuildMark(worldName, guildName) {
+  const world = String(worldName || "").trim();
+  const guild = String(guildName || "").trim();
+  if (!world || !guild || guild === "-") {
+    return "";
+  }
+
+  const cacheKey = `${world}::${guild}`;
+  if (rankingGuildMarkCache.has(cacheKey)) {
+    return rankingGuildMarkCache.get(cacheKey);
+  }
+
+  const pending = (async () => {
+    try {
+      const idQuery = new URLSearchParams({
+        world_name: world,
+        guild_name: guild,
+      });
+      const guildIdRes = await fetch(`/api/maplestorym/guild/id?${idQuery.toString()}`);
+      const guildIdPayload = await parseResponseSafely(guildIdRes);
+      if (!guildIdRes.ok || !guildIdPayload?.ok) {
+        return "";
+      }
+
+      const oguildId = String(guildIdPayload?.data?.oguild_id || "").trim();
+      if (!oguildId) {
+        return "";
+      }
+
+      const basicQuery = new URLSearchParams({ oguild_id: oguildId });
+      const guildBasicRes = await fetch(`/api/maplestorym/guild/basic?${basicQuery.toString()}`);
+      const guildBasicPayload = await parseResponseSafely(guildBasicRes);
+      if (!guildBasicRes.ok || !guildBasicPayload?.ok) {
+        return "";
+      }
+
+      return String(guildBasicPayload?.data?.guild_mark_icon || "").trim();
+    } catch (_error) {
+      return "";
+    }
+  })();
+
+  rankingGuildMarkCache.set(cacheKey, pending);
+  return pending;
+}
+
+async function resolveOverallRankingByOcid(ocid, options = {}) {
+  const normalizedOcid = String(ocid || "").trim();
+  if (!normalizedOcid) return null;
+  const maxDays = Number.isFinite(options?.days)
+    ? Math.max(1, Math.min(14, Math.floor(options.days)))
+    : 7;
+  let date = getKstDateString();
+  if (date < rankingDateFloor) {
+    date = rankingDateFloor;
+  }
+
+  for (let attempt = 0; attempt < maxDays; attempt += 1) {
+    try {
+      const query = new URLSearchParams({
+        date,
+        ocid: normalizedOcid,
+        page: "1",
+      });
+      const response = await fetch(
+        `/api/maplestorym/ranking/level?${query.toString()}`,
+      );
+      const payload = await parseResponseSafely(response);
+      if (response.ok && payload?.ok) {
+        const first = toArray(payload?.data?.ranking)[0];
+        const rankingValue = parseNumericValue(first?.ranking);
+        if (rankingValue !== null && rankingValue > 0) {
+          return {
+            date,
+            ranking: Math.floor(rankingValue),
+          };
+        }
+      }
+    } catch (_error) {
+      // Ignore and continue with older date.
+    }
+
+    const previousDate = shiftDateText(date, -1);
+    if (!previousDate || previousDate < rankingDateFloor) {
+      break;
+    }
+    date = previousDate;
+  }
+
+  return null;
+}
+
+async function hydrateRankingGuildMarks(containerEl) {
+  if (!containerEl) return;
+  const targets = [
+    ...containerEl.querySelectorAll(
+      "img.js-ranking-guild-mark[data-world-name][data-guild-name]",
+    ),
+  ];
+  if (!targets.length) return;
+
+  let cursor = 0;
+  const workerSize = Math.min(2, targets.length);
+  const workers = Array.from({ length: workerSize }, async () => {
+    while (cursor < targets.length) {
+      const currentIndex = cursor;
+      cursor += 1;
+      const imgEl = targets[currentIndex];
+      if (!imgEl || imgEl.dataset.guildMarkResolved === "1") {
+        continue;
+      }
+
+      const worldName = String(imgEl.dataset.worldName || "").trim();
+      const guildName = String(imgEl.dataset.guildName || "").trim();
+      const resolvedImage = await resolveRankingGuildMark(worldName, guildName);
+      if (resolvedImage) {
+        imgEl.src = resolvedImage;
+        imgEl.hidden = false;
+      }
+      imgEl.dataset.guildMarkResolved = "1";
+    }
+  });
+
+  await Promise.all(workers);
+}
+
+function resolveWorldIcon(worldName) {
+  return worldIconByName[String(worldName || "").trim()] || "";
+}
+
+function resolveEquipmentGradeClass(itemGrade) {
+  const grade = normalizeForMatch(itemGrade);
+  if (!grade) return "";
+  if (grade.includes("레전") || grade.includes("legendary")) {
+    return "equip-item-grade--legendary";
+  }
+  if (grade.includes("유니크") || grade.includes("unique")) {
+    return "equip-item-grade--unique";
+  }
+  if (grade.includes("에픽") || grade.includes("epic")) {
+    return "equip-item-grade--epic";
+  }
+  if (grade.includes("레어") || grade.includes("rare")) {
+    return "equip-item-grade--rare";
+  }
+  return "";
+}
+
+function resolveEquipmentGradeKey(itemGrade) {
+  const grade = normalizeForMatch(itemGrade);
+  if (!grade) return "";
+  if (grade.includes("레전") || grade.includes("legendary")) return "legendary";
+  if (grade.includes("유니크") || grade.includes("unique")) return "unique";
+  if (grade.includes("에픽") || grade.includes("epic")) return "epic";
+  if (grade.includes("레어") || grade.includes("rare")) return "rare";
+  return "";
+}
+
+function resolvePotentialTierKey(optionList, potentialGradeText = "") {
+  const options = toArray(optionList);
+  if (!options.length) {
+    return "";
+  }
+
+  const mapPotentialGradeValueToTier = (value) => {
+    const text = String(value || "").trim().toLowerCase();
+    if (!text) return "";
+    if (text === "4") return "legendary";
+    if (text === "3") return "unique";
+    if (text === "2") return "epic";
+    if (text === "1") return "rare";
+    const normalized = normalizeForMatch(text);
+    if (
+      normalized.includes(normalizeForMatch("레전더리")) ||
+      normalized.includes("legendary")
+    )
+      return "legendary";
+    if (
+      normalized.includes(normalizeForMatch("유니크")) ||
+      normalized.includes("unique")
+    )
+      return "unique";
+    if (
+      normalized.includes(normalizeForMatch("에픽")) ||
+      normalized.includes("epic")
+    )
+      return "epic";
+    if (
+      normalized.includes(normalizeForMatch("레어")) ||
+      normalized.includes("rare")
+    )
+      return "rare";
+    return "";
+  };
+
+  const gradeText = String(potentialGradeText || "").trim();
+  const mappedFromPotentialGrade = mapPotentialGradeValueToTier(gradeText);
+  if (mappedFromPotentialGrade) {
+    return mappedFromPotentialGrade;
+  }
+
+  for (const option of options) {
+    const mappedFromOptionGrade = mapPotentialGradeValueToTier(option?.optionGrade);
+    if (mappedFromOptionGrade) {
+      return mappedFromOptionGrade;
+    }
+  }
+
+  const normalizedGrade = normalizeForMatch(gradeText);
+  if (
+    normalizedGrade.includes(normalizeForMatch("레전더리")) ||
+    normalizedGrade.includes("legendary")
+  ) {
+    return "legendary";
+  }
+  if (
+    normalizedGrade.includes(normalizeForMatch("유니크")) ||
+    normalizedGrade.includes("unique")
+  ) {
+    return "unique";
+  }
+  if (
+    normalizedGrade.includes(normalizeForMatch("에픽")) ||
+    normalizedGrade.includes("epic")
+  ) {
+    return "epic";
+  }
+  if (
+    normalizedGrade.includes(normalizeForMatch("레어")) ||
+    normalizedGrade.includes("rare")
+  ) {
+    return "rare";
+  }
+
+  const text = `${options
+    .map((option) => `${option?.name || ""} ${option?.value || ""}`)
+    .join(" ")} ${options
+    .map((option) => option?.optionGrade || "")
+    .join(" ")}`;
+  const normalized = normalizeForMatch(text);
+  if (normalized.includes(normalizeForMatch("레전더리")) || normalized.includes("legendary")) {
+    return "legendary";
+  }
+  if (normalized.includes(normalizeForMatch("유니크")) || normalized.includes("unique")) {
+    return "unique";
+  }
+  if (normalized.includes(normalizeForMatch("에픽")) || normalized.includes("epic")) {
+    return "epic";
+  }
+  if (normalized.includes(normalizeForMatch("레어")) || normalized.includes("rare")) {
+    return "rare";
+  }
+  return "";
+}
+
+function renderHoverOptionRows(list, emptyText) {
+  const options = toArray(list);
+  if (!options.length) {
+    return `<li class="is-empty">${escapeHtml(emptyText || "옵션 정보 없음")}</li>`;
+  }
+
+  return options
+    .map((option) => {
+      const name = sanitizeEquipmentText(option?.name || "-") || "-";
+      const value = sanitizeEquipmentText(option?.value || "-") || "-";
+      return `<li><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></li>`;
+    })
+    .join("");
+}
+
+function renderHoverTierBadge(optionList, potentialGrade, label) {
+  const tierKey = resolvePotentialTierKey(optionList, potentialGrade);
+  const tier = potentialTierAssets[tierKey] || null;
+  if (!tier) {
+    return `<span class="equip-hover__tier is-none"><b>${escapeHtml(label)}</b></span>`;
+  }
+
+  return `<span class="equip-hover__tier is-${escapeHtml(tierKey)}"><img src="${escapeHtml(tier.icon)}" alt="${escapeHtml(label)}" /><b>${escapeHtml(label)}</b></span>`;
+}
+
+function buildStarGlyphHtml(starforceValue) {
+  const numeric = parseNumericValue(starforceValue);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return "";
+  }
+
+  const count = Math.max(1, Math.round(numeric));
+  const groups = [];
+  let remaining = count;
+
+  while (remaining > 0) {
+    const groupCount = Math.min(5, remaining);
+    groups.push("★".repeat(groupCount));
+    remaining -= groupCount;
+  }
+
+  const lines = [];
+  for (let index = 0; index < groups.length; index += 4) {
+    lines.push(groups.slice(index, index + 4).join(" "));
+  }
+
+  return lines.join("<br />");
+}
+
+function renderEquipmentHoverCard(item) {
+  const slot = classifyEquipmentSlot(item);
+  const showAttackPower = ["weapon", "subWeapon", "emblem"].includes(slot.key);
+  const itemName = sanitizeEquipmentText(item?.itemName || "-") || "-";
+  const itemGrade = sanitizeEquipmentText(item?.itemGrade || "-") || "-";
+  const slotName = sanitizeEquipmentText(item?.slotName || "-") || "-";
+  const icon = String(item?.itemIcon || "").trim();
+  const equipmentLevel = sanitizeEquipmentText(item?.equipmentLevel ?? "-") || "-";
+  const combatPower = sanitizeEquipmentText(item?.combatPower ?? "-") || "-";
+  const karmaScissorsRemaining = sanitizeEquipmentText(item?.karmaScissorsRemaining ?? "");
+  const remainingStarforceExpansion = sanitizeEquipmentText(item?.remainingStarforceExpansion ?? "");
+  const starforceValue = item?.starforceUpgrade ?? "-";
+  const starGlyphsHtml = buildStarGlyphHtml(starforceValue);
+  const starforceNumeric = parseNumericValue(starforceValue);
+  const starText = Number.isFinite(starforceNumeric)
+    ? `⭐ ${Math.round(starforceNumeric)}`
+    : `⭐ ${escapeHtml(String(starforceValue || "-"))}`;
+  const soulOption =
+    sanitizeEquipmentText(item?.soulInfo?.soulOption || "").trim() || "소울 정보 없음";
+  const miscInfo = [
+    karmaScissorsRemaining
+      ? `<p><span>남은 카르마의 가위 사용 수</span><strong>${escapeHtml(karmaScissorsRemaining)}</strong></p>`
+      : "",
+    remainingStarforceExpansion
+      ? `<p><span>남은 스타포스 확장 수</span><strong>${escapeHtml(remainingStarforceExpansion)}</strong></p>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}<span class="equip-hover__equipped">장착중</span></div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}<div class="equip-hover__option-block"><h5>기본 옵션</h5><ul>${renderHoverOptionRows(item?.basicOption, "기본 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>추가 옵션</h5><ul>${renderHoverOptionRows(item?.additionalOption, "추가 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>${renderHoverTierBadge(item?.potentialOption, item?.potentialGrade, "잠재능력")}</h5><ul>${renderHoverOptionRows(item?.potentialOption, "잠재 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>${renderHoverTierBadge(item?.additionalPotentialOption, item?.additionalPotentialGrade, "에디셔널 잠재능력")}</h5><ul>${renderHoverOptionRows(item?.additionalPotentialOption, "에디 옵션 없음")}</ul></div><div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div></section></article>`;
+}
+
+function resolveUnionGradeIcon(unionGrade, unionGradeIcon) {
+  const provided = String(unionGradeIcon || "").trim();
+  if (provided) return provided;
+
+  const normalized = normalizeForMatch(unionGrade);
+  const levelMatch = String(unionGrade || "").match(/([1-5])/);
+  const level = levelMatch ? Number(levelMatch[1]) : null;
+  if (!level || level < 1 || level > 5) return "";
+
+  if (normalized.includes("supreme")) return `/assets/ico-supreme${level}.png`;
+  if (normalized.includes("grandmaster"))
+    return `/assets/ico-grandmaster${level}.png`;
+  if (normalized.includes("master")) return `/assets/ico-master${level}.png`;
+  if (normalized.includes("veteran")) return `/assets/ico-veteran${level}.png`;
+  if (normalized.includes("nobis")) return `/assets/ico-nobis${level}.png`;
+
+  return "";
+}
+
+function renderRankingCharacterCell(row, fallbackName = "") {
+  const worldIcon = resolveWorldIcon(row.world_name);
+  const thumb =
+    row.character_image ||
+    row.character_icon ||
+    row.character_image_url ||
+    rankingThumbDefaultSrc;
+  const name = String(row.character_name || fallbackName || "-");
+  const worldName = String(row.world_name || "").trim();
+  const href = buildCharacterProfileHref(worldName, name);
+  const dataAttrs =
+    worldName && name !== "-"
+      ? ` data-world-name="${escapeHtml(worldName)}" data-char-name="${escapeHtml(name)}"`
+      : "";
+  const thumbTag = `<img class="ranking-char-thumb js-ranking-char-thumb" src="${escapeHtml(thumb)}" alt="${escapeHtml(name)}" loading="lazy"${dataAttrs} />`;
+  const thumbWrapper = href
+    ? `<a class="ranking-char-thumb-link" href="${escapeHtml(href)}">${thumbTag}</a>`
+    : `<span class="ranking-char-thumb-link">${thumbTag}</span>`;
+
+  return `<span class="ranking-char-cell">${thumbWrapper}<span class="ranking-char-meta">${worldIcon ? `<img class="ranking-world-mini" src="${escapeHtml(worldIcon)}" alt="${escapeHtml(String(row.world_name || ""))}" />` : ""}${renderRankingCharacterNameLink(name, worldName)}</span></span>`;
+}
+
+function renderRankingGuildCell({ worldName, guildName, guildMarkIcon }) {
+  const world = String(worldName || "").trim();
+  const guild = String(guildName || "").trim();
+  const guildMark = String(guildMarkIcon || "").trim();
+  const guildMarkHtml = guildMark
+    ? `<img class="ranking-guild-mark" src="${escapeHtml(guildMark)}" alt="${escapeHtml(String(guild || "길드"))}" loading="lazy" />`
+    : world && guild && guild !== "-"
+      ? `<img class="ranking-guild-mark js-ranking-guild-mark" src="" alt="${escapeHtml(String(guild || "길드"))}" loading="lazy" data-world-name="${escapeHtml(world)}" data-guild-name="${escapeHtml(guild)}" hidden />`
+      : "";
+
+  return `<span class="ranking-guild">${guildMarkHtml}<span>${escapeHtml(guild || "-")}</span></span>`;
+}
+
+function renderRankingGradeCell(unionGrade, unionGradeIcon) {
+  const icon = resolveUnionGradeIcon(unionGrade, unionGradeIcon);
+  return `<span class="ranking-grade-cell">${icon ? `<img class="ranking-grade-icon" src="${escapeHtml(icon)}" alt="${escapeHtml(String(unionGrade || "등급"))}" loading="lazy" />` : ""}<span>${escapeHtml(unionGrade || "-")}</span></span>`;
+}
+
+function getRankingColumns(type) {
+  if (type === "union") {
+    return ["#", "캐릭터", "등급", "유니온 레벨", "직업", "길드"];
+  }
+  if (type === "achievement") {
+    return ["#", "캐릭터", "업적 점수", "티어", "길드"];
+  }
+  if (type === "sharenian-battlefield") {
+    return ["#", "길드", "점수", "길드마스터"];
+  }
+  if (type === "sharenian-waterway") {
+    return ["#", "캐릭터", "점수", "길드", "길드마스터"];
+  }
+  if (type === "root-of-time") {
+    return ["#", "캐릭터", "점수", "직업", "길드"];
+  }
+  return ["#", "캐릭터", "레벨", "직업", "길드"];
+}
+
+function renderRankingRow(type, row, rankNo) {
+  if (type === "union") {
+    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td>${renderRankingGradeCell(row.union_grade, row.union_grade_icon)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.union_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+  }
+
+  if (type === "achievement") {
+    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.achievement_score))}</td><td>${renderRankingGradeCell(row.achievement_grade_name, row.achievement_grade_icon)}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+  }
+
+  if (type === "sharenian-battlefield") {
+    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
+  }
+
+  if (type === "sharenian-waterway") {
+    const fallbackCharacterName = String(
+      row.character_name || row.guild_master_name || "-",
+    );
+    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row, fallbackCharacterName)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
+  }
+
+  if (type === "root-of-time") {
+    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.max_damage)))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+  }
+
+  return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num">${escapeHtml(formatNumber(row.character_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+}
+
+function renderRankingTable(type, rows, pageNo) {
+  const columns = getRankingColumns(type);
+  if (!rows.length) {
+    return '<p class="empty">조건에 맞는 랭킹 데이터가 없습니다.</p>';
+  }
+
+  const offset = (pageNo - 1) * rankingPageSize;
+  const body = rows
+    .map((row, index) => {
+      const rankNo = parseNumericValue(row?.ranking) ?? offset + index + 1;
+      return renderRankingRow(type, row, rankNo);
+    })
+    .join("");
+
+  return `<table class="ranking-table"><thead><tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function renderRankingPagination(buttonWrapEl, currentPage) {
+  if (!buttonWrapEl) return;
+
+  const start = Math.max(1, currentPage - 4);
+  const pages = Array.from({ length: 10 }, (_, index) => start + index);
+  buttonWrapEl.innerHTML = pages
+    .map(
+      (page) =>
+        `<button type="button" data-ranking-page="${page}" class="${page === currentPage ? "is-active" : ""}">${page}</button>`,
+    )
+    .join("");
+}
+
+async function fetchRankingPageData(type, date, worldName, pageNo, options = {}) {
+  const allowReadyFallback = options?.allowReadyFallback !== false;
+  const zeroBasedIndex = (pageNo - 1) * rankingPageSize;
+  const apiPage = Math.floor(zeroBasedIndex / rankingApiPageSize) + 1;
+  const localOffset = zeroBasedIndex % rankingApiPageSize;
+
+  const query = new URLSearchParams({
+    date,
+    page: String(apiPage),
+  });
+  if (worldName) query.set("world_name", worldName);
+
+  const response = await fetch(
+    `/api/maplestorym/ranking/${encodeURIComponent(rankingTypes[type].endpoint)}?${query.toString()}`,
+  );
+  const payload = await parseResponseSafely(response);
+
+  if (!response.ok || !payload.ok) {
+    const message =
+      payload?.message ||
+      payload?.error?.error?.message ||
+      "랭킹 조회에 실패했습니다.";
+
+    if (allowReadyFallback && isRankingDataNotReadyMessage(message)) {
+      const previousDate = shiftDateText(date, -1);
+      if (previousDate && previousDate >= rankingDateFloor) {
+        const fallbackResult = await fetchRankingPageData(
+          type,
+          previousDate,
+          worldName,
+          pageNo,
+          { allowReadyFallback: false },
+        );
+        return {
+          ...fallbackResult,
+          effectiveDate: previousDate,
+          fallbackFromDate: date,
+        };
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  const ranking = toArray(payload?.data?.ranking);
+  const rows = ranking.slice(localOffset, localOffset + rankingPageSize);
+  return {
+    rows,
+    apiPage,
+    localOffset,
+    effectiveDate: date,
+    fallbackFromDate: "",
+  };
+}
+
+function initRankingPage() {
+  bindCharacterSearchForm(document.getElementById("quickSearchForm"));
+
+  const form = document.getElementById("rankingSearchForm");
+  const messageEl = document.getElementById("rankingMessage");
+  const titleEl = document.getElementById("rankingResultTitle");
+  const tableWrapEl = document.getElementById("rankingTableWrap");
+  const pageButtonsEl = document.getElementById("rankingPageButtons");
+  const pageJumpForm = document.getElementById("rankingPageJumpForm");
+  const pageJumpInput = document.getElementById("rankingPageJumpInput");
+
+  if (
+    !form ||
+    !messageEl ||
+    !titleEl ||
+    !tableWrapEl ||
+    !pageButtonsEl ||
+    !pageJumpForm ||
+    !pageJumpInput
+  ) {
+    return;
+  }
+
+  const typeEl = document.getElementById("rankingType");
+  const dateEl = document.getElementById("rankingDate");
+  const worldEl = document.getElementById("rankingWorldName");
+  if (!typeEl || !dateEl || !worldEl) return;
+  configureRankingTypeSelect(typeEl);
+  configureRankingWorldSelect(worldEl);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentType = normalizeRankingType(urlParams.get("type"));
+  let currentDate = normalizeRankingDate(urlParams.get("date"));
+  let currentWorld = String(urlParams.get("world_name") || "").trim();
+  let currentPage = normalizeRankingPage(urlParams.get("page"));
+
+  const today = getKstDateString();
+  if (!currentDate) {
+    currentDate = today < rankingDateFloor ? rankingDateFloor : today;
+  }
+  if (currentDate < rankingDateFloor) {
+    currentDate = rankingDateFloor;
+  }
+
+  typeEl.value = currentType;
+  dateEl.min = rankingDateFloor;
+  dateEl.value = currentDate;
+  worldEl.value = currentWorld;
+  pageJumpInput.value = String(currentPage);
+
+  const syncUrl = () => {
+    const next = new URLSearchParams();
+    next.set("type", currentType);
+    next.set("date", currentDate);
+    if (currentWorld) next.set("world_name", currentWorld);
+    next.set("page", String(currentPage));
+    history.replaceState(null, "", `/ranking.html?${next.toString()}`);
+  };
+
+  const load = async () => {
+    if (currentDate < rankingDateFloor) {
+      setMessage(
+        messageEl,
+        `조회일은 ${rankingDateFloor} 이후만 가능합니다.`,
+        "error",
+      );
+      return;
+    }
+
+    setMessage(messageEl, "", "info");
+    titleEl.textContent = `${rankingTypes[currentType].label} | 조회일 ${currentDate}`;
+    tableWrapEl.innerHTML = '<p class="empty">랭킹 데이터를 불러오는 중입니다...</p>';
+
+    try {
+      const { rows, effectiveDate } = await fetchRankingPageData(
+        currentType,
+        currentDate,
+        currentWorld,
+        currentPage,
+      );
+      titleEl.textContent = `${rankingTypes[currentType].label} | 조회일 ${effectiveDate || currentDate}`;
+      setMessage(messageEl, "", "info");
+      tableWrapEl.innerHTML = renderRankingTable(currentType, rows, currentPage);
+      hydrateRankingCharacterThumbs(tableWrapEl);
+      hydrateRankingGuildMarks(tableWrapEl);
+      renderRankingPagination(pageButtonsEl, currentPage);
+      pageJumpInput.value = String(currentPage);
+      syncUrl();
+    } catch (error) {
+      tableWrapEl.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+      setMessage(messageEl, error.message, "error");
+      renderRankingPagination(pageButtonsEl, currentPage);
+    }
+  };
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    currentType = normalizeRankingType(typeEl.value);
+    currentDate = normalizeRankingDate(dateEl.value) || currentDate;
+    currentWorld = String(worldEl.value || "").trim();
+    currentPage = 1;
+    await load();
+  });
+
+  pageButtonsEl.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-ranking-page]");
+    if (!button) return;
+    const page = normalizeRankingPage(button.dataset.rankingPage);
+    if (page === currentPage) return;
+    currentPage = page;
+    await load();
+  });
+
+  pageJumpForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const page = normalizeRankingPage(pageJumpInput.value);
+    if (page === currentPage) return;
+    currentPage = page;
+    await load();
+  });
+
+  load();
+}
+
+let equipHoverOverlayEl = null;
+function getEquipHoverOverlayEl() {
+  if (equipHoverOverlayEl && document.body.contains(equipHoverOverlayEl)) {
+    return equipHoverOverlayEl;
+  }
+
+  equipHoverOverlayEl = document.createElement("div");
+  equipHoverOverlayEl.className = "equip-hover-overlay";
+  document.body.appendChild(equipHoverOverlayEl);
+  return equipHoverOverlayEl;
+}
+
+function hideEquipHoverOverlay() {
+  const overlay = getEquipHoverOverlayEl();
+  overlay.classList.remove("is-visible");
+}
+
+function positionEquipHoverOverlay(cardEl) {
+  if (!cardEl) return;
+  const overlay = getEquipHoverOverlayEl();
+  const margin = 14;
+  const gap = 12;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const overlayRect = overlay.getBoundingClientRect();
+  const width = overlayRect.width || 420;
+  const height = overlayRect.height || 520;
+  const cardRect = cardEl.getBoundingClientRect();
+
+  let left = cardRect.right + gap;
+  let top = cardRect.top;
+
+  if (left + width + margin > viewportWidth) {
+    left = cardRect.left - width - gap;
+  }
+  if (left < margin) {
+    left = margin;
+  }
+  if (top + height + margin > viewportHeight) {
+    top = viewportHeight - height - margin;
+  }
+  if (top < margin) {
+    top = margin;
+  }
+
+  overlay.style.left = `${Math.round(left)}px`;
+  overlay.style.top = `${Math.round(top)}px`;
+}
+
+function showEquipHoverOverlay(cardEl) {
+  if (!cardEl) return;
+  const template = cardEl.querySelector(".equip-hover-template");
+  if (!template) return;
+
+  const overlay = getEquipHoverOverlayEl();
+  overlay.innerHTML = template.innerHTML;
+  overlay.classList.add("is-visible");
+  positionEquipHoverOverlay(cardEl);
+}
+
 async function initCharacterPage() {
   const messageEl = document.getElementById("pageMessage");
   const profileCardEl = document.getElementById("profileCard");
@@ -869,6 +2260,48 @@ async function initCharacterPage() {
       skillLink: null,
     },
   };
+  const renderProfileCard = () => {
+    profileCardEl.innerHTML = renderProfile(
+      state.pageData?.profile || {},
+      state.pageData?.query || {},
+    );
+  };
+  const hydrateProfileSummaryMeta = async () => {
+    const pageData = state.pageData;
+    if (!pageData || !pageData.profile || !pageData.query) {
+      return;
+    }
+
+    const profile = pageData.profile;
+    const worldName = String(pageData?.query?.worldNameCanonical || "").trim();
+    const guildName = String(profile?.guildName || "").trim();
+    let changed = false;
+
+    if (!String(profile?.guildMarkIcon || "").trim() && worldName && guildName && guildName !== "-") {
+      const guildMark = await resolveRankingGuildMark(worldName, guildName);
+      if (guildMark) {
+        profile.guildMarkIcon = guildMark;
+        changed = true;
+      }
+    }
+
+    const currentRank =
+      parseNumericValue(profile?.overallRanking) ??
+      parseNumericValue(profile?.overallRankingText) ??
+      parseNumericValue(profile?.ranking);
+    if ((!currentRank || currentRank < 1) && pageData?.ocid) {
+      const resolvedRanking = await resolveOverallRankingByOcid(pageData.ocid, { days: 7 });
+      if (resolvedRanking?.ranking) {
+        profile.overallRanking = resolvedRanking.ranking;
+        profile.overallRankingText = `전체랭킹 - ${Number(resolvedRanking.ranking).toLocaleString("ko-KR")}위`;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      renderProfileCard();
+    }
+  };
   const render = () => {
     tabContentEl.innerHTML = renderTabContent(state);
   };
@@ -878,15 +2311,82 @@ async function initCharacterPage() {
   );
   setupTabNav(tabNavEl, (tabId) => {
     state.activeTab = tabId;
+    hideEquipHoverOverlay();
     render();
   });
+  let activeHoverCardEl = null;
+  tabContentEl.addEventListener("pointerover", (event) => {
+    const cardEl = event.target.closest(".equip-card");
+    if (!cardEl || !tabContentEl.contains(cardEl)) {
+      return;
+    }
+
+    activeHoverCardEl = cardEl;
+    showEquipHoverOverlay(cardEl);
+  });
+  tabContentEl.addEventListener("pointerout", (event) => {
+    if (!activeHoverCardEl) {
+      return;
+    }
+    const leavingFromActive = event.target.closest(".equip-card");
+    if (leavingFromActive !== activeHoverCardEl) {
+      return;
+    }
+    const related = event.relatedTarget;
+    if (related && activeHoverCardEl.contains(related)) {
+      return;
+    }
+
+    activeHoverCardEl = null;
+    hideEquipHoverOverlay();
+  });
+  window.addEventListener("scroll", () => {
+    if (!activeHoverCardEl) return;
+    positionEquipHoverOverlay(activeHoverCardEl);
+  });
+  window.addEventListener("resize", () => {
+    if (!activeHoverCardEl) return;
+    positionEquipHoverOverlay(activeHoverCardEl);
+  });
+
   tabContentEl.addEventListener("click", (e) => {
+    const expandBtn = e.target.closest("[data-expand-target]");
+    if (expandBtn && tabContentEl.contains(expandBtn)) {
+      const targetSelector = String(expandBtn.dataset.expandTarget || "").trim();
+      const targetEl = targetSelector
+        ? tabContentEl.querySelector(targetSelector)
+        : null;
+      if (targetEl) {
+        const collapsed = targetEl.classList.toggle("is-collapsed");
+        expandBtn.classList.toggle("is-open", !collapsed);
+        const closeLabel = String(
+          expandBtn.dataset.expandLabelClose || "더보기",
+        );
+        const openLabel = String(
+          expandBtn.dataset.expandLabelOpen || "접기",
+        );
+        expandBtn.textContent = collapsed ? closeLabel : openLabel;
+      }
+      return;
+    }
+
+    const summaryEl = e.target.closest("details > summary");
+    if (summaryEl && tabContentEl.contains(summaryEl)) {
+      e.preventDefault();
+      const detailsEl = summaryEl.parentElement;
+      if (detailsEl && detailsEl.tagName === "DETAILS") {
+        detailsEl.open = !detailsEl.open;
+      }
+      return;
+    }
+
     const btn = e.target.closest("[data-preset-tab][data-preset-no]");
     if (!btn) return;
     const tabKey = btn.dataset.presetTab;
     const presetNo = parseNumericValue(btn.dataset.presetNo);
     if (!tabKey || presetNo === null) return;
     state.selectedPresetByTab[tabKey] = presetNo;
+    hideEquipHoverOverlay();
     render();
   });
   const params = new URLSearchParams({
@@ -908,17 +2408,19 @@ async function initCharacterPage() {
       return;
     }
     state.pageData = page;
-    profileCardEl.innerHTML = renderProfile(page.profile || {}, page.query || {});
+    renderProfileCard();
     profileCardEl.hidden = false;
     tabNavEl.hidden = false;
+    hideEquipHoverOverlay();
     render();
     setMessage(messageEl, "캐릭터 데이터를 불러왔습니다.", "success");
+    hydrateProfileSummaryMeta();
     if (page.ocid) {
       state.expHistory.loading = true;
       if (state.activeTab === "exp") render();
       const [hRes, lRes] = await Promise.all([
         fetch(
-          `/api/maplestorym/character/exp-history?${new URLSearchParams({ ocid: page.ocid, limit: "40" }).toString()}`,
+          `/api/maplestorym/character/exp-history?${new URLSearchParams({ ocid: page.ocid, limit: "200" }).toString()}`,
         ),
         fetch(
           `/api/maplestorym/character/log-status?${new URLSearchParams({ ocid: page.ocid }).toString()}`,
@@ -932,10 +2434,9 @@ async function initCharacterPage() {
       state.expHistory.data =
         hRes.ok && hPayload.ok ? hPayload : { ok: true, points: [] };
       state.logStatus = lRes.ok && lPayload.ok ? lPayload : null;
-      profileCardEl.innerHTML = renderProfile(
-        page.profile || {},
-        page.query || {},
-      );
+      renderProfileCard();
+      hydrateProfileSummaryMeta();
+      hideEquipHoverOverlay();
       render();
     }
   } catch (error) {
@@ -945,8 +2446,10 @@ async function initCharacterPage() {
   }
 }
 initThemeControls();
+removeDisabledRankingMenuLinks();
 if (pageType === "index") {
   const red = redirectIndexCharacterPathIfNeeded();
   if (!red) initIndexPage();
 }
 if (pageType === "character") initCharacterPage();
+if (pageType === "ranking") initRankingPage();

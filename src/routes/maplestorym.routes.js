@@ -13,6 +13,12 @@ const {
   getUserUnionRaiderController,
   getGuildIdController,
   getGuildBasicController,
+  getRankingLevelController,
+  getRankingUnionController,
+  getRankingAchievementController,
+  getRankingSharenianBattlefieldController,
+  getRankingSharenianWaterwayController,
+  getRankingRootOfTimeController,
   getCharacterItemEquipment,
   getCharacterCashItemEquipment,
   getCharacterSymbol,
@@ -56,6 +62,12 @@ router.get("/character/link-skill", getCharacterLinkSkill);
 router.get("/character/vmatrix", getCharacterVmatrix);
 router.get("/character/hexamatrix-skill", getCharacterHexamatrixSkill);
 router.get("/character/hexamatrix-stat", getCharacterHexamatrixStat);
+router.get("/ranking/level", getRankingLevelController);
+router.get("/ranking/union", getRankingUnionController);
+router.get("/ranking/achievement", getRankingAchievementController);
+router.get("/ranking/sharenian-battlefield", getRankingSharenianBattlefieldController);
+router.get("/ranking/sharenian-waterway", getRankingSharenianWaterwayController);
+router.get("/ranking/root-of-time", getRankingRootOfTimeController);
 // Aliases to tolerate short or typo-prone client paths.
 router.get("/character/item-equip", getCharacterItemEquipment);
 router.get("/character/cashitem", getCharacterCashItemEquipment);
