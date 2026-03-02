@@ -1571,7 +1571,6 @@ function renderJewelSymbolVmatrixTab(tabData, state) {
   const jewels = toArray(data.jewelInfo);
   const arcane = toArray(tabData?.symbol?.arcaneSymbols);
   const auth = toArray(tabData?.symbol?.authenticSymbols);
-  const cores = toArray(tabData?.vmatrix?.vCores);
 
   const colorLabelByKey = {
     green: "그린",
@@ -1744,30 +1743,305 @@ function renderJewelSymbolVmatrixTab(tabData, state) {
     arcane,
   )}</article><article class="data-card authentic-symbol-panel"><h3>어센틱 심볼</h3>${renderAuthenticSymbolBoard(
     auth,
-  )}</article></div><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${cores.length ? cores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
-    c.vcoreName || "-",
-  )}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(
-    c.slotLevel ?? "-",
-  )}</p><p>${escapeHtml(
-    toArray(c.skills).join(" / ") || "스킬 정보 없음",
-  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article></section>`;
+  )}</article></div></section>`;
 }
-function renderHyperStatTab(tabData, state) {
-  const selected = resolveSelectedPreset("hyperStat", tabData, state);
-  const data = selected?.data || {};
-  const info = toArray(data.hyperStatInfo);
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>하이퍼스탯 프리셋</h3>${renderPresetSelector("hyperStat", tabData, state)}</article><article class="data-card data-card--wide"><h3>스탯 상세</h3><ul class="simple-list">${info.length ? info.map((i) => `<li><strong>${escapeHtml(i.statType || "-")}</strong><p>Lv.${escapeHtml(i.statLevel ?? "-")} | ${escapeHtml(i.statIncrease || "-")}</p></li>`).join("") : '<li class="empty">스탯 정보가 없습니다.</li>'}</ul></article></section>`;
+function renderSquarePresetSwitch(tabKey, tabData, state, labelPrefix) {
+  const presets = toArray(tabData?.presets);
+  if (!presets.length) {
+    return '<div class="preset-empty">프리셋 데이터가 없습니다.</div>';
+  }
+
+  const selectedNo = resolveSelectedPresetNo(tabKey, tabData, state);
+  return `<div class="jewel-page-switch hyper-link-preset">${presets
+    .map((preset) => {
+      const no = parseNumericValue(preset?.presetNo);
+      const selected = no !== null && no === selectedNo;
+      const activeClass = preset?.isActive ? "is-active" : "";
+      const aria = `${labelPrefix || "프리셋"} ${no ?? "-"}`;
+      return `<button type="button" class="jewel-page-btn hyper-link-preset__btn ${selected ? "is-selected" : ""} ${activeClass}" data-preset-tab="${escapeHtml(
+        tabKey,
+      )}" data-preset-no="${escapeHtml(no ?? "")}" aria-label="${escapeHtml(aria)}">${escapeHtml(
+        no ?? "-",
+      )}</button>`;
+    })
+    .join("")}</div>`;
 }
-function renderSkillLinkTab(tabData, state) {
-  const selectedPreset = resolveSelectedPreset("skillLink", tabData, state);
-  const data = selectedPreset?.data || {};
-  const links = toArray(data.linkSkillInfo),
-    skills = toArray(tabData?.skillSet);
-  const rawSkillSet = tabData?.skillSetRaw;
-  const rawFallback = rawSkillSet
-    ? `<pre>${escapeHtml(JSON.stringify(rawSkillSet, null, 2))}</pre>`
-    : '<p class="empty">스킬셋 정보가 없습니다.</p>';
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>링크 스킬 프리셋</h3>${renderPresetSelector("skillLink", tabData, state)}<ul class="kv-list compact-kv"><li><span>적용 프리셋</span><strong>${escapeHtml(String(tabData?.activePresetNo ?? "-"))}</strong></li><li><span>링크 스킬 수</span><strong>${escapeHtml(String(links.length))}</strong></li><li><span>스킬셋 수</span><strong>${escapeHtml(String(skills.length))}</strong></li></ul></article><article class="data-card data-card--wide"><h3>링크 스킬</h3><div class="card-grid card-grid--3">${links.length ? links.map((s) => `<article class="mini-card">${s.skillIcon ? `<img src="${escapeHtml(s.skillIcon)}" alt="${escapeHtml(s.skillName || "스킬")}" />` : ""}<h4>${escapeHtml(s.skillName || "-")}</h4><p>Lv.${escapeHtml(s.skillLevel ?? "-")}</p><p>${escapeHtml(s.skillEffect || "-")}</p></article>`).join("") : '<p class="empty">링크 스킬 정보가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>스킬셋</h3><div class="card-grid card-grid--3">${skills.length ? skills.map((s) => `<article class="mini-card">${s.skillIcon ? `<img src="${escapeHtml(s.skillIcon)}" alt="${escapeHtml(s.skillName || "스킬")}" />` : ""}<h4>${escapeHtml(s.skillName || "-")}</h4><p>Lv.${escapeHtml(s.skillLevel ?? "-")}</p><p>${escapeHtml(s.skillEffect || s.skillDescription || "-")}</p></article>`).join("") : ""}</div>${skills.length ? "" : rawFallback}</article></section>`;
+function splitLinkSkillEffectLines(text) {
+  const lines = String(text || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split(/\n+/)
+    .map((line) =>
+      line
+        .replace(/^[-•·]\s*/, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+
+  return lines
+    .flatMap((line) =>
+      line
+        .split(/,(?=\s*[A-Za-z가-힣])/)
+        .map((part) => part.trim())
+        .filter(Boolean),
+    )
+    .map((line) => line.replace(/^[-•·]\s*/, "").trim())
+    .filter(Boolean);
+}
+function extractLinkSkillMaxLevel(skill) {
+  const sourceText = [skill?.skillDescription, skill?.skillEffectNext]
+    .filter(Boolean)
+    .join(" ");
+  if (!sourceText) {
+    return null;
+  }
+
+  const match = sourceText.match(/max\s*lv\.?\s*(\d+)/i);
+  if (!match) {
+    return null;
+  }
+
+  return parseNumericValue(match[1]);
+}
+function parseMergedEffectLine(line) {
+  const cleaned = String(line || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) {
+    return null;
+  }
+
+  const parsed = cleaned.match(
+    /^(.+?)([+-]?\d{1,3}(?:,\d{3})*(?:\.\d+)?)(\s*(?:%|초))?\s*$/,
+  );
+  if (!parsed) {
+    return {
+      key: `text:${normalizeForMatch(cleaned)}`,
+      label: cleaned,
+      value: null,
+      unit: "",
+    };
+  }
+
+  const rawLabel = String(parsed[1] || "")
+    .replace(/[+:：]\s*$/, "")
+    .replace(/\s+[+]\s*$/, "")
+    .trim();
+  const numericValue = Number(String(parsed[2] || "").replaceAll(",", ""));
+  if (!rawLabel || !Number.isFinite(numericValue)) {
+    return {
+      key: `text:${normalizeForMatch(cleaned)}`,
+      label: cleaned,
+      value: null,
+      unit: "",
+    };
+  }
+
+  const unit = String(parsed[3] || "").trim();
+  return {
+    key: `num:${normalizeForMatch(rawLabel)}|${unit}`,
+    label: rawLabel,
+    value: numericValue,
+    unit,
+  };
+}
+function formatMergedEffectNumber(value) {
+  const abs = Math.abs(Number(value) || 0);
+  const hasDecimal = Math.abs(abs - Math.round(abs)) > 0.0001;
+  const text = abs.toLocaleString("ko-KR", {
+    minimumFractionDigits: hasDecimal ? 1 : 0,
+    maximumFractionDigits: 2,
+  });
+  return `${value < 0 ? "-" : ""}${text}`;
+}
+function mergeEffectLines(lines) {
+  const grouped = new Map();
+
+  lines.forEach((line) => {
+    const parsed = parseMergedEffectLine(line);
+    if (!parsed) {
+      return;
+    }
+
+    if (!grouped.has(parsed.key)) {
+      grouped.set(parsed.key, { ...parsed });
+      return;
+    }
+
+    const current = grouped.get(parsed.key);
+    if (current && current.value !== null && parsed.value !== null) {
+      current.value += parsed.value;
+    }
+  });
+
+  return [...grouped.values()].map((entry) => {
+    if (entry.value === null) {
+      return {
+        label: entry.label,
+        valueText: "",
+      };
+    }
+    return {
+      label: entry.label,
+      valueText: `${formatMergedEffectNumber(entry.value)}${entry.unit || ""}`,
+    };
+  });
+}
+function mergeLinkSkillsByName(links) {
+  const grouped = new Map();
+
+  links.forEach((skill) => {
+    const skillName = String(skill?.skillName || "-").trim() || "-";
+    const key = normalizeForMatch(skillName) || skillName;
+    const skillLevel = parseNumericValue(skill?.skillLevel);
+    const maxLevel = extractLinkSkillMaxLevel(skill);
+    const effectLines = splitLinkSkillEffectLines(
+      skill?.skillEffect || skill?.skillDescription,
+    );
+
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        skillName,
+        skillIcon: String(skill?.skillIcon || "").trim(),
+        levelSum: skillLevel !== null ? skillLevel : 0,
+        hasNumericLevel: skillLevel !== null,
+        levelTextFallback: String(skill?.skillLevel ?? "-"),
+        maxLevel,
+        count: 1,
+        effectLines: [...effectLines],
+      });
+      return;
+    }
+
+    const current = grouped.get(key);
+    if (!current) {
+      return;
+    }
+
+    current.count += 1;
+    if (!current.skillIcon && skill?.skillIcon) {
+      current.skillIcon = String(skill.skillIcon).trim();
+    }
+    if (skillLevel !== null) {
+      current.levelSum += skillLevel;
+      current.hasNumericLevel = true;
+    }
+    if (maxLevel !== null) {
+      current.maxLevel =
+        current.maxLevel === null ? maxLevel : Math.max(current.maxLevel, maxLevel);
+    }
+    if (effectLines.length) {
+      current.effectLines.push(...effectLines);
+    }
+  });
+
+  return [...grouped.values()].map((entry) => {
+    const mergedEffects = mergeEffectLines(entry.effectLines);
+    return {
+      skillName: entry.skillName,
+      skillIcon: entry.skillIcon,
+      count: entry.count,
+      levelText: entry.hasNumericLevel
+        ? `Lv.${formatNumber(entry.levelSum)}`
+        : `Lv.${entry.levelTextFallback}`,
+      maxLevelText:
+        entry.maxLevel !== null ? `MAX Lv.${formatNumber(entry.maxLevel)}` : "",
+      mergedEffects,
+      effectLines: entry.effectLines,
+    };
+  });
+}
+function escapeRegexText(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function buildHyperStatValueText(statType, statIncrease, statLevel) {
+  const statName = String(statType || "").replace(/\s+/g, " ").trim();
+  const increaseText = String(statIncrease || "").replace(/\s+/g, " ").trim();
+
+  if (increaseText) {
+    if (!statName) {
+      return increaseText;
+    }
+    const prefixPattern = new RegExp(
+      `^${escapeRegexText(statName)}\\s*[:：]?\\s*`,
+      "i",
+    );
+    const stripped = increaseText.replace(prefixPattern, "").trim();
+    return stripped || increaseText;
+  }
+
+  const level = parseNumericValue(statLevel);
+  return level !== null ? `Lv.${level}` : "-";
+}
+function renderHyperStatTab(hyperTabData, skillLinkTabData, state) {
+  const selectedHyper = resolveSelectedPreset("hyperStat", hyperTabData, state);
+  const hyperData = selectedHyper?.data || {};
+  const hyperInfo = toArray(hyperData.hyperStatInfo);
+
+  const selectedLink = resolveSelectedPreset("skillLink", skillLinkTabData, state);
+  const linkData = selectedLink?.data || {};
+  const links = toArray(linkData.linkSkillInfo);
+  const mergedSkills = mergeLinkSkillsByName(links);
+  const mergedAppliedEffects = mergeEffectLines(
+    mergedSkills.flatMap((skill) => skill.effectLines),
+  );
+  const hyperRows = hyperInfo.length
+    ? hyperInfo
+        .map((info) => {
+          const statName = String(info?.statType || "-").trim() || "-";
+          const valueText = buildHyperStatValueText(
+            statName,
+            info?.statIncrease,
+            info?.statLevel,
+          );
+          return `<li><span>${escapeHtml(statName)}</span><strong>${escapeHtml(valueText)}</strong></li>`;
+        })
+        .join("")
+    : '<li class="is-empty">하이퍼스탯 정보가 없습니다.</li>';
+  const linkCards = mergedSkills.length
+    ? mergedSkills
+        .map((skill) => {
+          const mergedEffects = skill.mergedEffects.length
+            ? skill.mergedEffects
+                .map((effect) => {
+                  if (!effect.valueText) {
+                    return `<li><span>${escapeHtml(effect.label)}</span></li>`;
+                  }
+                  return `<li><span>${escapeHtml(effect.label)}</span><strong>${escapeHtml(effect.valueText)}</strong></li>`;
+                })
+                .join("")
+            : '<li><span>효과 정보가 없습니다.</span></li>';
+
+          return `<article class="link-skill-item"><div class="link-skill-item__icon-wrap">${skill.skillIcon ? `<img src="${escapeHtml(skill.skillIcon)}" alt="${escapeHtml(skill.skillName || "링크 스킬")}" loading="lazy" />` : '<div class="link-skill-item__icon-empty">NO</div>'}</div><div class="link-skill-item__body"><h4>${escapeHtml(skill.skillName || "-")}</h4><p class="link-skill-item__level">${escapeHtml(
+            skill.levelText,
+          )}</p>${skill.maxLevelText ? `<p class="link-skill-item__max">${escapeHtml(skill.maxLevelText)}</p>` : ""}<ul class="link-skill-item__effects">${mergedEffects}</ul></div></article>`;
+        })
+        .join("")
+    : '<p class="empty">링크스킬 정보가 없습니다.</p>';
+  const mergedEffectRows = mergedAppliedEffects.length
+    ? mergedAppliedEffects
+        .map((effect) => {
+          if (!effect.valueText) {
+            return `<li><span>${escapeHtml(effect.label)}</span></li>`;
+          }
+          return `<li><span>${escapeHtml(effect.label)}</span><strong>${escapeHtml(effect.valueText)}</strong></li>`;
+        })
+        .join("")
+    : '<li class="is-empty">적용 중인 효과가 없습니다.</li>';
+
+  return `<section class="tab-grid hyper-link-grid"><article class="data-card hyper-stat-card"><div class="hyper-link-card__head"><h3>하이퍼스탯</h3>${renderSquarePresetSwitch(
+    "hyperStat",
+    hyperTabData,
+    state,
+    "하이퍼스탯 프리셋",
+  )}</div><ul class="hyper-stat-list">${hyperRows}</ul></article><article class="data-card link-skill-card"><div class="hyper-link-card__head"><h3>링크스킬</h3>${renderSquarePresetSwitch(
+    "skillLink",
+    skillLinkTabData,
+    state,
+    "링크스킬 프리셋",
+  )}</div><div class="link-skill-layout"><section class="link-skill-list-panel"><h4 class="link-panel-title">스킬 목록</h4><div class="link-skill-list">${linkCards}</div></section><section class="link-skill-effect-panel"><h4 class="link-panel-title">적용 중인 효과</h4><ul class="link-effect-list">${mergedEffectRows}</ul></section></div></article></section>`;
 }
 function renderGuildTab(tabData, name) {
   const s = tabData?.summary || {};
@@ -1826,10 +2100,195 @@ function renderGuildTab(tabData, name) {
       : '<p class="empty">길드원 정보가 없습니다.</p>'
   }</div></article></section>`;
 }
-function renderHexamatrixTab(tabData) {
-  const skills = toArray(tabData?.hexaSkills),
-    cores = toArray(tabData?.hexaStatCoreList);
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>헥사 스킬</h3><div class="card-grid card-grid--3">${skills.length ? skills.map((s) => `<article class="mini-card">${s.skillIcon ? `<img src="${escapeHtml(s.skillIcon)}" alt="${escapeHtml(s.skillName || "헥사 스킬")}" />` : ""}<h4>${escapeHtml(s.skillName || "-")}</h4><p>Lv.${escapeHtml(s.skillLevel ?? s.slotLevel ?? "-")} | ${escapeHtml(s.skillType || "-")}</p><p>${escapeHtml(s.skillEffect || "-")}</p></article>`).join("") : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>헥사 스탯</h3><div class="card-grid card-grid--2">${
+function resolveHexaSkillGroup(skill) {
+  const typeNorm = normalizeForMatch(skill?.skillType || "");
+  const nameNorm = normalizeForMatch(skill?.skillName || "");
+  const combined = `${typeNorm} ${nameNorm}`;
+
+  if (/common|공용|shared|쉐어|쉐어드/.test(combined)) return "common";
+  if (/mastery|마스터리/.test(combined)) return "mastery";
+  if (/reinforce|enhance|boost|강화/.test(combined)) return "enhance";
+  if (/skill|스킬|attack|공격/.test(combined)) return "skill";
+  return "unknown";
+}
+function sortHexaQueueBySlotNo(queue, preferredOrder = []) {
+  const orderMap = new Map(
+    preferredOrder.map((slotNo, index) => [Number(slotNo), index]),
+  );
+
+  return [...toArray(queue)].sort((left, right) => {
+    const leftSlotNo = parseNumericValue(left?.slotNo);
+    const rightSlotNo = parseNumericValue(right?.slotNo);
+    const leftRank = orderMap.has(leftSlotNo)
+      ? orderMap.get(leftSlotNo)
+      : Number.MAX_SAFE_INTEGER;
+    const rightRank = orderMap.has(rightSlotNo)
+      ? orderMap.get(rightSlotNo)
+      : Number.MAX_SAFE_INTEGER;
+
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+
+    if (
+      leftSlotNo !== null &&
+      rightSlotNo !== null &&
+      leftSlotNo !== rightSlotNo
+    ) {
+      return leftSlotNo - rightSlotNo;
+    }
+
+    return (left?.__idx ?? 0) - (right?.__idx ?? 0);
+  });
+}
+function buildHexaSkillBoardSlots(skills) {
+  const normalizedSkills = toArray(skills).map((skill, index) => ({
+    ...skill,
+    __idx: index,
+    __level:
+      parseNumericValue(skill?.skillLevel) ?? parseNumericValue(skill?.slotLevel) ?? null,
+  }));
+
+  const groupSlots = {
+    skill: ["t8", "t3", "t6", "t2", "t1", "t7"],       // 좌상: 스킬 코어
+    mastery: ["t9", "t4", "t10", "t5"],               // 우상: 마스터리 코어
+    enhance: ["b1", "b2", "b5", "b6"],                // 좌하: 강화 코어
+    common: ["b3", "b4", "b7", "b8"],                 // 우하: 공용 코어
+  };
+
+  const allSlotIds = [
+    ...groupSlots.skill,
+    ...groupSlots.mastery,
+    ...groupSlots.enhance,
+    ...groupSlots.common,
+  ];
+  const slotMap = Object.fromEntries(allSlotIds.map((slotId) => [slotId, null]));
+
+  const queues = {
+    skill: [],
+    mastery: [],
+    enhance: [],
+    common: [],
+    unknown: [],
+  };
+
+  normalizedSkills.forEach((skill) => {
+    const group = resolveHexaSkillGroup(skill);
+    if (group in queues) {
+      queues[group].push(skill);
+    } else {
+      queues.unknown.push(skill);
+    }
+  });
+
+  queues.skill = sortHexaQueueBySlotNo(queues.skill, [1, 2, 3, 4, 5, 6]);
+  // 요청사항: 마스터리 코어 2개 순서 교체
+  queues.mastery = sortHexaQueueBySlotNo(queues.mastery, [2, 1, 3, 4, 5, 6]);
+  // 요청사항: 강화 코어 slot_no 정렬 2,1,3,4 (위 왼쪽부터)
+  queues.enhance = sortHexaQueueBySlotNo(queues.enhance, [2, 1, 3, 4, 5, 6]);
+  queues.common = sortHexaQueueBySlotNo(queues.common, [1, 2, 3, 4, 5, 6]);
+  queues.unknown = sortHexaQueueBySlotNo(queues.unknown, [1, 2, 3, 4, 5, 6]);
+
+  const fillSlots = (slotIds, primaryQueue, secondaryQueue = null) => {
+    slotIds.forEach((slotId) => {
+      if (primaryQueue.length) {
+        slotMap[slotId] = primaryQueue.shift();
+        return;
+      }
+      if (secondaryQueue && secondaryQueue.length) {
+        slotMap[slotId] = secondaryQueue.shift();
+      }
+    });
+  };
+
+  fillSlots(groupSlots.skill, queues.skill, queues.unknown);
+  fillSlots(groupSlots.mastery, queues.mastery, queues.unknown);
+  fillSlots(groupSlots.enhance, queues.enhance, queues.unknown);
+  fillSlots(groupSlots.common, queues.common, queues.unknown);
+
+  const rest = [
+    ...queues.skill,
+    ...queues.mastery,
+    ...queues.enhance,
+    ...queues.common,
+    ...queues.unknown,
+  ];
+  if (rest.length) {
+    allSlotIds.forEach((slotId) => {
+      if (!slotMap[slotId] && rest.length) {
+        slotMap[slotId] = rest.shift();
+      }
+    });
+  }
+
+  return slotMap;
+}
+function renderHexaSkillNode(skill, theme = "purple") {
+  if (!skill) {
+    return `<div class="hexa-node hexa-node--${theme} is-empty"><div class="hexa-node__shape"><div class="hexa-node__lock" aria-hidden="true">LOCK</div></div></div>`;
+  }
+
+  const levelValue =
+    parseNumericValue(skill?.skillLevel) ?? parseNumericValue(skill?.slotLevel);
+  const levelText = levelValue === null ? "-" : String(Math.max(0, Math.floor(levelValue)));
+  const name = String(skill?.skillName || "헥사 스킬").trim() || "헥사 스킬";
+  const type = String(skill?.skillType || "").trim();
+  const titleParts = [name, type, `Lv.${levelText}`].filter(Boolean);
+
+  return `<div class="hexa-node hexa-node--${theme} is-filled" title="${escapeHtml(
+    titleParts.join(" | "),
+  )}"><div class="hexa-node__shape">${skill?.skillIcon ? `<img src="${escapeHtml(
+    skill.skillIcon,
+  )}" alt="${escapeHtml(name)}" loading="lazy" />` : '<div class="hexa-node__no">NO</div>'}</div>${levelText ? `<span class="hexa-node__level">${escapeHtml(
+    levelText,
+  )}</span>` : ""}</div>`;
+}
+function renderHexaSkillBoard(skills) {
+  const slotMap = buildHexaSkillBoardSlots(skills);
+  const slotDefs = [
+    { id: "t1", className: "hexa-slot--t1", theme: "purple" },
+    { id: "t2", className: "hexa-slot--t2", theme: "purple" },
+    { id: "t3", className: "hexa-slot--t3", theme: "purple" },
+    { id: "t4", className: "hexa-slot--t4", theme: "pink" },
+    { id: "t5", className: "hexa-slot--t5", theme: "pink" },
+    { id: "t6", className: "hexa-slot--t6", theme: "purple" },
+    { id: "t7", className: "hexa-slot--t7", theme: "purple" },
+    { id: "t8", className: "hexa-slot--t8", theme: "purple" },
+    { id: "t9", className: "hexa-slot--t9", theme: "pink" },
+    { id: "t10", className: "hexa-slot--t10", theme: "pink" },
+    { id: "b1", className: "hexa-slot--b1", theme: "blue" },
+    { id: "b2", className: "hexa-slot--b2", theme: "blue" },
+    { id: "b3", className: "hexa-slot--b3", theme: "silver" },
+    { id: "b4", className: "hexa-slot--b4", theme: "indigo" },
+    { id: "b5", className: "hexa-slot--b5", theme: "blue" },
+    { id: "b6", className: "hexa-slot--b6", theme: "blue" },
+    { id: "b7", className: "hexa-slot--b7", theme: "indigo" },
+    { id: "b8", className: "hexa-slot--b8", theme: "indigo" },
+  ];
+
+  const slotMarkup = slotDefs
+    .map((slot) => {
+      const skill = slotMap[slot.id] || null;
+      return `<div class="hexa-slot ${slot.className}">${renderHexaSkillNode(
+        skill,
+        slot.theme,
+      )}</div>`;
+    })
+    .join("");
+
+  return `<div class="hexa-skill-board"><div class="hexa-skill-board__glow" aria-hidden="true"></div><div class="hexa-skill-board__field">${slotMarkup}<div class="hexa-core-mark" aria-hidden="true">VI</div></div></div>`;
+}
+function renderHexamatrixTab(tabData, jewelSymbolVmatrixTabData) {
+  const vcores = toArray(jewelSymbolVmatrixTabData?.vmatrix?.vCores);
+  const skills = toArray(tabData?.hexaSkills);
+  const cores = toArray(tabData?.hexaStatCoreList);
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${vcores.length ? vcores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
+    c.vcoreName || "-",
+  )}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(
+    c.slotLevel ?? "-",
+  )}</p><p>${escapeHtml(
+    toArray(c.skills).join(" / ") || "스킬 정보 없음",
+  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>헥사 스킬</h3>${skills.length ? renderHexaSkillBoard(skills) : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스탯</h3><div class="card-grid card-grid--2">${
     cores.length
       ? cores
           .map(
@@ -1864,11 +2323,22 @@ function renderTabContent(state) {
   if (state.activeTab === "jewelSymbolVmatrix")
     return renderJewelSymbolVmatrixTab(tabs.jewelSymbolVmatrix || {}, state);
   if (state.activeTab === "hexamatrix")
-    return renderHexamatrixTab(tabs.hexamatrix || {});
+    return renderHexamatrixTab(
+      tabs.hexamatrix || {},
+      tabs.jewelSymbolVmatrix || {},
+    );
   if (state.activeTab === "hyperStat")
-    return renderHyperStatTab(tabs.hyperStat || {}, state);
+    return renderHyperStatTab(
+      tabs.hyperStat || {},
+      tabs.skillLink || {},
+      state,
+    );
   if (state.activeTab === "skillLink")
-    return renderSkillLinkTab(tabs.skillLink || {}, state);
+    return renderHyperStatTab(
+      tabs.hyperStat || {},
+      tabs.skillLink || {},
+      state,
+    );
   if (state.activeTab === "android")
     return renderAndroidTab(tabs.android || {}, state);
   if (state.activeTab === "guild")

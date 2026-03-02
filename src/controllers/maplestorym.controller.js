@@ -1779,7 +1779,7 @@ async function loadRecentPageDataDetailsByOcid(ocid, limit = presetFallbackLookb
   })
     .sort({ createdAt: -1 })
     .limit(lookback)
-    .select({ createdAt: 1, responseBody: 1, _id: 0 })
+    .select({ createdAt: 1, "responseBody.details": 1, _id: 0 })
     .allowDiskUse(true)
     .lean();
 
@@ -1900,6 +1900,28 @@ const expHistorySortHint = Object.freeze({
   success: 1,
   createdAt: -1
 });
+const expHistoryProjection = Object.freeze({
+  _id: 0,
+  createdAt: 1,
+  "responseBody.character_exp": 1,
+  "responseBody.character_exp_rate": 1,
+  "responseBody.character_level": 1,
+  "responseBody.details.basic.data.character_exp": 1,
+  "responseBody.details.basic.data.character_exp_rate": 1,
+  "responseBody.details.basic.data.character_level": 1,
+  "responseBody.details.stat.data.character_exp": 1,
+  "responseBody.details.stat.data.character_exp_rate": 1,
+  "responseBody.details.stat.data.character_level": 1,
+  "responseBody.tabs.exp.currentExp": 1,
+  "responseBody.tabs.exp.currentExpRate": 1,
+  "responseBody.tabs.exp.currentLevel": 1,
+  "responseBody.tabs.exp.basic.data.character_exp": 1,
+  "responseBody.tabs.exp.basic.data.character_exp_rate": 1,
+  "responseBody.tabs.exp.basic.data.character_level": 1,
+  "responseBody.tabs.exp.stat.data.character_exp": 1,
+  "responseBody.tabs.exp.stat.data.character_exp_rate": 1,
+  "responseBody.tabs.exp.stat.data.character_level": 1
+});
 
 function isHintNotUsableError(error) {
   const message = String(error?.message || "").toLowerCase();
@@ -1940,7 +1962,7 @@ async function fetchExpHistoryLogBatch({
   let query = RequestLog.find(filter)
     .sort({ createdAt: -1 })
     .limit(batchLimit)
-    .select({ createdAt: 1, responseBody: 1, _id: 0 })
+    .select(expHistoryProjection)
     .allowDiskUse(true)
     .lean();
 
@@ -2616,6 +2638,17 @@ function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
           symbol?.magic_atk ??
           symbol?.matk,
       ) ?? null,
+    authenticForce:
+      parseNumericValue(
+        symbol?.authentic_force ??
+          symbol?.authentic_force_value,
+      ) ?? null,
+    criticalDamage:
+      parseNumericValue(
+        symbol?.critical_damage ??
+          symbol?.critical_damage_rate ??
+          symbol?.critical_damage_percent,
+      ) ?? null,
   }));
 
   const authenticSymbols = toArray(symbolData.authentic_symbol).map((symbol) => ({
@@ -2647,6 +2680,17 @@ function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
           symbol?.magic_atk ??
           symbol?.matk,
       ) ?? null,
+    authenticForce:
+      parseNumericValue(
+        symbol?.authentic_force ??
+          symbol?.authentic_force_value,
+      ) ?? null,
+    criticalDamage:
+      parseNumericValue(
+        symbol?.critical_damage ??
+          symbol?.critical_damage_rate ??
+          symbol?.critical_damage_percent,
+      ) ?? null,
   }));
 
   const vCores = toArray(vmatrixData.character_v_core_equipment).map((core) => ({
@@ -2676,6 +2720,12 @@ function buildHexamatrixTab(details) {
   const hexaStatData = details?.hexamatrixStat?.data || {};
   const hexaSkills = toArray(hexaSkillData.hexamatrix_skill).map((skill) => ({
     skillName: skill?.skill_name || "-",
+    slotNo:
+      skill?.slot_no ??
+      skill?.hexa_skill_slot_no ??
+      skill?.hexamatrix_skill_slot_no ??
+      skill?.slot_id ??
+      null,
     skillLevel: skill?.skill_level ?? skill?.slot_level ?? "-",
     slotLevel: skill?.slot_level ?? "-",
     skillType: skill?.skill_type || "-",
