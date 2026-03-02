@@ -1391,7 +1391,7 @@ function parseSymbolOptionMetric(optionText, labelPattern) {
   const text = String(optionText || "");
   if (!text.trim()) return 0;
   const regex = new RegExp(
-    `(?:${labelPattern})[^\\d+-]*\\+?\\s*([\\d,]+)`,
+    `(?:${labelPattern})[^\\d+.-]*\\+?\\s*([\\d,.]+)`,
     "i",
   );
   const match = text.match(regex);
@@ -1399,27 +1399,115 @@ function parseSymbolOptionMetric(optionText, labelPattern) {
   return parseNumericValue(match[1]) || 0;
 }
 
-function resolveArcaneSymbolMetrics(symbol) {
-  const arcaneForceDirect = parseNumericValue(symbol?.arcaneForce);
+function resolveSymbolMetrics(symbol, forcePatterns) {
+  const forceDirect = parseNumericValue(symbol?.arcaneForce ?? symbol?.authenticForce);
   const physicalAttackDirect = parseNumericValue(symbol?.physicalAttack);
   const magicalAttackDirect = parseNumericValue(symbol?.magicalAttack);
+  const criticalDamageDirect = parseNumericValue(symbol?.criticalDamage);
   const optionText = String(symbol?.symbolOption || "");
 
-  const arcaneForce =
-    arcaneForceDirect ??
-    parseSymbolOptionMetric(optionText, "아케인\\s*포스|아케인포스");
+  const force =
+    forceDirect ??
+    parseSymbolOptionMetric(optionText, forcePatterns);
   const physicalAttack =
     physicalAttackDirect ??
     parseSymbolOptionMetric(optionText, "물리\\s*공격력|물리공격력");
   const magicalAttack =
     magicalAttackDirect ??
     parseSymbolOptionMetric(optionText, "마법\\s*공격력|마법공격력");
+  const criticalDamage =
+    criticalDamageDirect ??
+    parseSymbolOptionMetric(optionText, "치명타\\s*피해|치명타피해");
 
   return {
-    arcaneForce: Number.isFinite(arcaneForce) ? arcaneForce : 0,
+    force: Number.isFinite(force) ? force : 0,
     physicalAttack: Number.isFinite(physicalAttack) ? physicalAttack : 0,
     magicalAttack: Number.isFinite(magicalAttack) ? magicalAttack : 0,
+    criticalDamage: Number.isFinite(criticalDamage) ? criticalDamage : 0,
   };
+}
+
+function buildSymbolDisplayItems(items, options = {}) {
+  const {
+    prefixPattern = "",
+    orderedNames = [],
+    forcePatterns = "아케인\\s*포스|아케인포스",
+  } = options;
+  const stripPrefix = (rawName) =>
+    prefixPattern
+      ? String(rawName || "").replace(prefixPattern, "").trim()
+      : String(rawName || "").trim();
+  const orderMap = new Map(
+    orderedNames.map((name, index) => [normalizeForMatch(name), index]),
+  );
+  const sortedItems = toArray(items)
+    .map((symbol, index) => ({
+      ...symbol,
+      _sourceIndex: index,
+      _displayName: stripPrefix(symbol?.symbolName || "-") || "-",
+    }))
+    .sort((left, right) => {
+      const leftIndex = orderMap.get(normalizeForMatch(left._displayName));
+      const rightIndex = orderMap.get(normalizeForMatch(right._displayName));
+      const safeLeft = Number.isFinite(leftIndex) ? leftIndex : 999;
+      const safeRight = Number.isFinite(rightIndex) ? rightIndex : 999;
+      if (safeLeft !== safeRight) return safeLeft - safeRight;
+      return left._sourceIndex - right._sourceIndex;
+    });
+
+  return sortedItems.slice(0, 6).map((symbol, index) => {
+    const level = parseNumericValue(symbol?.symbolLevel);
+    const isMax = level !== null && level >= 20;
+    const metrics = resolveSymbolMetrics(symbol, forcePatterns);
+    return {
+      ...symbol,
+      metrics,
+      level,
+      isMax,
+      levelText: isMax ? "MAX" : level !== null ? `Lv.${formatNumber(level)}` : "Lv.-",
+      displayName: symbol._displayName,
+      iconUrl:
+        String(symbol?.symbolIcon || "").trim() ||
+        arcaneSymbolFallbackIcons[index % arcaneSymbolFallbackIcons.length],
+    };
+  });
+}
+
+function renderSymbolBoard(displayItems, options = {}) {
+  const {
+    boardClass = "",
+    summaryTitle = "아케인포스 증가",
+    showCriticalDamage = false,
+  } = options;
+  const totals = displayItems.reduce(
+    (acc, item) => {
+      acc.force += item.metrics.force;
+      acc.physicalAttack += item.metrics.physicalAttack;
+      acc.magicalAttack += item.metrics.magicalAttack;
+      acc.criticalDamage += item.metrics.criticalDamage;
+      return acc;
+    },
+    { force: 0, physicalAttack: 0, magicalAttack: 0, criticalDamage: 0 },
+  );
+  const attackTotal = totals.physicalAttack + totals.magicalAttack;
+  const criticalDamageText = formatPercentValue(totals.criticalDamage);
+
+  return `<div class="symbol-board ${escapeHtml(boardClass)}"><div class="symbol-board__summary"><p><span>${escapeHtml(
+    summaryTitle,
+  )}</span><strong>${escapeHtml(
+    formatNumber(totals.force),
+  )}</strong></p><p><span>공격력</span><strong>${escapeHtml(
+    formatNumber(attackTotal),
+  )}</strong></p>${showCriticalDamage ? `<p><span>치명타 피해</span><strong>${escapeHtml(criticalDamageText)}</strong></p>` : ""}</div><div class="symbol-board__grid">${displayItems
+    .map(
+      (item) =>
+        `<article class="symbol-card"><div class="symbol-card__icon-wrap"><img src="${escapeHtml(
+          item.iconUrl,
+        )}" alt="${escapeHtml(item.symbolName || "심볼")}" loading="lazy" /><span class="symbol-card__level">${escapeHtml(
+          item.levelText,
+        )}</span></div><h4>${escapeHtml(item.displayName || "-")}</h4></article>`,
+    )
+    .join("")}</div></div>`;
 }
 
 function renderArcaneSymbolBoard(arcaneSymbols) {
@@ -1428,47 +1516,51 @@ function renderArcaneSymbolBoard(arcaneSymbols) {
     return '<p class="empty">아케인 심볼이 없습니다.</p>';
   }
 
-  const displayItems = items.slice(0, 6).map((symbol, index) => {
-    const level = parseNumericValue(symbol?.symbolLevel);
-    const isMax = level !== null && level >= 20;
-    const metrics = resolveArcaneSymbolMetrics(symbol);
-    return {
-      ...symbol,
-      metrics,
-      level,
-      isMax,
-      levelText: isMax ? "MAX" : level !== null ? `Lv.${formatNumber(level)}` : "Lv.-",
-      iconUrl:
-        String(symbol?.symbolIcon || "").trim() ||
-        arcaneSymbolFallbackIcons[index % arcaneSymbolFallbackIcons.length],
-    };
+  const arcaneOrderNames = [
+    "소멸의 여로",
+    "츄츄 아일랜드",
+    "레헬른",
+    "아르카나",
+    "모라스",
+    "에스페라",
+  ];
+  const displayItems = buildSymbolDisplayItems(items, {
+    prefixPattern: /^아케인\s*심볼\s*[:：]?\s*|^아케인심볼\s*[:：]?\s*/i,
+    orderedNames: arcaneOrderNames,
+    forcePatterns: "아케인\\s*포스|아케인포스",
   });
+  return renderSymbolBoard(displayItems, {
+    boardClass: "symbol-board--arcane",
+    summaryTitle: "아케인포스 증가",
+    showCriticalDamage: false,
+  });
+}
 
-  const totals = displayItems.reduce(
-    (acc, item) => {
-      acc.arcaneForce += item.metrics.arcaneForce;
-      acc.physicalAttack += item.metrics.physicalAttack;
-      acc.magicalAttack += item.metrics.magicalAttack;
-      return acc;
-    },
-    { arcaneForce: 0, physicalAttack: 0, magicalAttack: 0 },
-  );
-  const attackTotal = totals.physicalAttack + totals.magicalAttack;
-
-  return `<div class="arcane-board"><div class="arcane-board__summary"><p><span>아케인포스 증가</span><strong>${escapeHtml(
-    formatNumber(totals.arcaneForce),
-  )}</strong></p><p><span>공격력</span><strong>${escapeHtml(
-    formatNumber(attackTotal),
-  )}</strong></p></div><div class="arcane-board__grid">${displayItems
-    .map(
-      (item) =>
-        `<article class="arcane-symbol-card"><div class="arcane-symbol-card__icon-wrap"><img src="${escapeHtml(
-          item.iconUrl,
-        )}" alt="${escapeHtml(item.symbolName || "아케인 심볼")}" loading="lazy" /><span class="arcane-symbol-card__level">${escapeHtml(
-          item.levelText,
-        )}</span></div><h4>${escapeHtml(item.symbolName || "-")}</h4></article>`,
-    )
-    .join("")}</div></div>`;
+function renderAuthenticSymbolBoard(authenticSymbols) {
+  const items = toArray(authenticSymbols);
+  if (!items.length) {
+    return '<p class="empty">어센틱 심볼이 없습니다.</p>';
+  }
+  const authenticOrderNames = [
+    "아에르",
+    "에세테라",
+    "세르니움",
+    "아르크스",
+    "오디움",
+    "도원경",
+    "아르테리아",
+    "카르시온",
+  ];
+  const displayItems = buildSymbolDisplayItems(items, {
+    prefixPattern: /^어센틱\s*심볼\s*[:：]?\s*|^어센틱심볼\s*[:：]?\s*/i,
+    orderedNames: authenticOrderNames,
+    forcePatterns: "어센틱\\s*포스|어센틱포스|authentic\\s*force",
+  });
+  return renderSymbolBoard(displayItems, {
+    boardClass: "symbol-board--authentic",
+    summaryTitle: "어센틱포스 증가",
+    showCriticalDamage: true,
+  });
 }
 
 function renderJewelSymbolVmatrixTab(tabData, state) {
@@ -1648,13 +1740,11 @@ function renderJewelSymbolVmatrixTab(tabData, state) {
     themeKey,
   )}"><button type="button" class="jewel-nav jewel-nav--left" ${previousPresetNo !== null ? `data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(previousPresetNo)}"` : "disabled"} aria-label="이전 페이지">‹</button><div class="jewel-ring-stage"><div class="jewel-ring"><svg class="jewel-ring__lines" viewBox="0 0 100 100" aria-hidden="true"><polyline points="50,7 84,31 70,74 30,74 16,31 50,7" /></svg>${nodeMarkup}</div><article class="jewel-set-card"><h4 class="${setSummary.inactive ? "is-inactive" : ""}">${escapeHtml(
     setSummary.title,
-  )}</h4>${setSummary.lines.length ? `<ul>${setSummary.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : ""}</article></div><button type="button" class="jewel-nav jewel-nav--right" ${nextPresetNo !== null ? `data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(nextPresetNo)}"` : "disabled"} aria-label="다음 페이지">›</button></div><div class="jewel-page-dots">${dotButtons}</div></article><article class="data-card arcane-symbol-panel"><h3>아케인 심볼</h3>${renderArcaneSymbolBoard(
+  )}</h4>${setSummary.lines.length ? `<ul>${setSummary.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : ""}</article></div><button type="button" class="jewel-nav jewel-nav--right" ${nextPresetNo !== null ? `data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(nextPresetNo)}"` : "disabled"} aria-label="다음 페이지">›</button></div><div class="jewel-page-dots">${dotButtons}</div></article><div class="symbol-side-stack"><article class="data-card arcane-symbol-panel"><h3>아케인 심볼</h3>${renderArcaneSymbolBoard(
     arcane,
-  )}</article><article class="data-card"><h3>어센틱 심볼</h3><ul class="simple-list">${auth.length ? auth.map((s) => `<li><strong>${escapeHtml(
-    s.symbolName || "-",
-  )}</strong><p>Lv.${escapeHtml(s.symbolLevel ?? "-")} | ${escapeHtml(
-    s.symbolOption || "-",
-  )}</p></li>`).join("") : '<li class="empty">어센틱 심볼이 없습니다.</li>'}</ul></article><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${cores.length ? cores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
+  )}</article><article class="data-card authentic-symbol-panel"><h3>어센틱 심볼</h3>${renderAuthenticSymbolBoard(
+    auth,
+  )}</article></div><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${cores.length ? cores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
     c.vcoreName || "-",
   )}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(
     c.slotLevel ?? "-",
