@@ -490,6 +490,144 @@ function compareEquipmentItems(l, r) {
     "ko-KR",
   );
 }
+const cashBoardLeftSlotDefs = Object.freeze([
+  { key: "weapon", label: "무기" },
+  { key: "hat", label: "모자" },
+  { key: "necklace1", label: "목걸이" },
+  { key: "necklace2", label: "목걸이 2" },
+  { key: "ring1", label: "반지" },
+  { key: "ring2", label: "반지 2" },
+  { key: "earring", label: "귀고리" },
+  { key: "badge", label: "뱃지" },
+]);
+const cashBoardRightSlotDefs = Object.freeze([
+  { key: "shoulder", label: "어깨" },
+  { key: "gloves", label: "장갑" },
+  { key: "cape", label: "망토" },
+  { key: "overall", label: "한벌옷" },
+  { key: "shoes", label: "신발" },
+  { key: "belt", label: "벨트" },
+]);
+const cashBoardBottomSlotDefs = Object.freeze([
+  { key: "face", label: "얼굴장식" },
+  { key: "eye", label: "눈장식" },
+  { key: "emblem", label: "엠블렘" },
+  { key: "android", label: "안드로이드" },
+  { key: "title", label: "칭호" },
+  { key: "medal", label: "훈장" },
+]);
+function resolveCashSlotKey(slotName) {
+  const n = normalizeForMatch(slotName);
+  if (!n) return "extra";
+  if (n.includes(normalizeForMatch("보조무기"))) return "subWeapon";
+  if (n.includes(normalizeForMatch("엠블렘"))) return "emblem";
+  if (n.includes(normalizeForMatch("무기"))) return "weapon";
+  if (n.includes(normalizeForMatch("모자"))) return "hat";
+  if (
+    n.includes(normalizeForMatch("목걸이")) ||
+    n.includes(normalizeForMatch("펜던")) ||
+    n.includes(normalizeForMatch("네클"))
+  ) {
+    if (n.includes("2")) return "necklace2";
+    return "necklace1";
+  }
+  if (n.includes(normalizeForMatch("반지"))) {
+    if (n.includes("2")) return "ring2";
+    return "ring1";
+  }
+  if (
+    n.includes(normalizeForMatch("귀고리")) ||
+    n.includes(normalizeForMatch("귀걸"))
+  ) {
+    return "earring";
+  }
+  if (n.includes(normalizeForMatch("뱃지"))) return "badge";
+  if (n.includes(normalizeForMatch("어깨")) || n.includes(normalizeForMatch("숄더"))) {
+    return "shoulder";
+  }
+  if (n.includes(normalizeForMatch("장갑"))) return "gloves";
+  if (n.includes(normalizeForMatch("망토"))) return "cape";
+  if (
+    n.includes(normalizeForMatch("한벌")) ||
+    n.includes(normalizeForMatch("상의")) ||
+    n.includes(normalizeForMatch("하의"))
+  ) {
+    return "overall";
+  }
+  if (n.includes(normalizeForMatch("신발"))) return "shoes";
+  if (n.includes(normalizeForMatch("벨트"))) return "belt";
+  if (n.includes(normalizeForMatch("얼굴장식"))) return "face";
+  if (n.includes(normalizeForMatch("눈장식"))) return "eye";
+  if (n.includes(normalizeForMatch("안드로이드"))) return "android";
+  if (n.includes(normalizeForMatch("칭호"))) return "title";
+  if (n.includes(normalizeForMatch("훈장"))) return "medal";
+  return "extra";
+}
+function buildCashSlotMap(cashItems) {
+  const byKey = new Map();
+  const extras = [];
+  toArray(cashItems).forEach((item) => {
+    const key = resolveCashSlotKey(item?.slotName);
+    const normalizedItem = {
+      cashItemName: sanitizeEquipmentText(item?.cashItemName || "-") || "-",
+      cashItemIcon: String(item?.cashItemIcon || "").trim(),
+      slotName: sanitizeEquipmentText(item?.slotName || "-") || "-",
+    };
+    if (key === "extra" || byKey.has(key)) {
+      extras.push(normalizedItem);
+      return;
+    }
+    byKey.set(key, normalizedItem);
+  });
+  return { byKey, extras };
+}
+function renderCashHoverCard(item, slotLabel) {
+  const itemName = sanitizeEquipmentText(item?.cashItemName || "-") || "-";
+  const icon = String(item?.cashItemIcon || "").trim();
+  const resolvedSlot = sanitizeEquipmentText(item?.slotName || slotLabel || "-") || "-";
+  return `<article class="cash-hover-card"><header class="cash-hover__header"><div class="cash-hover__icon-wrap">${icon ? `<img class="cash-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" loading="lazy" />` : '<div class="cash-hover__icon cash-hover__icon--empty">NO</div>'}</div><div class="cash-hover__title-wrap"><h4>${escapeHtml(itemName)}</h4><p>${escapeHtml(resolvedSlot)}</p></div></header><section class="cash-hover__body"><dl><div><dt>종류</dt><dd>캐시 장비</dd></div><div><dt>부위</dt><dd>${escapeHtml(resolvedSlot)}</dd></div><div><dt>아이템명</dt><dd>${escapeHtml(itemName)}</dd></div></dl></section></article>`;
+}
+function renderCashSlotCard(slotDef, slotMap, prefix = "cash") {
+  const item = slotMap.byKey.get(slotDef.key) || null;
+  const hasItem = !!(item && item.cashItemIcon);
+  const dataAttr = `data-cash-slot="${escapeHtml(slotDef.key)}"`;
+  if (!item) {
+    return `<article class="cash-slot-card is-empty" ${dataAttr}><span class="cash-slot-card__placeholder">${escapeHtml(slotDef.label)}</span></article>`;
+  }
+  const hoverTemplate = renderCashHoverCard(item, slotDef.label);
+  return `<article class="cash-slot-card ${hasItem ? "is-filled" : "is-empty"}" ${dataAttr}>${hasItem ? `<img src="${escapeHtml(item.cashItemIcon)}" alt="${escapeHtml(item.cashItemName)}" loading="lazy" />` : `<span class="cash-slot-card__placeholder">${escapeHtml(slotDef.label)}</span>`}<template class="cash-hover-template">${hoverTemplate}</template></article>`;
+}
+function renderCashEquipmentBoard(cashItems, profile) {
+  const slotMap = buildCashSlotMap(cashItems);
+  const leftCards = cashBoardLeftSlotDefs
+    .map((slotDef) => renderCashSlotCard(slotDef, slotMap, "left"))
+    .join("");
+  const rightCards = cashBoardRightSlotDefs
+    .map((slotDef) => renderCashSlotCard(slotDef, slotMap, "right"))
+    .join("");
+  const bottomCards = cashBoardBottomSlotDefs
+    .map((slotDef) => renderCashSlotCard(slotDef, slotMap, "bottom"))
+    .join("");
+  const extraCards = slotMap.extras.length
+    ? slotMap.extras
+        .map((item, index) => {
+          const key = `extra-${index + 1}`;
+          return renderCashSlotCard(
+            { key, label: item.slotName || "기타" },
+            { byKey: new Map([[key, item]]) },
+            "extra",
+          );
+        })
+        .join("")
+    : "";
+  const avatar = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
+  const profileName = String(profile?.name || "-").trim() || "-";
+  const levelText = Number.isFinite(parseNumericValue(profile?.level))
+    ? `Lv.${parseNumericValue(profile.level)}`
+    : "Lv.-";
+
+  return `<article class="data-card cash-board-card"><h3>캐시 장비</h3><div class="cash-board"><div class="cash-board__left">${leftCards}</div><div class="cash-board__center"><div class="cash-board__meta"><strong>${escapeHtml(levelText)}</strong><span>${escapeHtml(profileName)}</span></div><div class="cash-board__avatar-wrap"><img class="cash-board__avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(profileName)} 캐릭터" loading="lazy" /></div></div><div class="cash-board__right">${rightCards}</div></div><div class="cash-board__bottom">${bottomCards}${extraCards}</div></article>`;
+}
 function collectDamageAndBossOptions(list) {
   const t = {
     physicalDamage: 0,
@@ -769,7 +907,7 @@ function renderMajorStats(profile, options = {}) {
       ? `<button type="button" class="section-more-btn" data-expand-target="#${escapeHtml(listId)}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
       : "";
 
-  return `<section class="major-stats major-stats--compact"><h3>주요스탯</h3><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
+  return `<section class="major-stats major-stats--compact"><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
 }
 function renderProfile(profile, query) {
   const profileImage = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
@@ -919,54 +1057,39 @@ function renderEquipmentTab(tabData, profile, state) {
       ? `<button type="button" class="section-more-btn" data-expand-target="#${equipmentGridId}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
       : "";
   const cashFromSelected = toArray(data.cashItemEquipment);
+  const additionalCashFromSelected = toArray(data.additionalCashItemEquipment);
   const firstPresetWithCash =
     toArray(tabData?.presets)
       .map((preset) => toArray(preset?.data?.cashItemEquipment))
       .find((list) => list.length > 0) || [];
-  const cash = cashFromSelected.length ? cashFromSelected : firstPresetWithCash;
-  const renderCash = (list, empty) =>
-    list.length
-      ? list
-          .map(
-            (it) =>
-              `<li><div class="item-main">${it.cashItemIcon ? `<img src="${escapeHtml(it.cashItemIcon)}" alt="${escapeHtml(sanitizeEquipmentText(it.cashItemName || "캐시 장비") || "캐시 장비")}" />` : ""}<div><strong>${escapeHtml(sanitizeEquipmentText(it.cashItemName || "-") || "-")}</strong><p>${escapeHtml(sanitizeEquipmentText(it.slotName || "-") || "-")}</p></div></div></li>`,
-          )
-          .join("")
-      : `<li class="empty">${escapeHtml(empty)}</li>`;
-  const sets = toArray(tabData?.setEffects),
-    pets = toArray(tabData?.petSetOptions);
-  const renderOptionChips = (text, emptyMessage) => {
-    const options = splitOptionText(text);
-    if (!options.length) {
-      return `<p class="empty">${escapeHtml(emptyMessage)}</p>`;
-    }
-
-    return `<ul class="option-chip-list">${options.map((option) => `<li>${escapeHtml(sanitizeEquipmentText(option) || "-")}</li>`).join("")}</ul>`;
-  };
-  const renderSetEffectCard = (setInfo) => {
-    const setName = setInfo?.setName || "-";
-    const countMeta = parseSetCountMeta(setInfo?.setCount);
-    const starMatched = String(setInfo?.setOption || "").match(/★\s*\d+/);
-    const starLabel = starMatched ? String(starMatched[0]).replace(/\s+/g, "") : "";
-    const progressWidth = Math.round(countMeta.ratio * 100);
-
-    return `<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">${escapeHtml(setName)}</strong><span class="set-effect__meta">${escapeHtml(countMeta.label)}${starLabel ? ` <em class="set-effect__star">${escapeHtml(starLabel)}</em>` : ""}</span></summary><div class="set-effect__bar"><span style="width:${escapeHtml(String(progressWidth))}%"></span></div><div class="set-effect__detail">${renderOptionChips(setInfo?.setOption, "세트 옵션 정보가 없습니다.")}</div></details>`;
-  };
-  const renderPetEffectCard = (petInfo) =>
-    `<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">${escapeHtml(petInfo?.setName || "-")}</strong><span class="set-effect__meta">펫 세트</span></summary><div class="set-effect__detail">${renderOptionChips(petInfo?.setOption, "펫 세트 옵션 정보가 없습니다.")}</div></details>`;
-
+  const firstPresetWithAdditionalCash =
+    toArray(tabData?.presets)
+      .map((preset) => toArray(preset?.data?.additionalCashItemEquipment))
+      .find((list) => list.length > 0) || [];
+  const cashBase = cashFromSelected.length ? cashFromSelected : firstPresetWithCash;
+  const additionalCashBase = additionalCashFromSelected.length
+    ? additionalCashFromSelected
+    : firstPresetWithAdditionalCash;
+  const cash = [...cashBase, ...additionalCashBase].filter(
+    (item, index, array) =>
+      index ===
+      array.findIndex(
+        (target) =>
+          String(target?.cashItemName || "").trim() ===
+            String(item?.cashItemName || "").trim() &&
+          String(target?.slotName || "").trim() ===
+            String(item?.slotName || "").trim() &&
+          String(target?.cashItemIcon || "").trim() ===
+            String(item?.cashItemIcon || "").trim(),
+      ),
+  );
+  const cashBoard = renderCashEquipmentBoard(cash, profile);
   const statsPanel = renderMajorStats(profile);
   return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
     "equipment",
     tabData,
     state,
-  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><article class="data-card"><h3>캐시 장비</h3><ul class="simple-list">${renderCash(
-    cash,
-    "캐시 장비 데이터가 없습니다.",
-  )}</ul></article><article class="data-card"><h3>세트 효과</h3><div class="set-effect-list">${sets.length ? sets.map(renderSetEffectCard).join("") : '<p class="empty">세트 효과 데이터가 없습니다.</p>'}</div></article><article class="data-card"><h3>펫 효과</h3><div class="set-effect-list">${pets.length ? pets.map(renderPetEffectCard).join("") : '<p class="empty">펫 세트 효과 데이터가 없습니다.</p>'}<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">자동 스킬</strong><span class="set-effect__meta">펫 자동 스킬</span></summary><div class="set-effect__detail">${renderOptionChips(
-    tabData?.petAutoSkillOption,
-    "자동 스킬 정보가 없습니다.",
-  )}</div></details></div></article></section>`;
+  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div>${cashBoard}</section>`;
 }
 function buildDailySnapshotsFromHistory(expHistoryState) {
   const sourcePoints = toArray(expHistoryState?.data?.points)
@@ -1027,10 +1150,17 @@ function buildDailySnapshotsFromHistory(expHistoryState) {
 
 function buildExpSeriesForChart(snapshots, expTab, profile) {
   const snapshotItems = toArray(snapshots).filter(
-    (item) => Number.isFinite(item?.exp) && item.exp > 0,
+    (item) =>
+      Number.isFinite(item?.exp) &&
+      item.exp > 0 &&
+      item?.ts &&
+      !Number.isNaN(new Date(item.ts).getTime()),
   );
   if (snapshotItems.length) {
-    return snapshotItems;
+    const sorted = [...snapshotItems].sort(
+      (left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime(),
+    );
+    return sorted.slice(-7);
   }
 
   const currentExp = parseNumericValue(expTab?.currentExp);
@@ -1048,53 +1178,70 @@ function buildExpSeriesForChart(snapshots, expTab, profile) {
   ];
 }
 
-function buildLevelSeriesForChart(snapshots, expTab, profile) {
-  const items = toArray(snapshots).filter((item) => Number.isFinite(item?.level));
-  if (items.length >= 2) {
-    return items;
+function buildLevelSeriesForChart(snapshots, expHistoryState, expTab, profile) {
+  const rawHistoryItems = toArray(expHistoryState?.data?.points)
+    .map((point) => ({
+      ts: point?.ts,
+      level: parseNumericValue(point?.level),
+      exp: parseNumericValue(point?.exp),
+      expRate: parseNumericValue(point?.expRate),
+    }))
+    .filter(
+      (item) =>
+        item?.ts &&
+        !Number.isNaN(new Date(item.ts).getTime()) &&
+        Number.isFinite(item?.level),
+    )
+    .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+
+  const fallbackSnapshotItems = toArray(snapshots)
+    .filter((item) => Number.isFinite(item?.level) && item?.ts)
+    .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+  const items = rawHistoryItems.length ? rawHistoryItems : fallbackSnapshotItems;
+
+  const levelChanges = [];
+  let previousLevel = null;
+  items.forEach((item) => {
+    const levelValue = parseNumericValue(item.level);
+    if (levelValue === null) {
+      return;
+    }
+    if (previousLevel === null || levelValue !== previousLevel) {
+      levelChanges.push({
+        ...item,
+        level: levelValue,
+      });
+      previousLevel = levelValue;
+    }
+  });
+
+  const recentChanges = levelChanges.slice(-7);
+  if (recentChanges.length >= 2) {
+    return recentChanges;
+  }
+
+  const fallbackLevel =
+    recentChanges.length === 1
+      ? parseNumericValue(recentChanges[0]?.level)
+      : parseNumericValue(expTab?.currentLevel ?? profile?.level);
+  if (fallbackLevel === null) {
+    return [];
   }
 
   const now = new Date();
   const previous = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  if (items.length === 1) {
-    const first = items[0];
-    const fallbackLevel = parseNumericValue(first.level);
-    if (fallbackLevel === null) {
-      return [];
-    }
-
-    return [
-      {
-        ...first,
-        ts: previous.toISOString(),
-        level: fallbackLevel,
-      },
-      {
-        ...first,
-        ts: first.ts || now.toISOString(),
-        level: fallbackLevel,
-      },
-    ];
-  }
-
-  const currentLevel = parseNumericValue(expTab?.currentLevel ?? profile?.level);
-  if (currentLevel === null) {
-    return [];
-  }
-
   const currentExp = parseNumericValue(expTab?.currentExp);
   const currentExpRate = parseNumericValue(expTab?.currentExpRate ?? profile?.expRate);
-
   return [
     {
       ts: previous.toISOString(),
-      level: currentLevel,
+      level: fallbackLevel,
       exp: currentExp,
       expRate: currentExpRate,
     },
     {
       ts: now.toISOString(),
-      level: currentLevel,
+      level: fallbackLevel,
       exp: currentExp,
       expRate: currentExpRate,
     },
@@ -1111,51 +1258,44 @@ function renderExpBarChart(snapshots, expTab, profile) {
   return `<div class="exp-chart-wrap"><div class="exp-bar-chart">${items
     .map((item, index) => {
       const ratio = Math.max(0.08, item.exp / maxExp);
-      const height = Math.round(ratio * 220);
+      const height = Math.round(ratio * 236);
       const dateLabel = formatKstDateLabel(item.ts);
       const levelLabel = Number.isFinite(item.level)
-        ? `레벨 Lv.${formatNumber(item.level)}`
-        : "레벨 -";
-      const expRateLabel =
-        item.expRate !== null && item.expRate !== undefined
-          ? `경험치율 ${formatExpRateText(item.expRate)}`
-          : "경험치율 -";
+        ? `Lv.${formatNumber(item.level)}`
+        : "Lv.-";
+      const expRateLabel = item.expRate !== null && item.expRate !== undefined
+        ? formatExpRateText(item.expRate)
+        : "";
       const tooltip = `${formatKstTooltipDateTime(item.ts)} | 총 경험치 ${formatNumber(item.exp)} | ${levelLabel} | ${expRateLabel}`;
-      const metaLabel = [
-        Number.isFinite(item.level) ? `Lv.${formatNumber(item.level)}` : "",
-        item.expRate !== null && item.expRate !== undefined
-          ? formatExpRateText(item.expRate)
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" · ");
-      return `<div class="exp-bar-item"><div class="exp-bar ${index === items.length - 1 ? "is-current" : ""}" style="height:${height}px" title="${escapeHtml(tooltip)}"></div><p>${escapeHtml(dateLabel)}</p>${metaLabel ? `<small>${escapeHtml(metaLabel)}</small>` : ""}</div>`;
+      return `<div class="exp-bar-item"><p class="exp-bar-item__top">${escapeHtml(levelLabel)}</p><div class="exp-bar ${index === items.length - 1 ? "is-current" : ""}" style="height:${height}px" title="${escapeHtml(tooltip)}"></div><p class="exp-bar-item__date">${escapeHtml(dateLabel)}</p>${expRateLabel ? `<small class="exp-bar-item__rate">${escapeHtml(expRateLabel)}</small>` : ""}</div>`;
     })
     .join("")}</div></div>`;
 }
 
-function renderLevelLineChart(snapshots, expTab, profile) {
-  const items = buildLevelSeriesForChart(snapshots, expTab, profile);
+function renderLevelLineChart(snapshots, expHistoryState, expTab, profile) {
+  const items = buildLevelSeriesForChart(snapshots, expHistoryState, expTab, profile);
   if (!items.length) {
     return '<p class="empty">레벨 히스토리를 표시할 데이터가 없습니다.</p>';
   }
 
-  const width = 920;
-  const height = 260;
-  const paddingX = 34;
-  const paddingTop = 26;
-  const paddingBottom = 44;
+  const width = 680;
+  const height = 320;
+  const paddingX = 42;
+  const paddingTop = 36;
+  const paddingBottom = 62;
   const values = items.map((item) => item.level);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
+  const isFlatLevel = max === min;
 
   const points = items.map((item, index) => {
     const x = paddingX + (index / (items.length - 1)) * (width - paddingX * 2);
-    const y =
-      height -
-      paddingBottom -
-      ((item.level - min) / range) * (height - paddingTop - paddingBottom);
+    const y = isFlatLevel
+      ? paddingTop + (height - paddingTop - paddingBottom) / 2
+      : height -
+        paddingBottom -
+        ((item.level - min) / range) * (height - paddingTop - paddingBottom);
     return {
       ...item,
       x,
@@ -1179,7 +1319,7 @@ function renderLevelLineChart(snapshots, expTab, profile) {
           ? formatExpRateText(point.expRate)
           : "-";
       const tooltip = `${formatKstTooltipDateTime(point.ts)} | 총 경험치 ${formatNumber(point.exp)} | 레벨 Lv.${formatNumber(point.level)} | 경험치율 ${expRateText}`;
-      return `<g><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="4.5" class="level-chart__point"><title>${escapeHtml(
+      return `<g><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="5.5" class="level-chart__point"><title>${escapeHtml(
         tooltip,
       )}</title></circle><text x="${point.x.toFixed(2)}" y="${(point.y - 10).toFixed(2)}" text-anchor="middle" class="level-chart__value">Lv.${escapeHtml(
         formatNumber(point.level),
@@ -1202,6 +1342,7 @@ function renderExpTab(expTab, expHistoryState, profile) {
     profile,
   )}</article><article class="data-card"><h3>레벨 그래프</h3>${renderLevelLineChart(
     snapshots,
+    expHistoryState,
     expTab,
     profile,
   )}</article></section>`;
@@ -1236,18 +1377,290 @@ function renderAndroidTab(tabData, state) {
       : '<li class="empty">안드로이드 캐시 장비가 없습니다.</li>'
   }</ul></article></section>`;
 }
-function renderJewelSymbolVmatrixTab(tabData, state) {
-  const selectedPreset = resolveSelectedPreset(
-    "jewelSymbolVmatrix",
-    tabData,
-    state,
+
+const arcaneSymbolFallbackIcons = [
+  "/assets/simbol-1.png",
+  "/assets/simbol-2.png",
+  "/assets/simbol-3.png",
+  "/assets/simbol-4.png",
+  "/assets/simbol-5.png",
+  "/assets/simbol-6.png",
+];
+
+function parseSymbolOptionMetric(optionText, labelPattern) {
+  const text = String(optionText || "");
+  if (!text.trim()) return 0;
+  const regex = new RegExp(
+    `(?:${labelPattern})[^\\d+-]*\\+?\\s*([\\d,]+)`,
+    "i",
   );
+  const match = text.match(regex);
+  if (!match || !match[1]) return 0;
+  return parseNumericValue(match[1]) || 0;
+}
+
+function resolveArcaneSymbolMetrics(symbol) {
+  const arcaneForceDirect = parseNumericValue(symbol?.arcaneForce);
+  const physicalAttackDirect = parseNumericValue(symbol?.physicalAttack);
+  const magicalAttackDirect = parseNumericValue(symbol?.magicalAttack);
+  const optionText = String(symbol?.symbolOption || "");
+
+  const arcaneForce =
+    arcaneForceDirect ??
+    parseSymbolOptionMetric(optionText, "아케인\\s*포스|아케인포스");
+  const physicalAttack =
+    physicalAttackDirect ??
+    parseSymbolOptionMetric(optionText, "물리\\s*공격력|물리공격력");
+  const magicalAttack =
+    magicalAttackDirect ??
+    parseSymbolOptionMetric(optionText, "마법\\s*공격력|마법공격력");
+
+  return {
+    arcaneForce: Number.isFinite(arcaneForce) ? arcaneForce : 0,
+    physicalAttack: Number.isFinite(physicalAttack) ? physicalAttack : 0,
+    magicalAttack: Number.isFinite(magicalAttack) ? magicalAttack : 0,
+  };
+}
+
+function renderArcaneSymbolBoard(arcaneSymbols) {
+  const items = toArray(arcaneSymbols);
+  if (!items.length) {
+    return '<p class="empty">아케인 심볼이 없습니다.</p>';
+  }
+
+  const displayItems = items.slice(0, 6).map((symbol, index) => {
+    const level = parseNumericValue(symbol?.symbolLevel);
+    const isMax = level !== null && level >= 20;
+    const metrics = resolveArcaneSymbolMetrics(symbol);
+    return {
+      ...symbol,
+      metrics,
+      level,
+      isMax,
+      levelText: isMax ? "MAX" : level !== null ? `Lv.${formatNumber(level)}` : "Lv.-",
+      iconUrl:
+        String(symbol?.symbolIcon || "").trim() ||
+        arcaneSymbolFallbackIcons[index % arcaneSymbolFallbackIcons.length],
+    };
+  });
+
+  const totals = displayItems.reduce(
+    (acc, item) => {
+      acc.arcaneForce += item.metrics.arcaneForce;
+      acc.physicalAttack += item.metrics.physicalAttack;
+      acc.magicalAttack += item.metrics.magicalAttack;
+      return acc;
+    },
+    { arcaneForce: 0, physicalAttack: 0, magicalAttack: 0 },
+  );
+  const attackTotal = totals.physicalAttack + totals.magicalAttack;
+
+  return `<div class="arcane-board"><div class="arcane-board__summary"><p><span>아케인포스 증가</span><strong>${escapeHtml(
+    formatNumber(totals.arcaneForce),
+  )}</strong></p><p><span>공격력</span><strong>${escapeHtml(
+    formatNumber(attackTotal),
+  )}</strong></p></div><div class="arcane-board__grid">${displayItems
+    .map(
+      (item) =>
+        `<article class="arcane-symbol-card"><div class="arcane-symbol-card__icon-wrap"><img src="${escapeHtml(
+          item.iconUrl,
+        )}" alt="${escapeHtml(item.symbolName || "아케인 심볼")}" loading="lazy" /><span class="arcane-symbol-card__level">${escapeHtml(
+          item.levelText,
+        )}</span></div><h4>${escapeHtml(item.symbolName || "-")}</h4></article>`,
+    )
+    .join("")}</div></div>`;
+}
+
+function renderJewelSymbolVmatrixTab(tabData, state) {
+  const selectedPreset = resolveSelectedPreset("jewelSymbolVmatrix", tabData, state);
+  const selectedNo = resolveSelectedPresetNo("jewelSymbolVmatrix", tabData, state);
+  const presets = toArray(tabData?.presets);
   const data = selectedPreset?.data || {};
-  const jewels = toArray(data.jewelInfo),
-    arcane = toArray(tabData?.symbol?.arcaneSymbols),
-    auth = toArray(tabData?.symbol?.authenticSymbols),
-    cores = toArray(tabData?.vmatrix?.vCores);
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>쥬얼 페이지 프리셋</h3>${renderPresetSelector("jewelSymbolVmatrix", tabData, state)}<ul class="kv-list compact-kv"><li><span>적용 페이지</span><strong>${escapeHtml(String(tabData?.activePresetNo ?? "-"))}</strong></li><li><span>세트 옵션</span><strong>${escapeHtml(tabData?.activeSetOption || "-")}</strong></li><li><span>쥬얼 수</span><strong>${escapeHtml(String(jewels.length))}</strong></li></ul></article><article class="data-card data-card--wide"><h3>쥬얼 슬롯</h3><div class="card-grid card-grid--3">${jewels.length ? jewels.map((j) => `<article class="mini-card">${j.jewelIcon ? `<img src="${escapeHtml(j.jewelIcon)}" alt="${escapeHtml(j.jewelName || "쥬얼")}" />` : ""}<h4>${escapeHtml(j.jewelName || "-")}</h4><p>슬롯 ${escapeHtml(j.slotNo ?? "-")} | ${escapeHtml(j.jewelGrade || "-")} ${escapeHtml(j.jewelColor || "")}</p><p>${escapeHtml(j.jewelOption || "-")}</p></article>`).join("") : '<p class="empty">쥬얼 정보가 없습니다.</p>'}</div></article><article class="data-card"><h3>아케인 심볼</h3><ul class="simple-list">${arcane.length ? arcane.map((s) => `<li><strong>${escapeHtml(s.symbolName || "-")}</strong><p>Lv.${escapeHtml(s.symbolLevel ?? "-")} | ${escapeHtml(s.symbolOption || "-")}</p></li>`).join("") : '<li class="empty">아케인 심볼이 없습니다.</li>'}</ul></article><article class="data-card"><h3>어센틱 심볼</h3><ul class="simple-list">${auth.length ? auth.map((s) => `<li><strong>${escapeHtml(s.symbolName || "-")}</strong><p>Lv.${escapeHtml(s.symbolLevel ?? "-")} | ${escapeHtml(s.symbolOption || "-")}</p></li>`).join("") : '<li class="empty">어센틱 심볼이 없습니다.</li>'}</ul></article><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${cores.length ? cores.map((c) => `<article class="mini-card"><h4>${escapeHtml(c.vcoreName || "-")}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(c.slotLevel ?? "-")}</p><p>${escapeHtml(toArray(c.skills).join(" / ") || "스킬 정보 없음")}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article></section>`;
+  const jewels = toArray(data.jewelInfo);
+  const arcane = toArray(tabData?.symbol?.arcaneSymbols);
+  const auth = toArray(tabData?.symbol?.authenticSymbols);
+  const cores = toArray(tabData?.vmatrix?.vCores);
+
+  const colorLabelByKey = {
+    green: "그린",
+    yellow: "옐로",
+    blue: "블루",
+    red: "레드",
+    purple: "퍼플",
+  };
+  const normalizeJewelThemeKey = (raw) => {
+    const value = String(raw || "").toLowerCase();
+    if (value.includes("그린") || value.includes("green")) return "green";
+    if (value.includes("옐로") || value.includes("yellow") || value.includes("노랑"))
+      return "yellow";
+    if (value.includes("블루") || value.includes("blue")) return "blue";
+    if (value.includes("레드") || value.includes("red")) return "red";
+    if (value.includes("퍼플") || value.includes("purple") || value.includes("보라"))
+      return "purple";
+    return "";
+  };
+  const resolveJewelThemeKey = () => {
+    const fromSet = normalizeJewelThemeKey(tabData?.activeSetOption || "");
+    if (fromSet) return fromSet;
+    const counts = new Map();
+    jewels.forEach((jewel) => {
+      const key = normalizeJewelThemeKey(
+        `${jewel?.jewelColor || ""} ${jewel?.jewelName || ""}`,
+      );
+      if (!key) return;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    if (!counts.size) return "neutral";
+    let bestKey = "neutral";
+    let bestCount = -1;
+    counts.forEach((count, key) => {
+      if (count > bestCount) {
+        bestCount = count;
+        bestKey = key;
+      }
+    });
+    return bestKey;
+  };
+  const normalizeOptionText = (raw) =>
+    String(raw || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  const buildJewelSlots = () => {
+    const normalized = jewels.map((jewel, index) => ({
+      ...jewel,
+      _slotNo:
+        parseNumericValue(jewel?.slotNo) !== null
+          ? Math.round(parseNumericValue(jewel?.slotNo))
+          : index + 1,
+    }));
+    const slotMap = new Map();
+    normalized.forEach((jewel) => {
+      if (jewel._slotNo >= 1 && jewel._slotNo <= 5 && !slotMap.has(jewel._slotNo)) {
+        slotMap.set(jewel._slotNo, jewel);
+      }
+    });
+    const remains = normalized.filter(
+      (jewel) => !slotMap.has(jewel._slotNo) || slotMap.get(jewel._slotNo) !== jewel,
+    );
+    for (let slotNo = 1; slotNo <= 5; slotNo += 1) {
+      if (!slotMap.has(slotNo) && remains.length) {
+        slotMap.set(slotNo, remains.shift());
+      }
+    }
+    return Array.from({ length: 5 }, (_, index) => ({
+      slotNo: index + 1,
+      jewel: slotMap.get(index + 1) || null,
+    }));
+  };
+
+  const slots = buildJewelSlots();
+  const filledJewels = slots.map((slot) => slot.jewel).filter(Boolean);
+  const filledCount = filledJewels.length;
+  const resolveJewelGradeTier = (jewel) => {
+    const gradeText = String(jewel?.jewelGrade || "").toUpperCase();
+    if (gradeText.includes("SSS")) return "SSS";
+    if (gradeText.includes("SS")) return "SS";
+    return "";
+  };
+  const gradeList = filledJewels.map(resolveJewelGradeTier);
+  const sssCount = gradeList.filter((grade) => grade === "SSS").length;
+  const ssCount = gradeList.filter((grade) => grade === "SS").length;
+  const isAllSssFive = filledCount === 5 && sssCount === 5;
+  const isSsSetFive =
+    filledCount === 5 &&
+    sssCount + ssCount === 5 &&
+    !isAllSssFive;
+  const colorKeys = filledJewels
+    .map((jewel) => normalizeJewelThemeKey(`${jewel?.jewelColor || ""} ${jewel?.jewelName || ""}`))
+    .filter(Boolean);
+  const isSameColor = colorKeys.length === 5 && new Set(colorKeys).size === 1;
+  const activeColorKey = isSameColor ? colorKeys[0] : "";
+  const themeKey = activeColorKey || resolveJewelThemeKey();
+  const setSummary = isAllSssFive && isSameColor
+    ? {
+        title: `SSS등급 ${colorLabelByKey[activeColorKey] || "동일색"} 쥬얼 세트`,
+        lines: ["맥스 피버 확률 +9%", "방어율 무시 +2%"],
+        inactive: false,
+      }
+    : isSsSetFive && isSameColor
+      ? {
+          title: `SS등급 ${colorLabelByKey[activeColorKey] || "동일색"} 쥬얼 세트`,
+          lines: ["맥스 피버 확률 +3%"],
+          inactive: false,
+        }
+    : {
+        title: "세트 옵션 미적용",
+        lines: ["SS등급 이상", "동일 색상 쥬얼 5개 장착 시", "세트 옵션 활성화"],
+        inactive: true,
+      };
+  const nodeClassByIndex = [
+    "jewel-node--top",
+    "jewel-node--right-top",
+    "jewel-node--right-bottom",
+    "jewel-node--left-bottom",
+    "jewel-node--left-top",
+  ];
+  const presetIndex = presets.findIndex(
+    (preset) => parseNumericValue(preset?.presetNo) === selectedNo,
+  );
+  const hasPresetCycle = presets.length > 1 && presetIndex !== -1;
+  const previousPresetNo = hasPresetCycle
+    ? parseNumericValue(
+        presets[(presetIndex - 1 + presets.length) % presets.length]?.presetNo,
+      )
+    : null;
+  const nextPresetNo = hasPresetCycle
+    ? parseNumericValue(presets[(presetIndex + 1) % presets.length]?.presetNo)
+    : null;
+
+  const pageButtons = presets
+    .map((preset) => {
+      const no = parseNumericValue(preset?.presetNo);
+      const selected = no !== null && no === selectedNo;
+      return `<button type="button" class="jewel-page-btn ${selected ? "is-selected" : ""}" data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(no ?? "")}" aria-label="쥬얼 페이지 ${escapeHtml(no ?? "-")}">${escapeHtml(no ?? "-")}</button>`;
+    })
+    .join("");
+  const nodeMarkup = slots
+    .map((slot, index) => {
+      const jewel = slot.jewel;
+      const optionText = normalizeOptionText(jewel?.jewelOption || "");
+      const bubbleText =
+        optionText || normalizeOptionText(jewel?.jewelName || "") || `슬롯 ${slot.slotNo}`;
+      const iconMarkup = jewel?.jewelIcon
+        ? `<img src="${escapeHtml(jewel.jewelIcon)}" alt="${escapeHtml(jewel.jewelName || "쥬얼")}" loading="lazy" />`
+        : `<span class="jewel-node__slot-no">${escapeHtml(String(slot.slotNo))}</span>`;
+      return `<div class="jewel-node ${nodeClassByIndex[index]} ${jewel ? "is-filled" : "is-empty"}"><div class="jewel-node__bubble">${escapeHtml(
+        bubbleText,
+      )}</div><div class="jewel-node__hex">${iconMarkup}</div></div>`;
+    })
+    .join("");
+  const dotButtons = presets.length
+    ? presets
+        .map((preset) => {
+          const no = parseNumericValue(preset?.presetNo);
+          const selected = no !== null && no === selectedNo;
+          return `<button type="button" class="jewel-dot ${selected ? "is-selected" : ""}" data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(no ?? "")}" aria-label="쥬얼 페이지 ${escapeHtml(no ?? "-")}"></button>`;
+        })
+        .join("")
+    : '<span class="jewel-dot is-selected" aria-hidden="true"></span>';
+
+  return `<section class="tab-grid"><article class="data-card jewel-slot-card jewel-slot-card--compact"><div class="jewel-slot-card__head"><h3>쥬얼 슬롯</h3><div class="jewel-page-switch">${pageButtons}</div></div><div class="jewel-board jewel-theme--${escapeHtml(
+    themeKey,
+  )}"><button type="button" class="jewel-nav jewel-nav--left" ${previousPresetNo !== null ? `data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(previousPresetNo)}"` : "disabled"} aria-label="이전 페이지">‹</button><div class="jewel-ring-stage"><div class="jewel-ring"><svg class="jewel-ring__lines" viewBox="0 0 100 100" aria-hidden="true"><polyline points="50,7 84,31 70,74 30,74 16,31 50,7" /></svg>${nodeMarkup}</div><article class="jewel-set-card"><h4 class="${setSummary.inactive ? "is-inactive" : ""}">${escapeHtml(
+    setSummary.title,
+  )}</h4>${setSummary.lines.length ? `<ul>${setSummary.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : ""}</article></div><button type="button" class="jewel-nav jewel-nav--right" ${nextPresetNo !== null ? `data-preset-tab="jewelSymbolVmatrix" data-preset-no="${escapeHtml(nextPresetNo)}"` : "disabled"} aria-label="다음 페이지">›</button></div><div class="jewel-page-dots">${dotButtons}</div></article><article class="data-card arcane-symbol-panel"><h3>아케인 심볼</h3>${renderArcaneSymbolBoard(
+    arcane,
+  )}</article><article class="data-card"><h3>어센틱 심볼</h3><ul class="simple-list">${auth.length ? auth.map((s) => `<li><strong>${escapeHtml(
+    s.symbolName || "-",
+  )}</strong><p>Lv.${escapeHtml(s.symbolLevel ?? "-")} | ${escapeHtml(
+    s.symbolOption || "-",
+  )}</p></li>`).join("") : '<li class="empty">어센틱 심볼이 없습니다.</li>'}</ul></article><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${cores.length ? cores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
+    c.vcoreName || "-",
+  )}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(
+    c.slotLevel ?? "-",
+  )}</p><p>${escapeHtml(
+    toArray(c.skills).join(" / ") || "스킬 정보 없음",
+  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article></section>`;
 }
 function renderHyperStatTab(tabData, state) {
   const selected = resolveSelectedPreset("hyperStat", tabData, state);
@@ -2379,7 +2792,7 @@ function positionEquipHoverOverlay(cardEl) {
 
 function showEquipHoverOverlay(cardEl) {
   if (!cardEl) return;
-  const template = cardEl.querySelector(".equip-hover-template");
+  const template = cardEl.querySelector(".equip-hover-template, .cash-hover-template");
   if (!template) return;
 
   const overlay = getEquipHoverOverlayEl();
@@ -2478,7 +2891,7 @@ async function initCharacterPage() {
   });
   let activeHoverCardEl = null;
   tabContentEl.addEventListener("pointerover", (event) => {
-    const cardEl = event.target.closest(".equip-card");
+    const cardEl = event.target.closest(".equip-card, .cash-slot-card");
     if (!cardEl || !tabContentEl.contains(cardEl)) {
       return;
     }
@@ -2490,7 +2903,7 @@ async function initCharacterPage() {
     if (!activeHoverCardEl) {
       return;
     }
-    const leavingFromActive = event.target.closest(".equip-card");
+    const leavingFromActive = event.target.closest(".equip-card, .cash-slot-card");
     if (leavingFromActive !== activeHoverCardEl) {
       return;
     }

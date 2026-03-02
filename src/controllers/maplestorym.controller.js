@@ -2592,7 +2592,30 @@ function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
     symbolIcon: symbol?.symbol_icon || "",
     symbolLevel: symbol?.symbol_level ?? "-",
     symbolGrowthValue: symbol?.symbol_growth_value ?? "-",
-    symbolOption: symbol?.symbol_option || "-"
+    symbolOption: symbol?.symbol_option || "-",
+    arcaneForce:
+      parseNumericValue(
+        symbol?.arcane_force ??
+          symbol?.arcane_force_value ??
+          symbol?.symbol_force ??
+          symbol?.symbol_force_value ??
+          symbol?.force,
+      ) ?? null,
+    physicalAttack:
+      parseNumericValue(
+        symbol?.physical_attack ??
+          symbol?.physical_attack_power ??
+          symbol?.physical_atk ??
+          symbol?.atk,
+      ) ?? null,
+    magicalAttack:
+      parseNumericValue(
+        symbol?.magical_attack ??
+          symbol?.magical_attack_power ??
+          symbol?.magic_attack ??
+          symbol?.magic_atk ??
+          symbol?.matk,
+      ) ?? null,
   }));
 
   const authenticSymbols = toArray(symbolData.authentic_symbol).map((symbol) => ({
@@ -2600,7 +2623,30 @@ function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
     symbolIcon: symbol?.symbol_icon || "",
     symbolLevel: symbol?.symbol_level ?? "-",
     symbolGrowthValue: symbol?.symbol_growth_value ?? "-",
-    symbolOption: symbol?.symbol_option || "-"
+    symbolOption: symbol?.symbol_option || "-",
+    arcaneForce:
+      parseNumericValue(
+        symbol?.arcane_force ??
+          symbol?.arcane_force_value ??
+          symbol?.symbol_force ??
+          symbol?.symbol_force_value ??
+          symbol?.force,
+      ) ?? null,
+    physicalAttack:
+      parseNumericValue(
+        symbol?.physical_attack ??
+          symbol?.physical_attack_power ??
+          symbol?.physical_atk ??
+          symbol?.atk,
+      ) ?? null,
+    magicalAttack:
+      parseNumericValue(
+        symbol?.magical_attack ??
+          symbol?.magical_attack_power ??
+          symbol?.magic_attack ??
+          symbol?.magic_atk ??
+          symbol?.matk,
+      ) ?? null,
   }));
 
   const vCores = toArray(vmatrixData.character_v_core_equipment).map((core) => ({
