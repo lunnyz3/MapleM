@@ -2111,6 +2111,148 @@ function resolveHexaSkillGroup(skill) {
   if (/skill|스킬|attack|공격/.test(combined)) return "skill";
   return "unknown";
 }
+const HEXA_CORE_CUMULATIVE_COST = Object.freeze({
+  mastery: [
+    null,
+    { energy: 1, fragment: 10 },
+    { energy: 2, fragment: 30 },
+    { energy: 3, fragment: 55 },
+    { energy: 5, fragment: 85 },
+    { energy: 7, fragment: 120 },
+    { energy: 9, fragment: 160 },
+    { energy: 12, fragment: 205 },
+    { energy: 15, fragment: 255 },
+    { energy: 18, fragment: 310 },
+    { energy: 22, fragment: 372 },
+    { energy: 26, fragment: 441 },
+    { energy: 30, fragment: 517 },
+    { energy: 35, fragment: 600 },
+    { energy: 40, fragment: 690 },
+    { energy: 45, fragment: 787 },
+    { energy: 51, fragment: 891 },
+    { energy: 57, fragment: 1002 },
+    { energy: 63, fragment: 1120 },
+    { energy: 69, fragment: 1245 },
+    { energy: 76, fragment: 1380 },
+    { energy: 83, fragment: 1525 },
+    { energy: 90, fragment: 1680 },
+    { energy: 98, fragment: 1845 },
+    { energy: 106, fragment: 2020 },
+    { energy: 114, fragment: 2205 },
+    { energy: 122, fragment: 2400 },
+    { energy: 131, fragment: 2605 },
+    { energy: 140, fragment: 2820 },
+    { energy: 149, fragment: 3045 },
+    { energy: 159, fragment: 3285 },
+  ],
+  origin: [
+    null,
+    { energy: 0, fragment: 0 },
+    { energy: 2, fragment: 40 },
+    { energy: 5, fragment: 90 },
+    { energy: 8, fragment: 150 },
+    { energy: 11, fragment: 220 },
+    { energy: 15, fragment: 300 },
+    { energy: 19, fragment: 390 },
+    { energy: 24, fragment: 490 },
+    { energy: 29, fragment: 600 },
+    { energy: 35, fragment: 725 },
+    { energy: 41, fragment: 865 },
+    { energy: 48, fragment: 1020 },
+    { energy: 55, fragment: 1190 },
+    { energy: 63, fragment: 1375 },
+    { energy: 71, fragment: 1575 },
+    { energy: 80, fragment: 1790 },
+    { energy: 89, fragment: 2020 },
+    { energy: 99, fragment: 2265 },
+    { energy: 109, fragment: 2525 },
+    { energy: 120, fragment: 2805 },
+    { energy: 131, fragment: 3105 },
+    { energy: 143, fragment: 3425 },
+    { energy: 155, fragment: 3765 },
+    { energy: 168, fragment: 4125 },
+    { energy: 181, fragment: 4505 },
+    { energy: 195, fragment: 4905 },
+    { energy: 209, fragment: 5325 },
+    { energy: 224, fragment: 5765 },
+    { energy: 239, fragment: 6225 },
+    { energy: 254, fragment: 6725 },
+  ],
+  enhance: [
+    null,
+    { energy: 1, fragment: 20 },
+    { energy: 3, fragment: 50 },
+    { energy: 5, fragment: 85 },
+    { energy: 7, fragment: 125 },
+    { energy: 9, fragment: 170 },
+    { energy: 11, fragment: 220 },
+    { energy: 13, fragment: 275 },
+    { energy: 15, fragment: 335 },
+    { energy: 17, fragment: 400 },
+    { energy: 22, fragment: 475 },
+    { energy: 27, fragment: 560 },
+    { energy: 32, fragment: 655 },
+    { energy: 37, fragment: 760 },
+    { energy: 42, fragment: 875 },
+    { energy: 47, fragment: 1000 },
+    { energy: 52, fragment: 1135 },
+    { energy: 57, fragment: 1280 },
+    { energy: 62, fragment: 1435 },
+    { energy: 67, fragment: 1600 },
+    { energy: 77, fragment: 1780 },
+    { energy: 87, fragment: 1975 },
+    { energy: 97, fragment: 2185 },
+    { energy: 107, fragment: 2410 },
+    { energy: 117, fragment: 2650 },
+    { energy: 127, fragment: 2905 },
+    { energy: 137, fragment: 3175 },
+    { energy: 147, fragment: 3460 },
+    { energy: 157, fragment: 3760 },
+    { energy: 167, fragment: 4075 },
+    { energy: 182, fragment: 4410 },
+  ],
+  common: [
+    null,
+    { energy: 10, fragment: 200 },
+    { energy: 14, fragment: 255 },
+    { energy: 18, fragment: 324 },
+    { energy: 23, fragment: 407 },
+    { energy: 28, fragment: 504 },
+    { energy: 34, fragment: 614 },
+    { energy: 40, fragment: 738 },
+    { energy: 47, fragment: 876 },
+    { energy: 54, fragment: 1028 },
+    { energy: 64, fragment: 1201 },
+  ],
+});
+function resolveHexaCostTableByGroup(group) {
+  if (group === "mastery") return HEXA_CORE_CUMULATIVE_COST.mastery;
+  if (group === "enhance") return HEXA_CORE_CUMULATIVE_COST.enhance;
+  if (group === "common") return HEXA_CORE_CUMULATIVE_COST.common;
+  return HEXA_CORE_CUMULATIVE_COST.origin;
+}
+function getHexaCumulativeCostByGroupAndLevel(group, level) {
+  const table = resolveHexaCostTableByGroup(group);
+  const maxLevel = table.length - 1;
+  const lvRaw = parseNumericValue(level);
+  const lv = lvRaw === null ? 0 : Math.max(1, Math.min(maxLevel, Math.floor(lvRaw)));
+  if (lv <= 0) return { energy: 0, fragment: 0 };
+  return table[lv] || { energy: 0, fragment: 0 };
+}
+function getHexaUsedResourceTotals(skills) {
+  return toArray(skills).reduce(
+    (acc, skill) => {
+      const levelValue =
+        parseNumericValue(skill?.skillLevel) ?? parseNumericValue(skill?.slotLevel);
+      const coreGroup = String(skill?.__group || resolveHexaSkillGroup(skill) || "unknown");
+      const usedCost = getHexaCumulativeCostByGroupAndLevel(coreGroup, levelValue);
+      acc.energy += parseNumericValue(usedCost?.energy) ?? 0;
+      acc.fragment += parseNumericValue(usedCost?.fragment) ?? 0;
+      return acc;
+    },
+    { energy: 0, fragment: 0 },
+  );
+}
 function sortHexaQueueBySlotNo(queue, preferredOrder = []) {
   const orderMap = new Map(
     preferredOrder.map((slotNo, index) => [Number(slotNo), index]),
@@ -2145,13 +2287,14 @@ function buildHexaSkillBoardSlots(skills) {
   const normalizedSkills = toArray(skills).map((skill, index) => ({
     ...skill,
     __idx: index,
+    __group: resolveHexaSkillGroup(skill),
     __level:
       parseNumericValue(skill?.skillLevel) ?? parseNumericValue(skill?.slotLevel) ?? null,
   }));
 
   const groupSlots = {
-    skill: ["t8", "t3", "t6", "t2", "t1", "t7"],       // 좌상: 스킬 코어
-    mastery: ["t9", "t4", "t10", "t5"],               // 우상: 마스터리 코어
+    skill: ["t8", "t3", "t7", "t2", "t6", "t1"],       // 좌상: 스킬 코어(우하부터 역지그재그)
+    mastery: ["t9", "t10", "t4", "t5"],               // 우상: 마스터리 코어
     enhance: ["b1", "b2", "b5", "b6"],                // 좌하: 강화 코어
     common: ["b3", "b4", "b7", "b8"],                 // 우하: 공용 코어
   };
@@ -2173,7 +2316,7 @@ function buildHexaSkillBoardSlots(skills) {
   };
 
   normalizedSkills.forEach((skill) => {
-    const group = resolveHexaSkillGroup(skill);
+    const group = skill.__group;
     if (group in queues) {
       queues[group].push(skill);
     } else {
@@ -2245,6 +2388,7 @@ function renderHexaSkillNode(skill, theme = "purple") {
 }
 function renderHexaSkillBoard(skills) {
   const slotMap = buildHexaSkillBoardSlots(skills);
+  const resourceTotals = getHexaUsedResourceTotals(toArray(skills));
   const slotDefs = [
     { id: "t1", className: "hexa-slot--t1", theme: "purple" },
     { id: "t2", className: "hexa-slot--t2", theme: "purple" },
@@ -2276,7 +2420,148 @@ function renderHexaSkillBoard(skills) {
     })
     .join("");
 
-  return `<div class="hexa-skill-board"><div class="hexa-skill-board__glow" aria-hidden="true"></div><div class="hexa-skill-board__field">${slotMarkup}<div class="hexa-core-mark" aria-hidden="true">VI</div></div></div>`;
+  return `<div class="hexa-skill-board"><div class="hexa-skill-board__field"><div class="hexa-skill-board__glow" aria-hidden="true"></div>${slotMarkup}<div class="hexa-core-mark" aria-hidden="true">VI</div><aside class="hexa-resource-panel"><h4>사용재화</h4><div class="hexa-resource-entry"><img src="/assets/sole_erda.png" alt="솔 에르다" loading="lazy" /><div class="hexa-resource-entry__text"><span class="hexa-resource-entry__label">솔 에르다</span><strong class="hexa-resource-entry__value">${escapeHtml(
+    `${formatNumber(resourceTotals.energy)}개`,
+  )}</strong></div></div><div class="hexa-resource-entry"><img src="/assets/sole_erda_piece.png" alt="솔 에르다 조각" loading="lazy" /><div class="hexa-resource-entry__text"><span class="hexa-resource-entry__label">솔 에르다 조각</span><strong class="hexa-resource-entry__value">${escapeHtml(
+    `${formatNumber(resourceTotals.fragment)}개`,
+  )}</strong></div></div></aside></div></div>`;
+}
+function resolveHexaStatLevel(level, maxLevel = 10) {
+  const parsed = parseNumericValue(level);
+  if (parsed === null) return 0;
+  return Math.max(0, Math.min(maxLevel, Math.floor(parsed)));
+}
+function renderHexaStatGauge(level, tone = "sub") {
+  const totalSegment = 10;
+  const filled = resolveHexaStatLevel(level, totalSegment);
+  const segments = Array.from({ length: totalSegment }, (_, index) => {
+    const stateClass = index < filled ? "is-on" : "is-off";
+    return `<span class="hexa-stat-gauge__segment ${stateClass}" aria-hidden="true"></span>`;
+  }).join("");
+  return `<div class="hexa-stat-gauge hexa-stat-gauge--${tone}" role="img" aria-label="레벨 ${escapeHtml(String(filled))}/${escapeHtml(String(totalSegment))}"><div class="hexa-stat-gauge__segments">${segments}</div></div>`;
+}
+function renderHexaStatEntry(row) {
+  const tone = row?.tone === "main" ? "main" : "sub";
+  const typeText = tone === "main" ? "메인 스탯" : "부가 스탯";
+  const statLabel = String(row?.stat || "-").trim() || "-";
+  const levelValue = parseNumericValue(row?.level);
+  const levelText = levelValue === null ? "-" : String(Math.max(0, Math.floor(levelValue)));
+  return `<li class="hexa-stat-entry hexa-stat-entry--${tone}"><div class="hexa-stat-entry__icon" aria-hidden="true">VI</div><div class="hexa-stat-entry__body"><p class="hexa-stat-entry__type">${escapeHtml(
+    typeText,
+  )}</p><h5 class="hexa-stat-entry__name">${escapeHtml(
+    statLabel,
+  )}</h5>${renderHexaStatGauge(levelValue, tone)}<span class="hexa-stat-entry__level">Lv.${escapeHtml(
+    levelText,
+  )}</span></div></li>`;
+}
+function renderHexaStatSideNode(isActive, levelText, nodeClass) {
+  return `<div class="hexa-stat-node ${nodeClass} ${isActive ? "is-active" : "is-locked"}">${isActive ? `<span class="hexa-stat-node__level">${escapeHtml(
+    levelText,
+  )}</span><span class="hexa-stat-node__icon" aria-hidden="true">V</span>` : '<span class="hexa-stat-node__lock" aria-hidden="true">LOCK</span>'}</div>`;
+}
+function renderHexaStatCore(core, index) {
+  const pages = toArray(core?.statInfo);
+  const activeIndexByFlag = pages.findIndex(
+    (page) => String(page?.activateFlag ?? "0") === "1",
+  );
+  const activeIndex = activeIndexByFlag >= 0 ? activeIndexByFlag : 0;
+  const activeInfo = pages[activeIndex] || {};
+
+  const slotLevelValue =
+    parseNumericValue(activeInfo?.slotLevel) ??
+    parseNumericValue(activeInfo?.mainStatLevel) ??
+    0;
+  const slotLevelText = String(Math.max(0, Math.floor(slotLevelValue)));
+
+  const rows = [
+    {
+      tone: "main",
+      stat: activeInfo?.mainStat || "-",
+      level:
+        parseNumericValue(activeInfo?.mainStatLevel) ??
+        parseNumericValue(activeInfo?.slotLevel) ??
+        0,
+    },
+    {
+      tone: "sub",
+      stat: activeInfo?.sub1Stat || "-",
+      level: parseNumericValue(activeInfo?.sub1StatLevel) ?? 0,
+    },
+    {
+      tone: "sub",
+      stat: activeInfo?.sub2Stat || "-",
+      level: parseNumericValue(activeInfo?.sub2StatLevel) ?? 0,
+    },
+  ];
+
+  const pagePills = pages.length
+    ? pages
+        .map((page, pageIndex) => {
+          const pageText = String(page?.pageNo ?? pageIndex + 1).trim() || String(pageIndex + 1);
+          const isActive =
+            String(page?.activateFlag ?? "0") === "1" ||
+            (activeIndexByFlag < 0 && pageIndex === 0);
+          return `<span class="hexa-stat-core__page ${isActive ? "is-active" : ""}">${escapeHtml(
+            pageText,
+          )}</span>`;
+        })
+        .join("")
+    : '<span class="hexa-stat-core__page is-active">1</span>';
+
+  const appliedRows = rows
+    .filter((row) => {
+      const label = String(row?.stat || "").trim();
+      return !!label && label !== "-";
+    })
+    .map((row) => {
+      const numericLevel = parseNumericValue(row?.level);
+      const levelText = numericLevel === null ? "-" : String(Math.max(0, Math.floor(numericLevel)));
+      return `<li>${escapeHtml(String(row.stat || "-"))} <strong>Lv.${escapeHtml(
+        levelText,
+      )}</strong></li>`;
+    })
+    .join("");
+
+  return `<article class="hexa-stat-core"><header class="hexa-stat-core__head"><h4>스탯 코어 ${escapeHtml(
+    String(core?.statCoreSlot ?? index + 1),
+  )} (${escapeHtml(slotLevelText)}/20)</h4><div class="hexa-stat-core__pages">${pagePills}</div></header><div class="hexa-stat-core__body"><section class="hexa-stat-core__left"><ul class="hexa-stat-list">${rows
+    .map((row) => renderHexaStatEntry(row))
+    .join(
+      "",
+    )}</ul></section><aside class="hexa-stat-core__right"><div class="hexa-stat-visual"><div class="hexa-stat-visual__bg" aria-hidden="true"></div>${renderHexaStatSideNode(
+    true,
+    slotLevelText,
+    "hexa-stat-node--top",
+  )}${renderHexaStatSideNode(
+    false,
+    "-",
+    "hexa-stat-node--left-top",
+  )}${renderHexaStatSideNode(
+    false,
+    "-",
+    "hexa-stat-node--right-top",
+  )}${renderHexaStatSideNode(
+    false,
+    "-",
+    "hexa-stat-node--left-bottom",
+  )}${renderHexaStatSideNode(
+    false,
+    "-",
+    "hexa-stat-node--right-bottom",
+  )}${renderHexaStatSideNode(
+    false,
+    "-",
+    "hexa-stat-node--bottom",
+  )}<div class="hexa-stat-visual__mark" aria-hidden="true">VI</div></div><div class="hexa-stat-applied"><h5>적용 능력치</h5><ul>${appliedRows || '<li class="is-empty">적용 능력치가 없습니다.</li>'}</ul></div></aside></div></article>`;
+}
+function renderHexaStatBoard(cores) {
+  const normalized = toArray(cores);
+  if (!normalized.length) {
+    return '<p class="empty">헥사 스탯 데이터가 없습니다.</p>';
+  }
+  return `<div class="hexa-stat-board">${normalized
+    .map((core, index) => renderHexaStatCore(core, index))
+    .join("")}</div>`;
 }
 function renderHexamatrixTab(tabData, jewelSymbolVmatrixTabData) {
   const vcores = toArray(jewelSymbolVmatrixTabData?.vmatrix?.vCores);
@@ -2288,23 +2573,9 @@ function renderHexamatrixTab(tabData, jewelSymbolVmatrixTabData) {
     c.slotLevel ?? "-",
   )}</p><p>${escapeHtml(
     toArray(c.skills).join(" / ") || "스킬 정보 없음",
-  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>헥사 스킬</h3>${skills.length ? renderHexaSkillBoard(skills) : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스탯</h3><div class="card-grid card-grid--2">${
-    cores.length
-      ? cores
-          .map(
-            (c) =>
-              `<article class="mini-card"><h4>코어 슬롯 ${escapeHtml(c.statCoreSlot ?? "-")}</h4><ul class="simple-list">${toArray(
-                c.statInfo,
-              )
-                .map(
-                  (i) =>
-                    `<li><strong>${escapeHtml(i.mainStat || "-")} Lv.${escapeHtml(i.mainStatLevel ?? i.slotLevel ?? "-")}</strong><p>${escapeHtml(i.sub1Stat || "-")} Lv.${escapeHtml(i.sub1StatLevel ?? "-")} / ${escapeHtml(i.sub2Stat || "-")} Lv.${escapeHtml(i.sub2StatLevel ?? "-")}</p></li>`,
-                )
-                .join("")}</ul></article>`,
-          )
-          .join("")
-      : '<p class="empty">헥사 스탯 데이터가 없습니다.</p>'
-  }</div></article></section>`;
+  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>헥사 스킬</h3>${skills.length ? renderHexaSkillBoard(skills) : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스탯</h3>${renderHexaStatBoard(
+    cores,
+  )}</article></section>`;
 }
 function renderTabContent(state) {
   const tabs = state.pageData?.tabs || {};
