@@ -85,6 +85,75 @@ const sanitizeEquipmentText = (value) =>
     .replace(/\s+\|/g, " |")
     .replace(/\|\s+\|/g, "|")
     .trim();
+function abbreviateEquipmentOptionName(name) {
+  const rawName = sanitizeEquipmentText(name || "").trim();
+  if (!rawName) return "";
+  const normalized = normalizeForMatch(rawName);
+
+  if (
+    normalized.includes(normalizeForMatch("보스공격력")) ||
+    normalized.includes(normalizeForMatch("보스대미지")) ||
+    normalized.includes(normalizeForMatch("보스데미지"))
+  ) {
+    return "보공";
+  }
+  if (
+    normalized.includes(normalizeForMatch("물리대미지")) ||
+    normalized.includes(normalizeForMatch("물리데미지"))
+  ) {
+    return "물뎀";
+  }
+  if (
+    normalized.includes(normalizeForMatch("마법대미지")) ||
+    normalized.includes(normalizeForMatch("마법데미지"))
+  ) {
+    return "마뎀";
+  }
+  if (
+    normalized.includes(normalizeForMatch("파티")) &&
+    normalized.includes(normalizeForMatch("경험치"))
+  ) {
+    return "파경";
+  }
+  if (normalized.includes(normalizeForMatch("경험치획득량"))) {
+    return "경획";
+  }
+  if (
+    normalized.includes(normalizeForMatch("최대hp")) ||
+    normalized.includes(normalizeForMatch("최대체력"))
+  ) {
+    return "HP";
+  }
+  if (normalized.includes(normalizeForMatch("최대mp"))) {
+    return "MP";
+  }
+  if (normalized.includes(normalizeForMatch("회피율"))) {
+    return "회피율";
+  }
+  if (normalized.includes(normalizeForMatch("명중률"))) {
+    return "명중률";
+  }
+  if (
+    normalized.includes(normalizeForMatch("치명타확률")) ||
+    normalized.includes(normalizeForMatch("크리티컬확률"))
+  ) {
+    return "치확";
+  }
+  if (normalized.includes(normalizeForMatch("메소획득량"))) {
+    return "메획";
+  }
+  if (
+    normalized.includes(normalizeForMatch("아이템드롭률")) ||
+    normalized.includes(normalizeForMatch("드롭률"))
+  ) {
+    return "아드";
+  }
+  if (normalized.includes(normalizeForMatch("저항"))) {
+    return "저항";
+  }
+
+  return rawName;
+}
 async function parseResponseSafely(r) {
   const ct = r.headers.get("content-type") || "";
   if (ct.includes("application/json")) return r.json();
@@ -182,6 +251,23 @@ const renderLoadingCard = (m) =>
   `<section class="tab-grid"><article class="data-card data-card--wide"><h3>로딩 중</h3><p class="empty">${escapeHtml(m || "캐릭터 데이터를 불러오는 중입니다...")}</p></article></section>`;
 const renderErrorCard = (m) =>
   `<section class="tab-grid"><article class="data-card data-card--wide"><h3>조회 실패</h3><p class="empty">${escapeHtml(m || "캐릭터 정보를 불러오지 못했습니다.")}</p></article></section>`;
+const renderNotFoundCard = (m) =>
+  `<section class="tab-grid"><article class="data-card data-card--wide"><p class="empty">${escapeHtml(m || "검색 결과가 없습니다.")}</p></article></section>`;
+function normalizeCharacterLookupErrorMessage(message) {
+  const raw = String(message || "").trim();
+  const normalized = raw.toLowerCase();
+  if (!raw) return "검색 결과가 없습니다.";
+  if (
+    normalized.includes("please input valid parameter") ||
+    normalized.includes("invalid parameter") ||
+    normalized.includes("invalid character") ||
+    normalized.includes("character not found") ||
+    normalized.includes("not found")
+  ) {
+    return "검색 결과가 없습니다.";
+  }
+  return raw;
+}
 const rankingDateFloor = "2025-12-01";
 const rankingPageSize = 50;
 const rankingApiPageSize = 200;
@@ -491,7 +577,8 @@ function buildPotentialOptionPreview(list, maxCount = 3) {
     .map((option) => {
       const name = sanitizeEquipmentText(option?.name || "").trim();
       const value = sanitizeEquipmentText(option?.value || "").trim();
-      return `${name} ${value}`.trim();
+      const shortName = abbreviateEquipmentOptionName(name);
+      return `${shortName} ${value}`.trim();
     })
     .filter(Boolean)
     .slice(0, maxCount)
@@ -630,7 +717,6 @@ function parseSetCountMeta(setCount) {
 function renderMajorStats(profile, options = {}) {
   const majorStats = profile?.majorStats || {};
   const mode = resolveJobMode(profile);
-  const modeLabel = mode === "magical" ? "마법" : "물리";
   const collapseLimitRaw = Number(options?.collapseLimit || 0);
   const collapseLimit =
     Number.isFinite(collapseLimitRaw) && collapseLimitRaw > 0
@@ -683,7 +769,7 @@ function renderMajorStats(profile, options = {}) {
       ? `<button type="button" class="section-more-btn" data-expand-target="#${escapeHtml(listId)}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
       : "";
 
-  return `<section class="major-stats major-stats--compact"><h3>주요 스탯 <span>(${escapeHtml(modeLabel)})</span></h3><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
+  return `<section class="major-stats major-stats--compact"><h3>주요스탯</h3><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
 }
 function renderProfile(profile, query) {
   const profileImage = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
@@ -808,7 +894,7 @@ function renderEquipmentTab(tabData, profile, state) {
           const summaryBlock =
             summaryLines.length
               ? summaryLines.join("")
-              : '<span class="equip-option-empty">표시할 주요 옵션이 없습니다.</span>';
+              : "";
 
           const hoverTemplate = renderEquipmentHoverCard(item);
 
@@ -870,7 +956,7 @@ function renderEquipmentTab(tabData, profile, state) {
     `<details class="set-effect-card"><summary class="set-effect__summary"><strong class="set-effect__name">${escapeHtml(petInfo?.setName || "-")}</strong><span class="set-effect__meta">펫 세트</span></summary><div class="set-effect__detail">${renderOptionChips(petInfo?.setOption, "펫 세트 옵션 정보가 없습니다.")}</div></details>`;
 
   const statsPanel = renderMajorStats(profile);
-  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
+  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
     "equipment",
     tabData,
     state,
@@ -1819,6 +1905,29 @@ function buildStarGlyphHtml(starforceValue) {
   return lines.join("<br />");
 }
 
+const hoverSoulSlotKeys = new Set([
+  "weapon",
+  "subWeapon",
+  "emblem",
+  "shoulder",
+  "cape",
+  "belt",
+]);
+const hoverAccessoryOptionalOptionSlotKeys = new Set([
+  "necklace1",
+  "necklace2",
+  "ring1",
+  "ring2",
+  "ring3",
+  "ring4",
+  "earring",
+  "pocket",
+  "badge",
+  "eye",
+  "face",
+  "title",
+  "medal",
+]);
 function renderEquipmentHoverCard(item) {
   const slot = classifyEquipmentSlot(item);
   const showAttackPower = ["weapon", "subWeapon", "emblem"].includes(slot.key);
@@ -1836,8 +1945,11 @@ function renderEquipmentHoverCard(item) {
   const starText = Number.isFinite(starforceNumeric)
     ? `⭐ ${Math.round(starforceNumeric)}`
     : `⭐ ${escapeHtml(String(starforceValue || "-"))}`;
-  const soulOption =
-    sanitizeEquipmentText(item?.soulInfo?.soulOption || "").trim() || "소울 정보 없음";
+  const soulOption = sanitizeEquipmentText(item?.soulInfo?.soulOption || "").trim();
+  const additionalOptions = toArray(item?.additionalOption);
+  const potentialOptions = toArray(item?.potentialOption);
+  const additionalPotentialOptions = toArray(item?.additionalPotentialOption);
+  const hideEmptyOptionalOptions = hoverAccessoryOptionalOptionSlotKeys.has(slot.key);
   const miscInfo = [
     karmaScissorsRemaining
       ? `<p><span>남은 카르마의 가위 사용 수</span><strong>${escapeHtml(karmaScissorsRemaining)}</strong></p>`
@@ -1849,7 +1961,57 @@ function renderEquipmentHoverCard(item) {
     .filter(Boolean)
     .join("");
 
-  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}<span class="equip-hover__equipped">장착중</span></div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}<div class="equip-hover__option-block"><h5>기본 옵션</h5><ul>${renderHoverOptionRows(item?.basicOption, "기본 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>추가 옵션</h5><ul>${renderHoverOptionRows(item?.additionalOption, "추가 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>${renderHoverTierBadge(item?.potentialOption, item?.potentialGrade, "잠재능력")}</h5><ul>${renderHoverOptionRows(item?.potentialOption, "잠재 옵션 없음")}</ul></div><div class="equip-hover__option-block"><h5>${renderHoverTierBadge(item?.additionalPotentialOption, item?.additionalPotentialGrade, "에디셔널 잠재능력")}</h5><ul>${renderHoverOptionRows(item?.additionalPotentialOption, "에디 옵션 없음")}</ul></div><div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div></section></article>`;
+  const renderOptionBlock = ({
+    title,
+    list,
+    emptyText,
+    hideWhenEmpty = false,
+    withPotentialTier = false,
+    potentialGrade = "",
+  }) => {
+    const options = toArray(list);
+    if (hideWhenEmpty && !options.length) {
+      return "";
+    }
+    const titleHtml = withPotentialTier
+      ? renderHoverTierBadge(options, potentialGrade, title)
+      : escapeHtml(title);
+    return `<div class="equip-hover__option-block"><h5>${titleHtml}</h5><ul>${renderHoverOptionRows(options, emptyText)}</ul></div>`;
+  };
+
+  const basicOptionBlock = renderOptionBlock({
+    title: "기본 옵션",
+    list: item?.basicOption,
+    emptyText: "기본 옵션 없음",
+  });
+  const additionalOptionBlock = renderOptionBlock({
+    title: "추가 옵션",
+    list: additionalOptions,
+    emptyText: "추가 옵션 없음",
+    hideWhenEmpty: hideEmptyOptionalOptions,
+  });
+  const potentialOptionBlock = renderOptionBlock({
+    title: "잠재능력",
+    list: potentialOptions,
+    emptyText: "잠재 옵션 없음",
+    hideWhenEmpty: hideEmptyOptionalOptions,
+    withPotentialTier: true,
+    potentialGrade: item?.potentialGrade,
+  });
+  const additionalPotentialOptionBlock = renderOptionBlock({
+    title: "에디셔널 잠재능력",
+    list: additionalPotentialOptions,
+    emptyText: "에디 옵션 없음",
+    hideWhenEmpty: hideEmptyOptionalOptions,
+    withPotentialTier: true,
+    potentialGrade: item?.additionalPotentialGrade,
+  });
+  const soulBlock =
+    hoverSoulSlotKeys.has(slot.key) && soulOption
+      ? `<div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div>`
+      : "";
+
+  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}${basicOptionBlock}${additionalOptionBlock}${potentialOptionBlock}${additionalPotentialOptionBlock}${soulBlock}</section></article>`;
 }
 
 function resolveUnionGradeIcon(unionGrade, unionGradeIcon) {
@@ -2399,12 +2561,16 @@ async function initCharacterPage() {
     );
     const page = await parseResponseSafely(pageRes);
     if (!pageRes.ok || !page.ok) {
-      const m =
+      const mRaw =
         page?.message ||
         page?.error?.error?.message ||
         "캐릭터 조회에 실패했습니다.";
+      const m = normalizeCharacterLookupErrorMessage(mRaw);
       setMessage(messageEl, m, "error");
-      tabContentEl.innerHTML = renderErrorCard(m);
+      tabContentEl.innerHTML =
+        m === "검색 결과가 없습니다."
+          ? renderNotFoundCard(m)
+          : renderErrorCard(m);
       return;
     }
     state.pageData = page;
@@ -2413,7 +2579,7 @@ async function initCharacterPage() {
     tabNavEl.hidden = false;
     hideEquipHoverOverlay();
     render();
-    setMessage(messageEl, "캐릭터 데이터를 불러왔습니다.", "success");
+    setMessage(messageEl, "", "info");
     hydrateProfileSummaryMeta();
     if (page.ocid) {
       state.expHistory.loading = true;
