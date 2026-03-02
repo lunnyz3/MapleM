@@ -268,6 +268,15 @@ function normalizeCharacterLookupErrorMessage(message) {
   }
   return raw;
 }
+function normalizeRankingLookupErrorMessage(message) {
+  const raw = String(message || "").trim();
+  const normalized = raw.toLowerCase();
+  if (!raw) return "랭킹 조회에 실패했습니다.";
+  if (normalized.includes("please input valid parameter")) {
+    return "조회 조건이 올바르지 않습니다. 월드/조회일을 확인해 주세요.";
+  }
+  return raw;
+}
 const rankingDateFloor = "2025-12-01";
 const rankingPageSize = 50;
 const rankingApiPageSize = 200;
@@ -281,6 +290,9 @@ const rankingTypes = Object.freeze({
   },
   "root-of-time": { label: "시간의근원 랭킹", endpoint: "root-of-time" },
 });
+const rankingNicknameSearchTypes = Object.freeze(
+  new Set(["level", "union", "achievement", "root-of-time"]),
+);
 const disabledRankingTypes = Object.freeze(new Set(["sharenian-waterway"]));
 const worldIconByName = Object.freeze({
   스카니아: "/assets/scania.png",
@@ -937,14 +949,17 @@ function renderProfile(profile, query) {
       ? 0
       : Math.max(0, Math.min(100, Number(progressValueRaw)));
   const rankingHref = (() => {
-    const dateCandidate = getKstDateString();
+    const dateCandidate = shiftDateText(getKstDateString(), -1) || getKstDateString();
     const date = dateCandidate < rankingDateFloor ? rankingDateFloor : dateCandidate;
     const queryParams = new URLSearchParams({
       type: "level",
       date,
     });
+    if (profileName && profileName !== "-") {
+      queryParams.set("character_name", profileName);
+    }
     if (worldName && worldName !== "-") {
-      queryParams.set("world_name", worldName);
+      queryParams.set("character_world_name", worldName);
     }
     const queryText = queryParams.toString();
     return `/ranking.html?${queryText}`;
@@ -1347,13 +1362,102 @@ function renderExpTab(expTab, expHistoryState, profile) {
     profile,
   )}</article></section>`;
 }
+function splitUnionOptionLabelValue(rawText) {
+  const text = String(rawText || "").trim();
+  if (!text) {
+    return { name: "", value: "" };
+  }
+
+  const matchedValue = text.match(/([+-]?\d[\d,]*(?:\.\d+)?\s*%?)\s*$/);
+  if (!matchedValue || matchedValue.index === undefined) {
+    return { name: text, value: "" };
+  }
+
+  const value = String(matchedValue[1] || "").replace(/\s+/g, "").trim();
+  const name = text
+    .slice(0, matchedValue.index)
+    .replace(/[:\-|]+$/g, "")
+    .trim();
+
+  if (!name || !value) {
+    return { name: text, value: "" };
+  }
+
+  return { name, value };
+}
+function normalizeUnionOptionRows(optionRows) {
+  return toArray(optionRows)
+    .map((row) => {
+      const directName = String(row?.name || "").trim();
+      const directValue = String(row?.value || "").trim();
+      if (directName && directValue) {
+        return { name: directName, value: directValue };
+      }
+      if (directName) {
+        return splitUnionOptionLabelValue(directName);
+      }
+      return splitUnionOptionLabelValue(row);
+    })
+    .filter((row) => String(row?.name || "").trim());
+}
+function renderUnionStatList(optionRows, emptyText) {
+  const rows = normalizeUnionOptionRows(optionRows);
+  if (!rows.length) {
+    return `<ul class="union-stat-list"><li class="is-empty">${escapeHtml(emptyText || "효과 정보가 없습니다.")}</li></ul>`;
+  }
+  return `<ul class="union-stat-list">${rows
+    .map((row) => {
+      if (row.value) {
+        return `<li><span>${escapeHtml(row.name)}</span><strong>${escapeHtml(row.value)}</strong></li>`;
+      }
+      return `<li class="is-single"><span>${escapeHtml(row.name)}</span></li>`;
+    })
+    .join("")}</ul>`;
+}
 function renderUnionTab(tabData, state) {
   const selected = resolveSelectedPreset("union", tabData, state);
   const data = selected?.data || {};
-  const occupied = toArray(data.occupiedOptions),
-    raider = toArray(data.raiderOptions);
+  const occupied = toArray(data.occupiedOptions).length
+    ? toArray(data.occupiedOptions)
+    : toArray(tabData?.activeOccupiedOptions);
+  const raider = toArray(data.raiderOptions).length
+    ? toArray(data.raiderOptions)
+    : toArray(tabData?.activeRaiderOptions);
   const summary = tabData?.summary || {};
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>유니온 공격대 프리셋</h3>${renderPresetSelector("union", tabData, state)}<ul class="kv-list compact-kv"><li><span>유니온 레벨</span><strong>${escapeHtml(summary.unionLevel ?? "-")}</strong></li><li><span>유니온 등급</span><strong>${escapeHtml(summary.unionGrade || "-")}</strong></li></ul><p class="union-option">${escapeHtml(summary.unionLevelTotalOption || "-")}</p></article><article class="data-card"><h3>적용 점령 효과</h3><ul class="simple-list">${occupied.length ? occupied.map((i) => `<li>${escapeHtml(i.name)} ${escapeHtml(i.value || "")}</li>`).join("") : '<li class="empty">적용 점령 효과가 없습니다.</li>'}</ul></article><article class="data-card"><h3>적용 공격대 효과</h3><ul class="simple-list">${raider.length ? raider.map((i) => `<li>${escapeHtml(i.name)} ${escapeHtml(i.value || "")}</li>`).join("") : '<li class="empty">적용 공격대 효과가 없습니다.</li>'}</ul></article></section>`;
+  const levelRaw = parseNumericValue(summary.unionLevel);
+  const unionLevelText =
+    levelRaw === null
+      ? String(summary.unionLevel || "-")
+      : formatNumber(Math.max(0, Math.floor(levelRaw)));
+  const unionGradeText = String(summary.unionGrade || "-").trim() || "-";
+  const unionGradeIcon = resolveUnionGradeIcon(
+    unionGradeText,
+    summary.unionGradeIcon,
+  );
+  const summarySegments = toArray(summary.unionLevelTotalOptionSegments).length
+    ? toArray(summary.unionLevelTotalOptionSegments)
+    : splitStatSegments(summary.unionLevelTotalOption || "");
+  const totalEffectRows = summarySegments.map((segment) =>
+    splitUnionOptionLabelValue(segment),
+  );
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>유니온</h3>${renderPresetSelector(
+    "union",
+    tabData,
+    state,
+  )}<div class="union-dashboard"><section class="union-dashboard__left"><div class="union-emblem-wrap">${unionGradeIcon ? `<img class="union-emblem" src="${escapeHtml(unionGradeIcon)}" alt="${escapeHtml(unionGradeText)}" loading="lazy" />` : '<div class="union-emblem union-emblem--empty">UNION</div>'}</div><p class="union-grade-text">${escapeHtml(
+    unionGradeText,
+  )}</p><p class="union-level-label">유니온 레벨 총합</p><strong class="union-level-value">${escapeHtml(
+    unionLevelText,
+  )}</strong></section><section class="union-dashboard__right"><article class="union-panel"><h4>레벨 총합 효과 누적</h4>${renderUnionStatList(
+    totalEffectRows,
+    "레벨 총합 효과 정보가 없습니다.",
+  )}</article><article class="union-panel"><h4>전투 지도 적용 효과</h4><div class="union-panel__group"><h5>점령 효과</h5>${renderUnionStatList(
+    occupied,
+    "적용 점령 효과가 없습니다.",
+  )}</div><div class="union-panel__group"><h5>공격대원 효과</h5>${renderUnionStatList(
+    raider,
+    "적용 공격대 효과가 없습니다.",
+  )}</div></article></section></div></article></section>`;
 }
 function renderAndroidTab(tabData, state) {
   const selected = resolveSelectedPreset("android", tabData, state);
@@ -1759,6 +1863,27 @@ function renderSquarePresetSwitch(tabKey, tabData, state, labelPrefix) {
       const activeClass = preset?.isActive ? "is-active" : "";
       const aria = `${labelPrefix || "프리셋"} ${no ?? "-"}`;
       return `<button type="button" class="jewel-page-btn hyper-link-preset__btn ${selected ? "is-selected" : ""} ${activeClass}" data-preset-tab="${escapeHtml(
+        tabKey,
+      )}" data-preset-no="${escapeHtml(no ?? "")}" aria-label="${escapeHtml(aria)}">${escapeHtml(
+        no ?? "-",
+      )}</button>`;
+    })
+    .join("")}</div>`;
+}
+function renderJewelPresetSwitch(tabKey, tabData, state, labelPrefix) {
+  const presets = toArray(tabData?.presets);
+  if (!presets.length) {
+    return '<div class="preset-empty">프리셋 데이터가 없습니다.</div>';
+  }
+
+  const selectedNo = resolveSelectedPresetNo(tabKey, tabData, state);
+  return `<div class="jewel-page-switch">${presets
+    .map((preset) => {
+      const no = parseNumericValue(preset?.presetNo);
+      const selected = no !== null && no === selectedNo;
+      const activeClass = preset?.isActive ? "is-active" : "";
+      const aria = `${labelPrefix || "프리셋"} ${no ?? "-"}`;
+      return `<button type="button" class="jewel-page-btn ${selected ? "is-selected" : ""} ${activeClass}" data-preset-tab="${escapeHtml(
         tabKey,
       )}" data-preset-no="${escapeHtml(no ?? "")}" aria-label="${escapeHtml(aria)}">${escapeHtml(
         no ?? "-",
@@ -2457,56 +2582,133 @@ function renderHexaStatEntry(row) {
 function renderHexaStatSideNode(isActive, levelText, nodeClass) {
   return `<div class="hexa-stat-node ${nodeClass} ${isActive ? "is-active" : "is-locked"}">${isActive ? `<span class="hexa-stat-node__level">${escapeHtml(
     levelText,
-  )}</span><span class="hexa-stat-node__icon" aria-hidden="true">V</span>` : '<span class="hexa-stat-node__lock" aria-hidden="true">LOCK</span>'}</div>`;
+  )}</span><span class="hexa-stat-node__icon" aria-hidden="true">VI</span>` : '<span class="hexa-stat-node__lock" aria-hidden="true">LOCK</span>'}</div>`;
 }
-function renderHexaStatCore(core, index) {
+function resolveActiveHexaStatInfo(core) {
   const pages = toArray(core?.statInfo);
   const activeIndexByFlag = pages.findIndex(
     (page) => String(page?.activateFlag ?? "0") === "1",
   );
   const activeIndex = activeIndexByFlag >= 0 ? activeIndexByFlag : 0;
-  const activeInfo = pages[activeIndex] || {};
+  return pages[activeIndex] || {};
+}
+function normalizeHexaStatCores(cores) {
+  const mergedBySlot = new Map();
 
-  const slotLevelValue =
-    parseNumericValue(activeInfo?.slotLevel) ??
+  toArray(cores).forEach((core, index) => {
+    const slotNo = parseNumericValue(core?.statCoreSlot);
+    const key = slotNo !== null ? `slot:${slotNo}` : `idx:${index}`;
+    if (!mergedBySlot.has(key)) {
+      mergedBySlot.set(key, {
+        statCoreSlot:
+          slotNo !== null ? slotNo : core?.statCoreSlot ?? index + 1,
+        statInfo: [],
+        __idx: index,
+      });
+    }
+    const target = mergedBySlot.get(key);
+    if (!target) return;
+    target.statInfo.push(...toArray(core?.statInfo));
+  });
+
+  return [...mergedBySlot.values()]
+    .map((core) => {
+      const pageMap = new Map();
+      toArray(core?.statInfo).forEach((info, index) => {
+        const pageNo = parseNumericValue(info?.pageNo);
+        const key = pageNo !== null ? `page:${pageNo}` : `idx:${index}`;
+        if (!pageMap.has(key)) {
+          pageMap.set(key, info);
+          return;
+        }
+        const current = pageMap.get(key);
+        const currentActive = String(current?.activateFlag ?? "0") === "1";
+        const nextActive = String(info?.activateFlag ?? "0") === "1";
+        if (!currentActive && nextActive) {
+          pageMap.set(key, info);
+        }
+      });
+      return {
+        ...core,
+        statInfo: [...pageMap.values()],
+      };
+    })
+    .sort((left, right) => {
+      const leftSlot = parseNumericValue(left?.statCoreSlot);
+      const rightSlot = parseNumericValue(right?.statCoreSlot);
+      if (leftSlot !== null && rightSlot !== null && leftSlot !== rightSlot) {
+        return leftSlot - rightSlot;
+      }
+      if (leftSlot !== null && rightSlot === null) return -1;
+      if (leftSlot === null && rightSlot !== null) return 1;
+      return (left?.__idx ?? 0) - (right?.__idx ?? 0);
+    });
+}
+function buildHexaStatPagePresetTabData(core) {
+  const pages = toArray(core?.statInfo);
+  if (!pages.length) {
+    return { presets: [] };
+  }
+
+  const pageMap = new Map();
+  let fallbackNo = 1;
+  pages.forEach((page, index) => {
+    let presetNo = parseNumericValue(page?.pageNo);
+    if (presetNo === null || pageMap.has(presetNo)) {
+      while (pageMap.has(fallbackNo)) {
+        fallbackNo += 1;
+      }
+      presetNo = fallbackNo;
+    }
+    pageMap.set(presetNo, {
+      presetNo,
+      isActive: String(page?.activateFlag ?? "0") === "1",
+      data: { pageInfo: page, pageIndex: index },
+    });
+  });
+
+  const presets = [...pageMap.values()].sort((left, right) => {
+    const leftNo = parseNumericValue(left?.presetNo) ?? Number.MAX_SAFE_INTEGER;
+    const rightNo = parseNumericValue(right?.presetNo) ?? Number.MAX_SAFE_INTEGER;
+    return leftNo - rightNo;
+  });
+
+  if (!presets.some((preset) => preset?.isActive) && presets[0]) {
+    presets[0].isActive = true;
+  }
+
+  return { presets };
+}
+function renderHexaStatCore(core, activeInfoRaw = null, presetSwitchMarkup = "") {
+  const activeInfo = activeInfoRaw || resolveActiveHexaStatInfo(core);
+
+  const mainLevel = resolveHexaStatLevel(
     parseNumericValue(activeInfo?.mainStatLevel) ??
-    0;
-  const slotLevelText = String(Math.max(0, Math.floor(slotLevelValue)));
+      parseNumericValue(activeInfo?.slotLevel),
+  );
+  const sub1Level = resolveHexaStatLevel(parseNumericValue(activeInfo?.sub1StatLevel));
+  const sub2Level = resolveHexaStatLevel(parseNumericValue(activeInfo?.sub2StatLevel));
+  const usedEnhanceCount = Math.min(20, mainLevel + sub1Level + sub2Level);
+  const topNodeLevelText = String(mainLevel);
+  const statCoreText = String(core?.statCoreSlot ?? "-").trim() || "-";
 
   const rows = [
     {
       tone: "main",
       stat: activeInfo?.mainStat || "-",
-      level:
-        parseNumericValue(activeInfo?.mainStatLevel) ??
-        parseNumericValue(activeInfo?.slotLevel) ??
-        0,
+      level: mainLevel,
     },
     {
       tone: "sub",
       stat: activeInfo?.sub1Stat || "-",
-      level: parseNumericValue(activeInfo?.sub1StatLevel) ?? 0,
+      level: sub1Level,
     },
     {
       tone: "sub",
       stat: activeInfo?.sub2Stat || "-",
-      level: parseNumericValue(activeInfo?.sub2StatLevel) ?? 0,
+      level: sub2Level,
     },
   ];
-
-  const pagePills = pages.length
-    ? pages
-        .map((page, pageIndex) => {
-          const pageText = String(page?.pageNo ?? pageIndex + 1).trim() || String(pageIndex + 1);
-          const isActive =
-            String(page?.activateFlag ?? "0") === "1" ||
-            (activeIndexByFlag < 0 && pageIndex === 0);
-          return `<span class="hexa-stat-core__page ${isActive ? "is-active" : ""}">${escapeHtml(
-            pageText,
-          )}</span>`;
-        })
-        .join("")
-    : '<span class="hexa-stat-core__page is-active">1</span>';
 
   const appliedRows = rows
     .filter((row) => {
@@ -2523,14 +2725,14 @@ function renderHexaStatCore(core, index) {
     .join("");
 
   return `<article class="hexa-stat-core"><header class="hexa-stat-core__head"><h4>스탯 코어 ${escapeHtml(
-    String(core?.statCoreSlot ?? index + 1),
-  )} (${escapeHtml(slotLevelText)}/20)</h4><div class="hexa-stat-core__pages">${pagePills}</div></header><div class="hexa-stat-core__body"><section class="hexa-stat-core__left"><ul class="hexa-stat-list">${rows
+    statCoreText,
+  )} (${escapeHtml(String(usedEnhanceCount))}/20)</h4>${presetSwitchMarkup}</header><div class="hexa-stat-core__body"><section class="hexa-stat-core__left"><ul class="hexa-stat-list">${rows
     .map((row) => renderHexaStatEntry(row))
     .join(
       "",
     )}</ul></section><aside class="hexa-stat-core__right"><div class="hexa-stat-visual"><div class="hexa-stat-visual__bg" aria-hidden="true"></div>${renderHexaStatSideNode(
     true,
-    slotLevelText,
+    topNodeLevelText,
     "hexa-stat-node--top",
   )}${renderHexaStatSideNode(
     false,
@@ -2554,27 +2756,99 @@ function renderHexaStatCore(core, index) {
     "hexa-stat-node--bottom",
   )}<div class="hexa-stat-visual__mark" aria-hidden="true">VI</div></div><div class="hexa-stat-applied"><h5>적용 능력치</h5><ul>${appliedRows || '<li class="is-empty">적용 능력치가 없습니다.</li>'}</ul></div></aside></div></article>`;
 }
-function renderHexaStatBoard(cores) {
-  const normalized = toArray(cores);
-  if (!normalized.length) {
+function renderHexaStatBoard(cores, state) {
+  const normalizedCores = normalizeHexaStatCores(cores);
+  const currentCore = normalizedCores[0] || null;
+  if (!currentCore) {
     return '<p class="empty">헥사 스탯 데이터가 없습니다.</p>';
   }
-  return `<div class="hexa-stat-board">${normalized
-    .map((core, index) => renderHexaStatCore(core, index))
-    .join("")}</div>`;
+
+  const presetTabData = buildHexaStatPagePresetTabData(currentCore);
+  const presets = toArray(presetTabData?.presets);
+  if (!presets.length) {
+    return '<p class="empty">헥사 스탯 데이터가 없습니다.</p>';
+  }
+
+  const selectedPreset = resolveSelectedPreset("hexaStat", presetTabData, state);
+  const selectedPage =
+    selectedPreset?.data?.pageInfo ||
+    presets.find((preset) => preset?.isActive)?.data?.pageInfo ||
+    presets[0]?.data?.pageInfo ||
+    null;
+  const presetSwitch = renderJewelPresetSwitch(
+    "hexaStat",
+    presetTabData,
+    state,
+    "헥사 스탯 페이지",
+  );
+  return `<div class="hexa-stat-board">${renderHexaStatCore(
+    currentCore,
+    selectedPage,
+    presetSwitch,
+  )}</div>`;
 }
-function renderHexamatrixTab(tabData, jewelSymbolVmatrixTabData) {
+function resolveVmatrixCoreGroup(core) {
+  const typeNorm = normalizeForMatch(core?.vcoreType || "");
+  if (/강화|enhance|boost/.test(typeNorm)) {
+    return "enhance";
+  }
+  if (/특수|special|common/.test(typeNorm)) {
+    return "special";
+  }
+  if (/스킬|skill/.test(typeNorm)) {
+    return "skill";
+  }
+  return "skill";
+}
+function renderSimpleVmatrixCoreBoard(vcores) {
+  const grouped = {
+    skill: [],
+    enhance: [],
+    special: [],
+  };
+  toArray(vcores).forEach((core) => {
+    const key = resolveVmatrixCoreGroup(core);
+    grouped[key].push(core);
+  });
+
+  const groupDefs = [
+    { key: "skill", label: "스킬 코어" },
+    { key: "enhance", label: "강화 코어" },
+    { key: "special", label: "특수 코어" },
+  ];
+  const renderCoreLine = (core, groupKey) => {
+    const levelValue = parseNumericValue(core?.vcoreLevel);
+    const levelText =
+      levelValue === null ? "-" : String(Math.max(0, Math.floor(levelValue)));
+    const skillsText = toArray(core?.skills)
+      .map((name) => String(name || "").trim())
+      .filter(Boolean)
+      .join("/");
+    const titleText =
+      groupKey === "enhance" && skillsText
+        ? skillsText
+        : String(core?.vcoreName || "").trim() || skillsText || "-";
+    return `<li>${escapeHtml(titleText)} (Lv. ${escapeHtml(levelText)})</li>`;
+  };
+
+  return `<div class="vmatrix-simple"><div class="vmatrix-simple__grid">${groupDefs
+    .map((group) => {
+      const list = grouped[group.key] || [];
+      return `<section class="vmatrix-simple__group"><h5>${escapeHtml(
+        `${group.label} (${list.length})`,
+      )}</h5><ul class="vmatrix-simple__list">${list.length ? list.map((core) => renderCoreLine(core, group.key)).join("") : '<li class="is-empty">코어 정보가 없습니다.</li>'}</ul></section>`;
+    })
+    .join("")}</div></div>`;
+}
+function renderHexamatrixTab(tabData, jewelSymbolVmatrixTabData, state) {
   const vcores = toArray(jewelSymbolVmatrixTabData?.vmatrix?.vCores);
   const skills = toArray(tabData?.hexaSkills);
   const cores = toArray(tabData?.hexaStatCoreList);
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>V매트릭스 코어</h3><div class="card-grid card-grid--3">${vcores.length ? vcores.map((c) => `<article class="mini-card"><h4>${escapeHtml(
-    c.vcoreName || "-",
-  )}</h4><p>코어 Lv.${escapeHtml(c.vcoreLevel ?? "-")} / 슬롯 Lv.${escapeHtml(
-    c.slotLevel ?? "-",
-  )}</p><p>${escapeHtml(
-    toArray(c.skills).join(" / ") || "스킬 정보 없음",
-  )}</p></article>`).join("") : '<p class="empty">V코어 정보가 없습니다.</p>'}</div></article><article class="data-card data-card--wide"><h3>헥사 스킬</h3>${skills.length ? renderHexaSkillBoard(skills) : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스탯</h3>${renderHexaStatBoard(
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>V매트릭스</h3>${vcores.length ? renderSimpleVmatrixCoreBoard(
+    vcores,
+  ) : '<p class="empty">V코어 정보가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스킬</h3>${skills.length ? renderHexaSkillBoard(skills) : '<p class="empty">헥사 스킬 데이터가 없습니다.</p>'}</article><article class="data-card data-card--wide"><h3>헥사 스탯</h3>${renderHexaStatBoard(
     cores,
+    state,
   )}</article></section>`;
 }
 function renderTabContent(state) {
@@ -2597,6 +2871,7 @@ function renderTabContent(state) {
     return renderHexamatrixTab(
       tabs.hexamatrix || {},
       tabs.jewelSymbolVmatrix || {},
+      state,
     );
   if (state.activeTab === "hyperStat")
     return renderHyperStatTab(
@@ -2651,6 +2926,9 @@ function normalizeRankingType(type) {
   const key = String(type || "").trim();
   if (disabledRankingTypes.has(key)) return "level";
   return rankingTypes[key] ? key : "level";
+}
+function isRankingNicknameSearchType(type) {
+  return rankingNicknameSearchTypes.has(normalizeRankingType(type));
 }
 
 function normalizeRankingDate(dateText) {
@@ -2727,9 +3005,21 @@ function shiftDateText(dateText, dayOffset) {
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}-${String(shifted.getUTCDate()).padStart(2, "0")}`;
 }
 
-function isRankingDataNotReadyMessage(message) {
+function isRankingDataNotReadyMessage(message, date = "") {
   const text = String(message || "").toLowerCase();
-  return text.includes("please wait until the data is ready");
+  if (text.includes("please wait until the data is ready")) {
+    return true;
+  }
+
+  if (!text.includes("please input valid parameter")) {
+    return false;
+  }
+
+  // Some ranking endpoints return this message for "today not ready".
+  const probeDate = normalizeRankingDate(date);
+  const today = getKstDateString();
+  const yesterday = shiftDateText(today, -1);
+  return !!probeDate && (probeDate === today || probeDate === yesterday);
 }
 
 async function resolveRankingCharacterImage(worldName, characterName) {
@@ -2907,7 +3197,6 @@ async function resolveOverallRankingByOcid(ocid, options = {}) {
       const query = new URLSearchParams({
         date,
         ocid: normalizedOcid,
-        page: "1",
       });
       const response = await fetch(
         `/api/maplestorym/ranking/level?${query.toString()}`,
@@ -3336,44 +3625,54 @@ function getRankingColumns(type) {
   return ["#", "캐릭터", "레벨", "직업", "길드"];
 }
 
-function renderRankingRow(type, row, rankNo) {
+function renderRankingRow(type, row, rankNo, targetCharacterNameNorm = "") {
+  const rowNameNorm = normalizeForMatch(row?.character_name || row?.guild_master_name || "");
+  const isTargetRow =
+    !!targetCharacterNameNorm &&
+    !!rowNameNorm &&
+    rowNameNorm === targetCharacterNameNorm;
+  const rowClassAttr = isTargetRow ? ' class="is-target"' : "";
+
   if (type === "union") {
-    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td>${renderRankingGradeCell(row.union_grade, row.union_grade_icon)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.union_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td>${renderRankingGradeCell(row.union_grade, row.union_grade_icon)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.union_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
   }
 
   if (type === "achievement") {
-    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.achievement_score))}</td><td>${renderRankingGradeCell(row.achievement_grade_name, row.achievement_grade_icon)}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.achievement_score))}</td><td>${renderRankingGradeCell(row.achievement_grade_name, row.achievement_grade_icon)}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
   }
 
   if (type === "sharenian-battlefield") {
-    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
   }
 
   if (type === "sharenian-waterway") {
     const fallbackCharacterName = String(
       row.character_name || row.guild_master_name || "-",
     );
-    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row, fallbackCharacterName)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row, fallbackCharacterName)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
   }
 
   if (type === "root-of-time") {
-    return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.max_damage)))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.max_damage)))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
   }
 
-  return `<tr><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num">${escapeHtml(formatNumber(row.character_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
+  return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num">${escapeHtml(formatNumber(row.character_level))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
 }
 
-function renderRankingTable(type, rows, pageNo) {
+function renderRankingTable(type, rows, pageNo, options = {}) {
   const columns = getRankingColumns(type);
   if (!rows.length) {
     return '<p class="empty">조건에 맞는 랭킹 데이터가 없습니다.</p>';
   }
 
+  const targetCharacterNameNorm = isRankingNicknameSearchType(type)
+    ? normalizeForMatch(options?.targetCharacterName || "")
+    : "";
   const offset = (pageNo - 1) * rankingPageSize;
   const body = rows
     .map((row, index) => {
       const rankNo = parseNumericValue(row?.ranking) ?? offset + index + 1;
-      return renderRankingRow(type, row, rankNo);
+      return renderRankingRow(type, row, rankNo, targetCharacterNameNorm);
     })
     .join("");
 
@@ -3395,6 +3694,12 @@ function renderRankingPagination(buttonWrapEl, currentPage) {
 
 async function fetchRankingPageData(type, date, worldName, pageNo, options = {}) {
   const allowReadyFallback = options?.allowReadyFallback !== false;
+  const fallbackAttempt = Number.isFinite(options?.fallbackAttempt)
+    ? Math.max(0, Math.floor(options.fallbackAttempt))
+    : 0;
+  const maxFallbackDays = Number.isFinite(options?.maxFallbackDays)
+    ? Math.max(1, Math.floor(options.maxFallbackDays))
+    : 7;
   const zeroBasedIndex = (pageNo - 1) * rankingPageSize;
   const apiPage = Math.floor(zeroBasedIndex / rankingApiPageSize) + 1;
   const localOffset = zeroBasedIndex % rankingApiPageSize;
@@ -3411,12 +3716,17 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
   const payload = await parseResponseSafely(response);
 
   if (!response.ok || !payload.ok) {
-    const message =
+    const messageRaw =
       payload?.message ||
       payload?.error?.error?.message ||
       "랭킹 조회에 실패했습니다.";
+    const message = String(messageRaw || "");
 
-    if (allowReadyFallback && isRankingDataNotReadyMessage(message)) {
+    if (
+      allowReadyFallback &&
+      isRankingDataNotReadyMessage(message, date) &&
+      fallbackAttempt < maxFallbackDays
+    ) {
       const previousDate = shiftDateText(date, -1);
       if (previousDate && previousDate >= rankingDateFloor) {
         const fallbackResult = await fetchRankingPageData(
@@ -3424,17 +3734,23 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
           previousDate,
           worldName,
           pageNo,
-          { allowReadyFallback: false },
+          {
+            allowReadyFallback,
+            fallbackAttempt: fallbackAttempt + 1,
+            maxFallbackDays,
+          },
         );
         return {
           ...fallbackResult,
-          effectiveDate: previousDate,
-          fallbackFromDate: date,
+          effectiveDate: fallbackResult?.effectiveDate || previousDate,
+          fallbackFromDate: fallbackResult?.fallbackFromDate || date,
         };
       }
     }
 
-    throw new Error(message);
+    const error = new Error(normalizeRankingLookupErrorMessage(message));
+    error.rawMessage = message;
+    throw error;
   }
 
   const ranking = toArray(payload?.data?.ranking);
@@ -3446,6 +3762,91 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
     effectiveDate: date,
     fallbackFromDate: "",
   };
+}
+async function fetchCharacterOcidByName(characterName, worldName) {
+  const name = String(characterName || "").trim();
+  const world = String(worldName || "").trim();
+  if (!name || !world) {
+    return "";
+  }
+
+  const query = new URLSearchParams({
+    character_name: name,
+    world_name: world,
+  });
+  const response = await fetch(`/api/maplestorym/id?${query.toString()}`);
+  const payload = await parseResponseSafely(response);
+  if (!response.ok || !payload?.ok) {
+    return "";
+  }
+
+  const ocid =
+    String(payload?.ocid || payload?.data?.ocid || "").trim() ||
+    String(payload?.data?.ocid || "").trim();
+  return ocid || "";
+}
+async function resolveRankingByCharacter({
+  type,
+  date,
+  characterName,
+  worldName,
+}) {
+  const normalizedType = normalizeRankingType(type);
+  if (!isRankingNicknameSearchType(normalizedType)) {
+    return null;
+  }
+
+  const ocid = await fetchCharacterOcidByName(characterName, worldName);
+  if (!ocid) {
+    return null;
+  }
+
+  let probeDate = normalizeRankingDate(date) || getKstDateString();
+  if (probeDate < rankingDateFloor) {
+    probeDate = rankingDateFloor;
+  }
+
+  for (let attempt = 0; attempt < 7; attempt += 1) {
+    const query = new URLSearchParams({
+      date: probeDate,
+      ocid,
+    });
+    const endpoint = rankingTypes[normalizedType]?.endpoint || "level";
+    const response = await fetch(
+      `/api/maplestorym/ranking/${encodeURIComponent(endpoint)}?${query.toString()}`,
+    );
+    const payload = await parseResponseSafely(response);
+    if (response.ok && payload?.ok) {
+      const first = toArray(payload?.data?.ranking)[0] || null;
+      const rankingValue = parseNumericValue(first?.ranking);
+      if (rankingValue !== null && rankingValue > 0) {
+        const normalizedRanking = Math.max(1, Math.floor(rankingValue));
+        const targetPage = Math.floor((normalizedRanking - 1) / rankingPageSize) + 1;
+        return {
+          ocid,
+          ranking: normalizedRanking,
+          page: targetPage,
+          date: probeDate,
+          type: normalizedType,
+        };
+      }
+      return null;
+    }
+
+    const message =
+      payload?.message || payload?.error?.error?.message || "";
+    if (!isRankingDataNotReadyMessage(message, probeDate)) {
+      return null;
+    }
+
+    const previousDate = shiftDateText(probeDate, -1);
+    if (!previousDate || previousDate < rankingDateFloor) {
+      return null;
+    }
+    probeDate = previousDate;
+  }
+
+  return null;
 }
 
 function initRankingPage() {
@@ -3474,6 +3875,7 @@ function initRankingPage() {
   const typeEl = document.getElementById("rankingType");
   const dateEl = document.getElementById("rankingDate");
   const worldEl = document.getElementById("rankingWorldName");
+  const characterNameEl = document.getElementById("rankingCharacterName");
   if (!typeEl || !dateEl || !worldEl) return;
   configureRankingTypeSelect(typeEl);
   configureRankingWorldSelect(worldEl);
@@ -3483,10 +3885,18 @@ function initRankingPage() {
   let currentDate = normalizeRankingDate(urlParams.get("date"));
   let currentWorld = String(urlParams.get("world_name") || "").trim();
   let currentPage = normalizeRankingPage(urlParams.get("page"));
+  let targetCharacterName = String(urlParams.get("character_name") || "").trim();
+  let targetCharacterWorld = String(urlParams.get("character_world_name") || "").trim();
+  const targetLookupCache = new Map();
+
+  if (!currentWorld && targetCharacterWorld) {
+    currentWorld = targetCharacterWorld;
+  }
 
   const today = getKstDateString();
+  const defaultDate = shiftDateText(today, -1) || today;
   if (!currentDate) {
-    currentDate = today < rankingDateFloor ? rankingDateFloor : today;
+    currentDate = defaultDate < rankingDateFloor ? rankingDateFloor : defaultDate;
   }
   if (currentDate < rankingDateFloor) {
     currentDate = rankingDateFloor;
@@ -3497,12 +3907,17 @@ function initRankingPage() {
   dateEl.value = currentDate;
   worldEl.value = currentWorld;
   pageJumpInput.value = String(currentPage);
+  if (characterNameEl) {
+    characterNameEl.value = targetCharacterName;
+  }
 
   const syncUrl = () => {
     const next = new URLSearchParams();
     next.set("type", currentType);
     next.set("date", currentDate);
     if (currentWorld) next.set("world_name", currentWorld);
+    if (targetCharacterName) next.set("character_name", targetCharacterName);
+    if (targetCharacterWorld) next.set("character_world_name", targetCharacterWorld);
     next.set("page", String(currentPage));
     history.replaceState(null, "", `/ranking.html?${next.toString()}`);
   };
@@ -3522,23 +3937,115 @@ function initRankingPage() {
     tableWrapEl.innerHTML = '<p class="empty">랭킹 데이터를 불러오는 중입니다...</p>';
 
     try {
-      const { rows, effectiveDate } = await fetchRankingPageData(
-        currentType,
-        currentDate,
-        currentWorld,
-        currentPage,
-      );
+      const allowsNicknameSearch = isRankingNicknameSearchType(currentType);
+      const rankingLabel = rankingTypes[currentType]?.label || "랭킹";
+      let targetLookupResult = null;
+      if (allowsNicknameSearch && targetCharacterName) {
+        const worldForLookup =
+          String(targetCharacterWorld || currentWorld || "").trim();
+        const lookupKey = `${currentDate}|${targetCharacterName}|${worldForLookup}`;
+        if (targetLookupCache.has(lookupKey)) {
+          targetLookupResult = targetLookupCache.get(lookupKey);
+        } else if (worldForLookup) {
+          targetLookupResult = await resolveRankingByCharacter({
+            type: currentType,
+            date: currentDate,
+            characterName: targetCharacterName,
+            worldName: worldForLookup,
+          });
+          targetLookupCache.set(lookupKey, targetLookupResult || null);
+        }
+        if (
+          targetLookupResult?.page &&
+          Number.isInteger(targetLookupResult.page) &&
+          targetLookupResult.page > 0
+        ) {
+          currentPage = targetLookupResult.page;
+        }
+      }
+
+      let rows = [];
+      let effectiveDate = currentDate;
+      let jumpedPageFallback = false;
+      try {
+        const rankingResult = await fetchRankingPageData(
+          currentType,
+          currentDate,
+          currentWorld,
+          currentPage,
+        );
+        rows = rankingResult.rows;
+        effectiveDate = rankingResult.effectiveDate || currentDate;
+      } catch (fetchError) {
+        const fetchMessage = String(
+          fetchError?.rawMessage || fetchError?.message || "",
+        );
+        const looksLikeInvalidParam =
+          /please input valid parameter/i.test(fetchMessage) ||
+          fetchMessage.includes("랭킹 데이터가 아직 준비되지 않았습니다.");
+        const canRetryFirstPage =
+          looksLikeInvalidParam &&
+          allowsNicknameSearch &&
+          !!targetLookupResult?.ranking &&
+          currentPage > 1;
+
+        if (!canRetryFirstPage) {
+          throw fetchError;
+        }
+
+        currentPage = 1;
+        const firstPageResult = await fetchRankingPageData(
+          currentType,
+          currentDate,
+          currentWorld,
+          currentPage,
+        );
+        rows = firstPageResult.rows;
+        effectiveDate = firstPageResult.effectiveDate || currentDate;
+        jumpedPageFallback = true;
+      }
       titleEl.textContent = `${rankingTypes[currentType].label} | 조회일 ${effectiveDate || currentDate}`;
-      setMessage(messageEl, "", "info");
-      tableWrapEl.innerHTML = renderRankingTable(currentType, rows, currentPage);
+      tableWrapEl.innerHTML = renderRankingTable(currentType, rows, currentPage, {
+        targetCharacterName,
+      });
+      if (allowsNicknameSearch && targetCharacterName) {
+        if (targetLookupResult?.ranking && jumpedPageFallback) {
+          setMessage(
+            messageEl,
+            `${targetCharacterName} 검색: ${rankingLabel} ${formatNumber(targetLookupResult.ranking)}위 (페이지 ${targetLookupResult.page}) - API 제한으로 1페이지를 표시했습니다.`,
+            "success",
+          );
+        } else if (targetLookupResult?.ranking) {
+          setMessage(
+            messageEl,
+            `${targetCharacterName} 검색: ${rankingLabel} ${formatNumber(targetLookupResult.ranking)}위 (페이지 ${targetLookupResult.page})`,
+            "success",
+          );
+        } else if (!String(targetCharacterWorld || currentWorld || "").trim()) {
+          setMessage(
+            messageEl,
+            "닉네임 검색은 월드 정보가 필요합니다. 월드를 선택해 주세요.",
+            "error",
+          );
+        } else {
+          setMessage(
+            messageEl,
+            `${targetCharacterName} 캐릭터의 ${rankingLabel} 순위를 찾지 못했습니다.`,
+            "error",
+          );
+        }
+      } else {
+        setMessage(messageEl, "", "info");
+      }
       hydrateRankingCharacterThumbs(tableWrapEl);
       hydrateRankingGuildMarks(tableWrapEl);
       renderRankingPagination(pageButtonsEl, currentPage);
       pageJumpInput.value = String(currentPage);
       syncUrl();
     } catch (error) {
-      tableWrapEl.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
-      setMessage(messageEl, error.message, "error");
+      const message = normalizeRankingLookupErrorMessage(error?.message || "");
+      tableWrapEl.innerHTML = `<p class="empty">${escapeHtml(message)}</p>`;
+      setMessage(messageEl, message, "error");
       renderRankingPagination(pageButtonsEl, currentPage);
     }
   };
@@ -3548,6 +4055,16 @@ function initRankingPage() {
     currentType = normalizeRankingType(typeEl.value);
     currentDate = normalizeRankingDate(dateEl.value) || currentDate;
     currentWorld = String(worldEl.value || "").trim();
+    targetCharacterName = characterNameEl
+      ? String(characterNameEl.value || "").trim()
+      : "";
+    targetCharacterWorld = targetCharacterName
+      ? String(currentWorld || targetCharacterWorld || "").trim()
+      : "";
+    if (targetCharacterName && targetCharacterWorld && !currentWorld) {
+      currentWorld = targetCharacterWorld;
+      worldEl.value = targetCharacterWorld;
+    }
     currentPage = 1;
     await load();
   });
@@ -3664,6 +4181,7 @@ async function initCharacterPage() {
       jewelSymbolVmatrix: null,
       hyperStat: null,
       skillLink: null,
+      hexaStat: null,
     },
   };
   const renderProfileCard = () => {

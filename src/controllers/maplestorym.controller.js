@@ -1224,7 +1224,6 @@ function parseRankingQuery(req, res) {
   }
 
   let worldNameCanonical = "";
-  let worldNameNexon = "";
   if (worldNameInput) {
     const worldValidation = normalizeWorldName(worldNameInput);
     if (!worldValidation.ok) {
@@ -1238,7 +1237,6 @@ function parseRankingQuery(req, res) {
     }
 
     worldNameCanonical = worldValidation.worldNameCanonical;
-    worldNameNexon = worldValidation.nexonWorldName;
   }
 
   let page = 1;
@@ -1255,12 +1253,12 @@ function parseRankingQuery(req, res) {
   }
 
   const params = {
-    date: dateInput,
-    page
+    date: dateInput
   };
 
-  if (worldNameNexon) {
-    params.world_name = worldNameNexon;
+  // Nexon ranking API can reject "page" when querying by ocid.
+  if (!ocid) {
+    params.page = page;
   }
 
   if (ocid) {
