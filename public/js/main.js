@@ -504,29 +504,39 @@ function compareEquipmentItems(l, r) {
 }
 const cashBoardLeftSlotDefs = Object.freeze([
   { key: "weapon", label: "무기" },
-  { key: "hat", label: "모자" },
-  { key: "necklace1", label: "목걸이" },
-  { key: "necklace2", label: "목걸이 2" },
+  { key: "subWeapon", label: "보조무기" },
   { key: "ring1", label: "반지" },
   { key: "ring2", label: "반지 2" },
+  { key: "ring3", label: "반지 3" },
+  { key: "ring4", label: "반지 4" },
   { key: "earring", label: "귀고리" },
-  { key: "badge", label: "뱃지" },
+  { key: "icon", label: "아이콘" },
 ]);
 const cashBoardRightSlotDefs = Object.freeze([
-  { key: "shoulder", label: "어깨" },
+  { key: "hat", label: "모자" },
   { key: "gloves", label: "장갑" },
-  { key: "cape", label: "망토" },
+  { key: "overall2", label: "한벌옷" },
   { key: "overall", label: "한벌옷" },
+  { key: "cape", label: "망토" },
   { key: "shoes", label: "신발" },
-  { key: "belt", label: "벨트" },
 ]);
 const cashBoardBottomSlotDefs = Object.freeze([
   { key: "face", label: "얼굴장식" },
   { key: "eye", label: "눈장식" },
-  { key: "emblem", label: "엠블렘" },
-  { key: "android", label: "안드로이드" },
-  { key: "title", label: "칭호" },
-  { key: "medal", label: "훈장" },
+  { key: "effect", label: "이펙트" },
+  { key: "chair", label: "의자" },
+  { key: "mount", label: "탈것" },
+]);
+const androidBoardLeftSlotDefs = Object.freeze([
+  { key: "hat", label: "모자" },
+  { key: "top", label: "상의" },
+  { key: "cape", label: "망토" },
+]);
+const androidBoardRightSlotDefs = Object.freeze([
+  { key: "gloves", label: "장갑" },
+  { key: "bottom", label: "하의" },
+  { key: "shoes", label: "신발" },
+  { key: "face", label: "얼굴장식" },
 ]);
 function resolveCashSlotKey(slotName) {
   const n = normalizeForMatch(slotName);
@@ -540,10 +550,12 @@ function resolveCashSlotKey(slotName) {
     n.includes(normalizeForMatch("펜던")) ||
     n.includes(normalizeForMatch("네클"))
   ) {
-    if (n.includes("2")) return "necklace2";
-    return "necklace1";
+    if (n.includes("2")) return "ring4";
+    return "ring3";
   }
   if (n.includes(normalizeForMatch("반지"))) {
+    if (n.includes("4")) return "ring4";
+    if (n.includes("3")) return "ring3";
     if (n.includes("2")) return "ring2";
     return "ring1";
   }
@@ -553,9 +565,14 @@ function resolveCashSlotKey(slotName) {
   ) {
     return "earring";
   }
-  if (n.includes(normalizeForMatch("뱃지"))) return "badge";
+  if (
+    n.includes(normalizeForMatch("아이콘")) ||
+    n.includes(normalizeForMatch("뱃지"))
+  ) {
+    return "icon";
+  }
   if (n.includes(normalizeForMatch("어깨")) || n.includes(normalizeForMatch("숄더"))) {
-    return "shoulder";
+    return "subWeapon";
   }
   if (n.includes(normalizeForMatch("장갑"))) return "gloves";
   if (n.includes(normalizeForMatch("망토"))) return "cape";
@@ -567,9 +584,29 @@ function resolveCashSlotKey(slotName) {
     return "overall";
   }
   if (n.includes(normalizeForMatch("신발"))) return "shoes";
-  if (n.includes(normalizeForMatch("벨트"))) return "belt";
+  if (n.includes(normalizeForMatch("벨트"))) return "overall2";
   if (n.includes(normalizeForMatch("얼굴장식"))) return "face";
   if (n.includes(normalizeForMatch("눈장식"))) return "eye";
+  if (
+    n.includes(normalizeForMatch("이펙트")) ||
+    n.includes(normalizeForMatch("effect"))
+  ) {
+    return "effect";
+  }
+  if (
+    n.includes(normalizeForMatch("의자")) ||
+    n.includes(normalizeForMatch("chair"))
+  ) {
+    return "chair";
+  }
+  if (
+    n.includes(normalizeForMatch("탈것")) ||
+    n.includes(normalizeForMatch("탑승")) ||
+    n.includes(normalizeForMatch("라이딩")) ||
+    n.includes(normalizeForMatch("mount"))
+  ) {
+    return "mount";
+  }
   if (n.includes(normalizeForMatch("안드로이드"))) return "android";
   if (n.includes(normalizeForMatch("칭호"))) return "title";
   if (n.includes(normalizeForMatch("훈장"))) return "medal";
@@ -591,6 +628,13 @@ function buildCashSlotMap(cashItems) {
     }
     byKey.set(key, normalizedItem);
   });
+  const overallPrimary = byKey.get("overall");
+  const overallSecondary = byKey.get("overall2");
+  if (overallPrimary && !overallSecondary) {
+    byKey.set("overall2", { ...overallPrimary });
+  } else if (overallSecondary && !overallPrimary) {
+    byKey.set("overall", { ...overallSecondary });
+  }
   return { byKey, extras };
 }
 function renderCashHoverCard(item, slotLabel) {
@@ -620,25 +664,164 @@ function renderCashEquipmentBoard(cashItems, profile) {
   const bottomCards = cashBoardBottomSlotDefs
     .map((slotDef) => renderCashSlotCard(slotDef, slotMap, "bottom"))
     .join("");
-  const extraCards = slotMap.extras.length
-    ? slotMap.extras
-        .map((item, index) => {
-          const key = `extra-${index + 1}`;
-          return renderCashSlotCard(
-            { key, label: item.slotName || "기타" },
-            { byKey: new Map([[key, item]]) },
-            "extra",
-          );
-        })
-        .join("")
-    : "";
   const avatar = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
   const profileName = String(profile?.name || "-").trim() || "-";
   const levelText = Number.isFinite(parseNumericValue(profile?.level))
     ? `Lv.${parseNumericValue(profile.level)}`
     : "Lv.-";
 
-  return `<article class="data-card cash-board-card"><h3>캐시 장비</h3><div class="cash-board"><div class="cash-board__left">${leftCards}</div><div class="cash-board__center"><div class="cash-board__meta"><strong>${escapeHtml(levelText)}</strong><span>${escapeHtml(profileName)}</span></div><div class="cash-board__avatar-wrap"><img class="cash-board__avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(profileName)} 캐릭터" loading="lazy" /></div></div><div class="cash-board__right">${rightCards}</div></div><div class="cash-board__bottom">${bottomCards}${extraCards}</div></article>`;
+  return `<article class="data-card cash-board-card"><h3>캐시 장비</h3><div class="cash-board"><div class="cash-board__left">${leftCards}</div><div class="cash-board__center"><div class="cash-board__meta"><strong>${escapeHtml(levelText)}</strong><span>${escapeHtml(profileName)}</span></div><div class="cash-board__avatar-wrap"><img class="cash-board__avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(profileName)} 캐릭터" loading="lazy" /></div></div><div class="cash-board__right">${rightCards}</div></div><div class="cash-board__bottom">${bottomCards}</div></article>`;
+}
+function resolveAndroidCashSlotKey(slotName) {
+  const normalized = normalizeForMatch(slotName);
+  if (!normalized) return "extra";
+  if (normalized.includes(normalizeForMatch("모자"))) return "hat";
+  if (
+    normalized.includes(normalizeForMatch("상의")) ||
+    normalized.includes(normalizeForMatch("한벌"))
+  ) {
+    return "top";
+  }
+  if (normalized.includes(normalizeForMatch("하의"))) return "bottom";
+  if (normalized.includes(normalizeForMatch("망토"))) return "cape";
+  if (normalized.includes(normalizeForMatch("장갑"))) return "gloves";
+  if (normalized.includes(normalizeForMatch("신발"))) return "shoes";
+  if (normalized.includes(normalizeForMatch("얼굴장식"))) return "face";
+  return "extra";
+}
+function buildAndroidCashSlotMap(cashItems) {
+  const byKey = new Map();
+  const extras = [];
+  toArray(cashItems).forEach((item) => {
+    const normalizedItem = {
+      name: sanitizeEquipmentText(item?.name || "-") || "-",
+      icon: String(item?.icon || "").trim(),
+      slotName: sanitizeEquipmentText(item?.slotName || "-") || "-",
+    };
+    const key = resolveAndroidCashSlotKey(normalizedItem.slotName);
+    if (key === "extra" || byKey.has(key)) {
+      extras.push(normalizedItem);
+      return;
+    }
+    byKey.set(key, normalizedItem);
+  });
+  return { byKey, extras };
+}
+function renderAndroidCashHoverCard(item, slotLabel) {
+  return renderCashHoverCard(
+    {
+      cashItemName: item?.name,
+      cashItemIcon: item?.icon,
+      slotName: item?.slotName,
+    },
+    slotLabel,
+  );
+}
+function renderAndroidEquipmentHoverCard(androidEquipment) {
+  const name = sanitizeEquipmentText(androidEquipment?.androidName || "-") || "-";
+  const icon = String(androidEquipment?.androidIcon || "").trim();
+  const grade = sanitizeEquipmentText(androidEquipment?.androidGrade || "-") || "-";
+  const gender = sanitizeEquipmentText(androidEquipment?.androidGender || "-") || "-";
+  const nickname =
+    sanitizeEquipmentText(androidEquipment?.androidNickname || "-") || "-";
+  const warehouseUsableFlag = String(
+    androidEquipment?.warehouseUsableFlag ?? "-",
+  ).trim();
+  const earSensorClipFlag = String(
+    androidEquipment?.earSensorClipFlag ?? "-",
+  ).trim();
+  const description =
+    sanitizeEquipmentText(androidEquipment?.androidDescription || "") || "-";
+
+  return `<article class="cash-hover-card"><header class="cash-hover__header"><div class="cash-hover__icon-wrap">${icon ? `<img class="cash-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(name)}" loading="lazy" />` : '<div class="cash-hover__icon cash-hover__icon--empty">NO</div>'}</div><div class="cash-hover__title-wrap"><h4>${escapeHtml(
+    name,
+  )}</h4><p>${escapeHtml(
+    `${grade} | ${gender}`,
+  )}</p></div></header><section class="cash-hover__body"><dl><div><dt>종류</dt><dd>안드로이드</dd></div><div><dt>닉네임</dt><dd>${escapeHtml(
+    nickname,
+  )}</dd></div><div><dt>창고 이동</dt><dd>${escapeHtml(
+    warehouseUsableFlag,
+  )}</dd></div><div><dt>이어센서 클립</dt><dd>${escapeHtml(
+    earSensorClipFlag,
+  )}</dd></div><div><dt>설명</dt><dd>${escapeHtml(
+    description,
+  )}</dd></div></dl></section></article>`;
+}
+function renderAndroidHeartHoverCard(heartEquipment) {
+  const itemName = sanitizeEquipmentText(heartEquipment?.heartName || "-") || "-";
+  const icon = String(heartEquipment?.heartIcon || "").trim();
+  const description =
+    sanitizeEquipmentText(heartEquipment?.heartDescription || "").trim();
+  const additionalOptions = toArray(heartEquipment?.additionalOption);
+  const potentialOptions = toArray(heartEquipment?.potentialOption);
+  const additionalPotentialOptions = toArray(
+    heartEquipment?.additionalPotentialOption,
+  );
+
+  const renderOptionBlock = (titleHtml, list, emptyText) =>
+    `<div class="equip-hover__option-block"><h5>${titleHtml}</h5><ul>${renderHoverOptionRows(
+      list,
+      emptyText,
+    )}</ul></div>`;
+  const descriptionBlock = description
+    ? `<div class="equip-hover__misc"><p><span>설명</span><strong>${escapeHtml(description)}</strong></p></div>`
+    : "";
+
+  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta"><h4 class="equip-hover__name">${escapeHtml(
+    itemName,
+  )}</h4><p class="equip-hover__grade"><span>하트 장비</span><span class="equip-hover__starforce-text">-</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>하트</strong></div><div><span>아이템명</span><strong>${escapeHtml(
+    itemName,
+  )}</strong></div></div>${descriptionBlock}${renderOptionBlock(
+    "추가 옵션",
+    additionalOptions,
+    "추가 옵션 없음",
+  )}${renderOptionBlock(
+    renderHoverTierBadge(potentialOptions, "", "잠재능력"),
+    potentialOptions,
+    "잠재 옵션 없음",
+  )}${renderOptionBlock(
+    renderHoverTierBadge(additionalPotentialOptions, "", "에디셔널 잠재능력"),
+    additionalPotentialOptions,
+    "에디셔널 잠재 옵션 없음",
+  )}</section></article>`;
+}
+function renderAndroidCashSlotCard(slotDef, slotMap) {
+  const item = slotMap.byKey.get(slotDef.key) || null;
+  const hasItem = !!(item && item.icon);
+  const dataAttr = `data-cash-slot="android-${escapeHtml(slotDef.key)}"`;
+
+  if (!item) {
+    return `<article class="cash-slot-card android-slot-card is-empty" ${dataAttr}><span class="cash-slot-card__placeholder">${escapeHtml(slotDef.label)}</span></article>`;
+  }
+
+  const hoverTemplate = renderAndroidCashHoverCard(item, slotDef.label);
+  return `<article class="cash-slot-card android-slot-card ${hasItem ? "is-filled" : "is-empty"}" ${dataAttr}>${hasItem ? `<img src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}" loading="lazy" />` : `<span class="cash-slot-card__placeholder">${escapeHtml(slotDef.label)}</span>`}<template class="cash-hover-template">${hoverTemplate}</template></article>`;
+}
+function renderAndroidMainSlotCard(kind, androidEquipment, heartEquipment) {
+  const isHeart = kind === "heart";
+  const name = isHeart
+    ? sanitizeEquipmentText(heartEquipment?.heartName || "-") || "-"
+    : sanitizeEquipmentText(androidEquipment?.androidName || "-") || "-";
+  const icon = isHeart
+    ? String(heartEquipment?.heartIcon || "").trim()
+    : String(androidEquipment?.androidIcon || "").trim();
+  const slotLabel = isHeart ? "하트" : "안드로이드";
+  const hasItem = !!icon;
+  const hoverTemplate = isHeart
+    ? `<template class="equip-hover-template">${renderAndroidHeartHoverCard(
+        heartEquipment,
+      )}</template>`
+    : `<template class="cash-hover-template">${renderAndroidEquipmentHoverCard(
+        androidEquipment,
+      )}</template>`;
+
+  return `<article class="cash-slot-card android-main-slot ${hasItem ? "is-filled" : "is-empty"}" data-cash-slot="android-main-${escapeHtml(
+    kind,
+  )}">${hasItem ? `<img src="${escapeHtml(icon)}" alt="${escapeHtml(name)}" loading="lazy" />` : `<span class="cash-slot-card__placeholder">${escapeHtml(
+    slotLabel,
+  )}</span>`}<p class="android-main-slot__name">${escapeHtml(
+    slotLabel,
+  )}</p>${hasItem ? hoverTemplate : ""}</article>`;
 }
 function collectDamageAndBossOptions(list) {
   const t = {
@@ -1099,12 +1282,16 @@ function renderEquipmentTab(tabData, profile, state) {
       ),
   );
   const cashBoard = renderCashEquipmentBoard(cash, profile);
+  const androidBoard = renderAndroidBoardCard(
+    state.pageData?.tabs?.android || {},
+    state,
+  );
   const statsPanel = renderMajorStats(profile);
   return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
     "equipment",
     tabData,
     state,
-  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div>${cashBoard}</section>`;
+  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><div class="char-cash-android-layout">${cashBoard}${androidBoard}</div></section>`;
 }
 function buildDailySnapshotsFromHistory(expHistoryState) {
   const sourcePoints = toArray(expHistoryState?.data?.points)
@@ -1440,11 +1627,12 @@ function renderUnionTab(tabData, state) {
   const totalEffectRows = summarySegments.map((segment) =>
     splitUnionOptionLabelValue(segment),
   );
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>유니온</h3>${renderPresetSelector(
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><div class="union-header"><h3>유니온</h3>${renderJewelPresetSwitch(
     "union",
     tabData,
     state,
-  )}<div class="union-dashboard"><section class="union-dashboard__left"><div class="union-emblem-wrap">${unionGradeIcon ? `<img class="union-emblem" src="${escapeHtml(unionGradeIcon)}" alt="${escapeHtml(unionGradeText)}" loading="lazy" />` : '<div class="union-emblem union-emblem--empty">UNION</div>'}</div><p class="union-grade-text">${escapeHtml(
+    "유니온 프리셋",
+  )}</div><div class="union-dashboard"><section class="union-dashboard__left"><div class="union-emblem-wrap">${unionGradeIcon ? `<img class="union-emblem" src="${escapeHtml(unionGradeIcon)}" alt="${escapeHtml(unionGradeText)}" loading="lazy" />` : '<div class="union-emblem union-emblem--empty">UNION</div>'}</div><p class="union-grade-text">${escapeHtml(
     unionGradeText,
   )}</p><p class="union-level-label">유니온 레벨 총합</p><strong class="union-level-value">${escapeHtml(
     unionLevelText,
@@ -1459,27 +1647,55 @@ function renderUnionTab(tabData, state) {
     "적용 공격대 효과가 없습니다.",
   )}</div></article></section></div></article></section>`;
 }
-function renderAndroidTab(tabData, state) {
+function renderAndroidBoardCard(tabData, state) {
   const selected = resolveSelectedPreset("android", tabData, state);
   const data = selected?.data || {};
   const a = data.androidEquipment || {},
     h = data.heartEquipment || {};
-  const aIcon = a.androidIcon
-    ? `<img class="android-avatar" src="${escapeHtml(a.androidIcon)}" alt="${escapeHtml(a.androidName || "안드로이드")} 아이콘" />`
-    : '<div class="android-avatar android-avatar--empty">NO IMAGE</div>';
-  const hIcon = h.heartIcon
-    ? `<img class="android-avatar" src="${escapeHtml(h.heartIcon)}" alt="${escapeHtml(h.heartName || "하트")} 아이콘" />`
-    : '<div class="android-avatar android-avatar--empty">NO IMAGE</div>';
-  return `<section class="tab-grid"><article class="data-card data-card--wide"><h3>안드로이드 프리셋</h3>${renderPresetSelector("android", tabData, state)}</article><article class="data-card"><h3>안드로이드</h3><div class="guild-head">${aIcon}<div><strong>${escapeHtml(a.androidName || "-")}</strong><p>${escapeHtml(a.androidGrade || "-")} | ${escapeHtml(a.androidGender || "-")}</p></div></div><ul class="kv-list"><li><span>닉네임</span><strong>${escapeHtml(a.androidNickname || "-")}</strong></li><li><span>창고 이동</span><strong>${escapeHtml(String(a.warehouseUsableFlag ?? "-"))}</strong></li><li><span>이어센서 클립</span><strong>${escapeHtml(String(a.earSensorClipFlag ?? "-"))}</strong></li></ul><p class="union-option">${escapeHtml(a.androidDescription || "-")}</p></article><article class="data-card"><h3>하트 장비</h3><div class="guild-head">${hIcon}<div><strong>${escapeHtml(h.heartName || "-")}</strong><p>${escapeHtml(h.heartDescription || "-")}</p></div></div><h4 class="sub-title">추가 옵션</h4><ul class="simple-list">${renderOptionList(h.additionalOption)}</ul><h4 class="sub-title">잠재 옵션</h4><ul class="simple-list">${renderOptionList(h.potentialOption)}</ul><h4 class="sub-title">에디셔널 잠재 옵션</h4><ul class="simple-list">${renderOptionList(h.additionalPotentialOption)}</ul></article><article class="data-card"><h3>안드로이드 캐시 장비</h3><ul class="simple-list">${
-    toArray(a.cashItemEquipment).length
-      ? toArray(a.cashItemEquipment)
-          .map(
-            (i) =>
-              `<li><div class="item-main">${i.icon ? `<img src="${escapeHtml(i.icon)}" alt="${escapeHtml(i.name || "아이템")}" />` : ""}<div><strong>${escapeHtml(i.name || "-")}</strong><p>${escapeHtml(i.slotName || "-")}</p></div></div></li>`,
-          )
-          .join("")
-      : '<li class="empty">안드로이드 캐시 장비가 없습니다.</li>'
-  }</ul></article></section>`;
+  const androidName = sanitizeEquipmentText(a.androidName || "-") || "-";
+  const androidGrade = sanitizeEquipmentText(a.androidGrade || "-") || "-";
+  const androidGender = sanitizeEquipmentText(a.androidGender || "-") || "-";
+  const androidIcon = String(a.androidIcon || "").trim();
+  const subtitleParts = [androidGrade, androidGender].filter(
+    (part) => String(part || "").trim() && part !== "-",
+  );
+  const subtitle = subtitleParts.length
+    ? subtitleParts.join(" | ")
+    : "안드로이드 정보";
+
+  const cashSlotMap = buildAndroidCashSlotMap(toArray(a.cashItemEquipment));
+  const leftSlots = androidBoardLeftSlotDefs
+    .map((slotDef) => renderAndroidCashSlotCard(slotDef, cashSlotMap))
+    .join("");
+  const rightSlots = androidBoardRightSlotDefs
+    .map((slotDef) => renderAndroidCashSlotCard(slotDef, cashSlotMap))
+    .join("");
+  const extraSlots = cashSlotMap.extras.length
+    ? cashSlotMap.extras
+        .map((item, index) => {
+          const key = `extra-${index + 1}`;
+          return renderAndroidCashSlotCard(
+            { key, label: item.slotName || "기타" },
+            { byKey: new Map([[key, item]]) },
+          );
+        })
+        .join("")
+    : "";
+
+  const mainSlots = `${renderAndroidMainSlotCard("android", a, h)}${renderAndroidMainSlotCard(
+    "heart",
+    a,
+    h,
+  )}`;
+
+  return `<article class="data-card android-board-card"><div class="android-board-card__head"><h3>안드로이드</h3>${renderJewelPresetSwitch(
+    "android",
+    tabData,
+    state,
+    "안드로이드 프리셋",
+  )}</div><div class="android-board"><div class="android-board__left">${leftSlots}</div><div class="android-board__center"><div class="android-stage"><div class="android-stage__frame">${androidIcon ? `<img class="android-stage__avatar" src="${escapeHtml(androidIcon)}" alt="${escapeHtml(androidName)}" loading="lazy" />` : '<div class="android-stage__empty">NO IMAGE</div>'}</div><div class="android-stage__platform" aria-hidden="true"></div><div class="android-stage__meta"><strong>${escapeHtml(
+    androidName,
+  )}</strong><span>${escapeHtml(subtitle)}</span></div></div><div class="android-main-slots">${mainSlots}</div>${extraSlots ? `<div class="android-extra-slots">${extraSlots}</div>` : ""}</div><div class="android-board__right">${rightSlots}</div></div></article>`;
 }
 
 const arcaneSymbolFallbackIcons = [
@@ -2168,62 +2384,311 @@ function renderHyperStatTab(hyperTabData, skillLinkTabData, state) {
     "링크스킬 프리셋",
   )}</div><div class="link-skill-layout"><section class="link-skill-list-panel"><h4 class="link-panel-title">스킬 목록</h4><div class="link-skill-list">${linkCards}</div></section><section class="link-skill-effect-panel"><h4 class="link-panel-title">적용 중인 효과</h4><ul class="link-effect-list">${mergedEffectRows}</ul></section></div></article></section>`;
 }
+function parseGuildMemberCount(value) {
+  const rawText = String(value ?? "").trim();
+  const compact = rawText.replace(/\s+/g, "");
+  const ratioMatch = compact.match(/^(\d+)\/(\d+)$/);
+  if (ratioMatch) {
+    const current = Number(ratioMatch[1]);
+    const max = Number(ratioMatch[2]);
+    const percent =
+      Number.isFinite(current) && Number.isFinite(max) && max > 0
+        ? Math.max(0, Math.min(100, (current / max) * 100))
+        : null;
+    return {
+      displayText: `${formatNumber(current)} / ${formatNumber(max)}`,
+      percent,
+    };
+  }
+  const parsed = parseNumericValue(rawText);
+  if (parsed !== null) {
+    return { displayText: formatNumber(parsed), percent: null };
+  }
+  return { displayText: rawText || "-", percent: null };
+}
+function formatGuildCreateDateOnly(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "-";
+  const directMatch = raw.match(/\d{4}-\d{2}-\d{2}/);
+  if (directMatch) return directMatch[0];
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return raw.split(" ")[0] || raw;
+  return new Intl.DateTimeFormat("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(parsed);
+}
+function renderGuildSkillHoverCard(skill) {
+  const skillName = sanitizeEquipmentText(skill?.skillName || "-") || "-";
+  const skillLevel = formatGuildSkillLevelText(skill?.skillLevel);
+  const skillOption =
+    sanitizeEquipmentText(skill?.skillOption || "").trim() || "-";
+  const skillIcon = String(skill?.skillIcon || "").trim();
+  return `<article class="cash-hover-card guild-skill-hover-card"><header class="cash-hover__header"><div class="cash-hover__icon-wrap">${skillIcon ? `<img class="cash-hover__icon" src="${escapeHtml(skillIcon)}" alt="${escapeHtml(skillName)}" loading="lazy" />` : '<div class="cash-hover__icon cash-hover__icon--empty">NO</div>'}</div><div class="cash-hover__title-wrap"><h4>${escapeHtml(
+    skillName,
+  )}</h4><p>개인 길드 스킬</p></div></header><section class="cash-hover__body"><dl><div><dt>스킬명</dt><dd>${escapeHtml(
+    skillName,
+  )}</dd></div><div><dt>레벨</dt><dd>${escapeHtml(
+    skillLevel,
+  )}</dd></div><div><dt>효과</dt><dd>${escapeHtml(
+    skillOption,
+  )}</dd></div></dl></section></article>`;
+}
+function formatGuildSkillLevelText(levelValue) {
+  const raw = String(levelValue ?? "").trim();
+  if (!raw || raw === "-") return "-";
+  if (/max/i.test(raw)) return "Max";
+  const parsed = parseNumericValue(raw);
+  if (parsed === null) return raw;
+  return `Lv.${formatNumber(parsed)}`;
+}
+function resolveGuildSkillTierByColumn(columnNo) {
+  if (columnNo <= 3) return "R";
+  if (columnNo <= 6) return "E";
+  if (columnNo <= 8) return "U";
+  return "L";
+}
+const fixedGuildPersonalSkillSlots = Object.freeze([
+  {
+    row: 1,
+    col: 2,
+    skillName: "스타포스 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ce2f8bf5edaa792ba649f2072479f22f7f53149cd8e1c0890ad6af5b72c3e6b014",
+  },
+  {
+    row: 1,
+    col: 4,
+    skillName: "경험치 획득량 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/35f263049887745d84612c5996a16ef1012f5b2ecea4288fadfb57c1a4f2be7d",
+  },
+  {
+    row: 1,
+    col: 6,
+    skillName: "최대 HP/MP Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ceb575e577ca90c47160b3280e8d1ba314",
+  },
+  {
+    row: 1,
+    col: 8,
+    skillName: "파티 경험치 획득량 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/90b7a3f582eddc7be19de69db8ee1ec175c8d03915ddc856346c2056cf16d358149cea6a461c1caa092d808a1d1fe968",
+  },
+  {
+    row: 1,
+    col: 10,
+    skillName: "맥스 피버 확률 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ce43c849099fb0ac0173993ebc9f00391e",
+  },
+  {
+    row: 2,
+    col: 1,
+    skillName: "물리/마법 공격력 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268cee03f625dbe0b910cc678fd0fddbb1cee",
+  },
+  {
+    row: 2,
+    col: 3,
+    skillName: "물리/마법 대미지 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ce9ea5ab1fda56f8229190af5d1999ec1d73f542ba3e59fd26c3640f084b378cdb",
+  },
+  {
+    row: 2,
+    col: 5,
+    skillName: "물리/마법 공격력 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268cee03f625dbe0b910cc678fd0fddbb1cee",
+  },
+  {
+    row: 2,
+    col: 7,
+    skillName: "물리/마법 대미지 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ce9ea5ab1fda56f8229190af5d1999ec1d73f542ba3e59fd26c3640f084b378cdb",
+  },
+  {
+    row: 2,
+    col: 9,
+    skillName: "최대 대미지 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268cea60daf41af1fdf0bc8b8c273e0fe4b7ff2f6ca7dbf581182a4c066612cb33fc7",
+  },
+  {
+    row: 3,
+    col: 2,
+    skillName: "치명타 확률 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268ce2e26d4a0b0585c3a55e313a94dcc347e59dc4da775dff8c0901a5894d4a678b9",
+  },
+  {
+    row: 3,
+    col: 4,
+    skillName: "보스 공격력 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/8370d11a0f30624fab0e8bdfd0ff95b3c6230ef69a880ef610b80d5e936ebd8f",
+  },
+  {
+    row: 3,
+    col: 6,
+    skillName: "치명타 피해 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/f4feeb05dc55c86dd33d29ad37c268cea5675d667b675ed450c8c4d859f46ea14e07aff98ea876012dbf7ee44f1efefe",
+  },
+  {
+    row: 3,
+    col: 8,
+    skillName: "최종 대미지 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/90b7a3f582eddc7be19de69db8ee1ec1cd5641726723db7b727b38f045a7344d",
+  },
+  {
+    row: 3,
+    col: 10,
+    skillName: "최종 대미지 Lv.5",
+    skillIcon:
+      "https://open.api.nexon.com/static/maplestorym/asset/icon/90b7a3f582eddc7be19de69db8ee1ec1cd5641726723db7b727b38f045a7344d",
+  },
+]);
+function normalizeGuildSkillLookupName(value) {
+  return normalizeForMatch(
+    String(value || "")
+      .replace(/lv\.?\s*\d+/gi, "")
+      .replace(/레벨\s*\d+/gi, "")
+      .replace(/max/gi, ""),
+  );
+}
+function stripGuildSkillLevelText(value) {
+  return String(value || "")
+    .replace(/\s*lv\.?\s*\d+/gi, "")
+    .replace(/\s*레벨\s*\d+/gi, "")
+    .trim();
+}
+function renderGuildSkillSlot(skill, index, options = {}) {
+  const skillName = sanitizeEquipmentText(skill?.skillName || "-") || "-";
+  const skillLevel = formatGuildSkillLevelText(skill?.skillLevel);
+  const skillIcon = String(skill?.skillIcon || "").trim();
+  const slotKey = `guild-skill-${index + 1}`;
+  const tierLabel =
+    String(options.tierLabel || "").trim() ||
+    resolveGuildSkillTierByColumn((index % 10) + 1);
+  const hasNext = !!options.hasNext;
+  const hoverTemplate = renderGuildSkillHoverCard(skill);
+  return `<article class="cash-slot-card guild-skill-slot ${skillIcon ? "is-filled" : "is-empty"}" data-cash-slot="${escapeHtml(
+    slotKey,
+  )}">${skillIcon ? `<img src="${escapeHtml(skillIcon)}" alt="${escapeHtml(
+    skillName,
+  )}" loading="lazy" />` : '<span class="cash-slot-card__placeholder">NO</span>'}<span class="guild-skill-slot__tier guild-skill-slot__tier--${escapeHtml(
+    tierLabel,
+  )}">${escapeHtml(
+    tierLabel,
+  )}</span><p class="guild-skill-slot__level">${escapeHtml(
+    skillLevel,
+  )}</p>${hasNext ? '<span class="guild-skill-slot__link" aria-hidden="true"></span>' : ""}<template class="cash-hover-template">${hoverTemplate}</template></article>`;
+}
+function renderGuildPersonalSkillBoard(skills) {
+  const personalSkills = toArray(skills);
+  const skillByName = new Map();
+  personalSkills.forEach((skill) => {
+    const lookup = normalizeGuildSkillLookupName(skill?.skillName || "");
+    if (!lookup || skillByName.has(lookup)) return;
+    skillByName.set(lookup, skill);
+  });
+  const nodes = new Map();
+  fixedGuildPersonalSkillSlots.forEach((slot, index) => {
+    const lookup = normalizeGuildSkillLookupName(slot.skillName);
+    const apiSkill = skillByName.get(lookup) || null;
+    const mergedSkill = {
+      skillName: apiSkill?.skillName || stripGuildSkillLevelText(slot.skillName) || slot.skillName,
+      skillIcon: slot.skillIcon,
+      skillLevel: apiSkill?.skillLevel ?? apiSkill?.skill_level ?? 0,
+      skillOption: apiSkill?.skillOption || apiSkill?.skill_option || "-",
+    };
+    const row = slot.row;
+    const col = slot.col;
+    nodes.set(`${row}-${col}`, {
+      skill: mergedSkill,
+      sequence: index + 1,
+      tierLabel: resolveGuildSkillTierByColumn(col),
+    });
+  });
+  const hasNode = (row, col) => nodes.has(`${row}-${col}`);
+  const renderRow = (row) =>
+    `<div class="guild-personal-row">${Array.from({ length: 10 }, (_, idx) => {
+      const col = idx + 1;
+      const key = `${row}-${col}`;
+      const payload = nodes.get(key);
+      if (!payload) {
+        return '<article class="guild-skill-slot guild-skill-slot--empty" aria-hidden="true"></article>';
+      }
+      return renderGuildSkillSlot(payload.skill, payload.sequence - 1, {
+        hasNext: hasNode(row, col + 2),
+        tierLabel: payload.tierLabel,
+      });
+    }).join("")}</div>`;
+
+  const columnHead = Array.from(
+    { length: 10 },
+    (_, idx) => `<span>${escapeHtml(String(idx + 1))}</span>`,
+  ).join("");
+
+  return `<div class="guild-personal-board-wrap"><section class="guild-personal-board"><div class="guild-personal-board__head">${columnHead}</div>${renderRow(
+    1,
+  )}${renderRow(2)}${renderRow(3)}</section></div>`;
+}
 function renderGuildTab(tabData, name) {
   const s = tabData?.summary || {};
-  const m = tabData?.memberSelf;
+  const m = tabData?.memberSelf || null;
+  const worldIcon = resolveWorldIcon(s.worldName);
   const mark = s.guildMarkIcon
-    ? `<img class="guild-mark" src="${escapeHtml(s.guildMarkIcon)}" alt="${escapeHtml(s.guildName || "길드")} 마크" />`
-    : '<div class="guild-mark guild-mark--empty">NO MARK</div>';
-  return `<section class="tab-grid"><article class="data-card"><h3>길드 기본 정보</h3><div class="guild-head">${mark}<div><strong>${escapeHtml(s.guildName || "-")}</strong><p>${escapeHtml(s.worldName || "-")} | Lv.${escapeHtml(s.guildLevel ?? "-")}</p></div></div><ul class="kv-list"><li><span>길드장</span><strong>${escapeHtml(s.guildMasterName || "-")}</strong></li><li><span>길드원 수</span><strong>${escapeHtml(s.guildMemberCount ?? "-")}</strong></li><li><span>생성일</span><strong>${escapeHtml(s.guildCreateDate || "-")}</strong></li></ul></article><article class="data-card"><h3>내 캐릭터 길드 정보</h3>${
-    m
-      ? `<ul class="kv-list"><li><span>캐릭터명</span><strong>${escapeHtml(m.characterName || "-")}</strong></li><li><span>레벨</span><strong>${escapeHtml(m.characterLevel ?? "-")}</strong></li><li><span>길드 활동</span><strong>${escapeHtml(m.guildActivity ?? "-")}</strong></li></ul><h4 class="sub-title">개인 길드 스킬</h4><ul class="simple-list">${
-          toArray(m.guildPersonalSkill).length
-            ? toArray(m.guildPersonalSkill)
-                .map(
-                  (sk) =>
-                    `<li><strong>${escapeHtml(sk.skillName || "-")}</strong><p>Lv.${escapeHtml(sk.skillLevel ?? "-")} | ${escapeHtml(sk.skillOption || "-")}</p></li>`,
-                )
-                .join("")
-            : '<li class="empty">개인 길드 스킬 정보가 없습니다.</li>'
-        }</ul>`
-      : `<p class="empty">${escapeHtml(name || "현재 캐릭터")}와 일치하는 길드원 정보가 없습니다.</p>`
-  }</article><article class="data-card"><h3>길드 스킬</h3><ul class="simple-list">${
-    toArray(tabData?.guildSkills).length
-      ? toArray(tabData.guildSkills)
-          .map(
-            (sk) =>
-              `<li><strong>${escapeHtml(sk.skillName || "-")}</strong><p>Lv.${escapeHtml(sk.skillLevel ?? "-")} | ${escapeHtml(sk.skillOption || "-")}</p></li>`,
-          )
-          .join("")
-      : '<li class="empty">길드 스킬 정보가 없습니다.</li>'
-  }</ul></article><article class="data-card"><h3>길드 어빌리티</h3><ul class="simple-list">${
-    toArray(tabData?.guildAbilities).length
-      ? toArray(tabData.guildAbilities)
-          .map(
-            (ab) =>
-              `<li><strong>${escapeHtml(ab.abilityName || "-")}</strong><p>Lv.${escapeHtml(ab.abilityLevel ?? "-")} | ${escapeHtml(ab.abilityOption || "-")}</p></li>`,
-          )
-          .join("")
-      : '<li class="empty">길드 어빌리티 정보가 없습니다.</li>'
-  }</ul></article><article class="data-card"><h3>길드 건물</h3><ul class="simple-list">${
-    toArray(tabData?.guildBuildings).length
-      ? toArray(tabData.guildBuildings)
-          .map(
-            (b) =>
-              `<li><strong>${escapeHtml(b.buildingName || "-")}</strong><p>Lv.${escapeHtml(b.buildingLevel ?? "-")}</p></li>`,
-          )
-          .join("")
-      : '<li class="empty">길드 건물 정보가 없습니다.</li>'
-  }</ul></article><article class="data-card data-card--wide"><h3>길드원 미리보기</h3><div class="card-grid card-grid--4">${
-    toArray(tabData?.memberPreview).length
-      ? toArray(tabData.memberPreview)
-          .map(
-            (u) =>
-              `<article class="mini-card"><h4>${escapeHtml(u.characterName || "-")}</h4><p>Lv.${escapeHtml(u.characterLevel ?? "-")}</p><p>활동 ${escapeHtml(u.guildActivity ?? "-")}</p></article>`,
-          )
-          .join("")
-      : '<p class="empty">길드원 정보가 없습니다.</p>'
-  }</div></article></section>`;
+    ? `<img class="guild-overview-mark" src="${escapeHtml(s.guildMarkIcon)}" alt="${escapeHtml(s.guildName || "길드")} 마크" loading="lazy" />`
+    : '<div class="guild-overview-mark guild-overview-mark--empty">NO MARK</div>';
+  const guildMasterLink = renderRankingCharacterNameLink(
+    s.guildMasterName || "-",
+    s.worldName || "",
+  );
+  const guildCreateDate = formatGuildCreateDateOnly(s.guildCreateDate || "-");
+  const memberCount = parseGuildMemberCount(s.guildMemberCount);
+  const progressPercent = memberCount.percent ?? 100;
+  const progressText =
+    memberCount.percent === null
+      ? "100%"
+      : `${Math.round(progressPercent)}%`;
+  const guildActivityValue = parseNumericValue(m?.guildActivity);
+  const guildActivityText =
+    guildActivityValue === null
+      ? String(m?.guildActivity || "-")
+      : formatNumber(guildActivityValue);
+  const skillGrid = m
+    ? renderGuildPersonalSkillBoard(m.guildPersonalSkill)
+    : `<p class="empty">${escapeHtml(name || "현재 캐릭터")}와 일치하는 길드원 정보가 없습니다.</p>`;
+
+  return `<section class="tab-grid guild-tab-grid"><article class="data-card data-card--wide guild-overview-card"><h3>길드 기본 정보</h3><div class="guild-overview-head">${mark}<div class="guild-overview-title"><strong>${worldIcon ? `<img class="guild-overview-world" src="${escapeHtml(worldIcon)}" alt="${escapeHtml(
+    s.worldName || "-",
+  )}" />` : ""}<span>${escapeHtml(
+    s.guildName || "-",
+  )}</span></strong><p>길드장 <span class="guild-master-link">${guildMasterLink}</span></p></div></div><div class="guild-overview-progress"><span class="guild-overview-level">Lv.${escapeHtml(
+    s.guildLevel ?? "-",
+  )}</span><div class="guild-overview-progressbar" role="img" aria-label="${escapeHtml(
+    `길드 현황 ${progressText}`,
+  )}"><span style="width:${escapeHtml(progressPercent.toFixed(2))}%"></span></div><strong class="guild-overview-percent">${escapeHtml(
+    progressText,
+  )}</strong></div><ul class="guild-overview-meta"><li><span>길드원</span><strong>${escapeHtml(
+    memberCount.displayText,
+  )}</strong></li><li><span>생성일</span><strong>${escapeHtml(
+    guildCreateDate,
+  )}</strong></li><li><span>길드활동</span><strong>${escapeHtml(
+    guildActivityText,
+  )}</strong></li><li><span>캐릭터</span><strong>${escapeHtml(
+    m?.characterName || name || "-",
+  )}</strong></li></ul></article><article class="data-card data-card--wide guild-personal-card"><h3>길드 개인 스킬</h3>${skillGrid}</article></section>`;
 }
 function resolveHexaSkillGroup(skill) {
   const typeNorm = normalizeForMatch(skill?.skillType || "");
@@ -2885,8 +3350,6 @@ function renderTabContent(state) {
       tabs.skillLink || {},
       state,
     );
-  if (state.activeTab === "android")
-    return renderAndroidTab(tabs.android || {}, state);
   if (state.activeTab === "guild")
     return renderGuildTab(
       tabs.guild || {},
