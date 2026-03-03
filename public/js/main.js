@@ -1,5 +1,7 @@
 ﻿const pageType = document.body?.dataset?.page || "";
 const THEME_STORAGE_KEY = "maplem-theme";
+const SITE_DOMAIN_LABEL = "maplem.co.kr";
+const BRAND_BASE_LABEL = "메이플M 플러스";
 const toArray = (v) => (Array.isArray(v) ? v : []);
 const escapeHtml = (v) =>
   String(v)
@@ -171,6 +173,22 @@ function setMessage(el, text, type = "info") {
   if (type === "error") el.classList.add("is-error");
   if (type === "success") el.classList.add("is-success");
   el.textContent = text;
+}
+function buildScopedIdentityLabel(name, worldName) {
+  const scopedName = String(name || "").trim();
+  const scopedWorld = String(worldName || "").trim();
+  if (!scopedName || !scopedWorld) {
+    return "";
+  }
+  return `${scopedName}@${scopedWorld}`;
+}
+function applyPageIdentity(scopeLabel = "") {
+  const scoped = String(scopeLabel || "").trim();
+  const titleLabel = scoped
+    ? `${scoped} || ${BRAND_BASE_LABEL} - ${SITE_DOMAIN_LABEL}`
+    : `${BRAND_BASE_LABEL} - ${SITE_DOMAIN_LABEL}`;
+
+  document.title = titleLabel;
 }
 function applyTheme(theme) {
   const root = document.documentElement;
@@ -1223,8 +1241,8 @@ function renderProfile(profile, query) {
       ? 0
       : Math.max(0, Math.min(100, Number(progressValueRaw)));
   const rankingHref = (() => {
-    const dateCandidate = shiftDateText(getKstDateString(), -1) || getKstDateString();
-    const date = dateCandidate < rankingDateFloor ? rankingDateFloor : dateCandidate;
+    const today = getKstDateString();
+    const date = today < rankingDateFloor ? rankingDateFloor : today;
     const queryParams = new URLSearchParams({
       type: "level",
       date,
@@ -3695,11 +3713,13 @@ function setupTabNav(tabNav, onChange) {
   });
 }
 function initIndexPage() {
+  applyPageIdentity();
   bindCharacterSearchForm(document.getElementById("quickSearchForm"));
   bindCharacterSearchForm(document.getElementById("searchForm"));
   bindGuildSearchForm(document.getElementById("guildSearchForm"));
 }
 async function initGuildPage() {
+  applyPageIdentity();
   bindGuildSearchForm(document.getElementById("quickSearchForm"));
   bindGuildSearchForm(document.getElementById("searchForm"));
 
@@ -3724,6 +3744,7 @@ async function initGuildPage() {
 
   if (searchSectionEl) searchSectionEl.hidden = true;
   const { worldName, guildName } = routeInfo;
+  applyPageIdentity(buildScopedIdentityLabel(guildName, worldName));
   setMessage(messageEl, "길드 데이터를 불러오는 중입니다...", "info");
   if (tabContentEl) {
     tabContentEl.innerHTML = renderLoadingCard("길드 데이터를 불러오는 중입니다...");
@@ -3843,6 +3864,9 @@ async function initGuildPage() {
     }));
 
     state.data = { summary, members, buildings, abilities };
+    applyPageIdentity(
+      buildScopedIdentityLabel(summary.guildName || guildName, summary.worldName || worldName),
+    );
     if (summaryEl) {
       summaryEl.innerHTML = renderGuildSummaryCard(summary);
       summaryEl.hidden = false;
@@ -3963,8 +3987,7 @@ function isRankingDataNotReadyMessage(message, date = "") {
   // Some ranking endpoints return this message for "today not ready".
   const probeDate = normalizeRankingDate(date);
   const today = getKstDateString();
-  const yesterday = shiftDateText(today, -1);
-  return !!probeDate && (probeDate === today || probeDate === yesterday);
+  return !!probeDate && probeDate === today;
 }
 
 async function resolveRankingCharacterImage(worldName, characterName) {
@@ -4691,7 +4714,7 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
     : 0;
   const maxFallbackDays = Number.isFinite(options?.maxFallbackDays)
     ? Math.max(1, Math.floor(options.maxFallbackDays))
-    : 7;
+    : 1;
   const zeroBasedIndex = (pageNo - 1) * rankingPageSize;
   const apiPage = Math.floor(zeroBasedIndex / rankingApiPageSize) + 1;
   const localOffset = zeroBasedIndex % rankingApiPageSize;
@@ -4716,6 +4739,7 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
 
     if (
       allowReadyFallback &&
+      normalizeRankingDate(date) === getKstDateString() &&
       isRankingDataNotReadyMessage(message, date) &&
       fallbackAttempt < maxFallbackDays
     ) {
@@ -4797,8 +4821,9 @@ async function resolveRankingByCharacter({
   if (probeDate < rankingDateFloor) {
     probeDate = rankingDateFloor;
   }
+  const today = getKstDateString();
 
-  for (let attempt = 0; attempt < 7; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const query = new URLSearchParams({
       date: probeDate,
       ocid,
@@ -4827,7 +4852,7 @@ async function resolveRankingByCharacter({
 
     const message =
       payload?.message || payload?.error?.error?.message || "";
-    if (!isRankingDataNotReadyMessage(message, probeDate)) {
+    if (!isRankingDataNotReadyMessage(message, probeDate) || probeDate !== today) {
       return null;
     }
 
@@ -4842,6 +4867,7 @@ async function resolveRankingByCharacter({
 }
 
 function initRankingPage() {
+  applyPageIdentity();
   bindCharacterSearchForm(document.getElementById("quickSearchForm"));
 
   const form = document.getElementById("rankingSearchForm");
@@ -4886,7 +4912,7 @@ function initRankingPage() {
   }
 
   const today = getKstDateString();
-  const defaultDate = shiftDateText(today, -1) || today;
+  const defaultDate = today;
   if (!currentDate) {
     currentDate = defaultDate < rankingDateFloor ? rankingDateFloor : defaultDate;
   }
@@ -5142,6 +5168,7 @@ function showEquipHoverOverlay(cardEl) {
 }
 
 async function initCharacterPage() {
+  applyPageIdentity();
   const messageEl = document.getElementById("pageMessage");
   const profileCardEl = document.getElementById("profileCard");
   const tabNavEl = document.getElementById("tabNav");
@@ -5153,6 +5180,7 @@ async function initCharacterPage() {
     return;
   }
   const { worldName, characterName } = routeInfo;
+  applyPageIdentity(buildScopedIdentityLabel(characterName, worldName));
   const quickSearchForm = document.getElementById("quickSearchForm");
   bindCharacterSearchForm(quickSearchForm);
   if (quickSearchForm) {
@@ -5328,6 +5356,12 @@ async function initCharacterPage() {
       return;
     }
     state.pageData = page;
+    applyPageIdentity(
+      buildScopedIdentityLabel(
+        page?.profile?.name || characterName,
+        page?.query?.worldNameCanonical || worldName,
+      ),
+    );
     renderProfileCard();
     profileCardEl.hidden = false;
     tabNavEl.hidden = false;
