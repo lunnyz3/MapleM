@@ -4421,7 +4421,11 @@ function renderHoverTierBadge(optionList, potentialGrade, label) {
   return `<span class="equip-hover__tier is-${escapeHtml(tierKey)}"><img src="${escapeHtml(tier.icon)}" alt="${escapeHtml(label)}" /><b>${escapeHtml(label)}</b></span>`;
 }
 
-function buildStarGlyphHtml(starforceValue) {
+function getHoverStarGroupsPerLine() {
+  return 4;
+}
+
+function buildStarGlyphHtml(starforceValue, groupsPerLine = 4) {
   const numeric = parseNumericValue(starforceValue);
   if (!Number.isFinite(numeric) || numeric <= 0) {
     return "";
@@ -4438,8 +4442,9 @@ function buildStarGlyphHtml(starforceValue) {
   }
 
   const lines = [];
-  for (let index = 0; index < groups.length; index += 4) {
-    lines.push(groups.slice(index, index + 4).join(" "));
+  const normalizedGroupsPerLine = Math.max(1, Math.floor(groupsPerLine) || 1);
+  for (let index = 0; index < groups.length; index += normalizedGroupsPerLine) {
+    lines.push(groups.slice(index, index + normalizedGroupsPerLine).join(" "));
   }
 
   return lines.join("<br />");
@@ -4480,7 +4485,10 @@ function renderEquipmentHoverCard(item) {
   const karmaScissorsRemaining = sanitizeEquipmentText(item?.karmaScissorsRemaining ?? "");
   const remainingStarforceExpansion = sanitizeEquipmentText(item?.remainingStarforceExpansion ?? "");
   const starforceValue = item?.starforceUpgrade ?? "-";
-  const starGlyphsHtml = buildStarGlyphHtml(starforceValue);
+  const starGlyphsHtml = buildStarGlyphHtml(
+    starforceValue,
+    getHoverStarGroupsPerLine(),
+  );
   const starforceNumeric = parseNumericValue(starforceValue);
   const starText = Number.isFinite(starforceNumeric)
     ? `⭐ ${Math.round(starforceNumeric)}`
@@ -5113,6 +5121,8 @@ function getEquipHoverOverlayEl() {
 
 function hideEquipHoverOverlay() {
   const overlay = getEquipHoverOverlayEl();
+  overlay.innerHTML = "";
+  overlay.classList.remove("is-touch");
   overlay.classList.remove("is-visible");
 }
 
@@ -5148,12 +5158,21 @@ function positionEquipHoverOverlay(cardEl) {
   overlay.style.top = `${Math.round(top)}px`;
 }
 
-function showEquipHoverOverlay(cardEl) {
+function showEquipHoverOverlay(cardEl, options = {}) {
   if (!cardEl) return;
   const template = cardEl.querySelector(".equip-hover-template, .cash-hover-template");
   if (!template) return;
 
   const overlay = getEquipHoverOverlayEl();
+  const useTouchMode = options?.touch === true;
+  if (useTouchMode) {
+    overlay.classList.add("is-touch");
+    overlay.innerHTML = `<div class="equip-touch-modal">${template.innerHTML}</div>`;
+    overlay.classList.add("is-visible");
+    return;
+  }
+
+  overlay.classList.remove("is-touch");
   overlay.innerHTML = template.innerHTML;
   overlay.classList.add("is-visible");
   positionEquipHoverOverlay(cardEl);
@@ -5256,26 +5275,17 @@ async function initCharacterPage() {
   let activeHoverCardEl = null;
   let activeTouchCard = null;
   const clearTouchPopover = () => {
-    if (!activeTouchCard) return;
-    const panel = activeTouchCard.querySelector(".equip-touch-popover");
-    if (panel) {
-      panel.remove();
+    if (activeTouchCard) {
+      activeTouchCard.classList.remove("is-touch-open");
+      activeTouchCard = null;
     }
-    activeTouchCard.classList.remove("is-touch-open");
-    activeTouchCard = null;
+    hideEquipHoverOverlay();
   };
   const showTouchPopover = (cardEl) => {
     if (!cardEl) return;
-    const template = cardEl.querySelector(
-      ".equip-hover-template, .cash-hover-template",
-    );
-    if (!template) return;
-    const panel = document.createElement("div");
-    panel.className = "equip-touch-popover";
-    panel.innerHTML = template.innerHTML;
-    cardEl.appendChild(panel);
     cardEl.classList.add("is-touch-open");
     activeTouchCard = cardEl;
+    showEquipHoverOverlay(cardEl, { touch: true });
   };
   const canHover =
     window.matchMedia &&
@@ -5315,6 +5325,15 @@ async function initCharacterPage() {
       positionEquipHoverOverlay(activeHoverCardEl);
     });
   }
+  if (!canHover) {
+    const overlayEl = getEquipHoverOverlayEl();
+    overlayEl.addEventListener("click", (event) => {
+      if (!overlayEl.classList.contains("is-touch")) return;
+      const modalEl = overlayEl.querySelector(".equip-touch-modal");
+      if (modalEl && modalEl.contains(event.target)) return;
+      clearTouchPopover();
+    });
+  }
 
   tabContentEl.addEventListener("click", (e) => {
     if (!canHover) {
@@ -5328,7 +5347,7 @@ async function initCharacterPage() {
         }
         return;
       }
-      if (activeTouchCard && !activeTouchCard.contains(e.target)) {
+      if (activeTouchCard) {
         clearTouchPopover();
       }
     }
@@ -5372,11 +5391,6 @@ async function initCharacterPage() {
     hideEquipHoverOverlay();
     render();
   });
-  if (!canHover) {
-    window.addEventListener("scroll", () => {
-      clearTouchPopover();
-    }, { passive: true });
-  }
   const params = new URLSearchParams({
     world_name: worldName,
     character_name: characterName,

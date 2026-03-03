@@ -4501,9 +4501,56 @@ body[data-page="character"] .tab-content {
   visibility: visible;
 }
 
+.equip-hover-overlay.is-touch {
+  inset: 0;
+  width: 100vw;
+  max-height: 100vh;
+  left: 0 !important;
+  top: 0 !important;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 32, 50, 0.14);
+  pointer-events: auto;
+}
+
+.equip-hover-overlay.is-touch .equip-touch-modal {
+  width: min(76vw, 380px);
+  max-height: 70vh;
+  overflow: auto;
+  border-radius: 16px;
+}
+
+.equip-hover-overlay.is-touch .equip-hover-card {
+  border-radius: 16px;
+  border: 1px solid #cfd8e8;
+  background: #f2f5fa;
+  box-shadow: 0 14px 34px rgba(13, 24, 40, 0.22);
+}
+
+.equip-hover-overlay.is-touch .equip-hover__header {
+  background: linear-gradient(180deg, #3f516f, #364964);
+  color: #f4f8ff;
+  padding: 10px 11px;
+}
+
+.equip-hover-overlay.is-touch .equip-hover__body {
+  padding: 8px 10px 10px;
+}
+
 @media (max-width: 720px) {
   .equip-hover-overlay {
     width: min(320px, calc(100vw - 16px));
+  }
+
+  .equip-hover-overlay.is-touch {
+    padding: 10px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-touch-modal {
+    width: min(80vw, 360px);
+    max-height: 66vh;
   }
 
   .equip-hover__header {
@@ -4519,8 +4566,85 @@ body[data-page="character"] .tab-content {
 }
 
 @media (hover: none), (pointer: coarse) {
-  .equip-hover-overlay {
+  .equip-hover-overlay:not(.is-touch) {
     display: none !important;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__header {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px 9px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__icon-wrap,
+  .equip-hover-overlay.is-touch .equip-hover__icon-wrap img,
+  .equip-hover-overlay.is-touch .equip-hover__icon-wrap .equip-hover__icon--empty,
+  .equip-hover-overlay.is-touch .equip-hover__icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__stars {
+    font-size: 12px;
+    line-height: 1.05;
+    letter-spacing: 0.05px;
+    margin-bottom: 3px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__name {
+    font-size: 16px;
+    line-height: 1.14;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__grade {
+    margin-top: 3px;
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__starforce-text {
+    font-size: 10px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__body {
+    padding: 6px 8px 8px;
+    gap: 6px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__info-grid {
+    border-radius: 8px;
+    padding: 7px 9px;
+    gap: 7px 10px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__info-grid span {
+    font-size: 12px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__info-grid strong {
+    font-size: 13px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__option-block h5 {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__option-block ul {
+    padding: 6px 8px;
+    gap: 3px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__option-block li span,
+  .equip-hover-overlay.is-touch .equip-hover__option-block li strong,
+  .equip-hover-overlay.is-touch .equip-hover__misc span,
+  .equip-hover-overlay.is-touch .equip-hover__misc strong {
+    font-size: 13px;
+  }
+
+  .equip-hover-overlay.is-touch .equip-hover__misc {
+    padding: 6px 8px;
+    gap: 3px;
   }
 }
 
@@ -4574,7 +4698,8 @@ body[data-page="character"] .tab-content {
   font-size: 13px;
   letter-spacing: 0.5px;
   line-height: 1.25;
-  word-break: break-word;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 .equip-hover__name {
@@ -6469,4 +6594,3 @@ body[data-page="character"] .tab-content {
     font-size: 12px;
   }
 }
-
