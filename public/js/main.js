@@ -1296,19 +1296,6 @@ function resolveSelectedPreset(tabKey, tabData, state) {
     ) || null
   );
 }
-function renderPresetSelector(tabKey, tabData, state) {
-  const presets = toArray(tabData?.presets);
-  if (!presets.length)
-    return '<div class="preset-empty">프리셋 데이터가 없습니다.</div>';
-  const selectedNo = resolveSelectedPresetNo(tabKey, tabData, state);
-  return `<div class="preset-selector">${presets
-    .map((p) => {
-      const no = parseNumericValue(p?.presetNo);
-      const sel = no !== null && no === selectedNo;
-      return `<button type="button" class="preset-btn ${sel ? "is-selected" : ""} ${p?.isActive ? "is-active" : ""}" data-preset-tab="${escapeHtml(tabKey)}" data-preset-no="${escapeHtml(no ?? "")}"><span>프리셋 ${escapeHtml(no ?? "-")}</span>${p?.isActive ? '<em class="pill">적용중</em>' : ""}</button>`;
-    })
-    .join("")}</div>`;
-}
 function renderEquipmentTab(tabData, profile, state) {
   const selected = resolveSelectedPreset("equipment", tabData, state);
   const data = selected?.data || {};
@@ -1414,10 +1401,11 @@ function renderEquipmentTab(tabData, profile, state) {
     state,
   );
   const statsPanel = renderMajorStats(profile);
-  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderPresetSelector(
+  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderJewelPresetSwitch(
     "equipment",
     tabData,
     state,
+    "장비 프리셋",
   )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><div class="char-cash-android-layout">${cashBoard}${androidBoard}</div></section>`;
 }
 function buildDailySnapshotsFromHistory(expHistoryState) {
