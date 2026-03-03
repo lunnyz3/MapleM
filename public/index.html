@@ -9,7 +9,6 @@
   <body data-page="index">
     <header class="topbar">
       <div class="topbar__left">
-        <a class="topbar__brand" href="/">MAPLEM</a>
         <nav class="topbar__nav" aria-label="주요 메뉴">
           <a class="topbar__menu is-active" href="/">메인</a>
           <div class="topbar__dropdown">
@@ -26,21 +25,13 @@
         </nav>
       </div>
       <div class="topbar__right">
-        <div class="theme-switch">
-          <label for="themeMode">테마</label>
-          <select id="themeMode" data-theme-select>
-            <option value="system">시스템</option>
-            <option value="dark">다크</option>
-            <option value="light">라이트</option>
-          </select>
-        </div>
         <form id="quickSearchForm" class="topbar-search">
           <select id="topWorldName" name="world_name" aria-label="월드명">
-            <option value="스카니아">스카니아</option>
+            <option value="스카니아" selected>스카니아</option>
             <option value="루나">루나</option>
             <option value="제니스">제니스</option>
             <option value="크로아">크로아</option>
-            <option value="유니온" selected>유니온</option>
+            <option value="유니온">유니온</option>
             <option value="엘리시움">엘리시움</option>
             <option value="아케인">아케인</option>
           </select>
@@ -51,17 +42,20 @@
     </header>
 
     <main class="page page--index">
+      <header class="index-head">
+        <h1>통합 조회</h1>
+      </header>
       <section class="index-search">
-        <h1>캐릭터 조회</h1>
+        <h2>캐릭터 조회</h2>
         <form id="searchForm" class="index-form">
           <label>
             <span>월드명</span>
             <select id="worldName" name="world_name" required>
-              <option value="스카니아">스카니아</option>
+              <option value="스카니아" selected>스카니아</option>
               <option value="루나">루나</option>
               <option value="제니스">제니스</option>
               <option value="크로아">크로아</option>
-              <option value="유니온" selected>유니온</option>
+              <option value="유니온">유니온</option>
               <option value="엘리시움">엘리시움</option>
               <option value="아케인">아케인</option>
             </select>
@@ -69,6 +63,28 @@
           <label>
             <span>캐릭터명</span>
             <input id="characterName" name="character_name" placeholder="캐릭터명을 입력하세요" required autofocus />
+          </label>
+          <button type="submit">조회</button>
+        </form>
+      </section>
+      <section class="index-search">
+        <h2>길드 조회</h2>
+        <form id="guildSearchForm" class="index-form">
+          <label>
+            <span>월드명</span>
+            <select id="guildWorldName" name="world_name" required>
+              <option value="스카니아" selected>스카니아</option>
+              <option value="루나">루나</option>
+              <option value="제니스">제니스</option>
+              <option value="크로아">크로아</option>
+              <option value="유니온">유니온</option>
+              <option value="엘리시움">엘리시움</option>
+              <option value="아케인">아케인</option>
+            </select>
+          </label>
+          <label>
+            <span>길드명</span>
+            <input id="guildName" name="guild_name" placeholder="길드명을 입력하세요" required />
           </label>
           <button type="submit">조회</button>
         </form>

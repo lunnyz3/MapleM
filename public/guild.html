@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapleM 길드 조회</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body data-page="guild">
+    <header class="topbar">
+      <div class="topbar__left">
+        <nav class="topbar__nav" aria-label="주요 메뉴">
+          <a class="topbar__menu" href="/">메인</a>
+          <div class="topbar__dropdown">
+            <button type="button" class="topbar__menu topbar__dropdown-toggle" aria-haspopup="true">랭킹</button>
+            <div class="topbar__dropdown-menu">
+              <a class="topbar__dropdown-item" href="/ranking.html?type=level">종합 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=union">유니온 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=achievement">업적 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-battlefield">샤레니안의 전장 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=sharenian-waterway">샤레니안의 지하수로 랭킹</a>
+              <a class="topbar__dropdown-item" href="/ranking.html?type=root-of-time">시간의근원 랭킹</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div class="topbar__right">
+        <form id="quickSearchForm" class="topbar-search">
+          <select id="topWorldName" name="world_name" aria-label="월드명">
+            <option value="스카니아" selected>스카니아</option>
+            <option value="루나">루나</option>
+            <option value="제니스">제니스</option>
+            <option value="크로아">크로아</option>
+            <option value="유니온">유니온</option>
+            <option value="엘리시움">엘리시움</option>
+            <option value="아케인">아케인</option>
+          </select>
+          <input id="topGuildName" name="guild_name" placeholder="길드명" aria-label="길드명" />
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="page page--guild">
+      <section id="pageMessage" class="notice">길드 데이터를 불러오는 중입니다...</section>
+
+      <section id="guildSearchSection" class="index-search guild-search">
+        <h1>길드 조회</h1>
+        <form id="searchForm" class="index-form index-form--guild">
+          <label>
+            <span>월드명</span>
+            <select id="worldName" name="world_name" required>
+              <option value="스카니아" selected>스카니아</option>
+              <option value="루나">루나</option>
+              <option value="제니스">제니스</option>
+              <option value="크로아">크로아</option>
+              <option value="유니온">유니온</option>
+              <option value="엘리시움">엘리시움</option>
+              <option value="아케인">아케인</option>
+            </select>
+          </label>
+          <label>
+            <span>길드명</span>
+            <input id="guildName" name="guild_name" placeholder="길드명을 입력하세요" required autofocus />
+          </label>
+          <button type="submit">조회</button>
+        </form>
+      </section>
+
+      <section id="guildSummary" class="guild-summary" hidden></section>
+
+      <nav id="guildTabNav" class="tab-nav tab-nav--guild" hidden>
+        <button type="button" data-tab="members" class="tab-btn is-active">길드원 목록</button>
+        <button type="button" data-tab="buildings" class="tab-btn">길드 건물</button>
+        <button type="button" data-tab="abilities" class="tab-btn">길드 어빌리티</button>
+      </nav>
+
+      <section id="guildTabContent" class="tab-content">
+        <article class="data-card data-card--wide">
+          <h3>로딩 중</h3>
+          <p class="empty">길드 데이터를 불러오는 중입니다...</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="/js/main.js?v=20260303h"></script>
+  </body>
+</html>

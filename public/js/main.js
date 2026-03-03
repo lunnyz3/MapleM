@@ -174,18 +174,11 @@ function setMessage(el, text, type = "info") {
 }
 function applyTheme(theme) {
   const root = document.documentElement;
-  const s = ["system", "dark", "light"].includes(theme) ? theme : "system";
-  if (s === "system") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", s);
-  localStorage.setItem(THEME_STORAGE_KEY, s);
+  root.setAttribute("data-theme", "light");
+  localStorage.setItem(THEME_STORAGE_KEY, "light");
 }
 function initThemeControls() {
-  const saved = localStorage.getItem(THEME_STORAGE_KEY) || "system";
-  applyTheme(saved);
-  const sel = document.querySelector("[data-theme-select]");
-  if (!sel) return;
-  sel.value = saved;
-  sel.addEventListener("change", () => applyTheme(sel.value));
+  applyTheme("light");
 }
 function removeDisabledRankingMenuLinks() {
   disabledRankingTypes.forEach((type) => {
@@ -201,6 +194,15 @@ function navigateToCharacterPage(worldName, characterName) {
   });
   window.location.assign(
     `/character/${encodeURIComponent(worldName)}/${encodeURIComponent(characterName)}?${p.toString()}`,
+  );
+}
+function navigateToGuildPage(worldName, guildName) {
+  const p = new URLSearchParams({
+    world_name: worldName,
+    guild_name: guildName,
+  });
+  window.location.assign(
+    `/guild/${encodeURIComponent(worldName)}/${encodeURIComponent(guildName)}?${p.toString()}`,
   );
 }
 function bindCharacterSearchForm(form) {
@@ -219,6 +221,22 @@ function bindCharacterSearchForm(form) {
     navigateToCharacterPage(worldName, characterName);
   });
 }
+function bindGuildSearchForm(form) {
+  if (!form) return;
+  const w = form.querySelector('select[name="world_name"]');
+  const g = form.querySelector('input[name="guild_name"]');
+  if (!w || !g) return;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const worldName = String(w.value || "").trim();
+    const guildName = String(g.value || "").trim();
+    if (!worldName || !guildName) {
+      g.focus();
+      return;
+    }
+    navigateToGuildPage(worldName, guildName);
+  });
+}
 function redirectIndexCharacterPathIfNeeded() {
   if (pageType !== "index") return false;
   const seg = window.location.pathname.split("/").filter(Boolean);
@@ -230,6 +248,19 @@ function redirectIndexCharacterPathIfNeeded() {
   if (!p.get("world_name")) p.set("world_name", worldName);
   if (!p.get("character_name")) p.set("character_name", characterName);
   window.location.replace(`/character.html?${p.toString()}`);
+  return true;
+}
+function redirectIndexGuildPathIfNeeded() {
+  if (pageType !== "index") return false;
+  const seg = window.location.pathname.split("/").filter(Boolean);
+  if (seg.length < 3 || seg[0] !== "guild") return false;
+  const worldName = decodeURIComponent(seg[1] || "");
+  const guildName = decodeURIComponent(seg.slice(2).join("/") || "");
+  if (!worldName || !guildName) return false;
+  const p = new URLSearchParams(window.location.search);
+  if (!p.get("world_name")) p.set("world_name", worldName);
+  if (!p.get("guild_name")) p.set("guild_name", guildName);
+  window.location.replace(`/guild.html?${p.toString()}`);
   return true;
 }
 function getCharacterRouteInfo() {
@@ -247,6 +278,21 @@ function getCharacterRouteInfo() {
   }
   return worldName && characterName ? { worldName, characterName } : null;
 }
+function getGuildRouteInfo() {
+  const seg = window.location.pathname.split("/").filter(Boolean);
+  const p = new URLSearchParams(window.location.search);
+  let worldName = "",
+    guildName = "";
+  if (seg.length >= 3 && seg[0] === "guild") {
+    worldName = decodeURIComponent(seg[1] || "");
+    guildName = decodeURIComponent(seg.slice(2).join("/") || "");
+  }
+  if (!worldName || !guildName) {
+    worldName = String(p.get("world_name") || "").trim();
+    guildName = String(p.get("guild_name") || "").trim();
+  }
+  return worldName && guildName ? { worldName, guildName } : null;
+}
 const renderLoadingCard = (m) =>
   `<section class="tab-grid"><article class="data-card data-card--wide"><h3>로딩 중</h3><p class="empty">${escapeHtml(m || "캐릭터 데이터를 불러오는 중입니다...")}</p></article></section>`;
 const renderErrorCard = (m) =>
@@ -262,6 +308,19 @@ function normalizeCharacterLookupErrorMessage(message) {
     normalized.includes("invalid parameter") ||
     normalized.includes("invalid character") ||
     normalized.includes("character not found") ||
+    normalized.includes("not found")
+  ) {
+    return "검색 결과가 없습니다.";
+  }
+  return raw;
+}
+function normalizeGuildLookupErrorMessage(message) {
+  const raw = String(message || "").trim();
+  const normalized = raw.toLowerCase();
+  if (!raw) return "검색 결과가 없습니다.";
+  if (
+    normalized.includes("please input valid parameter") ||
+    normalized.includes("invalid parameter") ||
     normalized.includes("not found")
   ) {
     return "검색 결과가 없습니다.";
@@ -310,6 +369,38 @@ const worldIconByName = Object.freeze({
   아케인: "/assets/arcane.png",
   Arcane: "/assets/arcane.png",
 });
+const guildBuildingSlots = Object.freeze([
+  {
+    key: "library",
+    label: "길드 도서관",
+    asset: "/assets/guild-library.png",
+    keywords: ["도서관", "library"],
+  },
+  {
+    key: "mapletree",
+    label: "길드 메이플나무",
+    asset: "/assets/guild-mapletree.png",
+    keywords: ["메이플", "나무", "maple", "tree"],
+  },
+  {
+    key: "accountant",
+    label: "길드 회계사",
+    asset: "/assets/guild-accountant.png",
+    keywords: ["회계", "account"],
+  },
+  {
+    key: "campfire",
+    label: "길드 캠프파이어",
+    asset: "/assets/guild-campfire.png",
+    keywords: ["캠프", "camp", "모닥불", "불"],
+  },
+  {
+    key: "chef",
+    label: "길드 요리사",
+    asset: "/assets/guild-chef.png",
+    keywords: ["요리", "chef", "쿠킹", "cook"],
+  },
+]);
 const potentialTierAssets = Object.freeze({
   legendary: { icon: "/assets/ico-potential-legendary.png", letter: "L" },
   unique: { icon: "/assets/ico-potential-unique.png", letter: "U" },
@@ -1147,8 +1238,26 @@ function renderProfile(profile, query) {
     const queryText = queryParams.toString();
     return `/ranking.html?${queryText}`;
   })();
+  const guildHref = buildGuildProfileHref(worldName, guildName);
+  const guildChip = guildHref
+    ? `<a class="char-hero__chip char-hero__chip--guild" href="${escapeHtml(
+        guildHref,
+      )}">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
+        guildMark,
+      )}" alt="${escapeHtml(
+        guildName,
+      )} 마크" loading="lazy" />` : ""}<span>${escapeHtml(
+        guildName,
+      )}</span><b>›</b></a>`
+    : `<span class="char-hero__chip char-hero__chip--guild">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
+        guildMark,
+      )}" alt="${escapeHtml(
+        guildName,
+      )} 마크" loading="lazy" />` : ""}<span>${escapeHtml(
+        guildName,
+      )}</span><b>›</b></span>`;
 
-  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(profileImage)}" alt="${escapeHtml(profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(profileName)}</h1><span class="char-hero-world">${worldIcon ? `<img src="${escapeHtml(worldIcon)}" alt="${escapeHtml(worldName)}" />` : ""}${escapeHtml(worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(levelText)}</span>${percentText ? `<span class="char-hero__level-rate">${escapeHtml(percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${expRateText}`)}"><span style="width:${escapeHtml(progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(overallRankingText)}</span><b>›</b></a><span class="char-hero__chip char-hero__chip--guild">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(guildMark)}" alt="${escapeHtml(guildName)} 마크" loading="lazy" />` : ""}<span>${escapeHtml(guildName)}</span><b>›</b></span></div></div></div></article></section>`;
+  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(profileImage)}" alt="${escapeHtml(profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(profileName)}</h1><span class="char-hero-world">${worldIcon ? `<img src="${escapeHtml(worldIcon)}" alt="${escapeHtml(worldName)}" />` : ""}${escapeHtml(worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(levelText)}</span>${percentText ? `<span class="char-hero__level-rate">${escapeHtml(percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${expRateText}`)}"><span style="width:${escapeHtml(progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(overallRankingText)}</span><b>›</b></a>${guildChip}</div></div></div></article></section>`;
 }
 function resolveSelectedPresetNo(tabKey, tabData, state) {
   const selected = parseNumericValue(state.selectedPresetByTab[tabKey]);
@@ -2690,6 +2799,221 @@ function renderGuildTab(tabData, name) {
     m?.characterName || name || "-",
   )}</strong></li></ul></article><article class="data-card data-card--wide guild-personal-card"><h3>길드 개인 스킬</h3>${skillGrid}</article></section>`;
 }
+function resolveGuildAbilityGradeLabel(rawValue) {
+  const raw = String(rawValue ?? "").trim();
+  const normalized = normalizeForMatch(raw);
+  if (normalized.includes("legendary") || normalized.includes("레전")) return "L";
+  if (normalized.includes("unique") || normalized.includes("유니크")) return "U";
+  if (normalized.includes("epic") || normalized.includes("에픽")) return "E";
+  if (normalized.includes("rare") || normalized.includes("레어")) return "R";
+  const numeric = parseNumericValue(raw);
+  if (numeric === 4) return "L";
+  if (numeric === 3) return "U";
+  if (numeric === 2) return "E";
+  if (numeric === 1) return "R";
+  return raw || "-";
+}
+function resolveGuildAbilityGradeClass(label) {
+  const tier = String(label || "").trim();
+  if (tier === "L") return "guild-ability-grade--L";
+  if (tier === "U") return "guild-ability-grade--U";
+  if (tier === "E") return "guild-ability-grade--E";
+  if (tier === "R") return "guild-ability-grade--R";
+  return "";
+}
+function buildGuildBuildingSlots(buildings) {
+  const list = toArray(buildings).map((building) => ({
+    buildingName: building?.buildingName || building?.building_name || "-",
+    buildingLevel: building?.buildingLevel ?? building?.building_level ?? 0,
+  }));
+  const slots = guildBuildingSlots.map((slot) => {
+    const matched = list.find((entry) =>
+      slot.keywords.some((keyword) =>
+        normalizeForMatch(entry.buildingName).includes(
+          normalizeForMatch(keyword),
+        ),
+      ),
+    );
+    const levelValue = parseNumericValue(matched?.buildingLevel) ?? 0;
+    return {
+      ...slot,
+      buildingName: matched?.buildingName || slot.label,
+      buildingLevel: levelValue,
+    };
+  });
+  return slots.sort((a, b) => {
+    const left = parseNumericValue(a.buildingLevel);
+    const right = parseNumericValue(b.buildingLevel);
+    if (left !== null && right !== null) return right - left;
+    if (left !== null) return -1;
+    if (right !== null) return 1;
+    return String(a.buildingName || "").localeCompare(
+      String(b.buildingName || ""),
+    );
+  });
+}
+function renderGuildSummaryCard(summary) {
+  const s = summary || {};
+  const worldIcon = resolveWorldIcon(s.worldName);
+  const mark = s.guildMarkIcon
+    ? `<img class="guild-overview-mark" src="${escapeHtml(s.guildMarkIcon)}" alt="${escapeHtml(s.guildName || "길드")} 마크" loading="lazy" />`
+    : '<div class="guild-overview-mark guild-overview-mark--empty">NO MARK</div>';
+  const memberCount = parseGuildMemberCount(s.guildMemberCount);
+  const progressPercent = memberCount.percent ?? 100;
+  const progressText =
+    memberCount.percent === null
+      ? "100%"
+      : `${Math.round(progressPercent)}%`;
+  const guildCreateDate = formatGuildCreateDateOnly(s.guildCreateDate || "-");
+  const guildMasterLink = renderRankingCharacterNameLink(
+    s.guildMasterName || "-",
+    s.worldName || "",
+  );
+  return `<section class="tab-grid guild-summary-grid"><article class="data-card data-card--wide guild-overview-card"><h3>길드 기본 정보</h3><div class="guild-overview-head">${mark}<div class="guild-overview-title"><strong>${worldIcon ? `<img class="guild-overview-world" src="${escapeHtml(worldIcon)}" alt="${escapeHtml(
+    s.worldName || "-",
+  )}" />` : ""}<span>${escapeHtml(
+    s.guildName || "-",
+  )}</span></strong><p>길드장 <span class="guild-master-link">${guildMasterLink}</span></p></div></div><div class="guild-overview-progress"><span class="guild-overview-level">Lv.${escapeHtml(
+    s.guildLevel ?? "-",
+  )}</span><div class="guild-overview-progressbar" role="img" aria-label="${escapeHtml(
+    `길드 현황 ${progressText}`,
+  )}"><span style="width:${escapeHtml(progressPercent.toFixed(2))}%"></span></div><strong class="guild-overview-percent">${escapeHtml(
+    progressText,
+  )}</strong></div><ul class="guild-overview-meta"><li><span>길드원</span><strong>${escapeHtml(
+    memberCount.displayText,
+  )}</strong></li><li><span>생성일</span><strong>${escapeHtml(
+    guildCreateDate,
+  )}</strong></li><li><span>월드</span><strong>${escapeHtml(
+    s.worldName || "-",
+  )}</strong></li><li><span>길드 레벨</span><strong>${escapeHtml(
+    s.guildLevel ?? "-",
+  )}</strong></li></ul></article></section>`;
+}
+function renderGuildMemberListTab(members, worldName) {
+  const list = toArray(members);
+  const sorted = [...list].sort((left, right) => {
+    const leftLevel = parseNumericValue(
+      left?.characterLevel ?? left?.character_level,
+    );
+    const rightLevel = parseNumericValue(
+      right?.characterLevel ?? right?.character_level,
+    );
+    if (leftLevel !== null && rightLevel !== null) {
+      return rightLevel - leftLevel;
+    }
+    if (leftLevel !== null) return -1;
+    if (rightLevel !== null) return 1;
+    return String(left?.characterName || left?.character_name || "").localeCompare(
+      String(right?.characterName || right?.character_name || ""),
+    );
+  });
+  if (!sorted.length) {
+    return `<section class="tab-grid"><article class="data-card data-card--wide"><p class="empty">길드원 정보가 없습니다.</p></article></section>`;
+  }
+  const cards = sorted
+    .map((member) => {
+      const name = member?.characterName || member?.character_name || "-";
+      const level = member?.characterLevel ?? member?.character_level ?? "-";
+      const job =
+        member?.characterJob ||
+        member?.character_class ||
+        member?.character_job_name ||
+        "-";
+      const grade =
+        member?.guildMemberGrade ||
+        member?.guild_member_grade ||
+        member?.guild_grade ||
+        "";
+      const activityRaw =
+        member?.guildActivity ?? member?.guild_activity ?? "-";
+      const activityValue = parseNumericValue(activityRaw);
+      const activityText =
+        activityValue === null ? String(activityRaw || "-") : formatNumber(activityValue);
+      const portrait =
+        member?.characterImage ||
+        member?.character_image ||
+        member?.characterIcon ||
+        member?.character_icon ||
+        "";
+      const needsResolve = !portrait && name && name !== "-";
+      const thumbSrc = portrait || rankingThumbDefaultSrc;
+      const nameLink = renderRankingCharacterNameLink(name, worldName);
+      return `<article class="guild-member-card"><div class="guild-member-card__avatar"><img class="guild-member-thumb js-guild-member-thumb${needsResolve ? " is-placeholder" : ""}" src="${escapeHtml(
+        thumbSrc,
+      )}" alt="${escapeHtml(name)}" loading="lazy" ${needsResolve ? `data-world-name="${escapeHtml(
+        worldName || "",
+      )}" data-char-name="${escapeHtml(name)}" data-thumb-needs-resolve="1"` : ""} /></div><div class="guild-member-card__body"><div class="guild-member-card__top"><strong>${nameLink}</strong>${grade ? `<span class="guild-member-card__grade">${escapeHtml(
+        grade,
+      )}</span>` : ""}</div><div class="guild-member-card__meta"><span>Lv.${escapeHtml(
+        level,
+      )}</span><span>${escapeHtml(
+        job || "-",
+      )}</span></div><div class="guild-member-card__activity">길드활동 ${escapeHtml(
+        activityText,
+      )}</div></div></article>`;
+    })
+    .join("");
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><div class="guild-member-grid">${cards}</div></article></section>`;
+}
+function renderGuildBuildingTab(buildings) {
+  const slots = buildGuildBuildingSlots(buildings);
+  const cards = slots
+    .map(
+      (slot) =>
+        `<article class="guild-building-card"><div class="guild-building-card__image"><img src="${escapeHtml(
+          slot.asset,
+        )}" alt="${escapeHtml(
+          slot.buildingName,
+        )}" loading="lazy" /></div><div class="guild-building-card__info"><strong>${escapeHtml(
+          slot.buildingName,
+        )}</strong><span>Lv.${escapeHtml(
+          slot.buildingLevel,
+        )}</span></div></article>`,
+    )
+    .join("");
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><div class="guild-building-grid">${cards}</div></article></section>`;
+}
+function renderGuildAbilityTab(abilities) {
+  const list = toArray(abilities);
+  if (!list.length) {
+    return `<section class="tab-grid"><article class="data-card data-card--wide"><p class="empty">길드 어빌리티 정보가 없습니다.</p></article></section>`;
+  }
+  const cards = list
+    .map((ability) => {
+      const name = ability?.abilityName || ability?.ability_name || "-";
+      const level = formatGuildSkillLevelText(
+        ability?.abilityLevel ?? ability?.ability_level ?? "-",
+      );
+      const option =
+        ability?.abilityOption ||
+        ability?.ability_option ||
+        ability?.ability_desc ||
+        "";
+      const icon = ability?.abilityIcon || ability?.ability_icon || "";
+      const gradeLabel = resolveGuildAbilityGradeLabel(
+        ability?.abilityGrade ||
+          ability?.ability_grade ||
+          ability?.ability_grade_name ||
+          "",
+      );
+      const gradeClass = resolveGuildAbilityGradeClass(gradeLabel);
+      return `<article class="guild-ability-tile ${escapeHtml(
+        gradeClass,
+      )}"><div class="guild-ability-tile__frame ${escapeHtml(
+        gradeClass,
+      )}">${icon ? `<img src="${escapeHtml(icon)}" alt="${escapeHtml(
+        name,
+      )}" loading="lazy" />` : '<div class="guild-ability-card__icon-empty">NO</div>'}${gradeLabel && gradeLabel !== "-" ? `<span class="guild-ability-tile__grade">${escapeHtml(
+        gradeLabel,
+      )}</span>` : ""}${level && level !== "-" ? `<span class="guild-ability-tile__level">${escapeHtml(
+        level,
+      )}</span>` : ""}</div><div class="guild-ability-tile__info"><strong>${escapeHtml(
+        name,
+      )}</strong>${option ? `<span>${escapeHtml(option)}</span>` : ""}</div></article>`;
+    })
+    .join("");
+  return `<section class="tab-grid"><article class="data-card data-card--wide"><div class="guild-ability-board">${cards}</div></article></section>`;
+}
 function resolveHexaSkillGroup(skill) {
   const typeNorm = normalizeForMatch(skill?.skillType || "");
   const nameNorm = normalizeForMatch(skill?.skillName || "");
@@ -3373,6 +3697,164 @@ function setupTabNav(tabNav, onChange) {
 function initIndexPage() {
   bindCharacterSearchForm(document.getElementById("quickSearchForm"));
   bindCharacterSearchForm(document.getElementById("searchForm"));
+  bindGuildSearchForm(document.getElementById("guildSearchForm"));
+}
+async function initGuildPage() {
+  bindGuildSearchForm(document.getElementById("quickSearchForm"));
+  bindGuildSearchForm(document.getElementById("searchForm"));
+
+  const messageEl = document.getElementById("pageMessage");
+  const summaryEl = document.getElementById("guildSummary");
+  const tabNavEl = document.getElementById("guildTabNav");
+  const tabContentEl = document.getElementById("guildTabContent");
+  const searchSectionEl = document.getElementById("guildSearchSection");
+
+  const routeInfo = getGuildRouteInfo();
+  if (!routeInfo) {
+    setMessage(messageEl, "월드/길드명을 입력해 주세요.", "info");
+    if (tabNavEl) tabNavEl.hidden = true;
+    if (summaryEl) summaryEl.hidden = true;
+    if (tabContentEl) {
+      tabContentEl.innerHTML = renderNotFoundCard(
+        "월드/길드명을 입력해 주세요.",
+      );
+    }
+    return;
+  }
+
+  if (searchSectionEl) searchSectionEl.hidden = true;
+  const { worldName, guildName } = routeInfo;
+  setMessage(messageEl, "길드 데이터를 불러오는 중입니다...", "info");
+  if (tabContentEl) {
+    tabContentEl.innerHTML = renderLoadingCard("길드 데이터를 불러오는 중입니다...");
+  }
+
+  const state = {
+    activeTab: "members",
+    data: null,
+  };
+
+  const renderTab = () => {
+    if (!tabContentEl || !state.data) return;
+    if (state.activeTab === "members") {
+      tabContentEl.innerHTML = renderGuildMemberListTab(
+        state.data.members,
+        state.data.summary.worldName || worldName,
+      );
+      hydrateGuildMemberThumbs(tabContentEl);
+      return;
+    }
+    if (state.activeTab === "buildings") {
+      tabContentEl.innerHTML = renderGuildBuildingTab(state.data.buildings);
+      return;
+    }
+    if (state.activeTab === "abilities") {
+      tabContentEl.innerHTML = renderGuildAbilityTab(state.data.abilities);
+      return;
+    }
+    tabContentEl.innerHTML = renderNotFoundCard("표시할 탭이 없습니다.");
+  };
+
+  if (tabNavEl) {
+    setupTabNav(tabNavEl, (tab) => {
+      state.activeTab = tab;
+      renderTab();
+    });
+  }
+
+  try {
+    const idQuery = new URLSearchParams({
+      world_name: worldName,
+      guild_name: guildName,
+    });
+    const idRes = await fetch(`/api/maplestorym/guild/id?${idQuery.toString()}`);
+    const idPayload = await parseResponseSafely(idRes);
+    if (!idRes.ok || !idPayload?.ok) {
+      const mRaw =
+        idPayload?.message ||
+        idPayload?.error?.error?.message ||
+        "길드 조회에 실패했습니다.";
+      const m = normalizeGuildLookupErrorMessage(mRaw);
+      setMessage(messageEl, m, "error");
+      if (tabContentEl) {
+        tabContentEl.innerHTML =
+          m === "검색 결과가 없습니다." ? renderNotFoundCard(m) : renderErrorCard(m);
+      }
+      return;
+    }
+
+    const oguildId = String(idPayload?.data?.oguild_id || "").trim();
+    if (!oguildId) {
+      const m = "길드 ID를 찾을 수 없습니다.";
+      setMessage(messageEl, m, "error");
+      if (tabContentEl) tabContentEl.innerHTML = renderErrorCard(m);
+      return;
+    }
+
+    const basicQuery = new URLSearchParams({ oguild_id: oguildId });
+    const basicRes = await fetch(`/api/maplestorym/guild/basic?${basicQuery.toString()}`);
+    const basicPayload = await parseResponseSafely(basicRes);
+    if (!basicRes.ok || !basicPayload?.ok) {
+      const mRaw =
+        basicPayload?.message ||
+        basicPayload?.error?.error?.message ||
+        "길드 조회에 실패했습니다.";
+      const m = normalizeGuildLookupErrorMessage(mRaw);
+      setMessage(messageEl, m, "error");
+      if (tabContentEl) {
+        tabContentEl.innerHTML =
+          m === "검색 결과가 없습니다." ? renderNotFoundCard(m) : renderErrorCard(m);
+      }
+      return;
+    }
+
+    const basicData = basicPayload?.data || {};
+    const summary = {
+      guildName: basicData.guild_name || guildName || "-",
+      worldName: basicData.world_name || worldName || "-",
+      guildLevel: basicData.guild_level ?? "-",
+      guildCreateDate:
+        basicData.guild_create_date || basicData.world_create_date || "-",
+      guildMarkIcon: basicData.guild_mark_icon || "",
+      guildMasterName: basicData.guild_master_name || "-",
+      guildMemberCount: basicData.guild_member_count ?? "-",
+    };
+    const members = toArray(basicData.guild_member).map((member) => ({
+      characterName: member?.character_name || "-",
+      characterLevel: member?.character_level ?? "-",
+      characterJob: member?.character_class || member?.character_job_name || "-",
+      guildMemberGrade:
+        member?.guild_member_grade || member?.guild_grade || "",
+      guildActivity: member?.guild_activity ?? "-",
+      characterImage:
+        member?.character_image || member?.character_icon || "",
+    }));
+    const buildings = toArray(basicData.guild_building).map((building) => ({
+      buildingName: building?.building_name || "-",
+      buildingLevel: building?.building_level ?? 0,
+    }));
+    const abilities = toArray(basicData.guild_ability).map((ability) => ({
+      abilityName: ability?.ability_name || "-",
+      abilityLevel: ability?.ability_level ?? 0,
+      abilityOption: ability?.ability_option || "-",
+      abilityIcon: ability?.ability_icon || "",
+      abilityGrade:
+        ability?.ability_grade_name || ability?.ability_grade || "",
+    }));
+
+    state.data = { summary, members, buildings, abilities };
+    if (summaryEl) {
+      summaryEl.innerHTML = renderGuildSummaryCard(summary);
+      summaryEl.hidden = false;
+    }
+    if (tabNavEl) tabNavEl.hidden = false;
+    setMessage(messageEl, "", "info");
+    renderTab();
+  } catch (error) {
+    const m = `네트워크 오류: ${error.message}`;
+    setMessage(messageEl, m, "error");
+    if (tabContentEl) tabContentEl.innerHTML = renderErrorCard(m);
+  }
 }
 
 function getKstDateString(date = new Date()) {
@@ -3575,6 +4057,41 @@ async function hydrateRankingCharacterThumbs(containerEl) {
 
   await Promise.all(workers);
 }
+async function hydrateGuildMemberThumbs(containerEl) {
+  if (!containerEl) return;
+  const targets = [
+    ...containerEl.querySelectorAll(
+      "img.js-guild-member-thumb[data-world-name][data-char-name]",
+    ),
+  ].filter((imgEl) => imgEl.dataset.thumbNeedsResolve === "1");
+  if (!targets.length) return;
+
+  let cursor = 0;
+  const workerSize = Math.min(2, targets.length);
+  const workers = Array.from({ length: workerSize }, async () => {
+    while (cursor < targets.length) {
+      const currentIndex = cursor;
+      cursor += 1;
+      const imgEl = targets[currentIndex];
+      if (!imgEl || imgEl.dataset.thumbResolved === "1") {
+        continue;
+      }
+
+      const worldName = String(imgEl.dataset.worldName || "").trim();
+      const characterName = String(imgEl.dataset.charName || "").trim();
+      const resolvedImage = await resolveRankingCharacterImage(
+        worldName,
+        characterName,
+      );
+      if (resolvedImage) {
+        imgEl.src = resolvedImage;
+      }
+      imgEl.dataset.thumbResolved = "1";
+    }
+  });
+
+  await Promise.all(workers);
+}
 
 function buildCharacterProfileHref(worldName, characterName) {
   const world = String(worldName || "").trim();
@@ -3587,6 +4104,18 @@ function buildCharacterProfileHref(worldName, characterName) {
     character_name: name,
   });
   return `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}?${query.toString()}`;
+}
+function buildGuildProfileHref(worldName, guildName) {
+  const world = String(worldName || "").trim();
+  const name = String(guildName || "").trim();
+  if (!world || !name || name === "-") {
+    return "";
+  }
+  const query = new URLSearchParams({
+    world_name: world,
+    guild_name: name,
+  });
+  return `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}?${query.toString()}`;
 }
 
 function renderRankingCharacterNameLink(characterName, worldName) {
@@ -4839,8 +5368,10 @@ async function initCharacterPage() {
 initThemeControls();
 removeDisabledRankingMenuLinks();
 if (pageType === "index") {
-  const red = redirectIndexCharacterPathIfNeeded();
-  if (!red) initIndexPage();
+  const redChar = redirectIndexCharacterPathIfNeeded();
+  const redGuild = redChar ? true : redirectIndexGuildPathIfNeeded();
+  if (!redChar && !redGuild) initIndexPage();
 }
 if (pageType === "character") initCharacterPage();
 if (pageType === "ranking") initRankingPage();
+if (pageType === "guild") initGuildPage();

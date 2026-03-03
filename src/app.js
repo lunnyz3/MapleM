@@ -30,6 +30,15 @@ function createApp() {
   app.get("/ranking/:rankingType", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "ranking.html"));
   });
+  app.get("/guild", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
+  });
+  app.get("/guild/:worldName/:guildName", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
+  });
+  app.get(/^\/guild\/[^/]+\/.+$/, (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
+  });
 
   app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "index.html"));
