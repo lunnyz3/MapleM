@@ -1768,6 +1768,8 @@ function renderAndroidBoardCard(tabData, state) {
   const a = data.androidEquipment || {},
     h = data.heartEquipment || {};
   const androidName = sanitizeEquipmentText(a.androidName || "-") || "-";
+  const androidNickname =
+    sanitizeEquipmentText(a.androidNickname || "").trim() || "-";
   const androidGrade = sanitizeEquipmentText(a.androidGrade || "-") || "-";
   const androidGender = sanitizeEquipmentText(a.androidGender || "-") || "-";
   const androidIcon = String(a.androidIcon || "").trim();
@@ -1808,7 +1810,9 @@ function renderAndroidBoardCard(tabData, state) {
     tabData,
     state,
     "안드로이드 프리셋",
-  )}</div><div class="android-board"><div class="android-board__left">${leftSlots}</div><div class="android-board__center"><div class="android-stage"><div class="android-stage__frame">${androidIcon ? `<img class="android-stage__avatar" src="${escapeHtml(androidIcon)}" alt="${escapeHtml(androidName)}" loading="lazy" />` : '<div class="android-stage__empty">NO IMAGE</div>'}</div><div class="android-stage__platform" aria-hidden="true"></div><div class="android-stage__meta"><strong>${escapeHtml(
+  )}</div><div class="android-board"><div class="android-board__left">${leftSlots}</div><div class="android-board__center"><div class="android-stage"><div class="android-stage__frame">${androidIcon ? `<img class="android-stage__avatar" src="${escapeHtml(androidIcon)}" alt="${escapeHtml(androidName)}" loading="lazy" />` : '<div class="android-stage__empty">NO IMAGE</div>'}</div><div class="android-stage__platform" style="display:flex;align-items:center;justify-content:center;padding:0 10px;"><span style="color:rgba(16,38,10,0.92);font-size:10px;font-weight:900;line-height:1;letter-spacing:0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,0.35);">${escapeHtml(
+    androidNickname,
+  )}</span></div><div class="android-stage__meta"><strong>${escapeHtml(
     androidName,
   )}</strong><span>${escapeHtml(subtitle)}</span></div></div><div class="android-main-slots">${mainSlots}</div>${extraSlots ? `<div class="android-extra-slots">${extraSlots}</div>` : ""}</div><div class="android-board__right">${rightSlots}</div></div></article>`;
 }
