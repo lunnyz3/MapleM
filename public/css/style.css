@@ -6594,3 +6594,138 @@ body[data-page="character"] .tab-content {
     font-size: 12px;
   }
 }
+
+@media (max-width: 620px) {
+  body[data-page="ranking"] .topbar,
+  body[data-page="ranking"] .topbar__left,
+  body[data-page="ranking"] .topbar__nav,
+  body[data-page="ranking"] .topbar__dropdown {
+    overflow: visible;
+  }
+
+  body[data-page="ranking"] .topbar__dropdown-menu {
+    left: 0 !important;
+    right: auto !important;
+    min-width: min(88vw, 320px) !important;
+    max-width: calc(100vw - 24px);
+    z-index: 1200;
+  }
+
+  body[data-page="ranking"] .ranking-form {
+    gap: 6px;
+  }
+
+  body[data-page="ranking"] .ranking-form label {
+    gap: 4px;
+  }
+
+  body[data-page="ranking"] .ranking-form select,
+  body[data-page="ranking"] .ranking-form input,
+  body[data-page="ranking"] .ranking-form button {
+    height: 34px;
+    font-size: 12px;
+  }
+
+  body[data-page="ranking"] .ranking-table {
+    min-width: 100%;
+    table-layout: fixed;
+  }
+
+  body[data-page="ranking"] .ranking-table th,
+  body[data-page="ranking"] .ranking-table td {
+    padding: 5px 4px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  body[data-page="ranking"] .ranking-table th {
+    white-space: normal;
+  }
+
+  body[data-page="ranking"] .ranking-table td {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  body[data-page="ranking"] .ranking-table th:nth-child(1),
+  body[data-page="ranking"] .ranking-table td:nth-child(1) {
+    width: 38px;
+  }
+
+  body[data-page="ranking"] .ranking-table th:nth-child(2),
+  body[data-page="ranking"] .ranking-table td:nth-child(2) {
+    width: 34%;
+  }
+
+  body[data-page="ranking"] .ranking-char-cell {
+    gap: 4px;
+  }
+
+  body[data-page="ranking"] .ranking-char-meta,
+  body[data-page="ranking"] .ranking-world,
+  body[data-page="ranking"] .ranking-guild,
+  body[data-page="ranking"] .ranking-grade-cell {
+    gap: 3px;
+  }
+
+  body[data-page="ranking"] .ranking-char-thumb-link {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  body[data-page="ranking"] .ranking-char-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  body[data-page="ranking"] .ranking-world-mini {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+  }
+
+  body[data-page="ranking"] .ranking-world-icon,
+  body[data-page="ranking"] .ranking-guild-mark,
+  body[data-page="ranking"] .ranking-grade-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  body[data-page="ranking"] .ranking-rank-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 5px;
+    font-size: 10px;
+  }
+
+  body[data-page="ranking"] .ranking-pagination {
+    margin-top: 10px;
+    gap: 6px;
+  }
+
+  body[data-page="ranking"] .ranking-page-buttons {
+    gap: 4px;
+  }
+
+  body[data-page="ranking"] .ranking-page-buttons button {
+    min-width: 26px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  body[data-page="ranking"] .ranking-page-jump {
+    gap: 4px;
+  }
+
+  body[data-page="ranking"] .ranking-page-jump label {
+    font-size: 11px;
+  }
+
+  body[data-page="ranking"] .ranking-page-jump input,
+  body[data-page="ranking"] .ranking-page-jump button {
+    height: 24px;
+    font-size: 11px;
+  }
+}
