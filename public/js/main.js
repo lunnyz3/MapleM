@@ -5239,6 +5239,9 @@ async function initCharacterPage() {
     }
   };
   const render = () => {
+    if (typeof clearTouchPopover === "function") {
+      clearTouchPopover();
+    }
     tabContentEl.innerHTML = renderTabContent(state);
   };
   tabContentEl.hidden = false;
@@ -5251,41 +5254,85 @@ async function initCharacterPage() {
     render();
   });
   let activeHoverCardEl = null;
-  tabContentEl.addEventListener("pointerover", (event) => {
-    const cardEl = event.target.closest(".equip-card, .cash-slot-card");
-    if (!cardEl || !tabContentEl.contains(cardEl)) {
-      return;
+  let activeTouchCard = null;
+  const clearTouchPopover = () => {
+    if (!activeTouchCard) return;
+    const panel = activeTouchCard.querySelector(".equip-touch-popover");
+    if (panel) {
+      panel.remove();
     }
+    activeTouchCard.classList.remove("is-touch-open");
+    activeTouchCard = null;
+  };
+  const showTouchPopover = (cardEl) => {
+    if (!cardEl) return;
+    const template = cardEl.querySelector(
+      ".equip-hover-template, .cash-hover-template",
+    );
+    if (!template) return;
+    const panel = document.createElement("div");
+    panel.className = "equip-touch-popover";
+    panel.innerHTML = template.innerHTML;
+    cardEl.appendChild(panel);
+    cardEl.classList.add("is-touch-open");
+    activeTouchCard = cardEl;
+  };
+  const canHover =
+    window.matchMedia &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (canHover) {
+    tabContentEl.addEventListener("pointerover", (event) => {
+      const cardEl = event.target.closest(".equip-card, .cash-slot-card");
+      if (!cardEl || !tabContentEl.contains(cardEl)) {
+        return;
+      }
 
-    activeHoverCardEl = cardEl;
-    showEquipHoverOverlay(cardEl);
-  });
-  tabContentEl.addEventListener("pointerout", (event) => {
-    if (!activeHoverCardEl) {
-      return;
-    }
-    const leavingFromActive = event.target.closest(".equip-card, .cash-slot-card");
-    if (leavingFromActive !== activeHoverCardEl) {
-      return;
-    }
-    const related = event.relatedTarget;
-    if (related && activeHoverCardEl.contains(related)) {
-      return;
-    }
+      activeHoverCardEl = cardEl;
+      showEquipHoverOverlay(cardEl);
+    });
+    tabContentEl.addEventListener("pointerout", (event) => {
+      if (!activeHoverCardEl) {
+        return;
+      }
+      const leavingFromActive = event.target.closest(".equip-card, .cash-slot-card");
+      if (leavingFromActive !== activeHoverCardEl) {
+        return;
+      }
+      const related = event.relatedTarget;
+      if (related && activeHoverCardEl.contains(related)) {
+        return;
+      }
 
-    activeHoverCardEl = null;
-    hideEquipHoverOverlay();
-  });
-  window.addEventListener("scroll", () => {
-    if (!activeHoverCardEl) return;
-    positionEquipHoverOverlay(activeHoverCardEl);
-  });
-  window.addEventListener("resize", () => {
-    if (!activeHoverCardEl) return;
-    positionEquipHoverOverlay(activeHoverCardEl);
-  });
+      activeHoverCardEl = null;
+      hideEquipHoverOverlay();
+    });
+    window.addEventListener("scroll", () => {
+      if (!activeHoverCardEl) return;
+      positionEquipHoverOverlay(activeHoverCardEl);
+    });
+    window.addEventListener("resize", () => {
+      if (!activeHoverCardEl) return;
+      positionEquipHoverOverlay(activeHoverCardEl);
+    });
+  }
 
   tabContentEl.addEventListener("click", (e) => {
+    if (!canHover) {
+      const cardEl = e.target.closest(".equip-card, .cash-slot-card");
+      if (cardEl && tabContentEl.contains(cardEl)) {
+        if (activeTouchCard === cardEl) {
+          clearTouchPopover();
+        } else {
+          clearTouchPopover();
+          showTouchPopover(cardEl);
+        }
+        return;
+      }
+      if (activeTouchCard && !activeTouchCard.contains(e.target)) {
+        clearTouchPopover();
+      }
+    }
+
     const expandBtn = e.target.closest("[data-expand-target]");
     if (expandBtn && tabContentEl.contains(expandBtn)) {
       const targetSelector = String(expandBtn.dataset.expandTarget || "").trim();
@@ -5325,6 +5372,11 @@ async function initCharacterPage() {
     hideEquipHoverOverlay();
     render();
   });
+  if (!canHover) {
+    window.addEventListener("scroll", () => {
+      clearTouchPopover();
+    }, { passive: true });
+  }
   const params = new URLSearchParams({
     world_name: worldName,
     character_name: characterName,

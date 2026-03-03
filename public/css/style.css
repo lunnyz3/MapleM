@@ -198,6 +198,7 @@ body {
 .ranking-table-wrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ranking-table {
@@ -1666,7 +1667,23 @@ button:hover {
   }
 
   .ranking-table {
-    min-width: 680px;
+    min-width: 560px;
+  }
+
+  .ranking-table th,
+  .ranking-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .ranking-char-thumb-link {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ranking-char-thumb {
+    width: 32px;
+    height: 32px;
   }
 
   .ranking-pagination {
@@ -4484,6 +4501,29 @@ body[data-page="character"] .tab-content {
   visibility: visible;
 }
 
+@media (max-width: 720px) {
+  .equip-hover-overlay {
+    width: min(320px, calc(100vw - 16px));
+  }
+
+  .equip-hover__header {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .equip-hover__icon-wrap,
+  .equip-hover__icon-wrap img,
+  .equip-hover__icon-wrap .equip-hover__icon--empty {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .equip-hover-overlay {
+    display: none !important;
+  }
+}
+
 .equip-hover-card {
   border-radius: 12px;
   overflow: hidden;
@@ -4808,6 +4848,20 @@ body[data-page="character"] .tab-content {
   border-top: 1px dashed var(--ui-line);
   background: var(--ui-panel-soft);
   padding: 10px 11px;
+}
+
+.equip-touch-popover {
+  border-top: 1px dashed var(--ui-line);
+  background: var(--ui-panel-soft);
+  padding: 10px 11px;
+  margin-top: 6px;
+}
+
+.equip-touch-popover .equip-hover-card,
+.equip-touch-popover .cash-hover-card {
+  width: 100%;
+  box-shadow: none;
+  border-color: var(--ui-line);
 }
 
 .exp-grid {
