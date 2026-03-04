@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>메이플M 플러스 - maplem.co.kr</title>
     <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <link rel="stylesheet" href="/css/common.css?v=20260303p" />
-    <link rel="stylesheet" href="/css/page-character.css?v=20260303p" />
+    <link rel="stylesheet" href="/css/common.css?v=20260304t" />
+    <link rel="stylesheet" href="/css/page-character.css?v=20260304t" />
   </head>
   <body data-page="character">
     <header class="topbar">
@@ -66,6 +66,54 @@
       </section>
     </main>
 
-    <script type="module" src="/js/main.js?v=20260303p"></script>
+    <button
+      id="characterChatLauncher"
+      class="character-chat-launcher"
+      type="button"
+      aria-label="Open chatbot"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+    >
+      <img src="/assets/logo.png" alt="" />
+      <span class="character-chat-launcher__dot" aria-hidden="true"></span>
+    </button>
+
+    <div id="characterChatOverlay" class="character-chat-overlay" hidden></div>
+
+    <aside id="characterChatPanel" class="character-chat-panel" hidden aria-label="AI 챗봇">
+      <div class="character-chat-panel__head">
+        <div class="character-chat-panel__title">
+          <button
+            id="characterChatHeaderToggle"
+            type="button"
+            class="character-chat-header-toggle"
+            aria-label="Toggle chat"
+          >
+            <img src="/assets/logo.png" alt="" />
+          </button>
+          <div class="character-chat-panel__title-text">
+            <h3>멤플 봇 (MapleM-bot)</h3>
+            <p id="characterChatStatus" class="character-chat-status">세션 상태 확인 중...</p>
+          </div>
+        </div>
+        <div class="character-chat-panel__actions">
+          <button id="characterChatCloseBtn" type="button" class="character-chat-close-btn" aria-label="채팅 숨기기">X</button>
+        </div>
+      </div>
+      <div id="characterChatMessages" class="character-chat-messages" role="log" aria-live="polite"></div>
+      <form id="characterChatForm" class="character-chat-form">
+        <textarea
+          id="characterChatInput"
+          name="message"
+          rows="3"
+          maxlength="2000"
+          placeholder="메시지를 입력하세요..."
+          aria-label="채팅 메시지"
+        ></textarea>
+        <button id="characterChatSendBtn" type="submit">전송</button>
+      </form>
+    </aside>
+
+    <script type="module" src="/js/main.js?v=20260304t"></script>
   </body>
 </html>

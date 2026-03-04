@@ -1,72 +1,114 @@
-# MapleM Character Explorer
+﻿# MapleM Character Explorer
 
-Node.js + Express web app for MapleStory M Open API with MongoDB log storage.
+Node.js + Express web app for MapleStory M Open API.
 
-## Run
+This repository now includes a separate Python chatbot service (`chatbot_service`) for character chat.
+
+## Services
+
+1. Node app (public web + API proxy)
+2. Python FastAPI chatbot service (LangGraph + Vertex AI + Redis + Mongo + Elasticsearch)
+
+## Prerequisites
+
+- Node.js 22+
+- Python 3.11.x (Windows/Linux)
+- Redis
+- MongoDB
+- Elastic Cloud (for gate-ready chatbot)
+- Google Cloud Vertex AI access
+
+## Run Node app
 
 ```bash
 npm install
 npm start
 ```
 
-Open `http://localhost:3000` in your browser.
+Open `http://localhost:3000` (or `PORT`) in your browser.
 
-## Project Structure
+## Run Python chatbot service
 
-```text
-server.js
-src/
-  app.js
-  config/
-    env.js
-    mongo.js
-  controllers/
-  models/
-  routes/
-  services/
-public/
-  index.html
-  css/
-  js/
-  assets/
+```bash
+python -m pip install -r chatbot_service/requirements.lock
+python -m uvicorn chatbot_service.main:app --host 0.0.0.0 --port 8001
 ```
 
-- Add new API endpoint in this order:
-1. `src/routes/*.routes.js`
-2. `src/controllers/*.controller.js`
-3. `src/services/*.service.js`
-4. Optional Mongo schema in `src/models`
-- Add page styles in `public/css`
-- Add page behavior in `public/js`
-- Add images/graphics in `public/assets`
+Same command works on Linux/macOS and Windows PowerShell.
 
-## Environment Variables
+## Environment variables
 
-Example `.env`:
+See `.env.example` for the full list.
 
-```env
-PORT=3000
-NEXON_OPEN_API_KEY=your_nexon_open_api_key
-NEXON_API_BASE_URL=https://open.api.nexon.com
-MONGODB_URI=mongodb+srv://<db_username>:<db_password>@maplem.gmvdmys.mongodb.net/maplem?retryWrites=true&w=majority&appName=mapleM
-MONGODB_LOG_THROTTLE_MS=120000
+Important chatbot variables:
+
+- `CHATBOT_ENABLED=true` to enable Node `/api/chat/*`
+- `CHATBOT_REQUIRE_ES_GATE=true`
+- `CHATBOT_ES_GATE_READY=true` only after ES bootstrap is complete
+- `PYTHON_CHAT_BASE_URL=http://localhost:8001`
+- `GOOGLE_GENAI_USE_VERTEXAI=true`
+- `GOOGLE_CLOUD_PROJECT=<project-id>`
+- `GOOGLE_CLOUD_LOCATION=global`
+- `VERTEX_GEMINI_MODEL=gemini-2.5-flash`
+
+## ES gate policy
+
+If `CHATBOT_REQUIRE_ES_GATE=true` and `CHATBOT_ES_GATE_READY=false`, chat endpoints return `503` (`ES_GATE_NOT_READY`).
+
+Expected gate completion checklist:
+
+1. Elastic Cloud deployment created
+2. alias `maplem-rag` and backing index `maplem-rag-v1` created
+3. ELSER field mapping completed
+4. sample data indexed
+5. BM25 + `text_expansion` + RRF retrieval verified
+
+## API routes
+
+### Existing MapleM routes
+
+- `GET /api/health`
+- `GET /api/maplestorym/id?character_name=...&world_name=...`
+- `GET /api/maplestorym/character/all?character_name=...&world_name=...`
+- `GET /api/maplestorym/character/page-data?character_name=...&world_name=...`
+- `GET /api/maplestorym/character/exp-history?ocid=...&limit=30`
+
+### New chat routes (Node public API)
+
+- `GET /api/chat/session/status?world_name=...&character_name=...`
+- `POST /api/chat/message`
+- `POST /api/chat/session/reset`
+
+`POST /api/chat/message` body:
+
+```json
+{
+  "world_name": "스카니아",
+  "character_name": "캐릭터명",
+  "message": "질문"
+}
 ```
 
-## UI Flow
+Expired session response spec:
 
-1. Search page (`/`)
-  - Select `world_name`: `스카니아`, `루나`, `엘리시움`, `유니온`, `제니스`, `아케인`
-  - Input `character_name`
-2. Character page (`/character/:world_name/:character_name`)
-  - Profile: 직업, 랭킹(미지원 시 `-`), 이름, 이미지, 레벨, 길드, 경험치
-  - Tabs: 장비, 경험치 그래프, 쥬얼/심볼/V매트릭스, 헥사매트릭스, 하이퍼스탯, 스킬셋/링크, 길드
+- HTTP `409`
+- `code: "SESSION_EXPIRED"`
+- `status: "expired"`
 
-## API Routes
+## Character page chat UI
 
-- Health: `GET /api/health`
-- Character OCID: `GET /api/maplestorym/id?character_name=...&world_name=...`
-- All details (legacy-compatible): `GET /api/maplestorym/character/all?character_name=...&world_name=...`
-- Character page data: `GET /api/maplestorym/character/page-data?character_name=...&world_name=...`
-- EXP history (Mongo): `GET /api/maplestorym/character/exp-history?ocid=...&limit=30`
+Character page now includes a fixed right-side chatbot panel:
 
-If MongoDB is connected, API request/response logs are stored and EXP history is rendered from saved snapshots.
+- Session status display
+- Multi-turn message history
+- Auto-expire after 10 minutes of user inactivity
+- "새 대화 시작" reset button
+
+## Python CI
+
+A GitHub Actions workflow was added for Python 3.11 matrix checks:
+
+- `ubuntu-latest`
+- `windows-latest`
+
+The workflow installs `chatbot_service/requirements.lock` and runs pytest.

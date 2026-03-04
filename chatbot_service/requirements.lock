@@ -1,0 +1,10 @@
+﻿# Pinned baseline dependencies for Python 3.11 (Windows/Linux)
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+pydantic==2.11.7
+redis==5.2.1
+pymongo==4.11.3
+elasticsearch==8.18.1
+google-genai==1.31.0
+langgraph==0.6.8
+pytest==8.4.1

@@ -1,6 +1,7 @@
 const express = require("express");
 const { healthRouter } = require("./health.routes");
 const { maplestorymRouter } = require("./maplestorym.routes");
+const { chatRouter } = require("./chat.routes");
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.get("/health/routes", (req, res) => {
   });
 });
 router.use("/maplestorym", maplestorymRouter);
+router.use("/chat", chatRouter);
 
 module.exports = { apiRouter: router };

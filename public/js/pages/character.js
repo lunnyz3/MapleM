@@ -2794,6 +2794,296 @@ function showEquipHoverOverlay(cardEl, options = {}) {
   positionEquipHoverOverlay(cardEl);
 }
 
+const CHAT_SESSION_EXPIRED_CODE = "SESSION_EXPIRED";
+
+function normalizeChatMessages(rawMessages) {
+  if (!Array.isArray(rawMessages)) return [];
+  return rawMessages
+    .map((entry) => ({
+      role: String(entry?.role || "").trim(),
+      content: String(entry?.content || "").trim(),
+      ts: String(entry?.ts || "").trim(),
+    }))
+    .filter(
+      (entry) =>
+        (entry.role === "user" || entry.role === "assistant") &&
+        !!entry.content
+    );
+}
+
+function renderCharacterChatMessages(messagesEl, messages) {
+  const safeList = normalizeChatMessages(messages);
+  if (!safeList.length) {
+    messagesEl.innerHTML =
+      '<p class="character-chat-empty">아직 대화 내역이 없습니다.</p>';
+    return;
+  }
+
+  messagesEl.innerHTML = safeList
+    .map((entry) => {
+      const cssClass =
+        entry.role === "user"
+          ? "character-chat-msg--user"
+          : "character-chat-msg--assistant";
+      const content = escapeHtml(entry.content).replace(/\n/g, "<br>");
+      return `<article class="character-chat-msg ${cssClass}">${content}</article>`;
+    })
+    .join("");
+
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function setCharacterChatStatus(statusEl, text, tone = "default") {
+  statusEl.textContent = String(text || "");
+  statusEl.classList.toggle("is-error", tone === "error");
+  statusEl.classList.toggle("is-success", tone === "success");
+}
+
+function setCharacterChatInputEnabled(inputEl, sendBtn, enabled) {
+  inputEl.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+}
+
+function createCharacterChatController({ worldName, characterName }) {
+  const launcherEl = document.getElementById("characterChatLauncher");
+  const overlayEl = document.getElementById("characterChatOverlay");
+  const panelEl = document.getElementById("characterChatPanel");
+  const headerToggleEl = document.getElementById("characterChatHeaderToggle");
+  const statusEl = document.getElementById("characterChatStatus");
+  const messagesEl = document.getElementById("characterChatMessages");
+  const formEl = document.getElementById("characterChatForm");
+  const inputEl = document.getElementById("characterChatInput");
+  const sendBtn = document.getElementById("characterChatSendBtn");
+  const closeBtn = document.getElementById("characterChatCloseBtn");
+  const launcherDotEl = launcherEl?.querySelector(".character-chat-launcher__dot");
+
+  if (
+    !launcherEl ||
+    !overlayEl ||
+    !panelEl ||
+    !headerToggleEl ||
+    !statusEl ||
+    !messagesEl ||
+    !formEl ||
+    !inputEl ||
+    !sendBtn ||
+    !closeBtn
+  ) {
+    return null;
+  }
+
+  const state = {
+    enabled: true,
+    expired: false,
+    busy: false,
+    messages: [],
+    open: false,
+    unread: false,
+  };
+
+  const openChat = () => {
+    state.open = true;
+    state.unread = false;
+    render();
+    if (!state.busy && state.enabled) {
+      inputEl.focus();
+    }
+  };
+
+  const closeChat = () => {
+    state.open = false;
+    render();
+  };
+
+  const toggleChat = () => {
+    if (state.open) {
+      closeChat();
+      return;
+    }
+    openChat();
+  };
+
+  const render = () => {
+    const isOpen = state.open === true;
+
+    panelEl.hidden = !isOpen;
+    overlayEl.hidden = !isOpen;
+    panelEl.style.display = isOpen ? "grid" : "none";
+    overlayEl.style.display = isOpen ? "block" : "none";
+    document.body.classList.toggle("character-chat-open", state.open);
+    launcherEl.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (launcherDotEl) {
+      launcherDotEl.hidden = !state.unread;
+    }
+
+    renderCharacterChatMessages(messagesEl, state.messages);
+    setCharacterChatInputEnabled(
+      inputEl,
+      sendBtn,
+      state.enabled && !state.expired && !state.busy
+    );
+  };
+
+  const syncFromSession = (session, status) => {
+    state.messages = normalizeChatMessages(session?.messages);
+    state.expired = status === "expired";
+
+    if (state.expired) {
+      setCharacterChatStatus(
+        statusEl,
+        "사용자 입력이 10분 없어 세션이 종료되었습니다.",
+        "error"
+      );
+    } else if (status === "active") {
+      setCharacterChatStatus(statusEl, "세션이 활성화되었습니다.", "success");
+    } else {
+      setCharacterChatStatus(statusEl, "질문을 입력하면 대화가 시작됩니다.");
+    }
+
+    if (!state.open && state.messages.length > 0) {
+      state.unread = true;
+    }
+
+    render();
+  };
+
+  const initialize = async () => {
+    setCharacterChatStatus(statusEl, "세션 상태 확인 중...");
+    render();
+
+    try {
+      const query = new URLSearchParams({
+        world_name: worldName,
+        character_name: characterName,
+      });
+      const res = await fetch(`/api/chat/session/status?${query.toString()}`);
+      const payload = await parseResponseSafely(res);
+      if (!res.ok || !payload?.ok) {
+        state.enabled = false;
+        state.expired = false;
+        state.messages = [];
+        setCharacterChatStatus(
+          statusEl,
+          String(payload?.message || "챗봇 서비스를 사용할 수 없습니다."),
+          "error"
+        );
+        render();
+        return;
+      }
+
+      syncFromSession(payload?.session, payload?.status);
+    } catch (error) {
+      state.enabled = false;
+      state.expired = false;
+      setCharacterChatStatus(
+        statusEl,
+        `초기화 실패: ${error.message}`,
+        "error"
+      );
+      render();
+    }
+  };
+
+  const sendMessage = async (rawInput) => {
+    const message = String(rawInput || "").trim();
+    if (!message || !state.enabled || state.expired || state.busy) {
+      return;
+    }
+
+    state.busy = true;
+    setCharacterChatStatus(statusEl, "답변 생성 중...");
+    render();
+
+    try {
+      const res = await fetch("/api/chat/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          world_name: worldName,
+          character_name: characterName,
+          message,
+        }),
+      });
+      const payload = await parseResponseSafely(res);
+
+      if (
+        res.status === 409 &&
+        payload?.code === CHAT_SESSION_EXPIRED_CODE
+      ) {
+        syncFromSession(payload?.session, "expired");
+        state.busy = false;
+        render();
+        return;
+      }
+
+      if (!res.ok || !payload?.ok) {
+        throw new Error(String(payload?.message || "답변 생성에 실패했습니다."));
+      }
+
+      state.messages = normalizeChatMessages(payload?.session?.messages);
+      state.expired = false;
+      setCharacterChatStatus(statusEl, "답변이 도착했습니다.", "success");
+      if (!state.open) {
+        state.unread = true;
+      }
+      inputEl.value = "";
+    } catch (error) {
+      setCharacterChatStatus(statusEl, `요청 실패: ${error.message}`, "error");
+    } finally {
+      state.busy = false;
+      render();
+    }
+  };
+
+  launcherEl.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleChat();
+  });
+
+  closeBtn.addEventListener("click", () => {
+    closeChat();
+  });
+
+  headerToggleEl.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleChat();
+  });
+
+  overlayEl.addEventListener("click", () => {
+    closeChat();
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.open) {
+      closeChat();
+    }
+  });
+
+  formEl.addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendMessage(inputEl.value);
+  });
+
+  return {
+    initialize,
+    disableWithMessage(message) {
+      state.enabled = false;
+      state.expired = false;
+      state.busy = false;
+      state.open = false;
+      state.unread = false;
+      setCharacterChatStatus(
+        statusEl,
+        String(message || "챗봇을 사용할 수 없습니다."),
+        "error"
+      );
+      render();
+    },
+  };
+}
+
 async function initCharacterPage() {
   applyPageIdentity();
   const messageEl = document.getElementById("pageMessage");
@@ -2807,6 +3097,10 @@ async function initCharacterPage() {
     return;
   }
   const { worldName, characterName } = routeInfo;
+  const chatController = createCharacterChatController({
+    worldName,
+    characterName,
+  });
   applyPageIdentity(buildScopedIdentityLabel(characterName, worldName));
   const quickSearchForm = document.getElementById("quickSearchForm");
   bindCharacterSearchForm(quickSearchForm);
@@ -3033,6 +3327,11 @@ async function initCharacterPage() {
         m === "검색 결과가 없습니다."
           ? renderNotFoundCard(m)
           : renderErrorCard(m);
+      if (chatController) {
+        chatController.disableWithMessage(
+          "캐릭터 조회 실패로 챗봇을 사용할 수 없습니다."
+        );
+      }
       return;
     }
     state.pageData = page;
@@ -3048,6 +3347,9 @@ async function initCharacterPage() {
     hideEquipHoverOverlay();
     render();
     setMessage(messageEl, "", "info");
+    if (chatController) {
+      await chatController.initialize();
+    }
     hydrateProfileSummaryMeta();
     if (page.ocid) {
       state.expHistory.loading = true;
@@ -3077,6 +3379,11 @@ async function initCharacterPage() {
     const m = `네트워크 오류: ${error.message}`;
     setMessage(messageEl, m, "error");
     tabContentEl.innerHTML = renderErrorCard(m);
+    if (chatController) {
+      chatController.disableWithMessage(
+        "네트워크 오류로 챗봇을 사용할 수 없습니다."
+      );
+    }
   }
 }
 
