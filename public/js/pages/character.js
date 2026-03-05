@@ -47,6 +47,374 @@ import {
   resolvePotentialTierKey,
   resolveUnionGradeIcon,
 } from "../features/equipment-shared.js";
+import {
+  buildItemShareFileName,
+  buildTopPercentCaption,
+} from "../features/item-share.js";
+
+const SHARE_ACTION_BRAG = "brag";
+const SHARE_ACTION_SAVE = "save";
+const SHARE_TOAST_ELEMENT_ID = "equipShareToast";
+const SHARE_CAPTURE_CLASSNAME = "equip-share-capture-host";
+const SHARE_DEFAULT_CONFIG = Object.freeze({
+  loaded: false,
+  kakaoEnabled: false,
+  kakaoJsKey: "",
+});
+
+let kakaoSdkLoadPromise = null;
+let shareToastTimer = null;
+
+function getHtml2CanvasInstance() {
+  return typeof window !== "undefined" && typeof window.html2canvas === "function"
+    ? window.html2canvas
+    : null;
+}
+
+function showShareToast(message, tone = "default") {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  let toastEl = document.getElementById(SHARE_TOAST_ELEMENT_ID);
+  if (!toastEl) {
+    toastEl = document.createElement("div");
+    toastEl.id = SHARE_TOAST_ELEMENT_ID;
+    toastEl.className = "equip-share-toast";
+    toastEl.setAttribute("role", "status");
+    toastEl.setAttribute("aria-live", "polite");
+    document.body.appendChild(toastEl);
+  }
+
+  toastEl.textContent = String(message || "").trim();
+  toastEl.classList.remove("is-error");
+  toastEl.classList.remove("is-success");
+  if (tone === "error") {
+    toastEl.classList.add("is-error");
+  } else if (tone === "success") {
+    toastEl.classList.add("is-success");
+  }
+
+  toastEl.classList.add("is-visible");
+  if (shareToastTimer) {
+    window.clearTimeout(shareToastTimer);
+  }
+  shareToastTimer = window.setTimeout(() => {
+    toastEl.classList.remove("is-visible");
+  }, 2200);
+}
+
+function sanitizeShareText(text, fallback = "") {
+  const normalized = String(text || "").trim().replace(/\s+/g, " ");
+  return normalized || fallback;
+}
+
+function resolveCaptionText(item, includeCaption) {
+  if (!includeCaption) {
+    return "";
+  }
+  return buildTopPercentCaption(item);
+}
+
+function waitForCaptureImages(rootEl) {
+  const imageList = Array.from(rootEl.querySelectorAll("img"));
+  if (!imageList.length) {
+    return Promise.resolve();
+  }
+
+  const waitJobs = imageList.map(
+    (imgEl) =>
+      new Promise((resolve) => {
+        if (!imgEl.getAttribute("crossorigin")) {
+          imgEl.setAttribute("crossorigin", "anonymous");
+        }
+
+        if (imgEl.complete) {
+          resolve();
+          return;
+        }
+
+        const done = () => {
+          imgEl.removeEventListener("load", done);
+          imgEl.removeEventListener("error", done);
+          resolve();
+        };
+        imgEl.addEventListener("load", done, { once: true });
+        imgEl.addEventListener("error", done, { once: true });
+      }),
+  );
+
+  return Promise.all(waitJobs).then(() => undefined);
+}
+
+async function captureEquipmentCardImage({
+  cardEl,
+  item,
+  includeCaption = true,
+  mode = SHARE_ACTION_BRAG,
+}) {
+  const html2canvas = getHtml2CanvasInstance();
+  if (!html2canvas) {
+    throw new Error("html2canvas 로드에 실패했습니다.");
+  }
+
+  const templateEl = cardEl?.querySelector(".equip-hover-template");
+  if (!templateEl) {
+    throw new Error("공유 가능한 장비 템플릿을 찾지 못했습니다.");
+  }
+
+  const captionText = resolveCaptionText(item, includeCaption);
+  const hostEl = document.createElement("div");
+  hostEl.className = SHARE_CAPTURE_CLASSNAME;
+  const wrapEl = document.createElement("div");
+  wrapEl.className = "equip-share-capture-wrap";
+  wrapEl.innerHTML = templateEl.innerHTML;
+
+  if (captionText) {
+    const captionEl = document.createElement("p");
+    captionEl.className = "equip-share-caption";
+    captionEl.textContent = captionText;
+    wrapEl.appendChild(captionEl);
+  }
+
+  hostEl.appendChild(wrapEl);
+  document.body.appendChild(hostEl);
+
+  try {
+    await new Promise((resolve) =>
+      window.requestAnimationFrame(() =>
+        window.requestAnimationFrame(resolve),
+      ),
+    );
+    await waitForCaptureImages(wrapEl);
+
+    const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const canvas = await html2canvas(wrapEl, {
+      backgroundColor: null,
+      useCORS: true,
+      logging: false,
+      scale,
+    });
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((value) => {
+        if (!value) {
+          reject(new Error("이미지 캡처 결과를 생성하지 못했습니다."));
+          return;
+        }
+        resolve(value);
+      }, "image/png");
+    });
+
+    const itemName = sanitizeShareText(item?.itemName || "", "item");
+    return {
+      blob,
+      captionText,
+      fileName: buildItemShareFileName(itemName, mode),
+    };
+  } finally {
+    hostEl.remove();
+  }
+}
+
+async function uploadItemShareImage({
+  blob,
+  fileName,
+  itemName,
+  worldName,
+  characterName,
+}) {
+  const form = new FormData();
+  form.append("image", blob, fileName);
+  form.append("item_name", sanitizeShareText(itemName));
+  form.append("world_name", sanitizeShareText(worldName));
+  form.append("character_name", sanitizeShareText(characterName));
+
+  const response = await fetch("/api/share/item-image", {
+    method: "POST",
+    body: form,
+  });
+  const payload = await parseResponseSafely(response);
+  if (!response.ok || !payload?.ok) {
+    throw new Error(String(payload?.message || "이미지 업로드에 실패했습니다."));
+  }
+
+  return payload;
+}
+
+function resolveAbsoluteUrl(pathOrUrl) {
+  try {
+    return new URL(String(pathOrUrl || ""), window.location.origin).toString();
+  } catch (_error) {
+    return String(pathOrUrl || "");
+  }
+}
+
+async function ensureKakaoSdkReady(jsKey) {
+  const normalizedKey = sanitizeShareText(jsKey);
+  if (!normalizedKey) {
+    throw new Error("Kakao SDK 키가 설정되지 않았습니다.");
+  }
+
+  if (window.Kakao && typeof window.Kakao === "object") {
+    if (typeof window.Kakao.isInitialized === "function" && !window.Kakao.isInitialized()) {
+      window.Kakao.init(normalizedKey);
+    }
+    return window.Kakao;
+  }
+
+  if (!kakaoSdkLoadPromise) {
+    kakaoSdkLoadPromise = new Promise((resolve, reject) => {
+      const scriptEl = document.createElement("script");
+      scriptEl.src = "https://developers.kakao.com/sdk/js/kakao.min.js";
+      scriptEl.async = true;
+      scriptEl.onload = () => resolve(window.Kakao);
+      scriptEl.onerror = () => reject(new Error("Kakao SDK 스크립트를 불러오지 못했습니다."));
+      document.head.appendChild(scriptEl);
+    });
+  }
+
+  const Kakao = await kakaoSdkLoadPromise;
+  if (!Kakao || typeof Kakao !== "object") {
+    throw new Error("Kakao SDK 초기화에 실패했습니다.");
+  }
+  if (typeof Kakao.isInitialized === "function" && !Kakao.isInitialized()) {
+    Kakao.init(normalizedKey);
+  }
+  return Kakao;
+}
+
+async function shareImageViaKakao({
+  kakaoJsKey,
+  imageUrl,
+  itemName,
+  captionText,
+  pageUrl,
+}) {
+  const Kakao = await ensureKakaoSdkReady(kakaoJsKey);
+  if (!Kakao?.Share?.sendDefault) {
+    throw new Error("Kakao 공유 기능을 사용할 수 없습니다.");
+  }
+
+  Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: sanitizeShareText(itemName, "메이플M 아이템"),
+      description: sanitizeShareText(captionText, "메이플M 아이템 자랑"),
+      imageUrl: resolveAbsoluteUrl(imageUrl),
+      link: {
+        webUrl: pageUrl,
+        mobileWebUrl: pageUrl,
+      },
+    },
+    buttons: [
+      {
+        title: "캐릭터 페이지 보기",
+        link: {
+          webUrl: pageUrl,
+          mobileWebUrl: pageUrl,
+        },
+      },
+    ],
+  });
+}
+
+async function fallbackToWebShare({
+  blob,
+  fileName,
+  captionText,
+  itemName,
+  pageUrl,
+}) {
+  if (!navigator.share) {
+    return false;
+  }
+
+  const safeName = sanitizeShareText(fileName, "maplem-share.png");
+  const safeItemName = sanitizeShareText(itemName, "메이플M 아이템");
+  const file = new File([blob], safeName, { type: "image/png" });
+  const text = [captionText, pageUrl].filter(Boolean).join("\n");
+
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: safeItemName,
+        text,
+        files: [file],
+      });
+      return true;
+    }
+    await navigator.share({
+      title: safeItemName,
+      text,
+      url: pageUrl,
+    });
+    return true;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      return true;
+    }
+    return false;
+  }
+}
+
+function triggerBlobDownload(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const anchorEl = document.createElement("a");
+  anchorEl.href = url;
+  anchorEl.download = sanitizeShareText(fileName, "maplem-item.png");
+  anchorEl.rel = "noopener";
+  anchorEl.style.display = "none";
+  document.body.appendChild(anchorEl);
+  anchorEl.click();
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+    anchorEl.remove();
+  }, 0);
+}
+
+function setShareActionBusy(buttonEl, busy) {
+  if (!buttonEl) {
+    return;
+  }
+  buttonEl.disabled = !!busy;
+  buttonEl.classList.toggle("is-busy", !!busy);
+  buttonEl.textContent = busy
+    ? String(buttonEl.dataset.loadingLabel || "처리 중...")
+    : String(buttonEl.dataset.idleLabel || buttonEl.textContent || "");
+}
+
+async function loadShareClientConfig(state) {
+  if (state.shareClientConfig?.loaded) {
+    return state.shareClientConfig;
+  }
+
+  try {
+    const response = await fetch("/api/share/config");
+    const payload = await parseResponseSafely(response);
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.message || "공유 설정을 불러오지 못했습니다.");
+    }
+    state.shareClientConfig = {
+      loaded: true,
+      kakaoEnabled: !!payload.kakaoEnabled && !!payload.kakaoJsKey,
+      kakaoJsKey: sanitizeShareText(payload.kakaoJsKey),
+    };
+  } catch (_error) {
+    state.shareClientConfig = { ...SHARE_DEFAULT_CONFIG, loaded: true };
+  }
+
+  return state.shareClientConfig;
+}
+
+function renderEquipmentShareToggles(state) {
+  const bragChecked = state?.shareUiState?.bragIncludeCaption !== false;
+  const saveChecked = state?.shareUiState?.saveIncludeCaption !== false;
+  return `<div class="equip-share-toggles"><label class="equip-share-toggle"><input type="checkbox" data-share-toggle="brag" ${
+    bragChecked ? "checked" : ""
+  } /><span>자랑 문구 포함</span></label><label class="equip-share-toggle"><input type="checkbox" data-share-toggle="save" ${
+    saveChecked ? "checked" : ""
+  } /><span>저장 문구 포함</span></label></div>`;
+}
 
 const resolveJobMode = (p) => {
   const j = normalizeForMatch(p?.jobName || "");
@@ -815,11 +1183,12 @@ function renderEquipmentTab(tabData, profile, state) {
   const data = selected?.data || {};
   const mode = resolveJobMode(profile || {});
   const items = toArray(data.itemEquipment).sort(compareEquipmentItems);
+  state.currentEquipmentItems = items;
   const equipmentCardLimit = 9;
   const equipmentGridId = "equipCardGrid";
   const equipmentCards = items.length
     ? items
-        .map((item) => {
+        .map((item, itemIndex) => {
           const slot = classifyEquipmentSlot(item);
           const slotLabel = sanitizeEquipmentText(slot.label) || "-";
           const itemName = sanitizeEquipmentText(item.itemName || "-") || "-";
@@ -861,14 +1230,21 @@ function renderEquipmentTab(tabData, profile, state) {
               : "";
 
           const hoverTemplate = renderEquipmentHoverCard(item);
+          const actionButtons = `<div class="equip-share-actions"><button type="button" class="equip-share-btn equip-share-btn--brag" data-share-action="brag" data-item-index="${escapeHtml(
+            String(itemIndex),
+          )}" data-loading-label="자랑 준비 중..." data-idle-label="카카오톡 자랑">카카오톡 자랑</button><button type="button" class="equip-share-btn equip-share-btn--save" data-share-action="save" data-item-index="${escapeHtml(
+            String(itemIndex),
+          )}" data-loading-label="저장 준비 중..." data-idle-label="갤러리에 저장">갤러리에 저장</button></div>`;
 
-          return `<article class="equip-card"><div class="equip-card__summary"><p class="equip-card__slot">${escapeHtml(
+          return `<article class="equip-card" data-equip-item-index="${escapeHtml(
+            String(itemIndex),
+          )}"><div class="equip-card__summary"><p class="equip-card__slot">${escapeHtml(
             slotLabel,
           )}</p><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(
             itemName,
           )}</strong><p><span class="equip-item-grade ${escapeHtml(
             itemGradeClass,
-          )}">${escapeHtml(itemGrade)}</span> | ${escapeHtml(starforceText)}</p></div></div><div class="equip-option-chips">${summaryBlock}</div></div><template class="equip-hover-template">${hoverTemplate}</template></article>`;
+          )}">${escapeHtml(itemGrade)}</span> | ${escapeHtml(starforceText)}</p></div></div><div class="equip-option-chips">${summaryBlock}</div>${actionButtons}</div><template class="equip-hover-template">${hoverTemplate}</template></article>`;
         })
         .join("")
     : '<p class="empty">장비 데이터가 없습니다.</p>';
@@ -915,12 +1291,14 @@ function renderEquipmentTab(tabData, profile, state) {
     state,
   );
   const statsPanel = renderMajorStats(profile);
-  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3>${renderJewelPresetSwitch(
+  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3><div class="char-equip-panel__actions">${renderEquipmentShareToggles(
+    state,
+  )}${renderJewelPresetSwitch(
     "equipment",
     tabData,
     state,
     "장비 프리셋",
-  )}</div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><div class="char-cash-android-layout">${cashBoard}${androidBoard}</div></section>`;
+  )}</div></div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><div class="char-cash-android-layout">${cashBoard}${androidBoard}</div></section>`;
 }
 function buildDailySnapshotsFromHistory(expHistoryState) {
   const sourcePoints = toArray(expHistoryState?.data?.points)
@@ -3115,6 +3493,12 @@ async function initCharacterPage() {
     pageData: null,
     logStatus: null,
     expHistory: { loading: false, data: { ok: true, points: [] } },
+    shareUiState: {
+      bragIncludeCaption: true,
+      saveIncludeCaption: true,
+    },
+    shareClientConfig: { ...SHARE_DEFAULT_CONFIG },
+    currentEquipmentItems: [],
     selectedPresetByTab: {
       equipment: null,
       union: null,
@@ -3171,6 +3555,9 @@ async function initCharacterPage() {
     if (typeof clearTouchPopover === "function") {
       clearTouchPopover();
     }
+    if (state.activeTab !== "equipment") {
+      state.currentEquipmentItems = [];
+    }
     tabContentEl.innerHTML = renderTabContent(state);
   };
   tabContentEl.hidden = false;
@@ -3196,6 +3583,100 @@ async function initCharacterPage() {
     cardEl.classList.add("is-touch-open");
     activeTouchCard = cardEl;
     showEquipHoverOverlay(cardEl, { touch: true });
+  };
+  const resolveCurrentEquipmentItem = (itemIndex) => {
+    if (!Number.isFinite(itemIndex) || itemIndex < 0) {
+      return null;
+    }
+    const items = toArray(state.currentEquipmentItems);
+    return items[itemIndex] || null;
+  };
+  const handleEquipmentShareAction = async ({
+    actionType,
+    buttonEl,
+    cardEl,
+    itemIndex,
+  }) => {
+    const item = resolveCurrentEquipmentItem(itemIndex);
+    if (!item || !cardEl || !buttonEl) {
+      showShareToast("공유할 장비 정보를 찾지 못했습니다.", "error");
+      return;
+    }
+
+    const includeCaption =
+      actionType === SHARE_ACTION_BRAG
+        ? state.shareUiState.bragIncludeCaption
+        : state.shareUiState.saveIncludeCaption;
+
+    setShareActionBusy(buttonEl, true);
+
+    try {
+      const { blob, captionText, fileName } = await captureEquipmentCardImage({
+        cardEl,
+        item,
+        includeCaption,
+        mode: actionType,
+      });
+
+      if (actionType === SHARE_ACTION_SAVE) {
+        triggerBlobDownload(blob, fileName);
+        showShareToast("이미지를 저장했습니다.", "success");
+        return;
+      }
+
+      const config = await loadShareClientConfig(state);
+      const itemName = sanitizeShareText(item?.itemName, "메이플M 아이템");
+      const pageUrl = window.location.href;
+
+      let uploadedImageUrl = "";
+      try {
+        const uploadPayload = await uploadItemShareImage({
+          blob,
+          fileName,
+          itemName,
+          worldName,
+          characterName,
+        });
+        uploadedImageUrl = resolveAbsoluteUrl(uploadPayload?.imageUrl || "");
+      } catch (error) {
+        console.warn("[share] upload failed:", error?.message || error);
+        showShareToast("업로드 실패, 브라우저 공유로 전환합니다.", "error");
+      }
+
+      if (config.kakaoEnabled && uploadedImageUrl) {
+        try {
+          await shareImageViaKakao({
+            kakaoJsKey: config.kakaoJsKey,
+            imageUrl: uploadedImageUrl,
+            itemName,
+            captionText,
+            pageUrl,
+          });
+          showShareToast("카카오톡 공유창을 열었습니다.", "success");
+          return;
+        } catch (error) {
+          console.warn("[share] kakao share failed:", error?.message || error);
+        }
+      }
+
+      const shared = await fallbackToWebShare({
+        blob,
+        fileName,
+        captionText,
+        itemName,
+        pageUrl: uploadedImageUrl || pageUrl,
+      });
+      if (shared) {
+        showShareToast("브라우저 공유창을 열었습니다.", "success");
+        return;
+      }
+
+      throw new Error("이 브라우저에서는 공유를 지원하지 않습니다.");
+    } catch (error) {
+      showShareToast(String(error?.message || "공유 처리 중 오류가 발생했습니다."), "error");
+    } finally {
+      setShareActionBusy(buttonEl, false);
+    }
   };
   const supportsHoverPointer =
     window.matchMedia &&
@@ -3251,7 +3732,45 @@ async function initCharacterPage() {
     });
   }
 
+  tabContentEl.addEventListener("change", (event) => {
+    const toggleEl = event.target.closest("[data-share-toggle]");
+    if (!toggleEl || !tabContentEl.contains(toggleEl)) {
+      return;
+    }
+
+    const toggleKey = String(toggleEl.dataset.shareToggle || "").trim();
+    if (toggleKey === "brag") {
+      state.shareUiState.bragIncludeCaption = !!toggleEl.checked;
+      return;
+    }
+    if (toggleKey === "save") {
+      state.shareUiState.saveIncludeCaption = !!toggleEl.checked;
+    }
+  });
+
   tabContentEl.addEventListener("click", (e) => {
+    const shareBtn = e.target.closest("[data-share-action][data-item-index]");
+    if (shareBtn && tabContentEl.contains(shareBtn)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const actionType = String(shareBtn.dataset.shareAction || "").trim().toLowerCase();
+      const itemIndex = Number(shareBtn.dataset.itemIndex);
+      const cardEl = shareBtn.closest(".equip-card");
+      if (
+        (actionType === SHARE_ACTION_BRAG || actionType === SHARE_ACTION_SAVE) &&
+        Number.isFinite(itemIndex) &&
+        cardEl
+      ) {
+        handleEquipmentShareAction({
+          actionType,
+          buttonEl: shareBtn,
+          cardEl,
+          itemIndex,
+        });
+      }
+      return;
+    }
+
     if (!useHoverInteraction) {
       const cardEl = e.target.closest(".equip-card, .cash-slot-card");
       if (cardEl && tabContentEl.contains(cardEl)) {
@@ -3350,6 +3869,7 @@ async function initCharacterPage() {
     if (chatController) {
       await chatController.initialize();
     }
+    loadShareClientConfig(state);
     hydrateProfileSummaryMeta();
     if (page.ocid) {
       state.expHistory.loading = true;

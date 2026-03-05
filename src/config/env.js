@@ -32,7 +32,20 @@ const env = {
   chatProxyTimeoutMs: Math.max(1000, parseNumber(process.env.CHAT_PROXY_TIMEOUT_MS, 20000)),
   chatCookieName: process.env.CHAT_COOKIE_NAME || "chat_sid",
   chatCookieMaxAgeSec: Math.max(60, parseNumber(process.env.CHAT_COOKIE_MAX_AGE_SEC, 15552000)),
-  chatCookieSecure: parseBoolean(process.env.CHAT_COOKIE_SECURE, false)
+  chatCookieSecure: parseBoolean(process.env.CHAT_COOKIE_SECURE, false),
+  kakaoJsKey: String(process.env.KAKAO_JS_KEY || "").trim(),
+  shareItemImagePublicDir: String(process.env.SHARE_ITEM_IMAGE_PUBLIC_DIR || "uploads/item-share")
+    .trim()
+    .replace(/^\/+|\/+$/g, ""),
+  shareItemImageMaxBytes: Math.max(
+    64 * 1024,
+    parseNumber(process.env.SHARE_ITEM_IMAGE_MAX_BYTES, 2 * 1024 * 1024),
+  ),
+  shareItemImageTtlSec: Math.max(60, parseNumber(process.env.SHARE_ITEM_IMAGE_TTL_SEC, 86400)),
+  shareItemImageCleanupIntervalMs: Math.max(
+    60 * 1000,
+    parseNumber(process.env.SHARE_ITEM_IMAGE_CLEANUP_INTERVAL_MS, 10 * 60 * 1000),
+  ),
 };
 
 module.exports = { env };

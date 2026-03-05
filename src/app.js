@@ -1,12 +1,19 @@
 const path = require("path");
 const express = require("express");
 const { apiRouter } = require("./routes/api.routes");
+const { initShareImageCleanupJob } = require("./controllers/share.controller");
 
 function createApp() {
   const app = express();
 
   app.use(express.json());
   app.use(express.static(path.join(__dirname, "..", "public")));
+  app.use(
+    "/vendor/html2canvas",
+    express.static(path.join(__dirname, "..", "node_modules", "html2canvas", "dist")),
+  );
+
+  initShareImageCleanupJob();
 
   app.use("/api", apiRouter);
 
