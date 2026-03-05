@@ -189,6 +189,249 @@ function buildStarGlyphHtml(starforceValue, groupsPerLine = 4) {
   return lines.join("<br />");
 }
 
+function resolveEmblemNameIconSrc(emblemInfo) {
+  if (!emblemInfo || typeof emblemInfo !== "object") {
+    return "";
+  }
+
+  const name = sanitizeEquipmentText(
+    emblemInfo?.emblem_name ?? emblemInfo?.emblemName ?? "",
+  ).trim();
+  const normalized = normalizeForMatch(name);
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.includes(normalizeForMatch("기민한문장"))) {
+    return "/assets/emblem_ki.png";
+  }
+  if (normalized.includes(normalizeForMatch("무자비한문장"))) {
+    return "/assets/emblem_mu.png";
+  }
+  if (normalized.includes(normalizeForMatch("강대한문장"))) {
+    return "/assets/emblem_ka.png";
+  }
+  if (normalized.includes(normalizeForMatch("신성한문장"))) {
+    return "/assets/emblem_si.png";
+  }
+  if (normalized.includes(normalizeForMatch("압도의문장"))) {
+    return "/assets/emblem_ap.png";
+  }
+
+  return "";
+}
+
+function resolveEmblemNameText(emblemInfo) {
+  if (!emblemInfo || typeof emblemInfo !== "object") {
+    return "";
+  }
+  return sanitizeEquipmentText(
+    emblemInfo?.emblem_name ?? emblemInfo?.emblemName ?? "",
+  ).trim();
+}
+
+function resolveEmblemLevelValue(emblemInfo) {
+  if (!emblemInfo || typeof emblemInfo !== "object") {
+    return null;
+  }
+  const levelRaw = emblemInfo?.emblem_level ?? emblemInfo?.emblemLevel;
+  const levelNumeric = parseNumericValue(levelRaw);
+  if (!Number.isFinite(levelNumeric)) {
+    return null;
+  }
+  const level = Math.floor(levelNumeric);
+  return level > 0 ? level : null;
+}
+
+function resolveEmblemLevelGifSrc(emblemInfo) {
+  const level = resolveEmblemLevelValue(emblemInfo);
+  if (!Number.isFinite(level)) {
+    return "";
+  }
+
+  if (level >= 1 && level <= 3) {
+    return "/assets/emblem_1_3.gif";
+  }
+  if (level === 4) {
+    return "/assets/emblem_4.gif";
+  }
+  if (level >= 5 && level <= 6) {
+    return "/assets/emblem_5_6.gif";
+  }
+  if (level >= 7 && level <= 8) {
+    return "/assets/emblem_7_8.gif";
+  }
+  if (level === 9) {
+    return "/assets/emblem_9.gif";
+  }
+  if (level === 10) {
+    return "/assets/emblem_10.gif";
+  }
+
+  return "";
+}
+
+function splitEmblemOptionSegments(rawText) {
+  const source = String(rawText || "").trim();
+  if (!source) {
+    return [];
+  }
+
+  const segments = [];
+  let current = "";
+
+  for (let index = 0; index < source.length; index += 1) {
+    const ch = source[index];
+    if (ch === "\n" || ch === "|" || ch === ",") {
+      if (ch === ",") {
+        const prev = source[index - 1] || "";
+        let nextIndex = index + 1;
+        while (source[nextIndex] === " ") {
+          nextIndex += 1;
+        }
+        const next = source[nextIndex] || "";
+        if (/\d/.test(prev) && /\d/.test(next)) {
+          current += ch;
+          continue;
+        }
+      }
+
+      if (current.trim()) {
+        segments.push(current.trim());
+      }
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+
+  if (current.trim()) {
+    segments.push(current.trim());
+  }
+
+  return segments;
+}
+
+function normalizeEmblemOptionValue(labelText, valueText) {
+  const label = normalizeForMatch(labelText);
+  const value = String(valueText || "").trim();
+  if (!label || !value) {
+    return value;
+  }
+
+  if (
+    label.includes(normalizeForMatch("최대대미지")) ||
+    label.includes(normalizeForMatch("최대데미지"))
+  ) {
+    const compactNumericValue = value.replace(/[,\s]/g, "");
+    if (/^\d+(\.\d+)?$/.test(compactNumericValue)) {
+      const numeric = Number(compactNumericValue);
+      if (Number.isFinite(numeric)) {
+        if (numeric > 0 && numeric <= 1000) {
+          return formatNumber(Math.round(numeric * 1000000));
+        }
+        return formatNumber(Math.round(numeric));
+      }
+    }
+  }
+
+  return value;
+}
+
+function parseEmblemOptionLine(lineText) {
+  const normalized = sanitizeEquipmentText(lineText).trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return null;
+  }
+
+  const colonMatch = normalized.match(/^(.+?)\s*[:：]\s*(.+)$/);
+  if (colonMatch) {
+    const label = sanitizeEquipmentText(colonMatch[1]).trim();
+    const value = sanitizeEquipmentText(colonMatch[2]).trim();
+    if (!label) {
+      return null;
+    }
+    return { label, value };
+  }
+
+  const digitIndex = normalized.search(/\d/);
+  if (digitIndex > 0) {
+    const label = sanitizeEquipmentText(normalized.slice(0, digitIndex)).trim();
+    const value = sanitizeEquipmentText(normalized.slice(digitIndex)).trim();
+    if (label) {
+      return { label, value };
+    }
+  }
+
+  return { label: normalized, value: "" };
+}
+
+function normalizeNumericFragment(valueText) {
+  const compact = String(valueText || "").trim().replace(/[,\s]/g, "");
+  return /^\d+(\.\d+)?$/.test(compact) ? compact : "";
+}
+
+function parseEmblemOptionLines(emblemInfo) {
+  if (!emblemInfo || typeof emblemInfo !== "object") {
+    return [];
+  }
+
+  const optionText = sanitizeEquipmentText(
+    emblemInfo?.emblem_option ?? emblemInfo?.emblemOption ?? "",
+  ).trim();
+  if (!optionText) {
+    return [];
+  }
+
+  const entries = [];
+  for (const segment of splitEmblemOptionSegments(optionText)) {
+    const compactNumericSegment = normalizeNumericFragment(segment);
+    const lastEntry = entries.length ? entries[entries.length - 1] : null;
+
+    if (compactNumericSegment && lastEntry) {
+      const previousValue = sanitizeEquipmentText(lastEntry.value || "").trim();
+      const compactPreviousValue = normalizeNumericFragment(previousValue);
+      if (compactPreviousValue) {
+        lastEntry.value = `${compactPreviousValue}${compactNumericSegment}`;
+        continue;
+      }
+      if (!previousValue && sanitizeEquipmentText(lastEntry.label || "").trim()) {
+        lastEntry.value = compactNumericSegment;
+        continue;
+      }
+    }
+
+    const parsed = parseEmblemOptionLine(segment);
+    if (parsed) {
+      entries.push(parsed);
+    }
+  }
+
+  return entries
+    .map((entry) => {
+      const label = sanitizeEquipmentText(entry?.label || "").trim();
+      const rawValue = sanitizeEquipmentText(entry?.value || "").trim();
+      if (!label) {
+        return null;
+      }
+      const value = rawValue ? normalizeEmblemOptionValue(label, rawValue) : "";
+      return { label, value };
+    })
+    .filter(Boolean);
+}
+
+function resolveEquipmentEmblemPresentation(emblemInfo) {
+  const levelValue = resolveEmblemLevelValue(emblemInfo);
+  const nameText = resolveEmblemNameText(emblemInfo);
+  return {
+    nameText,
+    levelValue,
+    nameIconSrc: resolveEmblemNameIconSrc(emblemInfo),
+    levelGifSrc: resolveEmblemLevelGifSrc(emblemInfo),
+    optionLines: parseEmblemOptionLines(emblemInfo),
+  };
+}
+
 function classifyEquipmentSlot(item) {
   const n = normalizeForMatch(`${item?.slotName || ""} ${item?.pageName || ""}`);
   if (n.includes(normalizeForMatch("보조무기")) || n.includes("subweapon")) {
@@ -269,6 +512,7 @@ const hoverAccessoryOptionalOptionSlotKeys = new Set([
 function renderEquipmentHoverCard(item) {
   const slot = classifyEquipmentSlot(item);
   const showAttackPower = ["weapon", "subWeapon", "emblem"].includes(slot.key);
+  const emblemPresentation = resolveEquipmentEmblemPresentation(item?.emblemInfo);
   const itemName = sanitizeEquipmentText(item?.itemName || "-") || "-";
   const itemGrade = sanitizeEquipmentText(item?.itemGrade || "-") || "-";
   const itemGradeClass = resolveEquipmentGradeClass(itemGrade);
@@ -284,6 +528,25 @@ function renderEquipmentHoverCard(item) {
   const starText = Number.isFinite(starforceNumeric)
     ? `⭐ ${Math.round(starforceNumeric)}`
     : `⭐ ${escapeHtml(String(starforceValue || "-"))}`;
+  const emblemLevelBackground = emblemPresentation.levelGifSrc
+    ? `<img class="equip-emblem-level-bg" src="${escapeHtml(
+        emblemPresentation.levelGifSrc,
+      )}" alt="" loading="lazy" decoding="async" />`
+    : "";
+  const emblemMetaText = [
+    Number.isFinite(emblemPresentation.levelValue) ? `Lv.${emblemPresentation.levelValue}` : "",
+    emblemPresentation.nameText,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const emblemMetaRow =
+    emblemPresentation.nameIconSrc || emblemMetaText
+      ? `<div class="equip-hover__emblem-meta">${emblemPresentation.nameIconSrc ? `<img src="${escapeHtml(
+          emblemPresentation.nameIconSrc,
+        )}" alt="" loading="lazy" decoding="async" />` : ""}${emblemMetaText ? `<p>${escapeHtml(
+          emblemMetaText,
+        )}</p>` : ""}</div>`
+      : "";
   const soulOption = sanitizeEquipmentText(item?.soulInfo?.soulOption || "").trim();
   const additionalOptions = toArray(item?.additionalOption);
   const potentialOptions = toArray(item?.potentialOption);
@@ -345,12 +608,29 @@ function renderEquipmentHoverCard(item) {
     withPotentialTier: true,
     potentialGrade: item?.additionalPotentialGrade,
   });
+  const emblemOptionRows = emblemPresentation.optionLines
+    .map((entry) => {
+      const label = sanitizeEquipmentText(entry?.label || "").trim();
+      const value = sanitizeEquipmentText(entry?.value || "").trim();
+      if (!label) {
+        return "";
+      }
+      if (value) {
+        return `<li><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></li>`;
+      }
+      return `<li class="is-emblem-line"><span>${escapeHtml(label)}</span></li>`;
+    })
+    .filter(Boolean)
+    .join("");
+  const emblemOptionBlock = emblemMetaRow || emblemOptionRows
+    ? `<div class="equip-hover__option-block equip-hover__option-block--emblem"><h5>문장 옵션</h5>${emblemMetaRow}${emblemOptionRows ? `<ul>${emblemOptionRows}</ul>` : ""}</div>`
+    : "";
   const soulBlock =
     hoverSoulSlotKeys.has(slot.key) && soulOption
       ? `<div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div>`
       : "";
 
-  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap ${escapeHtml(itemGradeClass)}">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}${basicOptionBlock}${additionalOptionBlock}${potentialOptionBlock}${additionalPotentialOptionBlock}${soulBlock}</section></article>`;
+  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap ${escapeHtml(itemGradeClass)} ${emblemPresentation.levelGifSrc ? "has-emblem-bg" : ""}">${emblemLevelBackground}${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}${basicOptionBlock}${additionalOptionBlock}${potentialOptionBlock}${additionalPotentialOptionBlock}${emblemOptionBlock}${soulBlock}</section></article>`;
 }
 
 function resolveUnionGradeIcon(unionGrade, unionGradeIcon) {
@@ -380,6 +660,7 @@ export {
   renderHoverOptionRows,
   renderHoverTierBadge,
   resolveEquipmentGradeClass,
+  resolveEquipmentEmblemPresentation,
   resolveEquipmentGradeKey,
   resolvePotentialTierKey,
   resolveUnionGradeIcon,

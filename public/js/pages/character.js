@@ -44,6 +44,7 @@ import {
   renderEquipmentHoverCard,
   renderHoverOptionRows,
   renderHoverTierBadge,
+  resolveEquipmentEmblemPresentation,
   resolveEquipmentGradeClass,
   resolvePotentialTierKey,
   resolveUnionGradeIcon,
@@ -1201,7 +1202,7 @@ function buildSoulSummary(text, mode) {
   } else if (t.physicalDamage > 0)
     p.push(`물뎀 ${formatPercentValue(t.physicalDamage)}`);
   if (t.bossDamage > 0) p.push(`보공 ${formatPercentValue(t.bossDamage)}`);
-  if (t.finalDamage > 0) p.push(`최종 ${formatPercentValue(t.finalDamage)}`);
+  if (t.finalDamage > 0) p.push(`최종 대미지 ${formatPercentValue(t.finalDamage)}`);
   return p.length ? `소울: ${p.join(" / ")}` : `소울: ${s}`;
 }
 const renderOptionList = (list) => {
@@ -1431,8 +1432,21 @@ function renderEquipmentTab(tabData, profile, state) {
           const itemName = sanitizeEquipmentText(item.itemName || "-") || "-";
           const itemGrade = sanitizeEquipmentText(item.itemGrade || "-") || "-";
           const itemGradeClass = resolveEquipmentGradeClass(itemGrade);
+          const emblemPresentation = resolveEquipmentEmblemPresentation(item?.emblemInfo);
+          const emblemLevelBackground = emblemPresentation.levelGifSrc
+            ? `<img class="equip-emblem-level-bg" src="${escapeHtml(
+                emblemPresentation.levelGifSrc,
+              )}" alt="" loading="lazy" decoding="async" />`
+            : "";
+          const iconWrapClass = [
+            "item-icon-wrap",
+            itemGradeClass,
+            emblemPresentation.levelGifSrc ? "has-emblem-bg" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
           const icon = item.itemIcon
-            ? `<img src="${escapeHtml(item.itemIcon)}" alt="${escapeHtml(itemName || "아이템")}" />`
+            ? `<img class="equip-item-icon" src="${escapeHtml(item.itemIcon)}" alt="${escapeHtml(itemName || "아이템")}" />`
             : '<div class="item-icon-empty">NO</div>';
           const sf = parseNumericValue(item?.starforceUpgrade);
           const sfTag = Number.isFinite(sf)
@@ -1477,9 +1491,9 @@ function renderEquipmentTab(tabData, profile, state) {
             String(itemIndex),
           )}"><div class="equip-card__summary"><div class="equip-card__slot-row"><p class="equip-card__slot">${escapeHtml(
             slotLabel,
-          )}</p><div class="equip-card__slot-actions">${actionButtons}</div></div><div class="equip-item-main"><div class="item-icon-wrap ${escapeHtml(
-            itemGradeClass,
-          )}">${icon}${sfTag}</div><div><strong>${escapeHtml(
+          )}</p><div class="equip-card__slot-actions">${actionButtons}</div></div><div class="equip-item-main"><div class="${escapeHtml(
+            iconWrapClass,
+          )}">${emblemLevelBackground}${icon}${sfTag}</div><div><strong>${escapeHtml(
             itemName,
           )}</strong><p><span class="equip-item-grade ${escapeHtml(
             itemGradeClass,
