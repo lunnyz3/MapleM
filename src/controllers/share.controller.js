@@ -6,6 +6,7 @@ const { env } = require("../config/env");
 
 const DEFAULT_UPLOAD_DIR = "uploads/item-share";
 const PNG_SIGNATURE = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const MAX_SHARE_IMAGE_FILES = 1000;
 
 let cleanupTimer = null;
 
@@ -60,20 +61,50 @@ async function cleanupExpiredShareImages(options = {}) {
   const ttlMs = Math.max(1000, Number(env.shareItemImageTtlSec) * 1000);
   const expireBefore = now - ttlMs;
   const baseDir = resolveUploadDirPath();
+  const maxFiles = Math.max(1, Number(options.maxFiles || MAX_SHARE_IMAGE_FILES));
 
   const entries = await fsp.readdir(baseDir, { withFileTypes: true });
-  const deleteJobs = entries
-    .filter((entry) => entry.isFile())
-    .map(async (entry) => {
+  const fileEntries = entries.filter((entry) => entry.isFile());
+  const statResults = await Promise.allSettled(
+    fileEntries.map(async (entry) => {
       const filePath = path.join(baseDir, entry.name);
       const stat = await fsp.stat(filePath);
-      if (stat.mtimeMs > expireBefore) {
-        return false;
-      }
+      return {
+        filePath,
+        mtimeMs: Number(stat.mtimeMs) || 0,
+      };
+    }),
+  );
 
-      await fsp.unlink(filePath);
-      return true;
-    });
+  const errors = [];
+  const files = [];
+  for (const result of statResults) {
+    if (result.status === "fulfilled" && result.value?.filePath) {
+      files.push(result.value);
+      continue;
+    }
+    if (result.status === "rejected") {
+      errors.push(String(result.reason?.message || result.reason || "cleanup_stat_failed"));
+    }
+  }
+
+  const expiredFiles = files.filter((file) => file.mtimeMs <= expireBefore);
+  const aliveFiles = files.filter((file) => file.mtimeMs > expireBefore);
+  const overflowCount = Math.max(0, aliveFiles.length - maxFiles);
+  const overflowFiles = overflowCount
+    ? aliveFiles
+        .sort((left, right) => left.mtimeMs - right.mtimeMs)
+        .slice(0, overflowCount)
+    : [];
+
+  const deleteTargets = [
+    ...expiredFiles.map((file) => file.filePath),
+    ...overflowFiles.map((file) => file.filePath),
+  ];
+  const deleteJobs = deleteTargets.map(async (filePath) => {
+    await fsp.unlink(filePath);
+    return true;
+  });
 
   const results = await Promise.allSettled(deleteJobs);
   return results.reduce(
@@ -87,7 +118,7 @@ async function cleanupExpiredShareImages(options = {}) {
       }
       return acc;
     },
-    { removedCount: 0, errors: [] },
+    { removedCount: 0, errors },
   );
 }
 
@@ -188,6 +219,9 @@ async function postShareItemImage(req, res) {
 
     const uploadPath = path.join(resolveUploadDirPath(), fileName);
     await fsp.writeFile(uploadPath, file.buffer);
+    cleanupExpiredShareImages().catch((cleanupError) => {
+      console.warn("[share] post-upload cleanup failed:", cleanupError?.message || cleanupError);
+    });
 
     const expiresAt = new Date(Date.now() + env.shareItemImageTtlSec * 1000).toISOString();
     return res.status(201).json({

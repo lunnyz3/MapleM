@@ -46,6 +46,9 @@ function createApp() {
   app.get(/^\/guild\/[^/]+\/.+$/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
   });
+  app.get("/go/maplem", (req, res) => {
+    res.redirect(302, "https://maplem.co.kr");
+  });
 
   app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "..", "public", "index.html"));

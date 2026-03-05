@@ -61,9 +61,7 @@ const SHARE_DEFAULT_CONFIG = Object.freeze({
   kakaoEnabled: false,
   kakaoJsKey: "",
 });
-const KAKAO_FEED_IMAGE_WIDTH = 800;
-const KAKAO_FEED_IMAGE_HEIGHT = 418;
-const KAKAO_FEED_IMAGE_PADDING = 24;
+const KAKAO_FEED_IMAGE_SIZE = 800;
 
 let kakaoSdkLoadPromise = null;
 let shareToastTimer = null;
@@ -281,25 +279,40 @@ async function buildKakaoShareImage(blob) {
   }
 
   const canvasEl = document.createElement("canvas");
-  canvasEl.width = KAKAO_FEED_IMAGE_WIDTH;
-  canvasEl.height = KAKAO_FEED_IMAGE_HEIGHT;
+  canvasEl.width = KAKAO_FEED_IMAGE_SIZE;
+  canvasEl.height = KAKAO_FEED_IMAGE_SIZE;
   const ctx = canvasEl.getContext("2d");
   if (!ctx) {
     return { blob, width: 0, height: 0 };
   }
 
-  ctx.fillStyle = "#f2f5fa";
-  ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  // Kakao preview tends to favor square crops; keep lower options by bottom-focused crop.
+  const targetRatio = 1;
+  const sourceRatio = sourceWidth / sourceHeight;
+  let sourceX = 0;
+  let sourceY = 0;
+  let sourceDrawWidth = sourceWidth;
+  let sourceDrawHeight = sourceHeight;
 
-  const availableWidth = Math.max(1, canvasEl.width - KAKAO_FEED_IMAGE_PADDING * 2);
-  const availableHeight = Math.max(1, canvasEl.height - KAKAO_FEED_IMAGE_PADDING * 2);
-  const scale = Math.min(availableWidth / sourceWidth, availableHeight / sourceHeight);
-  const drawWidth = Math.max(1, Math.round(sourceWidth * scale));
-  const drawHeight = Math.max(1, Math.round(sourceHeight * scale));
-  const offsetX = Math.floor((canvasEl.width - drawWidth) / 2);
-  const offsetY = Math.floor((canvasEl.height - drawHeight) / 2);
+  if (sourceRatio > targetRatio) {
+    sourceDrawWidth = Math.max(1, Math.round(sourceHeight * targetRatio));
+    sourceX = Math.max(0, Math.floor((sourceWidth - sourceDrawWidth) / 2));
+  } else if (sourceRatio < targetRatio) {
+    sourceDrawHeight = Math.max(1, Math.round(sourceWidth / targetRatio));
+    sourceY = Math.max(0, sourceHeight - sourceDrawHeight);
+  }
 
-  ctx.drawImage(imageEl, offsetX, offsetY, drawWidth, drawHeight);
+  ctx.drawImage(
+    imageEl,
+    sourceX,
+    sourceY,
+    sourceDrawWidth,
+    sourceDrawHeight,
+    0,
+    0,
+    canvasEl.width,
+    canvasEl.height,
+  );
 
   const kakaoBlob = await new Promise((resolve) => {
     canvasEl.toBlob((value) => resolve(value || blob), "image/png");
@@ -352,7 +365,7 @@ async function shareImageViaKakao({
   imageWidth,
   imageHeight,
   itemName,
-  captionText,
+  descriptionText,
   pageUrl,
 }) {
   const Kakao = await ensureKakaoSdkReady(kakaoJsKey);
@@ -362,7 +375,7 @@ async function shareImageViaKakao({
 
   const content = {
     title: sanitizeShareText(itemName, "메이플M 아이템"),
-    description: sanitizeShareText(captionText, "메이플M 아이템 자랑"),
+    description: sanitizeShareText(descriptionText, "메이플M 아이템 자랑"),
     imageUrl: resolveAbsoluteUrl(imageUrl),
     link: {
       webUrl: pageUrl,
@@ -380,17 +393,10 @@ async function shareImageViaKakao({
     content,
     buttons: [
       {
-        title: "캐릭터 페이지 보기",
+        title: "아이템 구경하기",
         link: {
           webUrl: pageUrl,
           mobileWebUrl: pageUrl,
-        },
-      },
-      {
-        title: "\uB0B4 \uC544\uC774\uD15C\uB3C4 \uC790\uB791\uD574\uBCFC\uAE4C?!",
-        link: {
-          webUrl: "https://maplem.co.kr",
-          mobileWebUrl: "https://maplem.co.kr",
         },
       },
     ],
@@ -3690,7 +3696,7 @@ async function initCharacterPage() {
 
     const includeCaption =
       actionType === SHARE_ACTION_BRAG
-        ? state.shareUiState.bragIncludeCaption
+        ? false
         : state.shareUiState.saveIncludeCaption;
 
     setShareActionBusy(buttonEl, true);
@@ -3742,13 +3748,14 @@ async function initCharacterPage() {
 
       if (config.kakaoEnabled && uploadedImageUrl) {
         try {
+          const kakaoDescription = buildTopPercentCaption(item);
           await shareImageViaKakao({
             kakaoJsKey: config.kakaoJsKey,
             imageUrl: uploadedImageUrl,
             imageWidth: shareImageWidth,
             imageHeight: shareImageHeight,
             itemName,
-            captionText,
+            descriptionText: kakaoDescription,
             pageUrl,
           });
           showShareToast("카카오톡 공유창을 열었습니다.", "success");
