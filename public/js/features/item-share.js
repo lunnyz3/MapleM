@@ -23,6 +23,7 @@ const OPTION_KIND = Object.freeze({
 const SLOT_KIND = Object.freeze({
   WEAPON: "weapon",
   SUB_WEAPON: "subWeapon",
+  EMBLEM: "emblem",
   OVERALL: "overall",
   UPPER: "upper",
   PANTS: "pants",
@@ -37,6 +38,7 @@ const SLOT_KIND = Object.freeze({
 const LABEL = Object.freeze({
   WEAPON: "\uBB34\uAE30",
   SUB_WEAPON: "\uBCF4\uC870\uBB34\uAE30",
+  EMBLEM: "\uC5E0\uBE14\uB818",
   OVERALL: "\uD55C\uBC8C\uC637",
   UPPER: "\uC0C1\uC758",
   PANTS: "\uD558\uC758",
@@ -65,6 +67,11 @@ const SLOT_PROBABILITY_CONFIG = Object.freeze({
     potentialFile: "assistanceweapon_potential_prob.json",
     additionalFile: "assistanceweapon_additional_potential_prob.json",
     keyLabel: LABEL.SUB_WEAPON,
+  },
+  [SLOT_KIND.EMBLEM]: {
+    potentialFile: "emblem_potential_prob.json",
+    additionalFile: "emblem_additional_potential_prob.json",
+    keyLabel: LABEL.EMBLEM,
   },
   [SLOT_KIND.OVERALL]: {
     potentialFile: "clothes_potential_prob.json",
@@ -187,17 +194,22 @@ function resolveOptionKind(optionName) {
 
   if (
     normalized.includes(normalizeForMatch("\uBB3C\uB9AC\uB300\uBBF8\uC9C0")) ||
-    normalized.includes(normalizeForMatch("\uBB3C\uB9AC\uB370\uBBF8\uC9C0"))
+    normalized.includes(normalizeForMatch("\uBB3C\uB9AC\uB370\uBBF8\uC9C0")) ||
+    normalized.includes(normalizeForMatch("\uBB3C\uB380"))
   ) {
     return OPTION_KIND.PHYSICAL_DAMAGE;
   }
   if (
     normalized.includes(normalizeForMatch("\uB9C8\uBC95\uB300\uBBF8\uC9C0")) ||
-    normalized.includes(normalizeForMatch("\uB9C8\uBC95\uB370\uBBF8\uC9C0"))
+    normalized.includes(normalizeForMatch("\uB9C8\uBC95\uB370\uBBF8\uC9C0")) ||
+    normalized.includes(normalizeForMatch("\uB9C8\uB380"))
   ) {
     return OPTION_KIND.MAGICAL_DAMAGE;
   }
-  if (normalized.includes(normalizeForMatch("\uBCF4\uC2A4\uACF5\uACA9\uB825"))) {
+  if (
+    normalized.includes(normalizeForMatch("\uBCF4\uC2A4\uACF5\uACA9\uB825")) ||
+    normalized.includes(normalizeForMatch("\uBCF4\uACF5"))
+  ) {
     return OPTION_KIND.BOSS_ATTACK;
   }
   if (
@@ -328,6 +340,12 @@ function classifyProbabilitySlot(item) {
   );
 
   if (
+    normalized.includes(normalizeForMatch(LABEL.EMBLEM)) ||
+    normalized.includes("emblem")
+  ) {
+    return SLOT_KIND.EMBLEM;
+  }
+  if (
     normalized.includes(normalizeForMatch(LABEL.SUB_WEAPON)) ||
     normalized.includes("subweapon")
   ) {
@@ -422,6 +440,7 @@ function resolveValidOptionKinds(
   switch (slotKind) {
     case SLOT_KIND.WEAPON:
     case SLOT_KIND.SUB_WEAPON:
+    case SLOT_KIND.EMBLEM:
     case SLOT_KIND.SHOULDER: {
       valid.add(profileDamageKind);
       break;

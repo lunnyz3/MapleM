@@ -300,6 +300,7 @@ function getShareClientConfig(req, res) {
     ok: true,
     kakaoJsKey: env.kakaoJsKey,
     kakaoEnabled: !!env.kakaoJsKey,
+    shareWebBaseUrl: env.shareWebBaseUrl,
     imageUploadMaxBytes: env.shareItemImageMaxBytes,
     imageTtlSec: env.shareItemImageTtlSec,
   });

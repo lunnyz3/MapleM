@@ -57,20 +57,86 @@ const SHARE_ACTION_BRAG = "brag";
 const SHARE_ACTION_SAVE = "save";
 const SHARE_TOAST_ELEMENT_ID = "equipShareToast";
 const SHARE_CAPTURE_CLASSNAME = "equip-share-capture-host";
+const DEFAULT_SHARE_WEB_BASE_URL = "https://maplem.co.kr";
 const SHARE_DEFAULT_CONFIG = Object.freeze({
   loaded: false,
   kakaoEnabled: false,
   kakaoJsKey: "",
+  shareWebBaseUrl: DEFAULT_SHARE_WEB_BASE_URL,
 });
 const KAKAO_FEED_IMAGE_SIZE = 800;
+const HTML2CANVAS_VENDOR_SRC = "/vendor/html2canvas/html2canvas.min.js?v=20260305s";
+const HTML2CANVAS_CDN_SRC =
+  "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
 
 let kakaoSdkLoadPromise = null;
+let html2canvasLoadPromise = null;
 let shareToastTimer = null;
 
 function getHtml2CanvasInstance() {
   return typeof window !== "undefined" && typeof window.html2canvas === "function"
     ? window.html2canvas
     : null;
+}
+
+function loadExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    const normalizedSrc = new URL(src, window.location.href).href;
+    const existingScript = Array.from(document.scripts || []).find(
+      (scriptEl) => scriptEl.src === normalizedSrc,
+    );
+    if (existingScript && getHtml2CanvasInstance()) {
+      resolve();
+      return;
+    }
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    const scriptEl = document.createElement("script");
+    scriptEl.src = src;
+    scriptEl.async = true;
+    scriptEl.dataset.loadState = "loading";
+    scriptEl.onload = () => {
+      scriptEl.dataset.loadState = "loaded";
+      resolve();
+    };
+    scriptEl.onerror = () => {
+      scriptEl.dataset.loadState = "error";
+      scriptEl.remove();
+      reject(new Error(`스크립트를 불러오지 못했습니다: ${src}`));
+    };
+    document.head.appendChild(scriptEl);
+  });
+}
+
+async function ensureHtml2CanvasReady() {
+  const loaded = getHtml2CanvasInstance();
+  if (loaded) {
+    return loaded;
+  }
+
+  if (!html2canvasLoadPromise) {
+    html2canvasLoadPromise = (async () => {
+      const candidates = [HTML2CANVAS_VENDOR_SRC, HTML2CANVAS_CDN_SRC];
+      for (const src of candidates) {
+        try {
+          await loadExternalScript(src);
+          const resolved = getHtml2CanvasInstance();
+          if (resolved) {
+            return resolved;
+          }
+        } catch (error) {
+          console.warn("[share] html2canvas script load failed:", src, error?.message || error);
+        }
+      }
+      throw new Error("html2canvas 로드에 실패했습니다.");
+    })().finally(() => {
+      html2canvasLoadPromise = null;
+    });
+  }
+
+  return html2canvasLoadPromise;
 }
 
 function showShareToast(message, tone = "default") {
@@ -156,10 +222,7 @@ async function captureEquipmentCardImage({
   mode = SHARE_ACTION_BRAG,
   profile = null,
 }) {
-  const html2canvas = getHtml2CanvasInstance();
-  if (!html2canvas) {
-    throw new Error("html2canvas 로드에 실패했습니다.");
-  }
+  const html2canvas = await ensureHtml2CanvasReady();
 
   const templateEl = cardEl?.querySelector(".equip-hover-template");
   if (!templateEl) {
@@ -244,9 +307,22 @@ async function uploadItemShareImage({
   return payload;
 }
 
-function resolveAbsoluteUrl(pathOrUrl) {
+function resolveShareWebBaseUrl(value) {
+  const normalized = sanitizeShareText(value, DEFAULT_SHARE_WEB_BASE_URL).replace(/\/+$/g, "");
   try {
-    return new URL(String(pathOrUrl || ""), window.location.origin).toString();
+    const url = new URL(normalized);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return DEFAULT_SHARE_WEB_BASE_URL;
+    }
+    return url.toString().replace(/\/+$/g, "");
+  } catch (_error) {
+    return DEFAULT_SHARE_WEB_BASE_URL;
+  }
+}
+
+function resolveAbsoluteUrl(pathOrUrl, baseUrl = window.location.origin) {
+  try {
+    return new URL(String(pathOrUrl || ""), String(baseUrl || window.location.origin)).toString();
   } catch (_error) {
     return String(pathOrUrl || "");
   }
@@ -561,6 +637,7 @@ async function loadShareClientConfig(state) {
       loaded: true,
       kakaoEnabled: !!payload.kakaoEnabled && !!payload.kakaoJsKey,
       kakaoJsKey: sanitizeShareText(payload.kakaoJsKey),
+      shareWebBaseUrl: resolveShareWebBaseUrl(payload.shareWebBaseUrl),
     };
   } catch (_error) {
     state.shareClientConfig = { ...SHARE_DEFAULT_CONFIG, loaded: true };
@@ -1453,13 +1530,14 @@ function renderEquipmentTab(tabData, profile, state) {
     state,
   );
   const statsPanel = renderMajorStats(profile);
-  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><h3>장비</h3><div class="char-equip-panel__actions">${renderEquipmentShareToggles(
-    state,
-  )}${renderJewelPresetSwitch(
+  const equipmentPresetSwitch = renderJewelPresetSwitch(
     "equipment",
     tabData,
     state,
     "장비 프리셋",
+  );
+  return `<section class="tab-grid"><div class="char-equip-layout"><article class="data-card char-stat-panel"><h3>주요스탯</h3>${statsPanel || '<p class="empty">스탯 정보가 없습니다.</p>'}</article><article class="data-card char-equip-panel"><div class="char-equip-panel__head"><div class="char-equip-panel__title-row"><h3>장비</h3><div class="char-equip-panel__preset-wrap">${equipmentPresetSwitch}</div></div><div class="char-equip-panel__actions">${renderEquipmentShareToggles(
+    state,
   )}</div></div><div id="${equipmentGridId}" class="${escapeHtml(equipmentGridClass)}">${equipmentCards}</div>${equipmentMoreButton}</article></div><div class="char-cash-android-layout">${cashBoard}${androidBoard}</div></section>`;
 }
 function buildDailySnapshotsFromHistory(expHistoryState) {
@@ -3835,7 +3913,7 @@ async function initCharacterPage() {
       const itemName = sanitizeShareText(item?.itemName, "메이플M 아이템");
       const characterPagePath =
         buildCharacterProfileHref(worldName, characterName) || window.location.pathname;
-      const pageUrl = resolveAbsoluteUrl(characterPagePath);
+      const pageUrl = resolveAbsoluteUrl(characterPagePath, config.shareWebBaseUrl);
       let shareBlob = blob;
       let shareImageWidth = 0;
       let shareImageHeight = 0;

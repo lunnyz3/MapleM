@@ -161,14 +161,6 @@ function renderHoverTierBadge(optionList, potentialGrade, label) {
 }
 
 function getHoverStarGroupsPerLine() {
-  if (typeof window !== "undefined" && window.matchMedia) {
-    if (window.matchMedia("(max-width: 620px)").matches) {
-      return 2;
-    }
-    if (window.matchMedia("(max-width: 980px)").matches) {
-      return 3;
-    }
-  }
   return 4;
 }
 
@@ -191,7 +183,7 @@ function buildStarGlyphHtml(starforceValue, groupsPerLine = 4) {
   const lines = [];
   const normalizedGroupsPerLine = Math.max(1, Math.floor(groupsPerLine) || 1);
   for (let index = 0; index < groups.length; index += normalizedGroupsPerLine) {
-    lines.push(groups.slice(index, index + normalizedGroupsPerLine).join(" "));
+    lines.push(groups.slice(index, index + normalizedGroupsPerLine).join("&nbsp;"));
   }
 
   return lines.join("<br />");
@@ -287,10 +279,7 @@ function renderEquipmentHoverCard(item) {
   const karmaScissorsRemaining = sanitizeEquipmentText(item?.karmaScissorsRemaining ?? "");
   const remainingStarforceExpansion = sanitizeEquipmentText(item?.remainingStarforceExpansion ?? "");
   const starforceValue = item?.starforceUpgrade ?? "-";
-  const starGlyphsHtml = buildStarGlyphHtml(
-    starforceValue,
-    getHoverStarGroupsPerLine(),
-  );
+  const starGlyphsHtml = buildStarGlyphHtml(starforceValue, 4);
   const starforceNumeric = parseNumericValue(starforceValue);
   const starText = Number.isFinite(starforceNumeric)
     ? `⭐ ${Math.round(starforceNumeric)}`
@@ -395,5 +384,3 @@ export {
   resolvePotentialTierKey,
   resolveUnionGradeIcon,
 };
-
-

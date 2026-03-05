@@ -34,6 +34,9 @@ const env = {
   chatCookieMaxAgeSec: Math.max(60, parseNumber(process.env.CHAT_COOKIE_MAX_AGE_SEC, 15552000)),
   chatCookieSecure: parseBoolean(process.env.CHAT_COOKIE_SECURE, false),
   kakaoJsKey: String(process.env.KAKAO_JS_KEY || "").trim(),
+  shareWebBaseUrl: String(process.env.SHARE_WEB_BASE_URL || "https://maplem.co.kr")
+    .trim()
+    .replace(/\/+$/g, ""),
   shareItemImagePublicDir: String(process.env.SHARE_ITEM_IMAGE_PUBLIC_DIR || "uploads/item-share")
     .trim()
     .replace(/^\/+|\/+$/g, ""),
