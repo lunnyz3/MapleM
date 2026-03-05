@@ -1,4 +1,4 @@
-import {
+﻿import {
   abbreviateEquipmentOptionName,
   sanitizeEquipmentText,
   escapeHtml,
@@ -279,6 +279,7 @@ function renderEquipmentHoverCard(item) {
   const showAttackPower = ["weapon", "subWeapon", "emblem"].includes(slot.key);
   const itemName = sanitizeEquipmentText(item?.itemName || "-") || "-";
   const itemGrade = sanitizeEquipmentText(item?.itemGrade || "-") || "-";
+  const itemGradeClass = resolveEquipmentGradeClass(itemGrade);
   const slotName = sanitizeEquipmentText(item?.slotName || "-") || "-";
   const icon = String(item?.itemIcon || "").trim();
   const equipmentLevel = sanitizeEquipmentText(item?.equipmentLevel ?? "-") || "-";
@@ -360,7 +361,7 @@ function renderEquipmentHoverCard(item) {
       ? `<div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div>`
       : "";
 
-  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}${basicOptionBlock}${additionalOptionBlock}${potentialOptionBlock}${additionalPotentialOptionBlock}${soulBlock}</section></article>`;
+  return `<article class="equip-hover-card"><header class="equip-hover__header"><div class="equip-hover__icon-wrap ${escapeHtml(itemGradeClass)}">${icon ? `<img class="equip-hover__icon" src="${escapeHtml(icon)}" alt="${escapeHtml(itemName)}" />` : '<div class="equip-hover__icon equip-hover__icon--empty">NO</div>'}</div><div class="equip-hover__head-meta">${starGlyphsHtml ? `<p class="equip-hover__stars">${starGlyphsHtml}</p>` : ""}<h4 class="equip-hover__name">${escapeHtml(itemName)}</h4><p class="equip-hover__grade"><span>${escapeHtml(itemGrade)}</span><span class="equip-hover__starforce-text">${escapeHtml(starText)}</span></p></div></header><section class="equip-hover__body"><div class="equip-hover__info-grid"><div><span>부위</span><strong>${escapeHtml(slotName)}</strong></div><div><span>장비 레벨</span><strong>${escapeHtml(String(equipmentLevel))}</strong></div><div><span>등급</span><strong>${escapeHtml(itemGrade)}</strong></div>${showAttackPower ? `<div><span>공격력</span><strong>${escapeHtml(String(combatPower))}</strong></div>` : ""}</div>${miscInfo ? `<div class="equip-hover__misc">${miscInfo}</div>` : ""}${basicOptionBlock}${additionalOptionBlock}${potentialOptionBlock}${additionalPotentialOptionBlock}${soulBlock}</section></article>`;
 }
 
 function resolveUnionGradeIcon(unionGrade, unionGradeIcon) {
@@ -394,3 +395,5 @@ export {
   resolvePotentialTierKey,
   resolveUnionGradeIcon,
 };
+
+

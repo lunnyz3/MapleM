@@ -721,6 +721,42 @@ color: #ebb400;
 color: #008000;
 }
 
+.item-icon-wrap.equip-item-grade--rare img,
+.item-icon-wrap.equip-item-grade--rare .item-icon-empty {
+border-color: #0033ff !important;
+}
+
+.item-icon-wrap.equip-item-grade--epic img,
+.item-icon-wrap.equip-item-grade--epic .item-icon-empty {
+border-color: #7a008f !important;
+}
+
+.item-icon-wrap.equip-item-grade--unique img,
+.item-icon-wrap.equip-item-grade--unique .item-icon-empty {
+border-color: #ebb400 !important;
+}
+
+.item-icon-wrap.equip-item-grade--legendary img,
+.item-icon-wrap.equip-item-grade--legendary .item-icon-empty {
+border-color: #008000 !important;
+}
+
+.equip-hover__icon-wrap.equip-item-grade--rare .equip-hover__icon {
+border-color: #0033ff !important;
+}
+
+.equip-hover__icon-wrap.equip-item-grade--epic .equip-hover__icon {
+border-color: #7a008f !important;
+}
+
+.equip-hover__icon-wrap.equip-item-grade--unique .equip-hover__icon {
+border-color: #ebb400 !important;
+}
+
+.equip-hover__icon-wrap.equip-item-grade--legendary .equip-hover__icon {
+border-color: #008000 !important;
+}
+
 .meta-badges {
 margin-top: 10px;
   display: flex;
@@ -2431,7 +2467,7 @@ background: var(--ui-panel) !important;
 }
 
 .char-stat-panel .major-row:last-child {
-border-bottom: 1px solid #000;
+border-bottom: 1px solid #e4d8c3;
 }
 
 .char-equip-panel__head {

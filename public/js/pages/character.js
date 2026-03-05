@@ -1400,7 +1400,9 @@ function renderEquipmentTab(tabData, profile, state) {
             String(itemIndex),
           )}"><div class="equip-card__summary"><div class="equip-card__slot-row"><p class="equip-card__slot">${escapeHtml(
             slotLabel,
-          )}</p><div class="equip-card__slot-actions">${actionButtons}</div></div><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(
+          )}</p><div class="equip-card__slot-actions">${actionButtons}</div></div><div class="equip-item-main"><div class="item-icon-wrap ${escapeHtml(
+            itemGradeClass,
+          )}">${icon}${sfTag}</div><div><strong>${escapeHtml(
             itemName,
           )}</strong><p><span class="equip-item-grade ${escapeHtml(
             itemGradeClass,
