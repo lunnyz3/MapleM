@@ -2706,13 +2706,103 @@ margin: 0;
 .equip-hover-overlay {
 position: fixed;
   z-index: 1200;
-  width: min(460px, calc(100vw - 24px));
+  width: min(430px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   overflow: auto;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.1s ease, visibility 0.1s ease;
+}
+
+.equip-hover-overlay .equip-hover__header {
+  padding: 10px 11px;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.equip-hover-overlay .equip-hover__icon-wrap {
+  width: 70px;
+}
+
+.equip-hover-overlay .equip-hover__icon {
+  width: 70px;
+  height: 70px;
+}
+
+.equip-hover-overlay .equip-hover__stars {
+  margin-bottom: 4px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+.equip-hover-overlay .equip-hover__name {
+  font-size: 21px;
+}
+
+.equip-hover-overlay .equip-hover__grade {
+  margin-top: 5px;
+  font-size: 13px;
+  gap: 7px;
+}
+
+.equip-hover-overlay .equip-hover__starforce-text {
+  font-size: 11px;
+}
+
+.equip-hover-overlay .equip-hover__body {
+  padding: 9px 11px 11px;
+  gap: 7px;
+}
+
+.equip-hover-overlay .equip-hover__info-grid {
+  border-radius: 9px;
+  padding: 9px 10px;
+  gap: 9px 14px;
+}
+
+.equip-hover-overlay .equip-hover__info-grid span {
+  font-size: 12px;
+}
+
+.equip-hover-overlay .equip-hover__info-grid strong {
+  font-size: 14px;
+}
+
+.equip-hover-overlay .equip-hover__option-block h5 {
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+.equip-hover-overlay .equip-hover__option-block ul {
+  padding: 7px 9px;
+  gap: 3px;
+}
+
+.equip-hover-overlay .equip-hover__option-block li span,
+.equip-hover-overlay .equip-hover__option-block li strong,
+.equip-hover-overlay .equip-hover__misc span,
+.equip-hover-overlay .equip-hover__misc strong {
+  font-size: 13px;
+}
+
+.equip-hover-overlay .equip-hover__option-block p {
+  padding: 8px 9px 9px;
+  font-size: 13px;
+}
+
+.equip-hover-overlay .equip-hover__misc {
+  padding: 7px 9px;
+  gap: 3px;
+}
+
+.equip-hover-overlay .equip-hover__tier img {
+  width: 18px;
+  height: 18px;
+}
+
+.equip-hover-overlay .equip-hover__tier b {
+  font-size: 14px;
 }
 
 .equip-hover-overlay.is-visible {
@@ -3136,6 +3226,7 @@ display: none;
 }
 
 .equip-card {
+position: relative;
 border: 1px solid var(--ui-line);
   border-radius: 12px;
   background: var(--ui-panel);
@@ -3145,9 +3236,22 @@ border: 1px solid var(--ui-line);
 .equip-card__summary {
 list-style: none;
   cursor: pointer;
+  position: relative;
   display: grid;
-  gap: 8px;
+  gap: 4px;
   padding: 10px 11px;
+}
+
+.equip-card__slot-row {
+position: relative;
+  min-height: 16px;
+  padding-right: 70px;
+}
+
+.equip-card__slot-actions {
+position: absolute;
+  top: -2px;
+  right: 0;
 }
 
 .equip-card__summary::-webkit-details-marker {
@@ -3164,6 +3268,7 @@ margin: 0;
 .equip-card .equip-item-main {
 grid-template-columns: 40px minmax(0, 1fr);
   gap: 8px;
+  align-items: start;
 }
 
 .equip-card .item-icon-wrap, .equip-card .item-icon-wrap img, .equip-card .item-icon-empty {
@@ -3191,25 +3296,36 @@ border-top: 1px dashed var(--ui-line);
 }
 
 .equip-share-actions {
-display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 2px;
+display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 .equip-share-btn {
 appearance: none;
-  border: 1px solid color-mix(in srgb, var(--ui-line) 88%, transparent);
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 9px;
-  background: color-mix(in srgb, var(--ui-panel) 72%, #2e4664);
+  overflow: hidden;
+  background: transparent;
   color: var(--ui-text);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  padding: 8px 8px;
+  line-height: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.equip-share-btn img {
+width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
 }
 
 .equip-share-btn:hover:not(:disabled) {
@@ -3222,17 +3338,17 @@ cursor: wait;
 }
 
 .equip-share-btn--brag {
-background: color-mix(in srgb, var(--ui-primary) 26%, var(--ui-panel));
-  border-color: color-mix(in srgb, var(--ui-primary) 56%, var(--ui-line));
+background: transparent;
+  border-color: transparent;
 }
 
 .equip-share-btn--save {
-background: color-mix(in srgb, var(--ui-ok) 20%, var(--ui-panel));
-  border-color: color-mix(in srgb, var(--ui-ok) 46%, var(--ui-line));
+background: transparent;
+  border-color: transparent;
 }
 
 .equip-share-btn.is-busy {
-background: color-mix(in srgb, #49627e 42%, var(--ui-panel));
+background: transparent;
 }
 
 .equip-share-capture-host {
@@ -4469,7 +4585,16 @@ width: 100%;
 }
 
 .equip-share-actions {
-grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.equip-card__slot-row {
+  padding-right: 60px;
+}
+
+.equip-share-btn {
+  width: 26px;
+  height: 26px;
 }
 
 .equip-share-capture-wrap {

@@ -61,6 +61,9 @@ const SHARE_DEFAULT_CONFIG = Object.freeze({
   kakaoEnabled: false,
   kakaoJsKey: "",
 });
+const KAKAO_FEED_IMAGE_WIDTH = 800;
+const KAKAO_FEED_IMAGE_HEIGHT = 418;
+const KAKAO_FEED_IMAGE_PADDING = 24;
 
 let kakaoSdkLoadPromise = null;
 let shareToastTimer = null;
@@ -249,6 +252,66 @@ function resolveAbsoluteUrl(pathOrUrl) {
   }
 }
 
+async function loadImageElementFromBlob(blob) {
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const imageEl = new Image();
+    imageEl.decoding = "async";
+    await new Promise((resolve, reject) => {
+      imageEl.onload = () => resolve();
+      imageEl.onerror = () => reject(new Error("failed to load captured image"));
+      imageEl.src = objectUrl;
+    });
+    return imageEl;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function buildKakaoShareImage(blob) {
+  if (!(blob instanceof Blob)) {
+    return { blob, width: 0, height: 0 };
+  }
+
+  const imageEl = await loadImageElementFromBlob(blob);
+  const sourceWidth = Number(imageEl.naturalWidth || imageEl.width || 0);
+  const sourceHeight = Number(imageEl.naturalHeight || imageEl.height || 0);
+  if (!Number.isFinite(sourceWidth) || !Number.isFinite(sourceHeight) || sourceWidth <= 0 || sourceHeight <= 0) {
+    return { blob, width: 0, height: 0 };
+  }
+
+  const canvasEl = document.createElement("canvas");
+  canvasEl.width = KAKAO_FEED_IMAGE_WIDTH;
+  canvasEl.height = KAKAO_FEED_IMAGE_HEIGHT;
+  const ctx = canvasEl.getContext("2d");
+  if (!ctx) {
+    return { blob, width: 0, height: 0 };
+  }
+
+  ctx.fillStyle = "#f2f5fa";
+  ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+
+  const availableWidth = Math.max(1, canvasEl.width - KAKAO_FEED_IMAGE_PADDING * 2);
+  const availableHeight = Math.max(1, canvasEl.height - KAKAO_FEED_IMAGE_PADDING * 2);
+  const scale = Math.min(availableWidth / sourceWidth, availableHeight / sourceHeight);
+  const drawWidth = Math.max(1, Math.round(sourceWidth * scale));
+  const drawHeight = Math.max(1, Math.round(sourceHeight * scale));
+  const offsetX = Math.floor((canvasEl.width - drawWidth) / 2);
+  const offsetY = Math.floor((canvasEl.height - drawHeight) / 2);
+
+  ctx.drawImage(imageEl, offsetX, offsetY, drawWidth, drawHeight);
+
+  const kakaoBlob = await new Promise((resolve) => {
+    canvasEl.toBlob((value) => resolve(value || blob), "image/png");
+  });
+
+  return {
+    blob: kakaoBlob,
+    width: canvasEl.width,
+    height: canvasEl.height,
+  };
+}
+
 async function ensureKakaoSdkReady(jsKey) {
   const normalizedKey = sanitizeShareText(jsKey);
   if (!normalizedKey) {
@@ -286,6 +349,8 @@ async function ensureKakaoSdkReady(jsKey) {
 async function shareImageViaKakao({
   kakaoJsKey,
   imageUrl,
+  imageWidth,
+  imageHeight,
   itemName,
   captionText,
   pageUrl,
@@ -295,23 +360,37 @@ async function shareImageViaKakao({
     throw new Error("Kakao 공유 기능을 사용할 수 없습니다.");
   }
 
+  const content = {
+    title: sanitizeShareText(itemName, "메이플M 아이템"),
+    description: sanitizeShareText(captionText, "메이플M 아이템 자랑"),
+    imageUrl: resolveAbsoluteUrl(imageUrl),
+    link: {
+      webUrl: pageUrl,
+      mobileWebUrl: pageUrl,
+    },
+  };
+
+  if (Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0) {
+    content.imageWidth = Math.round(imageWidth);
+    content.imageHeight = Math.round(imageHeight);
+  }
+
   Kakao.Share.sendDefault({
     objectType: "feed",
-    content: {
-      title: sanitizeShareText(itemName, "메이플M 아이템"),
-      description: sanitizeShareText(captionText, "메이플M 아이템 자랑"),
-      imageUrl: resolveAbsoluteUrl(imageUrl),
-      link: {
-        webUrl: pageUrl,
-        mobileWebUrl: pageUrl,
-      },
-    },
+    content,
     buttons: [
       {
         title: "캐릭터 페이지 보기",
         link: {
           webUrl: pageUrl,
           mobileWebUrl: pageUrl,
+        },
+      },
+      {
+        title: "\uB0B4 \uC544\uC774\uD15C\uB3C4 \uC790\uB791\uD574\uBCFC\uAE4C?!",
+        link: {
+          webUrl: "https://maplem.co.kr",
+          mobileWebUrl: "https://maplem.co.kr",
         },
       },
     ],
@@ -376,11 +455,17 @@ function setShareActionBusy(buttonEl, busy) {
   if (!buttonEl) {
     return;
   }
-  buttonEl.disabled = !!busy;
-  buttonEl.classList.toggle("is-busy", !!busy);
-  buttonEl.textContent = busy
-    ? String(buttonEl.dataset.loadingLabel || "처리 중...")
-    : String(buttonEl.dataset.idleLabel || buttonEl.textContent || "");
+
+  const isBusy = !!busy;
+  const idleLabel = String(
+    buttonEl.dataset.idleLabel || buttonEl.getAttribute("aria-label") || "",
+  );
+  const loadingLabel = String(buttonEl.dataset.loadingLabel || idleLabel || "processing");
+
+  buttonEl.disabled = isBusy;
+  buttonEl.classList.toggle("is-busy", isBusy);
+  buttonEl.setAttribute("aria-label", isBusy ? loadingLabel : idleLabel);
+  buttonEl.setAttribute("title", isBusy ? loadingLabel : idleLabel);
 }
 
 async function loadShareClientConfig(state) {
@@ -1232,19 +1317,19 @@ function renderEquipmentTab(tabData, profile, state) {
           const hoverTemplate = renderEquipmentHoverCard(item);
           const actionButtons = `<div class="equip-share-actions"><button type="button" class="equip-share-btn equip-share-btn--brag" data-share-action="brag" data-item-index="${escapeHtml(
             String(itemIndex),
-          )}" data-loading-label="자랑 준비 중..." data-idle-label="카카오톡 자랑">카카오톡 자랑</button><button type="button" class="equip-share-btn equip-share-btn--save" data-share-action="save" data-item-index="${escapeHtml(
+          )}" data-loading-label="Preparing Kakao share..." data-idle-label="Share on KakaoTalk" aria-label="Share on KakaoTalk" title="Share on KakaoTalk"><img src="/assets/icon-kakaotalk.png" alt="" loading="lazy" decoding="async" /></button><button type="button" class="equip-share-btn equip-share-btn--save" data-share-action="save" data-item-index="${escapeHtml(
             String(itemIndex),
-          )}" data-loading-label="저장 준비 중..." data-idle-label="갤러리에 저장">갤러리에 저장</button></div>`;
+          )}" data-loading-label="Preparing download..." data-idle-label="Save to gallery" aria-label="Save to gallery" title="Save to gallery"><img src="/assets/icon-download.png" alt="" loading="lazy" decoding="async" /></button></div>`;
 
           return `<article class="equip-card" data-equip-item-index="${escapeHtml(
             String(itemIndex),
-          )}"><div class="equip-card__summary"><p class="equip-card__slot">${escapeHtml(
+          )}"><div class="equip-card__summary"><div class="equip-card__slot-row"><p class="equip-card__slot">${escapeHtml(
             slotLabel,
-          )}</p><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(
+          )}</p><div class="equip-card__slot-actions">${actionButtons}</div></div><div class="equip-item-main"><div class="item-icon-wrap">${icon}${sfTag}</div><div><strong>${escapeHtml(
             itemName,
           )}</strong><p><span class="equip-item-grade ${escapeHtml(
             itemGradeClass,
-          )}">${escapeHtml(itemGrade)}</span> | ${escapeHtml(starforceText)}</p></div></div><div class="equip-option-chips">${summaryBlock}</div>${actionButtons}</div><template class="equip-hover-template">${hoverTemplate}</template></article>`;
+          )}">${escapeHtml(itemGrade)}</span> | ${escapeHtml(starforceText)}</p></div></div><div class="equip-option-chips">${summaryBlock}</div></div><template class="equip-hover-template">${hoverTemplate}</template></article>`;
         })
         .join("")
     : '<p class="empty">장비 데이터가 없습니다.</p>';
@@ -3627,11 +3712,23 @@ async function initCharacterPage() {
       const config = await loadShareClientConfig(state);
       const itemName = sanitizeShareText(item?.itemName, "메이플M 아이템");
       const pageUrl = window.location.href;
+      let shareBlob = blob;
+      let shareImageWidth = 0;
+      let shareImageHeight = 0;
+
+      try {
+        const kakaoImagePayload = await buildKakaoShareImage(blob);
+        shareBlob = kakaoImagePayload.blob || blob;
+        shareImageWidth = Number(kakaoImagePayload.width) || 0;
+        shareImageHeight = Number(kakaoImagePayload.height) || 0;
+      } catch (error) {
+        console.warn("[share] kakao image transform failed:", error?.message || error);
+      }
 
       let uploadedImageUrl = "";
       try {
         const uploadPayload = await uploadItemShareImage({
-          blob,
+          blob: shareBlob,
           fileName,
           itemName,
           worldName,
@@ -3648,6 +3745,8 @@ async function initCharacterPage() {
           await shareImageViaKakao({
             kakaoJsKey: config.kakaoJsKey,
             imageUrl: uploadedImageUrl,
+            imageWidth: shareImageWidth,
+            imageHeight: shareImageHeight,
             itemName,
             captionText,
             pageUrl,
@@ -3655,12 +3754,14 @@ async function initCharacterPage() {
           showShareToast("카카오톡 공유창을 열었습니다.", "success");
           return;
         } catch (error) {
-          console.warn("[share] kakao share failed:", error?.message || error);
+          const reason = String(error?.message || error || "kakao_share_failed");
+          console.warn("[share] kakao share failed:", reason);
+          showShareToast(`Kakao share failed: ${reason}`, "error");
         }
       }
 
       const shared = await fallbackToWebShare({
-        blob,
+        blob: shareBlob,
         fileName,
         captionText,
         itemName,

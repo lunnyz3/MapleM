@@ -600,9 +600,10 @@ grid-template-columns: 1fr;
 }
 
 .topbar__dropdown-menu {
-left: auto;
-    right: 0;
-    min-width: 220px;
+left: 0;
+    right: auto;
+    min-width: min(220px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
 }
 }
 
@@ -1099,9 +1100,10 @@ grid-template-columns: 1fr !important;
 }
 
 .topbar__dropdown-menu {
-left: auto;
-    right: 0;
-    min-width: 220px;
+left: 0;
+    right: auto;
+    min-width: min(220px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
 }
 
 .theme-switch {
