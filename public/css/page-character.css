@@ -2458,8 +2458,10 @@ display: flex;
 .equip-share-toggle {
 display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 5px 9px;
+  min-width: 126px;
+  padding: 5px 12px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--ui-line) 88%, transparent);
   background: color-mix(in srgb, var(--ui-panel-soft) 72%, transparent);
@@ -2472,6 +2474,10 @@ display: inline-flex;
 
 .equip-share-toggle input {
 margin: 0;
+}
+
+.equip-share-toggle span {
+  white-space: nowrap;
 }
 
 .char-equip-panel .preset-selector {

@@ -2,6 +2,7 @@ import {
   abbreviateEquipmentOptionName,
   applyPageIdentity,
   bindCharacterSearchForm,
+  buildCharacterProfileHref,
   buildGuildProfileHref,
   buildScopedIdentityLabel,
   equipmentOrder,
@@ -442,7 +443,76 @@ async function fallbackToWebShare({
   }
 }
 
-function triggerBlobDownload(blob, fileName) {
+function isLikelyMobileBrowser() {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  const ua = String(navigator.userAgent || "");
+  const touchMac =
+    navigator.platform === "MacIntel" && Number(navigator.maxTouchPoints || 0) > 1;
+  return /Android|iPhone|iPad|iPod/i.test(ua) || touchMac;
+}
+
+function reserveMobileDownloadWindow() {
+  if (!isLikelyMobileBrowser()) {
+    return null;
+  }
+
+  const popup = window.open("", "_blank");
+  if (!popup) {
+    return null;
+  }
+
+  try {
+    popup.document.title = "Preparing image";
+    popup.document.body.style.margin = "0";
+    popup.document.body.style.fontFamily = "sans-serif";
+    popup.document.body.style.padding = "16px";
+    popup.document.body.textContent = "Preparing image...";
+  } catch (_error) {
+    // Ignore cross-window access errors; location redirect will still work.
+  }
+
+  return popup;
+}
+
+function openBlobInNewTab(blob, popupWindow = null) {
+  const url = URL.createObjectURL(blob);
+  const revokeLater = () => {
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+  };
+
+  if (popupWindow && !popupWindow.closed) {
+    popupWindow.location.href = url;
+    revokeLater();
+    return true;
+  }
+
+  const opened = window.open(url, "_blank");
+  if (opened) {
+    revokeLater();
+    return true;
+  }
+
+  window.location.href = url;
+  revokeLater();
+  return true;
+}
+
+function triggerBlobDownload(blob, fileName, options = {}) {
+  if (!(blob instanceof Blob) || Number(blob.size || 0) <= 0) {
+    throw new Error("capture failed (empty blob)");
+  }
+
+  const mobilePopup = options?.mobilePopup || null;
+  if (isLikelyMobileBrowser()) {
+    openBlobInNewTab(blob, mobilePopup);
+    return { mode: "open" };
+  }
+
   const url = URL.createObjectURL(blob);
   const anchorEl = document.createElement("a");
   anchorEl.href = url;
@@ -455,6 +525,7 @@ function triggerBlobDownload(blob, fileName) {
     URL.revokeObjectURL(url);
     anchorEl.remove();
   }, 0);
+  return { mode: "download" };
 }
 
 function setShareActionBusy(buttonEl, busy) {
@@ -499,12 +570,9 @@ async function loadShareClientConfig(state) {
 
 function renderEquipmentShareToggles(state) {
   const bragChecked = state?.shareUiState?.bragIncludeCaption !== false;
-  const saveChecked = state?.shareUiState?.saveIncludeCaption !== false;
   return `<div class="equip-share-toggles"><label class="equip-share-toggle"><input type="checkbox" data-share-toggle="brag" ${
     bragChecked ? "checked" : ""
-  } /><span>자랑 문구 포함</span></label><label class="equip-share-toggle"><input type="checkbox" data-share-toggle="save" ${
-    saveChecked ? "checked" : ""
-  } /><span>저장 문구 포함</span></label></div>`;
+  } /><span>?? ?? ??</span></label></div>`;
 }
 
 const resolveJobMode = (p) => {
@@ -3688,9 +3756,16 @@ async function initCharacterPage() {
     cardEl,
     itemIndex,
   }) => {
+    const mobileDownloadPopup =
+      actionType === SHARE_ACTION_SAVE ? reserveMobileDownloadWindow() : null;
+    let mobileDownloadPopupUsed = false;
+
     const item = resolveCurrentEquipmentItem(itemIndex);
     if (!item || !cardEl || !buttonEl) {
-      showShareToast("공유할 장비 정보를 찾지 못했습니다.", "error");
+      if (mobileDownloadPopup && !mobileDownloadPopup.closed) {
+        mobileDownloadPopup.close();
+      }
+      showShareToast("Unable to find item data for sharing.", "error");
       return;
     }
 
@@ -3710,14 +3785,53 @@ async function initCharacterPage() {
       });
 
       if (actionType === SHARE_ACTION_SAVE) {
-        triggerBlobDownload(blob, fileName);
-        showShareToast("이미지를 저장했습니다.", "success");
+        const itemName = sanitizeShareText(item?.itemName, "item");
+
+        if (isLikelyMobileBrowser()) {
+          try {
+            const uploadPayload = await uploadItemShareImage({
+              blob,
+              fileName,
+              itemName,
+              worldName,
+              characterName,
+            });
+            const mobileDownloadUrl = resolveAbsoluteUrl(
+              uploadPayload?.downloadUrl || uploadPayload?.imageUrl || "",
+            );
+
+            if (mobileDownloadUrl) {
+              if (mobileDownloadPopup && !mobileDownloadPopup.closed) {
+                mobileDownloadPopup.location.href = mobileDownloadUrl;
+              } else {
+                window.location.href = mobileDownloadUrl;
+              }
+              mobileDownloadPopupUsed = true;
+              showShareToast("Download started.", "success");
+              return;
+            }
+          } catch (error) {
+            console.warn("[save] mobile upload/download fallback failed:", error?.message || error);
+          }
+        }
+
+        const saveResult = triggerBlobDownload(blob, fileName, {
+          mobilePopup: mobileDownloadPopup,
+        });
+        mobileDownloadPopupUsed = true;
+        if (saveResult?.mode === "open") {
+          showShareToast("On mobile, open image and save it manually.", "success");
+        } else {
+          showShareToast("Image saved.", "success");
+        }
         return;
       }
 
       const config = await loadShareClientConfig(state);
       const itemName = sanitizeShareText(item?.itemName, "메이플M 아이템");
-      const pageUrl = window.location.href;
+      const characterPagePath =
+        buildCharacterProfileHref(worldName, characterName) || window.location.pathname;
+      const pageUrl = resolveAbsoluteUrl(characterPagePath);
       let shareBlob = blob;
       let shareImageWidth = 0;
       let shareImageHeight = 0;
@@ -3781,6 +3895,14 @@ async function initCharacterPage() {
 
       throw new Error("이 브라우저에서는 공유를 지원하지 않습니다.");
     } catch (error) {
+      if (
+        actionType === SHARE_ACTION_SAVE &&
+        mobileDownloadPopup &&
+        !mobileDownloadPopupUsed &&
+        !mobileDownloadPopup.closed
+      ) {
+        mobileDownloadPopup.close();
+      }
       showShareToast(String(error?.message || "공유 처리 중 오류가 발생했습니다."), "error");
     } finally {
       setShareActionBusy(buttonEl, false);

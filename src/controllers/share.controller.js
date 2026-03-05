@@ -28,6 +28,21 @@ function buildPublicImagePath(fileName) {
   return `/${normalizeUploadDir()}/${fileName}`;
 }
 
+function buildDownloadApiPath(fileName) {
+  return `/api/share/item-image-download/${encodeURIComponent(fileName)}`;
+}
+
+function isValidShareImageFileName(fileName) {
+  const normalized = String(fileName || "").trim();
+  if (!normalized) {
+    return false;
+  }
+  if (normalized.includes("/") || normalized.includes("\\")) {
+    return false;
+  }
+  return /^[\w\uAC00-\uD7AF-]+\.png$/u.test(normalized);
+}
+
 async function ensureShareUploadDir() {
   await fsp.mkdir(resolveUploadDirPath(), { recursive: true });
 }
@@ -227,6 +242,7 @@ async function postShareItemImage(req, res) {
     return res.status(201).json({
       ok: true,
       imageUrl: buildPublicImagePath(fileName),
+      downloadUrl: buildDownloadApiPath(fileName),
       expiresAt,
     });
   } catch (error) {
@@ -234,6 +250,47 @@ async function postShareItemImage(req, res) {
       ok: false,
       code: "IMAGE_UPLOAD_FAILED",
       message: String(error?.message || "failed to upload item image"),
+    });
+  }
+}
+
+async function getShareItemImageDownload(req, res) {
+  try {
+    const fileName = String(req.params?.fileName || "").trim();
+    if (!isValidShareImageFileName(fileName)) {
+      return res.status(400).json({
+        ok: false,
+        code: "INVALID_FILE_NAME",
+        message: "invalid image file name",
+      });
+    }
+
+    const filePath = path.join(resolveUploadDirPath(), fileName);
+    let stat = null;
+    try {
+      stat = await fsp.stat(filePath);
+    } catch (_error) {
+      stat = null;
+    }
+
+    if (!stat || !stat.isFile()) {
+      return res.status(404).json({
+        ok: false,
+        code: "IMAGE_NOT_FOUND",
+        message: "share image not found or expired",
+      });
+    }
+
+    const encodedName = encodeURIComponent(fileName);
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", `attachment; filename=\"maplem-item.png\"; filename*=UTF-8''${encodedName}`);
+    res.setHeader("Cache-Control", "no-store");
+    return res.sendFile(filePath);
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      code: "IMAGE_DOWNLOAD_FAILED",
+      message: String(error?.message || "failed to prepare image download"),
     });
   }
 }
@@ -251,6 +308,7 @@ function getShareClientConfig(req, res) {
 module.exports = {
   cleanupExpiredShareImages,
   getShareClientConfig,
+  getShareItemImageDownload,
   initShareImageCleanupJob,
   parseItemImageUpload,
   postShareItemImage,
