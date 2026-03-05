@@ -111,11 +111,11 @@ function sanitizeShareText(text, fallback = "") {
   return normalized || fallback;
 }
 
-function resolveCaptionText(item, includeCaption) {
+async function resolveCaptionText(item, includeCaption, profile = null) {
   if (!includeCaption) {
     return "";
   }
-  return buildTopPercentCaption(item);
+  return buildTopPercentCaption(item, profile);
 }
 
 function waitForCaptureImages(rootEl) {
@@ -154,6 +154,7 @@ async function captureEquipmentCardImage({
   item,
   includeCaption = true,
   mode = SHARE_ACTION_BRAG,
+  profile = null,
 }) {
   const html2canvas = getHtml2CanvasInstance();
   if (!html2canvas) {
@@ -165,7 +166,7 @@ async function captureEquipmentCardImage({
     throw new Error("공유 가능한 장비 템플릿을 찾지 못했습니다.");
   }
 
-  const captionText = resolveCaptionText(item, includeCaption);
+  const captionText = await resolveCaptionText(item, includeCaption, profile);
   const hostEl = document.createElement("div");
   hostEl.className = SHARE_CAPTURE_CLASSNAME;
   const wrapEl = document.createElement("div");
@@ -572,7 +573,7 @@ function renderEquipmentShareToggles(state) {
   const bragChecked = state?.shareUiState?.bragIncludeCaption !== false;
   return `<div class="equip-share-toggles"><label class="equip-share-toggle"><input type="checkbox" data-share-toggle="brag" ${
     bragChecked ? "checked" : ""
-  } /><span>?? ?? ??</span></label></div>`;
+  } /><span>\uC790\uB791 \uBB38\uAD6C \uD3EC\uD568</span></label></div>`;
 }
 
 const resolveJobMode = (p) => {
@@ -3782,6 +3783,7 @@ async function initCharacterPage() {
         item,
         includeCaption,
         mode: actionType,
+        profile: state.pageData?.profile || null,
       });
 
       if (actionType === SHARE_ACTION_SAVE) {
@@ -3862,7 +3864,10 @@ async function initCharacterPage() {
 
       if (config.kakaoEnabled && uploadedImageUrl) {
         try {
-          const kakaoDescription = buildTopPercentCaption(item);
+          const kakaoDescription = await buildTopPercentCaption(
+            item,
+            state.pageData?.profile || null,
+          );
           await shareImageViaKakao({
             kakaoJsKey: config.kakaoJsKey,
             imageUrl: uploadedImageUrl,
