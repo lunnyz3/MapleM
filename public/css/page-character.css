@@ -2430,6 +2430,10 @@ background: var(--ui-panel-soft) !important;
 background: var(--ui-panel) !important;
 }
 
+.char-stat-panel .major-row:last-child {
+border-bottom: 1px solid #000;
+}
+
 .char-equip-panel__head {
 display: flex;
   align-items: center;
