@@ -25,6 +25,7 @@ def build_settings() -> Settings:
         es_elser_size=10,
         es_rrf_k=60,
         gemini_model="gemini-2.5-flash",
+        vertex_api_key="",
         google_cloud_project="test-project",
         google_cloud_location="global",
     )
@@ -47,3 +48,15 @@ def test_rrf_merge_prefers_documents_appearing_in_both_lists():
 
     assert ids[0] == "B"
     assert set(ids) == {"A", "B", "C"}
+
+
+def test_retrieve_returns_empty_without_es_config():
+    settings = build_settings()
+    settings = Settings(
+        **{
+            **settings.__dict__,
+            "es_url": "",
+        }
+    )
+    retriever = ElasticHybridRetriever(settings)
+    assert retriever.retrieve("테스트 질문", limit=6) == []

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import os
+from pathlib import Path
 
 
 def _to_bool(value: str | None, default: bool = False) -> bool:
@@ -21,6 +22,28 @@ def _to_int(value: str | None, default: int) -> int:
     except (TypeError, ValueError, AttributeError):
         return default
     return parsed
+
+
+def _load_project_env_file() -> None:
+    root_env_path = Path(__file__).resolve().parents[1] / ".env"
+    if not root_env_path.is_file():
+        return
+
+    try:
+        lines = root_env_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+
+    for raw_line in lines:
+        line = str(raw_line or "").strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        env_key = str(key or "").strip()
+        if not env_key or env_key in os.environ:
+            continue
+        env_value = str(value or "").strip().strip("\"'")
+        os.environ[env_key] = env_value
 
 
 @dataclass(frozen=True)
@@ -46,12 +69,14 @@ class Settings:
     es_elser_size: int
     es_rrf_k: int
     gemini_model: str
+    vertex_api_key: str
     google_cloud_project: str
     google_cloud_location: str
 
 
 
 def load_settings() -> Settings:
+    _load_project_env_file()
     return Settings(
         chatbot_enabled=_to_bool(os.getenv("CHATBOT_ENABLED"), False),
         require_es_gate=_to_bool(os.getenv("CHATBOT_REQUIRE_ES_GATE"), True),
@@ -74,6 +99,7 @@ def load_settings() -> Settings:
         es_elser_size=max(1, _to_int(os.getenv("ELASTICSEARCH_ELSER_SIZE"), 10)),
         es_rrf_k=max(1, _to_int(os.getenv("ELASTICSEARCH_RRF_K"), 60)),
         gemini_model=os.getenv("VERTEX_GEMINI_MODEL", "gemini-2.5-flash"),
+        vertex_api_key=os.getenv("VERTEX_API_KEY", "").strip(),
         google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", ""),
         google_cloud_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
     )

@@ -47,6 +47,7 @@ Important chatbot variables:
 - `CHATBOT_ES_GATE_READY=true` only after ES bootstrap is complete
 - `PYTHON_CHAT_BASE_URL=http://localhost:8001`
 - `GOOGLE_GENAI_USE_VERTEXAI=true`
+- `VERTEX_API_KEY=<optional-express-mode-api-key>`
 - `GOOGLE_CLOUD_PROJECT=<project-id>`
 - `GOOGLE_CLOUD_LOCATION=global`
 - `VERTEX_GEMINI_MODEL=gemini-2.5-flash`

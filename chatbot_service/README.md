@@ -40,6 +40,7 @@ ELASTICSEARCH_SPARSE_FIELD=content_embedding
 ELASTICSEARCH_ELSER_MODEL_ID=.elser_model_2
 
 GOOGLE_GENAI_USE_VERTEXAI=true
+VERTEX_API_KEY=<optional-express-mode-api-key>
 GOOGLE_CLOUD_PROJECT=<project-id>
 GOOGLE_CLOUD_LOCATION=global
 VERTEX_GEMINI_MODEL=gemini-2.5-flash

@@ -43,10 +43,13 @@ class ElasticHybridRetriever:
         if not query.strip():
             return []
         if self._client is None:
-            raise RuntimeError("Elasticsearch is not configured. Set ELASTICSEARCH_URL.")
+            return []
 
-        bm25_hits = self._search_bm25(query)
-        elser_hits = self._search_elser(query)
+        try:
+            bm25_hits = self._search_bm25(query)
+            elser_hits = self._search_elser(query)
+        except Exception:
+            return []
         return self._rrf_merge(bm25_hits, elser_hits, limit=limit)
 
     def _search_bm25(self, query: str) -> list[_RankedHit]:
