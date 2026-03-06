@@ -531,7 +531,7 @@ function renderEquipmentHoverCard(item) {
   const emblemLevelBackground = emblemPresentation.levelGifSrc
     ? `<img class="equip-emblem-level-bg" src="${escapeHtml(
         emblemPresentation.levelGifSrc,
-      )}" alt="" loading="lazy" decoding="async" />`
+      )}" alt="" decoding="async" />`
     : "";
   const emblemMetaText = [
     Number.isFinite(emblemPresentation.levelValue) ? `Lv.${emblemPresentation.levelValue}` : "",
@@ -543,7 +543,7 @@ function renderEquipmentHoverCard(item) {
     emblemPresentation.nameIconSrc || emblemMetaText
       ? `<div class="equip-hover__emblem-meta">${emblemPresentation.nameIconSrc ? `<img src="${escapeHtml(
           emblemPresentation.nameIconSrc,
-        )}" alt="" loading="lazy" decoding="async" />` : ""}${emblemMetaText ? `<p>${escapeHtml(
+        )}" alt="" decoding="async" />` : ""}${emblemMetaText ? `<p>${escapeHtml(
           emblemMetaText,
         )}</p>` : ""}</div>`
       : "";

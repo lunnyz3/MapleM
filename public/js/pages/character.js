@@ -198,11 +198,15 @@ function waitForCaptureImages(rootEl) {
     return Promise.resolve();
   }
 
+  const IMAGE_WAIT_TIMEOUT_MS = 4500;
   const waitJobs = imageList.map(
     (imgEl) =>
       new Promise((resolve) => {
         if (!imgEl.getAttribute("crossorigin")) {
           imgEl.setAttribute("crossorigin", "anonymous");
+        }
+        if (imgEl.getAttribute("loading") === "lazy") {
+          imgEl.setAttribute("loading", "eager");
         }
 
         if (imgEl.complete) {
@@ -210,7 +214,12 @@ function waitForCaptureImages(rootEl) {
           return;
         }
 
+        const timeoutId = window.setTimeout(() => {
+          done();
+        }, IMAGE_WAIT_TIMEOUT_MS);
+
         const done = () => {
+          window.clearTimeout(timeoutId);
           imgEl.removeEventListener("load", done);
           imgEl.removeEventListener("error", done);
           resolve();
@@ -284,6 +293,58 @@ async function captureEquipmentCardImage({
       blob,
       captionText,
       fileName: buildItemShareFileName(itemName, mode),
+    };
+  } finally {
+    hostEl.remove();
+  }
+}
+
+async function captureProfileCardImage({
+  profile,
+  query,
+  mode = SHARE_ACTION_BRAG,
+}) {
+  const html2canvas = await ensureHtml2CanvasReady();
+  const hostEl = document.createElement("div");
+  hostEl.className = SHARE_CAPTURE_CLASSNAME;
+  const wrapEl = document.createElement("div");
+  wrapEl.className = "profile-share-capture-wrap";
+  wrapEl.innerHTML = renderProfileShareCardMarkup({ profile, query });
+  hostEl.appendChild(wrapEl);
+  document.body.appendChild(hostEl);
+
+  try {
+    await new Promise((resolve) =>
+      window.requestAnimationFrame(() =>
+        window.requestAnimationFrame(resolve),
+      ),
+    );
+    await waitForCaptureImages(wrapEl);
+
+    const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const canvas = await html2canvas(wrapEl, {
+      backgroundColor: null,
+      useCORS: true,
+      logging: false,
+      scale,
+    });
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((value) => {
+        if (!value) {
+          reject(new Error("프로필 이미지 캡처 결과를 생성하지 못했습니다."));
+          return;
+        }
+        resolve(value);
+      }, "image/png");
+    });
+
+    const profileName = sanitizeShareText(profile?.name || "", "character");
+    const worldName = sanitizeShareText(query?.worldNameCanonical || "");
+    const baseName = [worldName, profileName].filter(Boolean).join("-");
+    return {
+      blob,
+      captionText: `${profileName} 캐릭터 공유`,
+      fileName: buildItemShareFileName(baseName || profileName, mode),
     };
   } finally {
     hostEl.remove();
@@ -528,6 +589,7 @@ async function shareImageViaKakao({
   itemName,
   descriptionText,
   pageUrl,
+  actionButtonTitle = "아이템 구경하기",
 }) {
   const Kakao = await ensureKakaoSdkReady(kakaoJsKey);
   if (!Kakao?.Share?.sendDefault) {
@@ -554,7 +616,7 @@ async function shareImageViaKakao({
     content,
     buttons: [
       {
-        title: "아이템 구경하기",
+        title: sanitizeShareText(actionButtonTitle, "아이템 구경하기"),
         link: {
           webUrl: pageUrl,
           mobileWebUrl: pageUrl,
@@ -1415,10 +1477,10 @@ function renderMajorStats(profile, options = {}) {
 
   return `<section class="major-stats major-stats--compact"><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
 }
-function renderProfile(profile, query) {
+function resolveProfileHeroMeta(profile, query) {
   const profileImage = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
   const profileName = String(profile?.name || "-");
-  const worldName = query.worldNameCanonical || "-";
+  const worldName = query?.worldNameCanonical || "-";
   const worldIcon = resolveWorldIcon(worldName);
   const guildMark = String(profile?.guildMarkIcon || "").trim();
   const guildName = String(profile?.guildName || "-").trim() || "-";
@@ -1431,9 +1493,10 @@ function renderProfile(profile, query) {
       : rankingValueFromText !== null
         ? rankingValueFromText
         : rankingValueFallback;
-  const overallRankingText = overallRankingValue !== null && overallRankingValue > 0
-    ? `전체랭킹 ${formatNumber(overallRankingValue)}위`
-    : "전체랭킹 -";
+  const overallRankingText =
+    overallRankingValue !== null && overallRankingValue > 0
+      ? `전체랭킹 ${formatNumber(overallRankingValue)}위`
+      : "전체랭킹 -";
   const expRateText = formatExpRateText(profile?.expRate ?? profile?.expText);
   const levelText = `Lv.${String(profile?.level || "-")}`;
   const percentText = expRateText === "-" ? "" : expRateText;
@@ -1442,6 +1505,42 @@ function renderProfile(profile, query) {
     progressValueRaw === null
       ? 0
       : Math.max(0, Math.min(100, Number(progressValueRaw)));
+
+  return {
+    profileImage,
+    profileName,
+    worldName,
+    worldIcon,
+    guildMark,
+    guildName,
+    overallRankingText,
+    expRateText,
+    levelText,
+    percentText,
+    progressValue,
+  };
+}
+
+function renderProfileShareCardMarkup({ profile, query }) {
+  const meta = resolveProfileHeroMeta(profile, query);
+  const guildLabel = meta.guildName && meta.guildName !== "-" ? meta.guildName : "길드 정보 없음";
+  return `<article class="profile-share-card"><div class="profile-share-card__frame"><div class="profile-share-card__avatar-wrap"><img class="profile-share-card__avatar" src="${escapeHtml(meta.profileImage)}" alt="${escapeHtml(meta.profileName)} 아바타" crossorigin="anonymous" /></div><div class="profile-share-card__identity"><h2>${escapeHtml(
+    meta.profileName,
+  )}</h2><p class="profile-share-card__world">${meta.worldIcon ? `<img src="${escapeHtml(
+    meta.worldIcon,
+  )}" alt="" crossorigin="anonymous" />` : ""}<span>${escapeHtml(meta.worldName)}</span></p></div><p class="profile-share-card__level"><strong>${escapeHtml(
+    meta.levelText,
+  )}</strong>${meta.percentText ? `<span>${escapeHtml(meta.percentText)}</span>` : ""}</p><div class="profile-share-card__progress" role="img" aria-label="${escapeHtml(
+    `경험치 ${meta.expRateText}`,
+  )}"><span style="width:${escapeHtml(meta.progressValue.toFixed(2))}%"></span></div><div class="profile-share-card__meta"><p><span>랭킹</span><strong>${escapeHtml(
+    meta.overallRankingText,
+  )}</strong></p><p><span>길드</span><strong>${meta.guildMark ? `<img src="${escapeHtml(
+    meta.guildMark,
+  )}" alt="" crossorigin="anonymous" />` : ""}<b>${escapeHtml(guildLabel)}</b></strong></p></div><p class="profile-share-card__cta">maplem.co.kr</p></div></article>`;
+}
+
+function renderProfile(profile, query) {
+  const meta = resolveProfileHeroMeta(profile, query);
   const rankingHref = (() => {
     const today = getKstDateString();
     const date = today < rankingDateFloor ? rankingDateFloor : today;
@@ -1449,35 +1548,36 @@ function renderProfile(profile, query) {
       type: "level",
       date,
     });
-    if (profileName && profileName !== "-") {
-      queryParams.set("character_name", profileName);
+    if (meta.profileName && meta.profileName !== "-") {
+      queryParams.set("character_name", meta.profileName);
     }
-    if (worldName && worldName !== "-") {
-      queryParams.set("character_world_name", worldName);
+    if (meta.worldName && meta.worldName !== "-") {
+      queryParams.set("character_world_name", meta.worldName);
     }
     const queryText = queryParams.toString();
     return `/ranking.html?${queryText}`;
   })();
-  const guildHref = buildGuildProfileHref(worldName, guildName);
+  const guildHref = buildGuildProfileHref(meta.worldName, meta.guildName);
   const guildChip = guildHref
     ? `<a class="char-hero__chip char-hero__chip--guild" href="${escapeHtml(
         guildHref,
-      )}">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
-        guildMark,
+      )}">${meta.guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
+        meta.guildMark,
       )}" alt="${escapeHtml(
-        guildName,
+        meta.guildName,
       )} 마크" loading="lazy" />` : ""}<span>${escapeHtml(
-        guildName,
+        meta.guildName,
       )}</span><b>›</b></a>`
-    : `<span class="char-hero__chip char-hero__chip--guild">${guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
-        guildMark,
+    : `<span class="char-hero__chip char-hero__chip--guild">${meta.guildMark ? `<img class="char-hero__guild-mark" src="${escapeHtml(
+        meta.guildMark,
       )}" alt="${escapeHtml(
-        guildName,
+        meta.guildName,
       )} 마크" loading="lazy" />` : ""}<span>${escapeHtml(
-        guildName,
+        meta.guildName,
       )}</span><b>›</b></span>`;
+  const profileShareActions = `<span class="char-hero__share-actions"><button type="button" class="equip-share-btn equip-share-btn--brag" data-profile-share-action="brag" data-loading-label="Preparing Kakao share..." data-idle-label="Share character on KakaoTalk" aria-label="Share character on KakaoTalk" title="Share character on KakaoTalk"><img src="/assets/icon-kakaotalk.png" alt="" loading="lazy" decoding="async" /></button><button type="button" class="equip-share-btn equip-share-btn--save" data-profile-share-action="save" data-loading-label="Preparing download..." data-idle-label="Save character image" aria-label="Save character image" title="Save character image"><img src="/assets/icon-download.png" alt="" loading="lazy" decoding="async" /></button></span>`;
 
-  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(profileImage)}" alt="${escapeHtml(profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(profileName)}</h1><span class="char-hero-world">${worldIcon ? `<img src="${escapeHtml(worldIcon)}" alt="${escapeHtml(worldName)}" />` : ""}${escapeHtml(worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(levelText)}</span>${percentText ? `<span class="char-hero__level-rate">${escapeHtml(percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${expRateText}`)}"><span style="width:${escapeHtml(progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(overallRankingText)}</span><b>›</b></a>${guildChip}</div></div></div></article></section>`;
+  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(meta.profileImage)}" alt="${escapeHtml(meta.profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(meta.profileName)}</h1><span class="char-hero-world">${meta.worldIcon ? `<img src="${escapeHtml(meta.worldIcon)}" alt="${escapeHtml(meta.worldName)}" />` : ""}${escapeHtml(meta.worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(meta.levelText)}</span>${meta.percentText ? `<span class="char-hero__level-rate">${escapeHtml(meta.percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${meta.expRateText}`)}"><span style="width:${escapeHtml(meta.progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(meta.overallRankingText)}</span><b>›</b></a>${guildChip}${profileShareActions}</div></div></div></article></section>`;
 }
 function resolveSelectedPresetNo(tabKey, tabData, state) {
   const selected = parseNumericValue(state.selectedPresetByTab[tabKey]);
@@ -4086,6 +4186,156 @@ async function initCharacterPage() {
       setShareActionBusy(buttonEl, false);
     }
   };
+  const handleProfileShareAction = async ({ actionType, buttonEl }) => {
+    const mobileDownloadPopup =
+      actionType === SHARE_ACTION_SAVE ? reserveMobileDownloadWindow() : null;
+    let mobileDownloadPopupUsed = false;
+
+    const profile = state.pageData?.profile || null;
+    const query = state.pageData?.query || null;
+    if (!profile || !query || !buttonEl) {
+      if (mobileDownloadPopup && !mobileDownloadPopup.closed) {
+        mobileDownloadPopup.close();
+      }
+      showShareToast("캐릭터 공유 데이터를 찾을 수 없습니다.", "error");
+      return;
+    }
+
+    setShareActionBusy(buttonEl, true);
+
+    try {
+      const { blob, captionText, fileName } = await captureProfileCardImage({
+        profile,
+        query,
+        mode: actionType,
+      });
+
+      if (actionType === SHARE_ACTION_SAVE) {
+        const characterLabel = sanitizeShareText(profile?.name, "character");
+
+        if (isLikelyMobileBrowser()) {
+          try {
+            const uploadPayload = await uploadItemShareImage({
+              blob,
+              fileName,
+              itemName: characterLabel,
+              worldName,
+              characterName,
+            });
+            const mobileDownloadUrl = resolveAbsoluteUrl(
+              uploadPayload?.downloadUrl || uploadPayload?.imageUrl || "",
+            );
+
+            if (mobileDownloadUrl) {
+              if (mobileDownloadPopup && !mobileDownloadPopup.closed) {
+                mobileDownloadPopup.location.href = mobileDownloadUrl;
+              } else {
+                window.location.href = mobileDownloadUrl;
+              }
+              mobileDownloadPopupUsed = true;
+              showShareToast("Download started.", "success");
+              return;
+            }
+          } catch (error) {
+            console.warn(
+              "[profile-share] mobile upload/download fallback failed:",
+              error?.message || error,
+            );
+          }
+        }
+
+        const saveResult = triggerBlobDownload(blob, fileName, {
+          mobilePopup: mobileDownloadPopup,
+        });
+        mobileDownloadPopupUsed = true;
+        if (saveResult?.mode === "open") {
+          showShareToast("On mobile, open image and save it manually.", "success");
+        } else {
+          showShareToast("Image saved.", "success");
+        }
+        return;
+      }
+
+      const config = await loadShareClientConfig(state);
+      const profileName = sanitizeShareText(profile?.name, "메이플M 캐릭터");
+      const worldLabel = sanitizeShareText(query?.worldNameCanonical || worldName);
+      const profileShareTitle = sanitizeShareText(
+        [worldLabel, profileName].filter(Boolean).join(" "),
+        profileName,
+      );
+      const characterPagePath =
+        buildCharacterProfileHref(worldName, characterName) || window.location.pathname;
+      const pageUrl = resolveAbsoluteUrl(characterPagePath, config.shareWebBaseUrl);
+      let shareBlob = blob;
+      let shareImageWidth = 0;
+      let shareImageHeight = 0;
+
+      let uploadedImageUrl = "";
+      try {
+        const uploadResult = await uploadKakaoImageWithRetry({
+          sourceBlob: blob,
+          fileName,
+          itemName: profileName,
+          worldName,
+          characterName,
+        });
+        shareBlob = uploadResult?.blob || shareBlob;
+        shareImageWidth = Number(uploadResult?.width) || 0;
+        shareImageHeight = Number(uploadResult?.height) || 0;
+        uploadedImageUrl = resolveAbsoluteUrl(uploadResult?.uploadPayload?.imageUrl || "");
+      } catch (error) {
+        console.warn("[profile-share] upload failed:", error?.message || error);
+        showShareToast("업로드 실패, 브라우저 공유로 전환합니다.", "error");
+      }
+
+      if (config.kakaoEnabled && uploadedImageUrl) {
+        try {
+          await shareImageViaKakao({
+            kakaoJsKey: config.kakaoJsKey,
+            imageUrl: uploadedImageUrl,
+            imageWidth: shareImageWidth,
+            imageHeight: shareImageHeight,
+            itemName: profileShareTitle,
+            descriptionText: `${worldLabel} ${profileName}`,
+            pageUrl,
+            actionButtonTitle: "캐릭터 구경하기",
+          });
+          showShareToast("카카오톡 공유창을 열었습니다.", "success");
+          return;
+        } catch (error) {
+          const reason = String(error?.message || error || "kakao_share_failed");
+          console.warn("[profile-share] kakao share failed:", reason);
+          showShareToast(`Kakao share failed: ${reason}`, "error");
+        }
+      }
+
+      const shared = await fallbackToWebShare({
+        blob: shareBlob,
+        fileName,
+        captionText,
+        itemName: profileShareTitle,
+        pageUrl: uploadedImageUrl || pageUrl,
+      });
+      if (shared) {
+        showShareToast("브라우저 공유창을 열었습니다.", "success");
+        return;
+      }
+
+      throw new Error("이 브라우저에서는 공유를 지원하지 않습니다.");
+    } catch (error) {
+      if (
+        actionType === SHARE_ACTION_SAVE &&
+        mobileDownloadPopup &&
+        !mobileDownloadPopupUsed &&
+        !mobileDownloadPopup.closed
+      ) {
+        mobileDownloadPopup.close();
+      }
+      showShareToast(String(error?.message || "공유 처리 중 오류가 발생했습니다."), "error");
+    } finally {
+      setShareActionBusy(buttonEl, false);
+    }
+  };
   const supportsHoverPointer =
     window.matchMedia &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -4153,6 +4403,25 @@ async function initCharacterPage() {
     }
     if (toggleKey === "save") {
       state.shareUiState.saveIncludeCaption = !!toggleEl.checked;
+    }
+  });
+
+  profileCardEl.addEventListener("click", (event) => {
+    const shareBtn = event.target.closest("[data-profile-share-action]");
+    if (!shareBtn || !profileCardEl.contains(shareBtn)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const actionType = String(shareBtn.dataset.profileShareAction || "")
+      .trim()
+      .toLowerCase();
+    if (actionType === SHARE_ACTION_BRAG || actionType === SHARE_ACTION_SAVE) {
+      handleProfileShareAction({
+        actionType,
+        buttonEl: shareBtn,
+      });
     }
   });
 
