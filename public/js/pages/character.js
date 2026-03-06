@@ -66,6 +66,13 @@ const SHARE_DEFAULT_CONFIG = Object.freeze({
   shareWebBaseUrl: DEFAULT_SHARE_WEB_BASE_URL,
 });
 const KAKAO_FEED_IMAGE_SIZE = 800;
+const KAKAO_UPLOAD_RETRY_SIZES = Object.freeze([
+  KAKAO_FEED_IMAGE_SIZE,
+  720,
+  640,
+  560,
+  512,
+]);
 const HTML2CANVAS_VENDOR_SRC = "/vendor/html2canvas/html2canvas.min.js?v=20260305s";
 const HTML2CANVAS_CDN_SRC =
   "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
@@ -302,7 +309,10 @@ async function uploadItemShareImage({
   });
   const payload = await parseResponseSafely(response);
   if (!response.ok || !payload?.ok) {
-    throw new Error(String(payload?.message || "이미지 업로드에 실패했습니다."));
+    const error = new Error(String(payload?.message || "이미지 업로드에 실패했습니다."));
+    error.code = String(payload?.code || "");
+    error.status = Number(response.status) || 0;
+    throw error;
   }
 
   return payload;
@@ -345,7 +355,20 @@ async function loadImageElementFromBlob(blob) {
   }
 }
 
-async function buildKakaoShareImage(blob) {
+function isShareImageTooLargeError(error) {
+  const code = String(error?.code || "").trim().toUpperCase();
+  if (code === "IMAGE_TOO_LARGE") {
+    return true;
+  }
+  const status = Number(error?.status) || 0;
+  if (status === 413) {
+    return true;
+  }
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("too large") || message.includes("bytes");
+}
+
+async function buildKakaoShareImage(blob, targetSize = KAKAO_FEED_IMAGE_SIZE) {
   if (!(blob instanceof Blob)) {
     return { blob, width: 0, height: 0 };
   }
@@ -357,9 +380,13 @@ async function buildKakaoShareImage(blob) {
     return { blob, width: 0, height: 0 };
   }
 
+  const normalizedTargetSize = Number.isFinite(Number(targetSize))
+    ? Math.max(256, Math.min(1200, Math.round(Number(targetSize))))
+    : KAKAO_FEED_IMAGE_SIZE;
+
   const canvasEl = document.createElement("canvas");
-  canvasEl.width = KAKAO_FEED_IMAGE_SIZE;
-  canvasEl.height = KAKAO_FEED_IMAGE_SIZE;
+  canvasEl.width = normalizedTargetSize;
+  canvasEl.height = normalizedTargetSize;
   const ctx = canvasEl.getContext("2d");
   if (!ctx) {
     return { blob, width: 0, height: 0 };
@@ -402,6 +429,61 @@ async function buildKakaoShareImage(blob) {
     width: canvasEl.width,
     height: canvasEl.height,
   };
+}
+
+async function uploadKakaoImageWithRetry({
+  sourceBlob,
+  fileName,
+  itemName,
+  worldName,
+  characterName,
+}) {
+  if (!(sourceBlob instanceof Blob)) {
+    throw new Error("kakao share source image is invalid");
+  }
+
+  let lastError = null;
+
+  for (const imageSize of KAKAO_UPLOAD_RETRY_SIZES) {
+    let transformedImage = null;
+    try {
+      transformedImage = await buildKakaoShareImage(sourceBlob, imageSize);
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+
+    const blobForUpload =
+      transformedImage?.blob instanceof Blob ? transformedImage.blob : sourceBlob;
+    const imageWidth = Number(transformedImage?.width) || 0;
+    const imageHeight = Number(transformedImage?.height) || 0;
+
+    try {
+      const uploadPayload = await uploadItemShareImage({
+        blob: blobForUpload,
+        fileName,
+        itemName,
+        worldName,
+        characterName,
+      });
+      return {
+        uploadPayload,
+        blob: blobForUpload,
+        width: imageWidth,
+        height: imageHeight,
+      };
+    } catch (error) {
+      lastError = error;
+      if (!isShareImageTooLargeError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error("image upload failed");
 }
 
 async function ensureKakaoSdkReady(jsKey) {
@@ -3569,7 +3651,10 @@ function createCharacterChatController({ worldName, characterName }) {
     } else if (status === "active") {
       setCharacterChatStatus(statusEl, "세션이 활성화되었습니다.", "success");
     } else {
-      setCharacterChatStatus(statusEl, "질문을 입력하면 대화가 시작됩니다.");
+      setCharacterChatStatus(
+        statusEl,
+        "질문을 입력하면 대화가 시작됩니다. 대신에 불안정하거나 헛소리를 할 가능성이 매우 높습니다."
+      );
     }
 
     if (!state.open && state.messages.length > 0) {
@@ -3932,25 +4017,19 @@ async function initCharacterPage() {
       let shareImageWidth = 0;
       let shareImageHeight = 0;
 
-      try {
-        const kakaoImagePayload = await buildKakaoShareImage(blob);
-        shareBlob = kakaoImagePayload.blob || blob;
-        shareImageWidth = Number(kakaoImagePayload.width) || 0;
-        shareImageHeight = Number(kakaoImagePayload.height) || 0;
-      } catch (error) {
-        console.warn("[share] kakao image transform failed:", error?.message || error);
-      }
-
       let uploadedImageUrl = "";
       try {
-        const uploadPayload = await uploadItemShareImage({
-          blob: shareBlob,
+        const uploadResult = await uploadKakaoImageWithRetry({
+          sourceBlob: blob,
           fileName,
           itemName,
           worldName,
           characterName,
         });
-        uploadedImageUrl = resolveAbsoluteUrl(uploadPayload?.imageUrl || "");
+        shareBlob = uploadResult?.blob || shareBlob;
+        shareImageWidth = Number(uploadResult?.width) || 0;
+        shareImageHeight = Number(uploadResult?.height) || 0;
+        uploadedImageUrl = resolveAbsoluteUrl(uploadResult?.uploadPayload?.imageUrl || "");
       } catch (error) {
         console.warn("[share] upload failed:", error?.message || error);
         showShareToast("업로드 실패, 브라우저 공유로 전환합니다.", "error");
