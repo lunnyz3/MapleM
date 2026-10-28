@@ -1,5 +1,5 @@
-// 랭킹 화면(/preview/ranking): 랭킹 7종 · 월드 · 날짜 · 쪽 · 이름 찾기.
-// 주소의 ?type=&date=&world_name=&page=&name= 과 화면 상태를 맞춘다(뒤로 가기 지원).
+// 랭킹 화면(/preview/ranking): 공식 랭킹 7종 · 월드 · 날짜 · 쪽 · 이름 찾기, 그리고 자체 수집 랭킹(아이템·스펙).
+// 주소의 ?view=&type=&date=&world_name=&page=&name= 과 화면 상태를 맞춘다(뒤로 가기 지원).
 import "../styles/ranking.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
@@ -11,7 +11,8 @@ import { Skeleton } from "../components/Skeleton.jsx";
 import { Freshness } from "../components/Freshness.jsx";
 import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
-import { TabPanel, Tabs } from "../components/Tabs.jsx";
+import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
+import { ItemRanking, SPEC_METRICS, SpecRanking } from "./ranking/Collected.jsx";
 import { RANKING_PAGE_SIZE, findCharacterRank, loadRankingPage } from "../lib/data.js";
 import { formatComma, formatDateDot, formatKoreanUnits, kstToday, shiftDate, toNumber } from "../lib/format.js";
 import { DEFAULT_WORLD, RANKING_DATE_FLOOR, RANKING_TYPES, WORLDS, getRankingType, urls } from "../lib/game.js";
@@ -368,7 +369,113 @@ function RankingSkeleton({ count = 8 }) {
   );
 }
 
+/** @typedef {"official" | "item" | "spec"} View */
+
+const VIEW_OPTIONS = [
+  { value: "official", label: "공식 랭킹" },
+  { value: "item", label: "아이템" },
+  { value: "spec", label: "스펙" }
+];
+
+/** @returns {View} */
+function readView() {
+  const view = new URLSearchParams(window.location.search).get("view");
+  return view === "item" || view === "spec" ? view : "official";
+}
+
+/** @param {{ view: View, onView: (view: View) => void }} props */
+function ViewSwitch({ view, onView }) {
+  return (
+    <div class="crk-switch">
+      <Segmented name="rk-view" legend="랭킹 종류" value={view} onChange={(value) => onView(/** @type {View} */ (value))} options={VIEW_OPTIONS} />
+    </div>
+  );
+}
+
+/** 아이템·스펙 랭킹 주소 값. */
+function readCollectedQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const worldParam = String(params.get("world_name") || "");
+  const metric = String(params.get("metric") || "");
+  return {
+    slot: String(params.get("slot") || "무기").slice(0, 20),
+    family: String(params.get("family") || "").slice(0, 60),
+    world: WORLDS.includes(worldParam) ? worldParam : "",
+    page: Math.max(1, Math.min(500, Math.floor(Number(params.get("page")) || 1))),
+    noEmblem: params.get("emblem") === "without",
+    metric: SPEC_METRICS.some((entry) => entry.id === metric) ? metric : SPEC_METRICS[0].id
+  };
+}
+
+/** @param {View} view @param {ReturnType<typeof readCollectedQuery>} query */
+function collectedUrl(view, query) {
+  const params = new URLSearchParams({ view });
+  if (view === "item") {
+    params.set("slot", query.slot);
+    if (query.family) params.set("family", query.family);
+    if (query.noEmblem) params.set("emblem", "without");
+  } else {
+    params.set("metric", query.metric);
+  }
+  if (query.world) params.set("world_name", query.world);
+  if (query.page > 1) params.set("page", String(query.page));
+  return `/preview/ranking?${params}`;
+}
+
+/** @param {{ view: "item" | "spec", onView: (view: View) => void }} props */
+function CollectedRanking({ view, onView }) {
+  const [query, setQuery] = useState(readCollectedQuery);
+  useEffect(() => {
+    const onPop = () => setQuery(readCollectedQuery());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  useEffect(() => {
+    document.title = `${view === "item" ? "아이템 랭킹" : "스펙 랭킹"} · 메이플M 플러스`;
+  }, [view]);
+  const onQuery = (/** @type {any} */ patch) => {
+    const next = { ...query, ...patch };
+    setQuery(next);
+    const url = collectedUrl(view, next);
+    if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState(null, "", url);
+    if (patch.page) window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  };
+  return (
+    <div class="rk">
+      <header class="page-head page-head--rank tone-gold">
+        <Aurora tone="sky" />
+        <Particles count={14} />
+        <span class="page-head__icon" key={`icon-${view}`} aria-hidden="true">
+          <Icon name={view === "item" ? "medal" : "bolt"} size={28} />
+        </span>
+        <h1 class="page-head__title display">
+          <SplitText key={view} text={view === "item" ? "아이템 랭킹" : "스펙 랭킹"} />
+        </h1>
+      </header>
+      <ViewSwitch view={view} onView={onView} />
+      {view === "item" ? <ItemRanking query={query} onQuery={onQuery} /> : <SpecRanking query={query} onQuery={onQuery} />}
+    </div>
+  );
+}
+
 export function Ranking() {
+  const [view, setView] = useState(readView);
+  useEffect(() => {
+    const onPop = () => setView(readView());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const onView = (/** @type {View} */ next) => {
+    if (next === view) return;
+    const url = next === "official" ? "/preview/ranking" : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
+    window.history.pushState(null, "", url);
+    setView(next);
+  };
+  return view === "official" ? <OfficialRanking onView={onView} /> : <CollectedRanking key={view} view={view} onView={onView} />;
+}
+
+/** @param {{ onView: (view: View) => void }} props */
+function OfficialRanking({ onView }) {
   const [query, setQuery] = useState(readQuery);
   const [state, setState] = useState(/** @type {{ key: string, status: "loading" | "ready" | "error", result?: RankingPage, error?: any }} */ ({ key: "", status: "loading" }));
   const [attempt, setAttempt] = useState(0);
@@ -491,6 +598,8 @@ export function Ranking() {
           <SplitText key={type.id} text={type.label} />
         </h1>
       </header>
+
+      <ViewSwitch view="official" onView={onView} />
 
       <Tabs idBase="rk" label="랭킹 종류" scrollable value={query.type} onChange={(id) => update({ type: id })} items={tabItems} />
 

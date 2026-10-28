@@ -1,4 +1,6 @@
 // 장비 탭: 프리셋 전환 · 장비창 배치 그리드 · 툴팁(마우스, 공유 버튼) · 자세히 보기(하단 시트, 공유).
+// 툴팁 스타일은 캐릭터 화면 CSS에 있다(랭킹 화면의 장비 시트도 같이 쓴다).
+import "../../styles/character.css";
 import { createPortal } from "preact/compat";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
