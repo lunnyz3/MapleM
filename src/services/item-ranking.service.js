@@ -39,7 +39,9 @@ function finiteOrNull(value) {
 
 /**
  * Stores a character's items (worn + presets) and spec summary. Items of that character not in
- * this response are removed, so sold or replaced items leave the ranking.
+ * this response are removed, so sold or replaced items leave the ranking. Bulk collection
+ * (`rankedOnly`) keeps only ranked-family items to bound the database; site lookups keep all
+ * items (the compare page scores every slot).
  * Returns the collected result, or null when nothing was stored.
  */
 async function recordCharacterItems({
@@ -52,6 +54,7 @@ async function recordCharacterItems({
   combatPower = null,
   maxDamage = null,
   source = "lookup",
+  rankedOnly = false,
   now = new Date()
 }) {
   const key = String(ocid || "").trim();
@@ -66,32 +69,35 @@ async function recordCharacterItems({
     characterLevel: Number(characterLevel) || 0,
     attackType: collected.attackType
   };
-  await EquipmentItem.bulkWrite(
-    collected.items.map((entry) => ({
-      updateOne: {
-        filter: { ocid: key, fingerprint: entry.fingerprint },
-        update: {
-          $set: {
-            ...owner,
-            slot: entry.slot,
-            family: entry.family,
-            label: entry.label,
-            itemName: String(entry.item?.item_name || ""),
-            starforce: Number(entry.item?.starforce_upgrade) || 0,
-            score: entry.score,
-            scoreWithoutEmblem: entry.scoreWithoutEmblem,
-            scoreVersion: SCORE_VERSION,
-            item: entry.item,
-            source,
-            checkedAt: now
-          }
-        },
-        upsert: true
-      }
-    })),
-    { ordered: false }
-  );
-  await EquipmentItem.deleteMany({ ocid: key, fingerprint: { $nin: collected.items.map((entry) => entry.fingerprint) } });
+  const stored = rankedOnly ? collected.items.filter((entry) => entry.family) : collected.items;
+  if (stored.length) {
+    await EquipmentItem.bulkWrite(
+      stored.map((entry) => ({
+        updateOne: {
+          filter: { ocid: key, fingerprint: entry.fingerprint },
+          update: {
+            $set: {
+              ...owner,
+              slot: entry.slot,
+              family: entry.family,
+              label: entry.label,
+              itemName: String(entry.item?.item_name || ""),
+              starforce: Number(entry.item?.starforce_upgrade) || 0,
+              score: entry.score,
+              scoreWithoutEmblem: entry.scoreWithoutEmblem,
+              scoreVersion: SCORE_VERSION,
+              item: entry.item,
+              source,
+              checkedAt: now
+            }
+          },
+          upsert: true
+        }
+      })),
+      { ordered: false }
+    );
+  }
+  await EquipmentItem.deleteMany({ ocid: key, fingerprint: { $nin: stored.map((entry) => entry.fingerprint) } });
 
   const best = collected.best || {};
   const spec = {

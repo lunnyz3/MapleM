@@ -1,8 +1,8 @@
-// 레벨 N 이상 캐릭터를 한 번 훑어 장비를 모은다(아이템·스펙 랭킹).
+// 랭킹·길드에서 찾을 수 있는 캐릭터를 한 번 훑어 장비를 모은다(아이템·스펙 랭킹).
 // 넥슨 랭킹은 상위 1만 명까지라서, 랭킹 캐릭터들이 속한 길드와 길드 랭킹의 길드를 모두 열어
 // 길드원 레벨로 대상을 넓힌다. 오늘 이미 모은 캐릭터는 건너뛴다(--force 면 다시).
 //
-//   node scripts/data/sweep-characters.js --min-level 270 [--force] [--dry-run]
+//   node scripts/data/sweep-characters.js [--min-level 0] [--force] [--dry-run]
 const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
@@ -28,7 +28,8 @@ const {
 } = require("../../src/services/maplestorym.service");
 
 const args = process.argv.slice(2);
-const minLevel = Number(args[args.indexOf("--min-level") + 1]) || 270;
+const minLevelIndex = args.indexOf("--min-level");
+const minLevel = minLevelIndex >= 0 ? Number(args[minLevelIndex + 1]) || 0 : 0;
 const force = args.includes("--force");
 const dryRun = args.includes("--dry-run");
 
@@ -80,11 +81,11 @@ async function fetchGuildMembers(worldName, guildName) {
 (async () => {
   await mongoose.connect(process.env.MONGODB_URI);
   const loadRows = async () => {
-    const { rows, stats } = await sweepCandidates({ fetchRanking, fetchGuildMembers, minLevel });
+    const { rows, stats } = await sweepCandidates({ fetchRanking, fetchGuildMembers, minLevel, guildWorkers: 6 });
     console.log(`candidates Lv.${minLevel}+: ${rows.length} (${JSON.stringify(stats)})`);
     return { date: null, rows: dryRun ? [] : rows };
   };
-  const collector = createItemCollector({ ...collectorDeps, loadRows, workers: 4, delayMs: 0 });
+  const collector = createItemCollector({ ...collectorDeps, loadRows, workers: 6, delayMs: 0 });
   const timer = setInterval(() => {
     const status = collector.getStatus();
     if (status.total) console.log(`${status.state} ${status.saved + status.skipped + status.failed}/${status.total} (saved ${status.saved}, skipped ${status.skipped}, failed ${status.failed})`);
