@@ -1,0 +1,629 @@
+{
+ "name": "hexa-stat.json",
+ "description": "HEXA 스탯 값표·강화 규칙",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "values",
+     "source": {
+      "extractedAt": "2026-09-20T18:04:27+09:00",
+      "files": [
+       {
+        "file": "7293949.msm",
+        "sha256": "c9d625513d04ab245d2309a9aa6156b58da59576a7b4f6478b4f1ac0232ff352"
+       },
+       {
+        "file": "7922143.msm",
+        "sha256": "d648c9187a9c6f7da805d4e7745989ef1fa37e3a9d3ba17aaab539850efa8c50"
+       },
+       {
+        "file": "7667177.msm",
+        "sha256": "5de3e0323e21de0161878872b94014a994d10c7a0980667e9fbd3aac38abfc56"
+       },
+       {
+        "file": "7910308.msm",
+        "sha256": "9a578826833533f58ce403a85a1204b29d7a6334cc9f4f5ec40d2ea9d2d8652d"
+       }
+      ],
+      "reference": "데이터분석 codex/hexa-stat-data-20260920 · 8a2ab23",
+      "valueSemantics": "각 레벨에 도달한 상태의 능력치 총량. 전 레벨에 매번 더할 증가량이 아님.",
+      "costSemantics": "현재 메인 스탯 레벨 기준 1회 강화 비용. 총합 레벨 또는 메인 레벨 상승 보장 비용이 아님."
+     },
+     "options": [
+      {
+       "code": "HexaStat_1",
+       "name": "물리/마법 공격력",
+       "unit": "수치",
+       "main": [
+        350,
+        500,
+        700,
+        900,
+        1100,
+        1400,
+        1700,
+        2200,
+        2700,
+        3400
+       ],
+       "sub": [
+        175,
+        250,
+        350,
+        450,
+        550,
+        700,
+        850,
+        1100,
+        1350,
+        1700
+       ]
+      },
+      {
+       "code": "HexaStat_2",
+       "name": "물리/마법 대미지",
+       "unit": "%",
+       "main": [
+        1.9,
+        2.7,
+        3.8,
+        4.9,
+        6,
+        7.6,
+        9.2,
+        11.9,
+        14.6,
+        18.4
+       ],
+       "sub": [
+        1,
+        1.4,
+        1.9,
+        2.5,
+        3,
+        3.8,
+        4.6,
+        6,
+        7.3,
+        9.2
+       ]
+      },
+      {
+       "code": "HexaStat_3",
+       "name": "치명타 피해",
+       "unit": "%",
+       "main": [
+        1.8,
+        2.6,
+        3.6,
+        4.6,
+        5.6,
+        7.1,
+        8.6,
+        11.1,
+        13.6,
+        17.1
+       ],
+       "sub": [
+        0.9,
+        1.3,
+        1.8,
+        2.3,
+        2.8,
+        3.6,
+        4.3,
+        5.6,
+        6.8,
+        8.6
+       ]
+      },
+      {
+       "code": "HexaStat_4",
+       "name": "최대 대미지",
+       "unit": "수치",
+       "main": [
+        50000000,
+        70000000,
+        100000000,
+        130000000,
+        160000000,
+        210000000,
+        260000000,
+        330000000,
+        400000000,
+        500000000
+       ],
+       "sub": [
+        25000000,
+        35000000,
+        50000000,
+        65000000,
+        80000000,
+        105000000,
+        130000000,
+        165000000,
+        200000000,
+        250000000
+       ]
+      },
+      {
+       "code": "HexaStat_5",
+       "name": "최종 대미지",
+       "unit": "%",
+       "main": [
+        1.2,
+        1.7,
+        2.4,
+        3.1,
+        3.8,
+        4.8,
+        5.8,
+        7.5,
+        9.2,
+        11.6
+       ],
+       "sub": [
+        0.6,
+        0.9,
+        1.2,
+        1.6,
+        1.9,
+        2.4,
+        2.9,
+        3.8,
+        4.6,
+        5.8
+       ]
+      },
+      {
+       "code": "HexaStat_6",
+       "name": "방어율 무시",
+       "unit": "%",
+       "main": [
+        1,
+        1.4,
+        2,
+        2.6,
+        3.2,
+        4.1,
+        5,
+        6.5,
+        8,
+        10.1
+       ],
+       "sub": [
+        0.5,
+        0.7,
+        1,
+        1.3,
+        1.6,
+        2.1,
+        2.5,
+        3.3,
+        4,
+        5.1
+       ]
+      }
+     ],
+     "rule": "각 레벨에 도달했을 때의 총량(증가분 아님). '물리/마법 공격력'은 깡공",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "equipmentHexa=MSM.createHexaStat({",
+     "prettyLine": 131316
+    },
+    {
+     "id": "enhance",
+     "costs": [
+      {
+       "currentMainLevel": 0,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 10,
+       "mainChancePercent": 35,
+       "sub1ChancePercent": 32.5,
+       "sub2ChancePercent": 32.5,
+       "sourceCode": "HexaCoreStat_1_01"
+      },
+      {
+       "currentMainLevel": 1,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 10,
+       "mainChancePercent": 35,
+       "sub1ChancePercent": 32.5,
+       "sub2ChancePercent": 32.5,
+       "sourceCode": "HexaCoreStat_1_02"
+      },
+      {
+       "currentMainLevel": 2,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 10,
+       "mainChancePercent": 35,
+       "sub1ChancePercent": 32.5,
+       "sub2ChancePercent": 32.5,
+       "sourceCode": "HexaCoreStat_1_03"
+      },
+      {
+       "currentMainLevel": 3,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 20,
+       "mainChancePercent": 20,
+       "sub1ChancePercent": 40,
+       "sub2ChancePercent": 40,
+       "sourceCode": "HexaCoreStat_1_04"
+      },
+      {
+       "currentMainLevel": 4,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 20,
+       "mainChancePercent": 20,
+       "sub1ChancePercent": 40,
+       "sub2ChancePercent": 40,
+       "sourceCode": "HexaCoreStat_1_05"
+      },
+      {
+       "currentMainLevel": 5,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 20,
+       "mainChancePercent": 20,
+       "sub1ChancePercent": 40,
+       "sub2ChancePercent": 40,
+       "sourceCode": "HexaCoreStat_1_06"
+      },
+      {
+       "currentMainLevel": 6,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 30,
+       "mainChancePercent": 20,
+       "sub1ChancePercent": 40,
+       "sub2ChancePercent": 40,
+       "sourceCode": "HexaCoreStat_1_07"
+      },
+      {
+       "currentMainLevel": 7,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 30,
+       "mainChancePercent": 15,
+       "sub1ChancePercent": 42.5,
+       "sub2ChancePercent": 42.5,
+       "sourceCode": "HexaCoreStat_1_08"
+      },
+      {
+       "currentMainLevel": 8,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 30,
+       "mainChancePercent": 10,
+       "sub1ChancePercent": 45,
+       "sub2ChancePercent": 45,
+       "sourceCode": "HexaCoreStat_1_09"
+      },
+      {
+       "currentMainLevel": 9,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 50,
+       "mainChancePercent": 5,
+       "sub1ChancePercent": 47.5,
+       "sub2ChancePercent": 47.5,
+       "sourceCode": "HexaCoreStat_1_10"
+      },
+      {
+       "currentMainLevel": 10,
+       "solErdaEnergyRaw": 0,
+       "solErdaFragments": 50,
+       "mainChancePercent": 0,
+       "sub1ChancePercent": 50,
+       "sub2ChancePercent": 50,
+       "sourceCode": "HexaCoreStat_1_11"
+      }
+     ],
+     "rule": "현재 메인 레벨 기준 1회 강화 비용·확률. 메인이 아니면 10 미만인 부가 스탯에 나머지 확률을 나눈다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "Td=[35,35,35,20,20,20,20,15,10,5,0]",
+     "prettyLine": 6240
+    },
+    {
+     "id": "limits",
+     "value": {
+      "perStatMax": 10,
+      "totalMax": 20
+     },
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "Td=[35,35,35,20,20,20,20,15,10,5,0]",
+     "prettyLine": 6240
+    },
+    {
+     "id": "superweek",
+     "rule": "HEXA 슈퍼위크(2026-09-27, 2026-10-02): 메인 레벨 5~9에서 메인 확률 ×1.2",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "superweekHexa:[\"2026-09-27\",\"2026-10-02\"]",
+     "prettyLine": 17362
+    },
+    {
+     "id": "reset",
+     "value": {
+      "mesoPerReset": 10000000,
+      "resetMinTotal": 10
+     },
+     "rule": "초기화 1회 1,000만 메소, 총합 10레벨 이상에서 초기화 전략 고려(시뮬레이터 설정)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "superweekHexa:[\"2026-09-27\",\"2026-10-02\"]",
+     "prettyLine": 17362
+    },
+    {
+     "id": "summation",
+     "rule": "캐릭터 합산은 API hexamatrix_stat의 activate_flag='1' 코어 main/sub_1/sub_2 문구를 파싱('HEXA' 출처, 방무 그룹은 쥬얼세트·축복과 공유)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "xt.activate_flag===\"1\"&&(De(\"HEXA\"",
+     "prettyLine": 1264
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "HEXA 스탯 값표와 강화 규칙, 솔 야누스",
+   "entries": [
+    {
+     "id": "guide:main",
+     "rows": [
+      {
+       "level": 1,
+       "attack": 350,
+       "damage": "1.90%",
+       "criticalDamage": "1.80%",
+       "finalDamage": "1.20%",
+       "ignoreDefense": "1.00%",
+       "maxDamage": "50,000,000"
+      },
+      {
+       "level": 2,
+       "attack": 500,
+       "damage": "2.70%",
+       "criticalDamage": "2.60%",
+       "finalDamage": "1.70%",
+       "ignoreDefense": "1.40%",
+       "maxDamage": "70,000,000"
+      },
+      {
+       "level": 3,
+       "attack": 700,
+       "damage": "3.80%",
+       "criticalDamage": "3.60%",
+       "finalDamage": "2.40%",
+       "ignoreDefense": "2.00%",
+       "maxDamage": "100,000,000"
+      },
+      {
+       "level": 4,
+       "attack": 900,
+       "damage": "4.90%",
+       "criticalDamage": "4.60%",
+       "finalDamage": "3.10%",
+       "ignoreDefense": "2.60%",
+       "maxDamage": "130,000,000"
+      },
+      {
+       "level": 5,
+       "attack": 1100,
+       "damage": "6.00%",
+       "criticalDamage": "5.60%",
+       "finalDamage": "3.80%",
+       "ignoreDefense": "3.20%",
+       "maxDamage": "160,000,000"
+      },
+      {
+       "level": 6,
+       "attack": 1400,
+       "damage": "7.60%",
+       "criticalDamage": "7.10%",
+       "finalDamage": "4.80%",
+       "ignoreDefense": "4.10%",
+       "maxDamage": "320,000,000"
+      },
+      {
+       "level": 7,
+       "attack": 1700,
+       "damage": "9.20%",
+       "criticalDamage": "8.60%",
+       "finalDamage": "5.80%",
+       "ignoreDefense": "5.00%",
+       "maxDamage": "260,000,000"
+      },
+      {
+       "level": 8,
+       "attack": 2200,
+       "damage": "11.90%",
+       "criticalDamage": "11.10%",
+       "finalDamage": "7.50%",
+       "ignoreDefense": "6.50%",
+       "maxDamage": "330,000,000"
+      },
+      {
+       "level": 9,
+       "attack": 2700,
+       "damage": "14.60%",
+       "criticalDamage": "13.60%",
+       "finalDamage": "9.20%",
+       "ignoreDefense": "8.00%",
+       "maxDamage": "400,000,000"
+      },
+      {
+       "level": 10,
+       "attack": 3400,
+       "damage": "18.40%",
+       "criticalDamage": "17.10%",
+       "finalDamage": "11.60%",
+       "ignoreDefense": "10.10%",
+       "maxDamage": "500,000,000"
+      }
+     ],
+     "unit": "깡공=정수, 나머지 문자열 그대로(%, 쉼표 절대값)",
+     "note": "Lv.6 최대 대미지 320,000,000은 오기로 보임(Lv.7 260,000,000)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "y7=Mc([[350,\"1",
+     "prettyLine": 44828
+    },
+    {
+     "id": "guide:sub",
+     "rows": [
+      {
+       "level": 1,
+       "attack": 175,
+       "damage": "1.00%",
+       "criticalDamage": "0.90%",
+       "finalDamage": "0.60%",
+       "ignoreDefense": "0.50%",
+       "maxDamage": "25,000,000"
+      },
+      {
+       "level": 2,
+       "attack": 250,
+       "damage": "1.40%",
+       "criticalDamage": "1.30%",
+       "finalDamage": "0.90%",
+       "ignoreDefense": "0.70%",
+       "maxDamage": "35,000,000"
+      },
+      {
+       "level": 3,
+       "attack": 350,
+       "damage": "1.90%",
+       "criticalDamage": "1.80%",
+       "finalDamage": "1.20%",
+       "ignoreDefense": "1.00%",
+       "maxDamage": "50,000,000"
+      },
+      {
+       "level": 4,
+       "attack": 450,
+       "damage": "2.50%",
+       "criticalDamage": "2.30%",
+       "finalDamage": "1.60%",
+       "ignoreDefense": "1.30%",
+       "maxDamage": "65,000,000"
+      },
+      {
+       "level": 5,
+       "attack": 550,
+       "damage": "3.00%",
+       "criticalDamage": "2.80%",
+       "finalDamage": "1.90%",
+       "ignoreDefense": "1.60%",
+       "maxDamage": "80,000,000"
+      },
+      {
+       "level": 6,
+       "attack": 700,
+       "damage": "3.80%",
+       "criticalDamage": "3.60%",
+       "finalDamage": "2.40%",
+       "ignoreDefense": "2.10%",
+       "maxDamage": "105,000,000"
+      },
+      {
+       "level": 7,
+       "attack": 850,
+       "damage": "4.60%",
+       "criticalDamage": "4.30%",
+       "finalDamage": "2.90%",
+       "ignoreDefense": "2.50%",
+       "maxDamage": "130,000,000"
+      },
+      {
+       "level": 8,
+       "attack": 1100,
+       "damage": "6.00%",
+       "criticalDamage": "5.60%",
+       "finalDamage": "3.80%",
+       "ignoreDefense": "3.30%",
+       "maxDamage": "165,000,000"
+      },
+      {
+       "level": 9,
+       "attack": 1350,
+       "damage": "7.30%",
+       "criticalDamage": "6.80%",
+       "finalDamage": "4.60%",
+       "ignoreDefense": "4.00%",
+       "maxDamage": "200,000,000"
+      },
+      {
+       "level": 10,
+       "attack": 1700,
+       "damage": "9.20%",
+       "criticalDamage": "8.60%",
+       "finalDamage": "5.80%",
+       "ignoreDefense": "5.10%",
+       "maxDamage": "250,000,000"
+      }
+     ],
+     "unit": "위와 같음",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "X7=Mc([[175,\"1",
+     "prettyLine": 44840
+    },
+    {
+     "id": "charpage:parse-rule",
+     "rule": "활성(activate_flag=1) 스탯 코어의 main/sub 문구를 파싱(API 문구에 수치 포함). 문구에 숫자가 없을 때만 레벨×가중치(메인 1, 부가 0.75)를 대신 쓴다",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "[\"sub_1_stat\",\"sub_1_stat_level\",.75]",
+     "prettyLine": 15747
+    },
+    {
+     "id": "sim:enhance-odds",
+     "rule": "메인 레벨 0~2: 메인 확률 35%·조각 10, 3~6: 20%·20, 7: 15%·30, 8: 10%·40, 9: 5%·50. 실패 시 두 부가 스탯이 (1-p)/2씩. 총 20회. 이벤트 시 메인 5레벨 이상 확률×1.2. 10레벨인 스탯은 다시 뽑음",
+     "site": "maplemworlds",
+     "file": "HexaSimulatorPage-BUSm0qBa.js",
+     "anchor": "t<=2?{prob:.35*o,cost:10}",
+     "prettyLine": 49
+    },
+    {
+     "id": "sim:market-defaults",
+     "value": {
+      "mesoPerFragment": 18000000,
+      "krwPer100mMeso": 650,
+      "feeDivisor": 0.9
+     },
+     "unit": "메소/조각, 원/1억 메소",
+     "note": "시뮬레이터 기본 입력(시세 가정)",
+     "site": "maplemworlds",
+     "file": "HexaSimulatorPage-BUSm0qBa.js",
+     "anchor": "n.useState(18e6)",
+     "prettyLine": 107
+    },
+    {
+     "id": "charpage:sol-janus",
+     "rule": "솔 야누스 Lv.L(0~30): 최종 대미지 = 0.5×L + (L≥10 ? 3 : 0) + (L≥20 ? 5 : 0) + (L≥30 ? 7 : 0). Lv.30 = 30%",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "label:\"솔 야누스\"",
+     "prettyLine": 15774
+    }
+   ]
+  }
+ }
+}

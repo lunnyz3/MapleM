@@ -1,0 +1,1065 @@
+{
+  "_meta": {
+    "description": "아이템 세트 효과(장착 개수별 누적값). 장비 프리셋마다 아이템 이름으로 세트 개수를 센다.",
+    "sources": [
+      "maplemworlds.kr 공개 JS index-5Pk4vujo.js — 아케인·앱솔·칠흑 표(앵커 r8={아케인:{2:), 칠흑 아이템 이름(앵커 g=[\"루즈 컨트롤\"), 럭키 아이템(앵커 for(const R of[\"아케인\",\"앱솔\"])), 마스터 라벨 고정값(앵커 b8=, c8=)",
+      "maplemtool.com tables.d39c9358b9414219.json msm-set-effects.json — 그 밖의 장비 세트 표, 럭키·빌림 규칙(_rules.lucky, _rules.borrow), 캐시 세트 구분"
+    ],
+    "extractedAt": "2026-10-28",
+    "notes": [
+      "두 사이트 모두 아케인·앱솔·칠흑 값이 같다.",
+      "maplemworlds는 그 밖의 장비 세트(군단장 전리품, 160제, 루타비스, 차원 균열의 반지 등)를 캐릭터 합산에 넣지 않는다. maplemtool과 넥슨 set-effect API는 넣는다. 우리는 넣는다(넥슨 API가 현재 착용 세트로 이 효과를 보고하므로).",
+      "provenance가 없는 행은 maplemtool 표에 출처 표기가 없던 값이다(추정 포함 가능). 현재 착용 프리셋은 calibration-report가 API set_info와 대조한다.",
+      "성흔 세트는 두 사이트 모두 빼므로 뺀다(성흔은 수동 입력 항목)."
+    ]
+  },
+  "sets": [
+    {
+      "id": "arcane",
+      "label": "아케인",
+      "apiNames": [
+        "아케인셰이드 세트"
+      ],
+      "match": {
+        "nameIncludes": [
+          "아케인셰이드"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "maxDamage": 165000000,
+            "finalDamage": 7,
+            "criticalDamage": 50,
+            "bossDamage": 17,
+            "magicalDamagePercent": 20,
+            "physicalDamagePercent": 20,
+            "magicalAttackPercent": 30,
+            "physicalAttackPercent": 30,
+            "ignoreDefense": 15
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "maxDamage": 210000000,
+            "finalDamage": 9,
+            "criticalDamage": 60,
+            "bossDamage": 19,
+            "magicalDamagePercent": 24,
+            "physicalDamagePercent": 24,
+            "magicalAttackPercent": 34,
+            "physicalAttackPercent": 34,
+            "ignoreDefense": 20
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "maxDamage": 255000000,
+            "finalDamage": 12,
+            "criticalDamage": 80,
+            "bossDamage": 21,
+            "magicalDamagePercent": 28,
+            "physicalDamagePercent": 28,
+            "magicalAttackPercent": 38,
+            "physicalAttackPercent": 38,
+            "ignoreDefense": 25
+          }
+        },
+        {
+          "count": 5,
+          "stats": {
+            "maxDamage": 300000000,
+            "finalDamage": 16,
+            "criticalDamage": 104,
+            "bossDamage": 24,
+            "magicalDamagePercent": 32,
+            "physicalDamagePercent": 32,
+            "magicalAttackPercent": 42,
+            "physicalAttackPercent": 42,
+            "ignoreDefense": 30
+          }
+        },
+        {
+          "count": 6,
+          "stats": {
+            "maxDamage": 375000000,
+            "finalDamage": 21,
+            "criticalDamage": 128,
+            "bossDamage": 28,
+            "magicalDamagePercent": 37,
+            "physicalDamagePercent": 37,
+            "magicalAttackPercent": 47,
+            "physicalAttackPercent": 47,
+            "ignoreDefense": 35
+          }
+        },
+        {
+          "count": 7,
+          "stats": {
+            "maxDamage": 525000000,
+            "finalDamage": 27,
+            "criticalDamage": 158,
+            "bossDamage": 33,
+            "magicalDamagePercent": 62,
+            "physicalDamagePercent": 62,
+            "magicalAttackPercent": 77,
+            "physicalAttackPercent": 77,
+            "ignoreDefense": 40
+          }
+        }
+      ],
+      "from": "maplemworlds r8 (maplemtool msm-set-effects와 같은 값)"
+    },
+    {
+      "id": "absolab",
+      "label": "앱솔",
+      "apiNames": [
+        "앱솔랩스 세트"
+      ],
+      "match": {
+        "nameIncludes": [
+          "앱솔랩스"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "maxDamage": 5500000,
+            "criticalDamage": 22,
+            "bossDamage": 6,
+            "magicalDamagePercent": 5,
+            "physicalDamagePercent": 5,
+            "magicalAttackPercent": 5,
+            "physicalAttackPercent": 5,
+            "ignoreDefense": 5
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "maxDamage": 11000000,
+            "criticalDamage": 24,
+            "bossDamage": 7,
+            "magicalDamagePercent": 6.5,
+            "physicalDamagePercent": 6.5,
+            "magicalAttackPercent": 6.5,
+            "physicalAttackPercent": 6.5,
+            "ignoreDefense": 8
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "maxDamage": 18500000,
+            "criticalDamage": 69,
+            "bossDamage": 8,
+            "magicalDamagePercent": 8,
+            "physicalDamagePercent": 8,
+            "magicalAttackPercent": 8,
+            "physicalAttackPercent": 8,
+            "ignoreDefense": 11
+          }
+        },
+        {
+          "count": 5,
+          "stats": {
+            "maxDamage": 28000000,
+            "criticalDamage": 76,
+            "bossDamage": 9,
+            "magicalDamagePercent": 9.5,
+            "physicalDamagePercent": 9.5,
+            "magicalAttackPercent": 9.5,
+            "physicalAttackPercent": 9.5,
+            "ignoreDefense": 14
+          }
+        },
+        {
+          "count": 6,
+          "stats": {
+            "maxDamage": 38500000,
+            "criticalDamage": 83,
+            "bossDamage": 10,
+            "magicalDamagePercent": 11,
+            "physicalDamagePercent": 11,
+            "magicalAttackPercent": 11,
+            "physicalAttackPercent": 11,
+            "ignoreDefense": 17
+          }
+        },
+        {
+          "count": 7,
+          "stats": {
+            "maxDamage": 49000000,
+            "criticalDamage": 130,
+            "bossDamage": 11,
+            "magicalDamagePercent": 50,
+            "physicalDamagePercent": 50,
+            "magicalAttackPercent": 57,
+            "physicalAttackPercent": 57,
+            "ignoreDefense": 23
+          }
+        }
+      ],
+      "from": "maplemworlds r8 (maplemtool과 같은 값)"
+    },
+    {
+      "id": "chaos",
+      "label": "칠흑",
+      "apiNames": [
+        "칠흑의 보스 세트"
+      ],
+      "match": {
+        "nameIncludes": [
+          "루즈 컨트롤",
+          "마력이 깃든",
+          "몽환의 벨트",
+          "저주받은 청의",
+          "저주받은 적의",
+          "거대한 공포",
+          "고통의 근원",
+          "커맨더 포스 이어링",
+          "창세의 뱃지",
+          "미트라의 분노",
+          "감시자의 눈"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "maxDamage": 3000000,
+            "bossDamage": 3
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "maxDamage": 7500000,
+            "finalDamage": 3,
+            "bossDamage": 3
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "maxDamage": 12000000,
+            "finalDamage": 5,
+            "bossDamage": 6,
+            "ignoreDefense": 5
+          }
+        },
+        {
+          "count": 5,
+          "stats": {
+            "maxDamage": 16500000,
+            "finalDamage": 7,
+            "bossDamage": 6,
+            "ignoreDefense": 10
+          }
+        },
+        {
+          "count": 6,
+          "stats": {
+            "maxDamage": 19500000,
+            "finalDamage": 9,
+            "bossDamage": 9,
+            "ignoreDefense": 15
+          }
+        },
+        {
+          "count": 7,
+          "stats": {
+            "maxDamage": 22500000,
+            "finalDamage": 12,
+            "bossDamage": 12,
+            "ignoreDefense": 20
+          }
+        },
+        {
+          "count": 8,
+          "stats": {
+            "maxDamage": 45000000,
+            "finalDamage": 20,
+            "bossDamage": 20,
+            "ignoreDefense": 25
+          }
+        },
+        {
+          "count": 9,
+          "stats": {
+            "maxDamage": 60000000,
+            "finalDamage": 28,
+            "bossDamage": 28,
+            "ignoreDefense": 30
+          }
+        }
+      ],
+      "from": "maplemworlds r8·칠흑 아이템 이름 목록 (maplemtool과 같은 값)"
+    },
+    {
+      "id": "도전자의 장비 세트",
+      "label": "도전자의 장비 세트",
+      "apiNames": [
+        "도전자의 장비 세트"
+      ],
+      "match": {
+        "names": [
+          "도전자의 장비 전사 무기 중 택1",
+          "도전자의 상의",
+          "도전자의 하의",
+          "도전자의 모자",
+          "도전자의 장갑",
+          "도전자의 신발",
+          "도전자의 어깨장식",
+          "도전자의 망토"
+        ],
+        "namePrefixes": [
+          "도전자의"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 8,
+          "stats": {
+            "physicalAttackPercent": 45,
+            "physicalDamagePercent": 40,
+            "criticalDamage": 52.5,
+            "magicalAttackPercent": 45,
+            "magicalDamagePercent": 40
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"도전자의 장비 세트\"]",
+      "provenance": "measured · 2026-09 · 0.98"
+    },
+    {
+      "id": "군단장 전리품 세트",
+      "label": "군단장 전리품 세트",
+      "apiNames": [
+        "군단장 전리품 세트"
+      ],
+      "match": {
+        "names": [
+          "카오스 영생의 돌",
+          "영생의 돌",
+          "지옥의 불꽃",
+          "고귀한 이피아의 반지",
+          "검은 노바의 휘장",
+          "폭군의 위상",
+          "매커네이터 펜던트",
+          "도미네이터 펜던트"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 3,
+          "stats": {
+            "bossDamage": 4
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "bossDamage": 7
+          }
+        },
+        {
+          "count": 5,
+          "stats": {
+            "finalDamage": 0.5,
+            "maxDamage": 50000,
+            "bossDamage": 7
+          }
+        },
+        {
+          "count": 6,
+          "stats": {
+            "finalDamage": 2.5,
+            "maxDamage": 250000,
+            "bossDamage": 10
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"군단장 전리품 세트\"]"
+    },
+    {
+      "id": "아스완의 빛 세트",
+      "label": "아스완의 빛 세트",
+      "apiNames": [
+        "아스완의 빛 세트"
+      ],
+      "match": {
+        "names": [
+          "아스완의 빛"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "bossDamage": 3
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"아스완의 빛 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "힐라를 잘 아는 자 세트",
+      "label": "힐라를 잘 아는 자 세트",
+      "apiNames": [
+        "힐라를 잘 아는 자 세트"
+      ],
+      "match": {
+        "names": [
+          "힐라를 잘 아는자"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "bossDamage": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"힐라를 잘 아는 자 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "악몽의 주인 격파자 세트",
+      "label": "악몽의 주인 격파자 세트",
+      "apiNames": [
+        "악몽의 주인 격파자 세트"
+      ],
+      "match": {
+        "names": [
+          "악몽의 주인 격파자"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "bossDamage": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"악몽의 주인 격파자 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "무릉도장의 투신 세트",
+      "label": "무릉도장의 투신 세트",
+      "apiNames": [
+        "무릉도장의 투신 세트"
+      ],
+      "match": {
+        "names": [
+          "10갑자의 내공을 가진 자",
+          "무릉도장의 투신"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "magicalDamagePercent": 5,
+            "physicalDamagePercent": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"무릉도장의 투신 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "RE:BOOST 칭호 훈장 세트",
+      "label": "RE:BOOST 칭호 훈장 세트",
+      "apiNames": [
+        "RE:BOOST 칭호 훈장 세트"
+      ],
+      "match": {
+        "names": [
+          "RE:BOOST 칭호",
+          "RE:BOOST 훈장"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "bossDamage": 8,
+            "magicalAttackPercent": 8,
+            "physicalAttackPercent": 8
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"RE:BOOST 칭호 훈장 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "타락한 빛의 인장",
+      "label": "타락한 빛의 인장",
+      "apiNames": [
+        "타락한 빛의 인장"
+      ],
+      "match": {
+        "names": [
+          "타락한 빛의 인장"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "bossDamage": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"타락한 빛의 인장\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "축복받은 커닝M타워 반지",
+      "label": "축복받은 커닝M타워 반지",
+      "apiNames": [
+        "축복받은 커닝M타워 반지"
+      ],
+      "match": {
+        "names": [
+          "축복받은 커닝M반지 (30일)"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "physicalAttackPercent": 10,
+            "magicalAttackPercent": 10
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"축복받은 커닝M타워 반지\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "차원 균열의 반지 세트",
+      "label": "차원 균열의 반지 세트",
+      "apiNames": [
+        "차원 균열의 반지 세트"
+      ],
+      "match": {
+        "names": [
+          "차원 균열의 반지"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "physicalAttackPercent": 3,
+            "magicalAttackPercent": 3
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"차원 균열의 반지 세트\"]"
+    },
+    {
+      "id": "노바 디멘션 전사 세트",
+      "label": "노바 디멘션 세트",
+      "apiNames": [],
+      "match": {
+        "names": [
+          "노바 히아데스 부츠",
+          "노바 히아데스 숄더",
+          "노바 히아데스 클록",
+          "노바 디멘션 심볼"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 9,
+            "bossDamage": 1
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "criticalDamage": 11,
+            "bossDamage": 1.5
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "criticalDamage": 13,
+            "bossDamage": 2
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"노바 디멘션 전사 세트\"]",
+      "apiNamePattern": "^노바 디멘션 .+ 세트$",
+      "provenance": "user-provided-ingame-image · 2026-09 · 1"
+    },
+    {
+      "id": "level160-legendary",
+      "label": "160레벨 세트 (레전더리)",
+      "apiNames": [],
+      "match": {
+        "names": [
+          "펜살리르 센티널캡",
+          "펜살리르 센티널슈트",
+          "펜살리르 센티널글러브",
+          "펜살리르 센티널부츠"
+        ],
+        "namePrefixes": [
+          "펜살리르"
+        ],
+        "grade": "레전더리"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 44.5
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "maxDamage": 500000,
+            "criticalDamage": 49.3
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "maxDamage": 1000000,
+            "criticalDamage": 54.1
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"궁수 160레벨 세트 (레전더리)\"]",
+      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 160레벨 세트 \\(레전더리\\)$"
+    },
+    {
+      "id": "루타비스 세트(레전더리)",
+      "label": "루타비스 세트(레전더리)",
+      "apiNames": [],
+      "match": {
+        "nameIncludes": [
+          "하이네스",
+          "이글아이",
+          "트릭스터",
+          "파프니르"
+        ],
+        "grade": "레전더리"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "maxDamage": 500000,
+            "physicalAttackPercent": 30,
+            "physicalDamagePercent": 25,
+            "criticalDamage": 44.5,
+            "magicalAttackPercent": 30,
+            "magicalDamagePercent": 25,
+            "ignoreDefense": 5
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "maxDamage": 1050000,
+            "physicalAttackPercent": 45,
+            "physicalDamagePercent": 35,
+            "criticalDamage": 49.3,
+            "magicalAttackPercent": 45,
+            "magicalDamagePercent": 35,
+            "ignoreDefense": 10
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "maxDamage": 3150000,
+            "physicalAttackPercent": 50,
+            "physicalDamagePercent": 45,
+            "criticalDamage": 54.1,
+            "magicalAttackPercent": 50,
+            "magicalDamagePercent": 45,
+            "ignoreDefense": 15
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"루타비스 세트(레전더리)\"]",
+      "apiNamePattern": "^루타비스 세트 ?\\(레전더리\\)$"
+    },
+    {
+      "id": "보스 전리품 세트",
+      "label": "보스 전리품 세트",
+      "apiNames": [
+        "보스 전리품 세트"
+      ],
+      "match": {
+        "names": [
+          "혼테일의 목걸이",
+          "카오스 혼테일의 목걸이",
+          "분노한 자쿰의 벨트",
+          "데아 시두스 이어링",
+          "블랙빈 마크",
+          "카오스 핑크빈 마크",
+          "아쿠아틱 레터 눈장식",
+          "응축된 힘의 결정석",
+          "실버블라썸 링",
+          "시그너스의 코히누르(에픽)",
+          "다크 프리미엄 심볼",
+          "시그너스의 코히누르(유니크)",
+          "크리스탈 윈투스 뱃지",
+          "카오스 데아 시두스 이어링",
+          "카오스 골든 클로버 벨트",
+          "핑크빛 성배"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 5,
+          "stats": {
+            "bossDamage": 3
+          }
+        },
+        {
+          "count": 6,
+          "stats": {
+            "bossDamage": 7
+          }
+        },
+        {
+          "count": 7,
+          "stats": {
+            "physicalDamagePercent": 5,
+            "magicalDamagePercent": 5,
+            "bossDamage": 7
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"보스 전리품 세트\"]"
+    },
+    {
+      "id": "루타비스 세트(유니크)",
+      "label": "루타비스 세트(유니크)",
+      "apiNames": [],
+      "match": {
+        "nameIncludes": [
+          "하이네스",
+          "이글아이",
+          "트릭스터",
+          "파프니르"
+        ],
+        "grade": "유니크"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 44.1
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "physicalAttackPercent": 40,
+            "criticalDamage": 48.3,
+            "magicalAttackPercent": 40
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "physicalAttackPercent": 45,
+            "physicalDamagePercent": 40,
+            "criticalDamage": 52.5,
+            "magicalAttackPercent": 45,
+            "magicalDamagePercent": 40
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"루타비스 세트(유니크)\"]",
+      "apiNamePattern": "^루타비스 세트 ?\\(유니크\\)$"
+    },
+    {
+      "id": "level160-unique",
+      "label": "160레벨 세트 (유니크)",
+      "apiNames": [],
+      "match": {
+        "names": [
+          "펜살리르 센티널캡",
+          "펜살리르 센티널슈트",
+          "펜살리르 센티널글러브",
+          "펜살리르 센티널부츠",
+          "우트가르드 보우"
+        ],
+        "namePrefixes": [
+          "펜살리르"
+        ],
+        "nameIncludes": [
+          "우트가르드"
+        ],
+        "grade": "유니크"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 44.1
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "criticalDamage": 48.3
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "criticalDamage": 52.5
+          }
+        },
+        {
+          "count": 5,
+          "stats": {
+            "criticalDamage": 55.2
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"궁수 160레벨 세트 (유니크)\"]",
+      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 160레벨 세트 \\(유니크\\)$"
+    },
+    {
+      "id": "level140-legendary",
+      "label": "140레벨 세트 (레전더리)",
+      "apiNames": [],
+      "match": {
+        "names": [
+          "무스펠 아처햇",
+          "무스펠 아처슈트",
+          "무스펠 아처글러브",
+          "무스펠 아처슈즈"
+        ],
+        "namePrefixes": [
+          "무스펠"
+        ],
+        "grade": "레전더리"
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 42.4
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "criticalDamage": 46.9
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "criticalDamage": 51.5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"궁수 140레벨 세트 (레전더리)\"]",
+      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 140레벨 세트 \\(레전더리\\)$",
+      "provenance": "user-provided-ingame-image · 2026-09 · 1"
+    },
+    {
+      "id": "level140-unique",
+      "label": "140레벨 세트 (유니크)",
+      "apiNames": [],
+      "match": {
+        "names": [
+          "무스펠 아처햇",
+          "무스펠 아처슈트",
+          "무스펠 아처글러브",
+          "무스펠 아처슈즈"
+        ],
+        "namePrefixes": [
+          "무스펠"
+        ],
+        "grade": "유니크"
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "criticalDamage": 42
+          }
+        },
+        {
+          "count": 3,
+          "stats": {
+            "criticalDamage": 46
+          }
+        },
+        {
+          "count": 4,
+          "stats": {
+            "criticalDamage": 50
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"궁수 140레벨 세트 (유니크)\"]",
+      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 140레벨 세트 \\(유니크\\)$"
+    },
+    {
+      "id": "무릉도장의 화신 세트",
+      "label": "무릉도장의 화신 세트",
+      "apiNames": [
+        "무릉도장의 화신 세트"
+      ],
+      "match": {
+        "names": [
+          "100갑자의 내공을 가진 자",
+          "무릉도장의 화신"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "magicalDamagePercent": 10,
+            "physicalDamagePercent": 10
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"무릉도장의 화신 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "아르카누스 정복자 세트",
+      "label": "아르카누스 정복자 세트",
+      "apiNames": [
+        "아르카누스 정복자 세트"
+      ],
+      "match": {
+        "names": [
+          "샤레니안의 빛",
+          "아르카누스 정복자"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 2,
+          "stats": {
+            "bossDamage": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"아르카누스 정복자 세트\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    },
+    {
+      "id": "커스터마이저",
+      "label": "커스터마이저",
+      "apiNames": [
+        "커스터마이저"
+      ],
+      "match": {
+        "names": [
+          "커스터마이저"
+        ]
+      },
+      "weaponSlot": false,
+      "tiers": [
+        {
+          "count": 1,
+          "stats": {
+            "physicalDamagePercent": 1,
+            "magicalDamagePercent": 1,
+            "criticalDamage": 2,
+            "bossDamage": 1
+          }
+        }
+      ],
+      "from": "maplemtool msm-set-effects.json sets[\"커스터마이저\"]",
+      "provenance": "measured · 2026-09 · 0.99"
+    }
+  ],
+  "cash": {
+    "rule": "캐시 세트(마스터 라벨 등)는 장비 프리셋과 무관하므로 넥슨 set-effect API의 set_option 문구를 그대로 읽는다(3세트 물·마 대미지 5·보스 10, 5세트 이상 치명타 피해 10 추가 — 두 사이트 같은 값).",
+    "namePrefixes": [
+      "마스터 "
+    ],
+    "nameIncludes": [
+      "플로라",
+      "포니 기프트",
+      "죽음의 데스",
+      "초롱나비",
+      "페어리",
+      "스페셜"
+    ],
+    "knownNames": [
+      "페어리 세트",
+      "초롱나비 세트",
+      "죽음의 데스 세트",
+      "마스터 타임 세트",
+      "플로라 세트",
+      "포니 기프트 세트",
+      "마스터 블러드 세트",
+      "마스터 스텔라 세트",
+      "마스터 쉐도우 세트",
+      "마스터 별의 전령 세트",
+      "마스터 이터니티 세트",
+      "마스터 메이즈 세트",
+      "마스터 데스티니 세트",
+      "마스터 나이트메어 세트",
+      "마스터 스노우 세트"
+    ]
+  },
+  "excludeApiSetPattern": "성흔",
+  "lucky": {
+    "rule": "무기 칸 아이템 이름에 '제네시스'가 있으면 럭키 아이템. weaponSlot 세트 가운데 이미 3개 이상인 세트마다 개수 +1, 그 무기 스타포스를 세트 스타포스 합에 더한다(두 사이트 같음, maplemworlds는 아케인·앱솔만).",
+    "weaponKeyword": "제네시스",
+    "minCount": 3
+  },
+  "borrow": {
+    "rule": "앱솔랩스를 1개 이상 끼고 아케인셰이드가 정확히 1개면 앱솔랩스 개수 +1, 그 아케인 장비 스타포스를 앱솔랩스 스타포스 합에 더한다(maplemtool _rules.borrow, 2026-07-30 패치 '세트옵션 자동 보정'). maplemworlds에는 없다.",
+    "host": "absolab",
+    "donor": "arcane",
+    "donorCount": 1
+  }
+}

@@ -1,0 +1,718 @@
+{
+ "name": "max-damage-sources.json",
+ "description": "최대 대미지 기본값·출처별 값·단위 처리",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "base",
+     "value": 400000000,
+     "unit": "절대값",
+     "rule": "'캐릭터 기본' 그룹으로 모든 캐릭터에 고정 4억을 더한다. 메타데이터 source=user-confirmed, patch=2026-09, confidence=1. 수동 입력으로 덮을 수 없다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "value:4e8",
+     "prettyLine": 3167
+    },
+    {
+     "id": "cp-reference",
+     "value": 100000000,
+     "unit": "절대값",
+     "rule": "전투력 공식의 기준점 (최대 대미지 / 1e8)^0.2",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "Math.pow(a.max/1e8,.2)",
+     "prettyLine": 1312
+    },
+    {
+     "id": "hyper",
+     "unit": "절대값",
+     "values": [
+      30000,
+      60000,
+      90000,
+      120000,
+      150000,
+      210000,
+      270000,
+      330000,
+      390000,
+      450000,
+      540000,
+      630000,
+      720000,
+      810000,
+      900000,
+      1020000,
+      1140000,
+      1260000,
+      1380000,
+      1500000,
+      2000000,
+      2500000,
+      3000000,
+      3500000,
+      4000000
+     ],
+     "rule": "하이퍼 스탯 '최대 대미지' Lv.1~25(API 문구로 합산, 표는 시뮬레이션용)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-hyper-stats.json",
+     "anchor": "msm-hyper-stats.json stats[no=2]"
+    },
+    {
+     "id": "hexa-stat",
+     "unit": "절대값",
+     "main": [
+      50000000,
+      70000000,
+      100000000,
+      130000000,
+      160000000,
+      210000000,
+      260000000,
+      330000000,
+      400000000,
+      500000000
+     ],
+     "sub": [
+      25000000,
+      35000000,
+      50000000,
+      65000000,
+      80000000,
+      105000000,
+      130000000,
+      165000000,
+      200000000,
+      250000000
+     ],
+     "rule": "HEXA 스탯 최대 대미지 Lv.1~10(API 문구로 합산, 표는 시뮬레이션용)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "equipmentHexa=MSM.createHexaStat({",
+     "prettyLine": 131316
+    },
+    {
+     "id": "union-level",
+     "unit": "절대값",
+     "values": [
+      {
+       "minUnionLevel": 2700,
+       "value": 500000
+      },
+      {
+       "minUnionLevel": 3900,
+       "value": 1000000
+      },
+      {
+       "minUnionLevel": 5500,
+       "value": 2500000
+      },
+      {
+       "minUnionLevel": 7500,
+       "value": 6000000
+      },
+      {
+       "minUnionLevel": 9500,
+       "value": 7500000
+      },
+      {
+       "minUnionLevel": 12500,
+       "value": 9000000
+      }
+     ],
+     "rule": "유니온 레벨 누적 효과 중 최대 대미지 구간(API union_level_total_option 문구로 합산)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-union-rules.json",
+     "anchor": "msm-union-rules.json levelTotal.thresholds"
+    },
+    {
+     "id": "guild-personal",
+     "unit": "절대값",
+     "values": [
+      400000,
+      800000,
+      1200000,
+      1600000,
+      2000000
+     ],
+     "rule": "길드 개인 스킬 '최대 대미지' Lv.1~5",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-guild-skills.json",
+     "anchor": "msm-guild-skills.json personal[name=최대 대미지]"
+    },
+    {
+     "id": "guild-ability",
+     "unit": "절대값",
+     "values": [
+      {
+       "base": 420,
+       "name": "최강 전사의 덕목",
+       "tier": 7,
+       "values": [
+        50000,
+        120000,
+        250000,
+        500000
+       ]
+      },
+      {
+       "base": 429,
+       "name": "한계 돌파",
+       "tier": 8,
+       "values": [
+        70000,
+        150000,
+        300000,
+        450000,
+        650000
+       ]
+      }
+     ],
+     "rule": "길드 어빌리티 중 최대 대미지",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-guild-skills.json",
+     "anchor": "msm-guild-skills.json ability"
+    },
+    {
+     "id": "starforce-set",
+     "unit": "절대값",
+     "rule": "starforce-set-options.json 참고(아케인 7,500만~6억 6,000만 등)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json"
+    },
+    {
+     "id": "set-effect",
+     "unit": "절대값",
+     "rule": "API set_info 문구(활성 프리셋) 또는 set-effects.json 표(아케인 7세트 5억 2,500만, 칠흑 9세트 6,000만 등)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json"
+    },
+    {
+     "id": "emblem",
+     "unit": "절대값",
+     "rule": "장비 emblem_info.emblem_option 문구를 '문장' 출처로 파싱(예: 무자비한 문장 Lv.10 = 1억 1,900만)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "na.emblem_info&&De(\"문장\"",
+     "prettyLine": 1233
+    },
+    {
+     "id": "stigma-set",
+     "unit": "절대값",
+     "values": {
+      "유니크": {
+       "최대 대미지": 50000000
+      },
+      "에픽": {
+       "최대 대미지": 25000000
+      }
+     },
+     "rule": "수동 입력 성흔: 아칸·아자젤 두 칸이 붉은빛 같은 등급이면 세트 효과 최대 대미지",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-stigma.json",
+     "anchor": "msm-stigma.json set2"
+    },
+    {
+     "id": "stella-chorus",
+     "unit": "절대값",
+     "ranges": [
+      30000000,
+      50000000,
+      60000000,
+      70000000,
+      75000000,
+      80000000,
+      85000000,
+      90000000,
+      100000000,
+      120000000
+     ],
+     "nodes": [
+      {
+       "id": "start",
+       "value": null,
+       "range": true,
+       "cost": 1
+      },
+      {
+       "id": "md-1",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-2",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-3",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-mid",
+       "value": null,
+       "range": true,
+       "cost": 50
+      },
+      {
+       "id": "md-4",
+       "value": 50000000,
+       "range": false,
+       "cost": 25
+      },
+      {
+       "id": "md-5",
+       "value": 50000000,
+       "range": false,
+       "cost": 25
+      },
+      {
+       "id": "md-end",
+       "value": null,
+       "range": true,
+       "cost": 50
+      }
+     ],
+     "rule": "수동 입력 스타코러스 노드",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-stellacode.json",
+     "anchor": "msm-stellacode.json ranges/nodes"
+    },
+    {
+     "id": "boss-force",
+     "unit": "절대값",
+     "arcane": [
+      {
+       "label": "150% 이상",
+       "maxDamage": 16500000
+      },
+      {
+       "label": "140%",
+       "maxDamage": 11500000
+      },
+      {
+       "label": "130%",
+       "maxDamage": 7500000
+      },
+      {
+       "label": "120%",
+       "maxDamage": 4500000
+      },
+      {
+       "label": "110%",
+       "maxDamage": 2500000
+      }
+     ],
+     "authentic": [
+      {
+       "label": "50 이상",
+       "maxDamage": 105000000
+      },
+      {
+       "label": "40 이상",
+       "maxDamage": 90000000
+      },
+      {
+       "label": "30 이상",
+       "maxDamage": 35000000
+      },
+      {
+       "label": "20 이상",
+       "maxDamage": 22400000
+      },
+      {
+       "label": "10 이상",
+       "maxDamage": 14000000
+      }
+     ],
+     "rule": "보스별 포스 초과 보너스. 캐릭터 합산·전투력에는 넣지 않고 보스 대미지 적용률 계산(Er)에서만 최대 대미지에 더한다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Er(a,o={}){",
+     "prettyLine": 6444
+    },
+    {
+     "id": "unit",
+     "rule": "모든 값은 절대 정수. 문구 파서는 쉼표만 지우고 숫자를 읽는다('만' 단위 해석 없음). 단위 보정 상수는 없다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Bt(a,o={},i=oe,l={}){",
+     "prettyLine": 1188
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "최대 대미지 기본값·출처별 값·단위 처리",
+   "entries": [
+    {
+     "id": "skill-passive-base",
+     "value": 400000000,
+     "unit": "절대값",
+     "note": "모든 직업 공통 '스킬 > 패시브' 고정 기여. 사실상 최대 대미지 기본값",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "l8={\"마법 공격력%\":",
+     "prettyLine": 15077
+    },
+    {
+     "id": "cp-reference",
+     "value": 100000000,
+     "unit": "절대값",
+     "note": "전투력 공식의 최대 대미지 기준점: (최대 대미지 / 1e8)^0.2",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "i8=1e8;functio",
+     "prettyLine": 15420
+    },
+    {
+     "id": "stat-efficiency-default",
+     "value": 100000000,
+     "unit": "절대값",
+     "note": "독립 스탯 효율 화면 기본 입력값(캐릭터 없을 때)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "B6={rawAtt:12e",
+     "prettyLine": 41591
+    },
+    {
+     "id": "item-score-reference",
+     "value": 2500000000,
+     "unit": "절대값",
+     "note": "템환산 가중치 기준 스펙(최대 대미지 25억)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "Sf=Object.free",
+     "prettyLine": 33957
+    },
+    {
+     "id": "set-effects",
+     "note": "r8 아케인/앱솔/칠흑 세트 표의 '최대 대미지'",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "r8={아케인:{2:{\"최",
+     "prettyLine": 15087
+    },
+    {
+     "id": "starforce-set-options",
+     "note": "s8 아케인/앱솔 스타포스 표의 '최대 대미지'",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "s8={아케인:{55:{\"",
+     "prettyLine": 15266
+    },
+    {
+     "id": "emblem-by-level",
+     "value": [
+      1500000,
+      2000000,
+      3750000,
+      5250000,
+      10500000,
+      21000000,
+      38080000,
+      59500000,
+      85000000,
+      119000000
+     ],
+     "unit": "절대값, 문장 Lv.1~10",
+     "pairedPercent": [
+      1.5,
+      2,
+      2.5,
+      3,
+      4,
+      5.5,
+      7.5,
+      10,
+      12,
+      15
+     ],
+     "pairedStatByEmblem": {
+      "신성한 문장": "마법 공격력",
+      "강대한 문장": "물리 공격력",
+      "무자비한 문장": "치명타 피해",
+      "압도의 문장": "보스 공격력",
+      "기민한 문장": "보스 방어력"
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "l2=[15e5,2e6,3",
+     "prettyLine": 33943
+    },
+    {
+     "id": "hexa-stat-main",
+     "value": [
+      {
+       "level": 1,
+       "maxDamage": "50,000,000"
+      },
+      {
+       "level": 2,
+       "maxDamage": "70,000,000"
+      },
+      {
+       "level": 3,
+       "maxDamage": "100,000,000"
+      },
+      {
+       "level": 4,
+       "maxDamage": "130,000,000"
+      },
+      {
+       "level": 5,
+       "maxDamage": "160,000,000"
+      },
+      {
+       "level": 6,
+       "maxDamage": "320,000,000"
+      },
+      {
+       "level": 7,
+       "maxDamage": "260,000,000"
+      },
+      {
+       "level": 8,
+       "maxDamage": "330,000,000"
+      },
+      {
+       "level": 9,
+       "maxDamage": "400,000,000"
+      },
+      {
+       "level": 10,
+       "maxDamage": "500,000,000"
+      }
+     ],
+     "unit": "문자열(쉼표 포함 절대값)",
+     "note": "가이드 표. Lv.6 '320,000,000'은 Lv.7 260,000,000보다 커서 오기로 보임",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "y7=Mc([[350,\"1",
+     "prettyLine": 44828
+    },
+    {
+     "id": "hexa-stat-sub",
+     "value": [
+      {
+       "level": 1,
+       "maxDamage": "25,000,000"
+      },
+      {
+       "level": 2,
+       "maxDamage": "35,000,000"
+      },
+      {
+       "level": 3,
+       "maxDamage": "50,000,000"
+      },
+      {
+       "level": 4,
+       "maxDamage": "65,000,000"
+      },
+      {
+       "level": 5,
+       "maxDamage": "80,000,000"
+      },
+      {
+       "level": 6,
+       "maxDamage": "105,000,000"
+      },
+      {
+       "level": 7,
+       "maxDamage": "130,000,000"
+      },
+      {
+       "level": 8,
+       "maxDamage": "165,000,000"
+      },
+      {
+       "level": 9,
+       "maxDamage": "200,000,000"
+      },
+      {
+       "level": 10,
+       "maxDamage": "250,000,000"
+      }
+     ],
+     "unit": "문자열(쉼표 포함 절대값)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "X7=Mc([[175,\"1",
+     "prettyLine": 44840
+    },
+    {
+     "id": "starcorus-nodes",
+     "value": [
+      {
+       "id": "start",
+       "range": true,
+       "cost": 1
+      },
+      {
+       "id": "md-1",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-2",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-3",
+       "value": 30000000,
+       "range": false,
+       "cost": 12
+      },
+      {
+       "id": "md-mid",
+       "range": true,
+       "cost": 50
+      },
+      {
+       "id": "md-4",
+       "value": 50000000,
+       "range": false,
+       "cost": 25
+      },
+      {
+       "id": "md-5",
+       "value": 50000000,
+       "range": false,
+       "cost": 25
+      },
+      {
+       "id": "md-end",
+       "range": true,
+       "cost": 50
+      }
+     ],
+     "rangeChoices": [
+      30000000,
+      50000000,
+      60000000,
+      70000000,
+      75000000,
+      80000000,
+      85000000,
+      90000000,
+      100000000,
+      120000000
+     ],
+     "rangeDefault": 30000000,
+     "unit": "절대값",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "TA=[{id:\"start",
+     "prettyLine": 16466
+    },
+    {
+     "id": "stigma-set-red",
+     "value": {
+      "unique": [
+       "최대 대미지",
+       "+5,000만"
+      ],
+      "epic": [
+       "최대 대미지",
+       "+2,500만"
+      ]
+     },
+     "unit": "문자열('만' 단위, 수동 입력 경로에서 1만 배)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "Cc={green:{uni",
+     "prettyLine": 40669
+    },
+    {
+     "id": "guild-ability-calc",
+     "value": [
+      {
+       "tier": "7차",
+       "skills": [
+        {
+         "name": "욕망의 끝",
+         "values": [
+          "+20만",
+          "+40만",
+          "+60만",
+          "+80만"
+         ]
+        }
+       ]
+      },
+      {
+       "tier": "8차",
+       "skills": [
+        {
+         "name": "극한의 힘",
+         "values": [
+          "+20만",
+          "+40만",
+          "+60만",
+          "+80만",
+          "+100만"
+         ]
+        }
+       ]
+      }
+     ],
+     "unit": "문자열('만' 단위)",
+     "note": "길드 어빌리티 계산기 표. 캐릭터 합산은 API 문구를 파싱",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "i0=[{tier:\"1차\"",
+     "prettyLine": 12147
+    },
+    {
+     "id": "unit-parse-api",
+     "rule": "API 문구 파싱(Qt)은 숫자 뒤 '만'을 해석하지 않는다(쉼표·기호만 제거). '만'을 1만 배로 바꾸는 것은 수동 입력 경로(d6 내부 d 함수)뿐",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "D.includes(\"만\")?1e4:1",
+     "prettyLine": 39876
+    },
+    {
+     "id": "no-cap",
+     "rule": "최대 대미지 합계에 상한 없음(단순 합). 전투력 계산 때 최소 1로 바닥 처리",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "maxDamage:Math.max(m[\"최대 대미지\"],1)",
+     "prettyLine": 15987
+    }
+   ]
+  }
+ },
+ "ours": {
+  "file": "src/controllers/maplestorym.controller.js",
+  "rule": "createMajorStatTrackers: 기본값 100,000,000(1억)을 더함"
+ }
+}

@@ -1,0 +1,315 @@
+/*
+ * 디자인 토큰 — "메이플 하늘 대시보드" (docs/design-system.md)
+ * 컴포넌트는 팔레트를 직접 쓰지 않고 의미 토큰(--bg, --text, --primary …)만 쓴다.
+ * 테마: 시스템 설정(prefers-color-scheme)을 따르고, <html data-theme="light|dark"> 가 있으면 그 값을 쓴다.
+ */
+
+:root {
+  /* ---------- 기본 팔레트 ---------- */
+  --sky-50: #f0f6ff;
+  --sky-100: #dceaff;
+  --sky-300: #9cc3ff;
+  --sky-500: #4c8df6;
+  --sky-600: #3170db; /* 구현 추가: 흰 글자 대비 4.5:1을 넘는 버튼 바탕 */
+  --sky-700: #2563c9;
+  --sky-900: #173d7a;
+
+  --mint-50: #ecfbf6;
+  --mint-100: #cff5e8;
+  --mint-300: #7fddbe;
+  --mint-500: #2fb98f;
+  --mint-700: #18805f;
+  --mint-900: #0e4a38;
+
+  --lavender-50: #f5f2ff;
+  --lavender-100: #e7e0ff;
+  --lavender-300: #bdaefa;
+  --lavender-500: #8d74f0;
+  --lavender-700: #5d45c8;
+  --lavender-900: #352670;
+
+  --peach-50: #fff4ef;
+  --peach-100: #ffe3d6;
+  --peach-300: #ffb596;
+  --peach-500: #f2825a;
+  --peach-700: #c2532f;
+  --peach-900: #6e2c17;
+
+  --gold-50: #fff9eb;
+  --gold-100: #ffefc2;
+  --gold-300: #ffd36b;
+  --gold-500: #f2b21f;
+  --gold-700: #9a6a00;
+  --gold-900: #573b00;
+
+  --cream-50: #fffdf8;
+  --cream-100: #fff8ec;
+  --cream-300: #f3e8d2;
+
+  --ink-50: #f6f6fa;
+  --ink-100: #e9e9f1;
+  --ink-300: #b9bacb;
+  --ink-500: #6e7089;
+  --ink-700: #3e4060;
+  --ink-900: #23243f;
+
+  /* ---------- 글꼴·크기 ---------- */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --fs-12: 0.75rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-18: 1.125rem;
+  --fs-22: 1.375rem;
+  --fs-28: 1.75rem;
+  --fs-40: 2.5rem;
+  --lh-body: 1.6;
+  --lh-title: 1.25;
+
+  /* ---------- 간격(4px 단위)·모서리 ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-hero: 24px;
+  --radius-pill: 999px;
+  --touch: 44px;
+
+  /* ---------- 모션 ---------- */
+  --dur-hover: 120ms;
+  --dur-panel: 200ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---------- 레이아웃 ---------- */
+  --content-max: 1200px;
+  --gutter: 24px;
+  --topbar-h: 64px;
+  --tabbar-h: 64px;
+
+  /* ---------- 의미 토큰 (라이트) ---------- */
+  color-scheme: light;
+  --bg: var(--cream-50);
+  --bg-glow-1: rgba(156, 195, 255, 0.45);
+  --bg-glow-2: rgba(189, 174, 250, 0.22);
+  --bg-top: #eaf3ff;
+  --surface: #ffffff;
+  --surface-soft: var(--ink-50);
+  --surface-raised: #ffffff;
+  --surface-selected: #ffffff; /* 구획 탭·라디오에서 고른 칸 */
+  --surface-glass: rgba(255, 255, 255, 0.82);
+  --border: var(--ink-100);
+  --border-strong: #d6d7e4;
+  --text: var(--ink-900);
+  --text-muted: var(--ink-700);
+  --text-subtle: #64667f; /* ink-500보다 조금 진하게: ink-50 바탕에서도 4.5:1 */
+  --primary: var(--sky-600);
+  --primary-hover: var(--sky-700);
+  --primary-strong: var(--sky-700);
+  --primary-soft: var(--sky-100);
+  --on-primary: #ffffff;
+  --success: var(--mint-700);
+  --warning: var(--gold-700);
+  --danger: #c8323f; /* #D93F4C는 흰 바탕 4.4:1이라 한 단계 진하게 */
+  --info: var(--lavender-700);
+  --focus-ring: var(--sky-600);
+  --skeleton: #eceef5;
+  --skeleton-shine: #f7f8fc;
+  --scrim: rgba(35, 36, 63, 0.4);
+
+  --shadow-1: 0 1px 2px rgba(35, 36, 63, 0.06);
+  --shadow-2: 0 6px 20px rgba(35, 36, 63, 0.08);
+  --shadow-pop: 0 12px 32px rgba(35, 36, 63, 0.14);
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  /* 히어로(하늘) */
+  --hero-bg: linear-gradient(135deg, #d4e5ff 0%, #e8f1ff 46%, #fff4e4 100%);
+  --hero-border: rgba(255, 255, 255, 0.75);
+  --cloud: rgba(255, 255, 255, 0.92);
+  --cloud-soft: rgba(255, 255, 255, 0.6);
+
+  /* 색 계열(아이콘 칩·배지): 바탕 / 전경 */
+  --sky-bg: var(--sky-100);
+  --sky-fg: var(--sky-700);
+  --mint-bg: var(--mint-100);
+  --mint-fg: var(--mint-700);
+  --lavender-bg: var(--lavender-100);
+  --lavender-fg: var(--lavender-700);
+  --peach-bg: var(--peach-100);
+  --peach-fg: var(--peach-700);
+  --gold-bg: var(--gold-100);
+  --gold-fg: var(--gold-700);
+  /* 색 계열 바탕 위 글자(4.5:1 이상) */
+  --sky-ink: var(--sky-900);
+  --mint-ink: var(--mint-900);
+  --lavender-ink: var(--lavender-900);
+  --peach-ink: var(--peach-900);
+  --gold-ink: var(--gold-900);
+
+  /* 순위 배지(금·은·동 단풍잎) — 숫자는 항상 진한 글자 */
+  --medal-gold-1: #ffe08a;
+  --medal-gold-2: #f2b21f;
+  --medal-gold-line: #9a6a00;
+  --medal-silver-1: #f3f4f9;
+  --medal-silver-2: #b9bacb;
+  --medal-silver-line: #6e7089;
+  --medal-bronze-1: #ffc9b0;
+  --medal-bronze-2: #f2825a;
+  --medal-bronze-line: #c2532f;
+  --medal-text: #23243f;
+}
+
+/*
+ * 다크 토큰. 아래 두 블록은 같은 값을 유지한다.
+ * (1) 시스템이 다크이고 사용자가 라이트를 고르지 않은 경우, (2) 사용자가 다크를 고른 경우.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #17182b;
+    --bg-glow-1: rgba(76, 141, 246, 0.2);
+    --bg-glow-2: rgba(141, 116, 240, 0.14);
+    --bg-top: #1a1d36;
+    --surface: #202139;
+    --surface-soft: #272842;
+    --surface-raised: #26284a;
+    --surface-selected: #3a3d63;
+    --surface-glass: rgba(32, 33, 57, 0.84);
+    --border: #33354f;
+    --border-strong: #45486a;
+    --text: #f0f0f8;
+    --text-muted: #c9cadb;
+    --text-subtle: #a3a5be;
+    --primary: var(--sky-600);
+    --primary-hover: #3d7ce6;
+    --primary-strong: var(--sky-300);
+    --primary-soft: rgba(76, 141, 246, 0.2);
+    --on-primary: #ffffff;
+    --success: var(--mint-300);
+    --warning: var(--gold-300);
+    --danger: #ff8a94;
+    --info: var(--lavender-300);
+    --focus-ring: var(--sky-300);
+    --skeleton: #2a2c48;
+    --skeleton-shine: #34375a;
+    --scrim: rgba(8, 9, 20, 0.6);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-pop: 0 14px 36px rgba(0, 0, 0, 0.45);
+    --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --hero-bg: linear-gradient(135deg, #1c2a52 0%, #1f2547 50%, #2a2342 100%);
+    --hero-border: rgba(255, 255, 255, 0.08);
+    --cloud: rgba(255, 255, 255, 0.07);
+    --cloud-soft: rgba(255, 255, 255, 0.045);
+    --sky-bg: rgba(76, 141, 246, 0.2);
+    --sky-fg: var(--sky-300);
+    --mint-bg: rgba(47, 185, 143, 0.2);
+    --mint-fg: var(--mint-300);
+    --lavender-bg: rgba(141, 116, 240, 0.22);
+    --lavender-fg: var(--lavender-300);
+    --peach-bg: rgba(242, 130, 90, 0.2);
+    --peach-fg: var(--peach-300);
+    --gold-bg: rgba(242, 178, 31, 0.18);
+    --gold-fg: var(--gold-300);
+    --sky-ink: var(--sky-300);
+    --mint-ink: var(--mint-300);
+    --lavender-ink: var(--lavender-300);
+    --peach-ink: var(--peach-300);
+    --gold-ink: var(--gold-300);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #17182b;
+  --bg-glow-1: rgba(76, 141, 246, 0.2);
+  --bg-glow-2: rgba(141, 116, 240, 0.14);
+  --bg-top: #1a1d36;
+  --surface: #202139;
+  --surface-soft: #272842;
+  --surface-raised: #26284a;
+  --surface-selected: #3a3d63;
+  --surface-glass: rgba(32, 33, 57, 0.84);
+  --border: #33354f;
+  --border-strong: #45486a;
+  --text: #f0f0f8;
+  --text-muted: #c9cadb;
+  --text-subtle: #a3a5be;
+  --primary: var(--sky-600);
+  --primary-hover: #3d7ce6;
+  --primary-strong: var(--sky-300);
+  --primary-soft: rgba(76, 141, 246, 0.2);
+  --on-primary: #ffffff;
+  --success: var(--mint-300);
+  --warning: var(--gold-300);
+  --danger: #ff8a94;
+  --info: var(--lavender-300);
+  --focus-ring: var(--sky-300);
+  --skeleton: #2a2c48;
+  --skeleton-shine: #34375a;
+  --scrim: rgba(8, 9, 20, 0.6);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 14px 36px rgba(0, 0, 0, 0.45);
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --hero-bg: linear-gradient(135deg, #1c2a52 0%, #1f2547 50%, #2a2342 100%);
+  --hero-border: rgba(255, 255, 255, 0.08);
+  --cloud: rgba(255, 255, 255, 0.07);
+  --cloud-soft: rgba(255, 255, 255, 0.045);
+  --sky-bg: rgba(76, 141, 246, 0.2);
+  --sky-fg: var(--sky-300);
+  --mint-bg: rgba(47, 185, 143, 0.2);
+  --mint-fg: var(--mint-300);
+  --lavender-bg: rgba(141, 116, 240, 0.22);
+  --lavender-fg: var(--lavender-300);
+  --peach-bg: rgba(242, 130, 90, 0.2);
+  --peach-fg: var(--peach-300);
+  --gold-bg: rgba(242, 178, 31, 0.18);
+  --gold-fg: var(--gold-300);
+  --sky-ink: var(--sky-300);
+  --mint-ink: var(--mint-300);
+  --lavender-ink: var(--lavender-300);
+  --peach-ink: var(--peach-300);
+  --gold-ink: var(--gold-300);
+}
+
+@media (max-width: 719px) {
+  :root {
+    --gutter: 16px;
+    --topbar-h: 56px;
+  }
+}
+
+/* 색 계열 유틸리티: 컴포넌트는 --tone-bg / --tone-fg 만 읽는다 */
+.tone-sky {
+  --tone-bg: var(--sky-bg);
+  --tone-fg: var(--sky-fg);
+  --tone-ink: var(--sky-ink);
+}
+.tone-mint {
+  --tone-bg: var(--mint-bg);
+  --tone-fg: var(--mint-fg);
+  --tone-ink: var(--mint-ink);
+}
+.tone-lavender {
+  --tone-bg: var(--lavender-bg);
+  --tone-fg: var(--lavender-fg);
+  --tone-ink: var(--lavender-ink);
+}
+.tone-peach {
+  --tone-bg: var(--peach-bg);
+  --tone-fg: var(--peach-fg);
+  --tone-ink: var(--peach-ink);
+}
+.tone-gold {
+  --tone-bg: var(--gold-bg);
+  --tone-fg: var(--gold-fg);
+  --tone-ink: var(--gold-ink);
+}

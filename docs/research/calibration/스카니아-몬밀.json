@@ -1,0 +1,8029 @@
+{
+ "character": {
+  "world": "스카니아",
+  "name": "몬밀",
+  "class": "캡틴",
+  "group": "core5"
+ },
+ "collectionNote": "공개 화면만 수집. GET 이외 요청 차단, 갱신·로그인·제출·공유 버튼 미사용, 사이트 JS·내부 API 응답 본문은 저장하지 않음(화면 텍스트만).",
+ "maplemworlds": {
+  "captured": true,
+  "url": "https://maplemworlds.kr/character/%EC%8A%A4%EC%B9%B4%EB%8B%88%EC%95%84-%EB%AA%AC%EB%B0%80",
+  "capturedAt": "2026-10-28T08:04:58.793Z",
+  "capturedAtKST": "2026-10-28 17:04:58 KST",
+  "dataAsOf": "2026. 10. 28. 오후 5:05:00",
+  "dataAsOfLabel": "방금 갱신",
+  "toggles": {
+   "보스 세팅": "기본 켬"
+  },
+  "toggleNote": "보스 세팅은 켬/끔 스위치가 아니다. 장비 프리셋(1~3), 안드로이드 슬롯, 하이퍼 페이지, 링크·유니온·쥬얼 프리셋 중 하나라도 보스 세팅 조합과 다르게 고르면 강조가 꺼지고, '보스 세팅'을 누르면 그 조합으로 돌아간다. 헥사 스탯 페이지 버튼(왼쪽 카드 1/2)은 표시만 바꾸고 계산값은 바꾸지 않았다.",
+  "header": {
+   "level": 295,
+   "expPercent": "10.8%",
+   "name": "몬밀",
+   "class": "캡틴",
+   "grade": "모들",
+   "badges": {
+    "스타포스(추정)": "300",
+    "아케인포스": "1,170",
+    "어센틱포스": "540",
+    "유니온 레벨": "10,785"
+   },
+   "hexaStatDisplay": "1 2 Lv.5 최댐 1.6억 Lv.6 종댐 2.4% Lv.9 방무 4%"
+  },
+  "presets": {
+   "보스 세팅(기본)": {
+    "장비 프리셋": 1,
+    "안드로이드 슬롯": 1,
+    "하이퍼 스탯": "페이지 1",
+    "링크 스킬": null,
+    "유니온 스탯": null,
+    "쥬얼": "프리셋 1",
+    "보스 세팅 버튼 강조": true,
+    "헥사 스탯 페이지(계산값 대조 추정)": 2
+   },
+   "게임 현재 조합": {
+    "장비 프리셋": 2,
+    "안드로이드 슬롯": 1,
+    "하이퍼 스탯": "페이지 1",
+    "링크 스킬": null,
+    "유니온 스탯": null,
+    "쥬얼": "프리셋 2",
+    "보스 세팅 버튼 강조": false,
+    "헥사 스탯 페이지(계산값 대조 추정)": 2,
+    "적용 근거(maplemtool 처음 조회 조합 번호)": {
+     "장비": 2,
+     "하이퍼 스탯": null,
+     "링크 스킬": null,
+     "쥬얼": 2,
+     "기계 심장": null,
+     "유니온 스탯": null
+    },
+    "적용 결과": {
+     "장비": 2,
+     "쥬얼": 2
+    }
+   },
+   "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+    "장비 프리셋": 1,
+    "안드로이드 슬롯": 1,
+    "하이퍼 스탯": "페이지 1",
+    "링크 스킬": null,
+    "유니온 스탯": null,
+    "쥬얼": "프리셋 1",
+    "보스 세팅 버튼 강조": false,
+    "헥사 스탯 페이지(계산값 대조 추정)": 2
+   },
+   "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+    "장비 프리셋": 2,
+    "안드로이드 슬롯": 1,
+    "하이퍼 스탯": "페이지 1",
+    "링크 스킬": null,
+    "유니온 스탯": null,
+    "쥬얼": "프리셋 1",
+    "보스 세팅 버튼 강조": false,
+    "헥사 스탯 페이지(계산값 대조 추정)": 2
+   },
+   "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+    "장비 프리셋": 3,
+    "안드로이드 슬롯": 1,
+    "하이퍼 스탯": "페이지 1",
+    "링크 스킬": null,
+    "유니온 스탯": null,
+    "쥬얼": "프리셋 1",
+    "보스 세팅 버튼 강조": false,
+    "헥사 스탯 페이지(계산값 대조 추정)": 2
+   }
+  },
+  "combatPower": {
+   "보스 세팅(기본) 전투력": 23991581,
+   "게임 현재 조합 전투력": 9124530,
+   "장비 프리셋 1만 변경(나머지 보스 세팅 값) 전투력": 23991581,
+   "장비 프리셋 2만 변경(나머지 보스 세팅 값) 전투력": 9883503,
+   "장비 프리셋 3만 변경(나머지 보스 세팅 값) 전투력": 23991581,
+   "기본정보 · 캐릭터 최고 기록 · 최고 전투력(최고치 기준)": 26435607,
+   "보스 탭 · 현재 최고 전투력": 26435607
+  },
+  "stats": {
+   "마법 공격력": {
+    "total": "103,921",
+    "totalNumber": 103921,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "103,921",
+     "게임 현재 조합": "110,824",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "103,921",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "110,824",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "103,921"
+    },
+    "categories": {
+     "장비": {
+      "total": 82715,
+      "totalText": "82,715",
+      "groups": {
+       "기본 옵션": {
+        "total": "63,170",
+        "totalNumber": 63170,
+        "itemCount": 2
+       },
+       "소울 게이지": {
+        "total": "30",
+        "totalNumber": 30,
+        "itemCount": 1
+       },
+       "세트 옵션": {
+        "total": "540",
+        "totalNumber": 540,
+        "itemCount": 3
+       },
+       "심볼": {
+        "total": "18,975",
+        "totalNumber": 18975,
+        "itemCount": 4
+       }
+      },
+      "items": [
+       {
+        "group": "기본 옵션",
+        "name": "팔콘아이 · 마법 공격력",
+        "value": "702",
+        "valueNumber": 702
+       },
+       {
+        "group": "기본 옵션",
+        "name": "앱솔랩스 포인팅건 · 마법 공격력",
+        "value": "62,468",
+        "valueNumber": 62468
+       },
+       {
+        "group": "소울 게이지",
+        "name": "소울 게이지 (0~199)",
+        "value": "30",
+        "valueNumber": 30
+       },
+       {
+        "group": "세트 옵션",
+        "name": "팔콘아이 · 벨룸 소울",
+        "value": "180",
+        "valueNumber": 180
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔랩스 파이렛숄더 · 벨룸 소울",
+        "value": "180",
+        "valueNumber": 180
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔랩스 포인팅건 · 벨룸 소울",
+        "value": "180",
+        "valueNumber": 180
+       },
+       {
+        "group": "심볼",
+        "name": "아케인포스 증가 200, 마법 공격력 2,225",
+        "value": "6,675",
+        "valueNumber": 6675
+       },
+       {
+        "group": "심볼",
+        "name": "아케인포스 증가 190, 마법 공격력 2,100",
+        "value": "6,300",
+        "valueNumber": 6300
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 110, 마법 공격력 3,300",
+        "value": "3,300",
+        "valueNumber": 3300
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 90, 마법 공격력 2,700",
+        "value": "2,700",
+        "valueNumber": 2700
+       }
+      ]
+     },
+     "스킬": {
+      "total": 19706,
+      "totalText": "19,706",
+      "groups": {
+       "기본 공격력": {
+        "total": "19,706",
+        "totalNumber": 19706,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "기본 공격력",
+        "name": "레벨 기준 기본 공격력",
+        "value": "19,706",
+        "valueNumber": 19706
+       }
+      ]
+     },
+     "성장": {
+      "total": 1500,
+      "totalText": "1,500",
+      "groups": {
+       "세트 옵션": {
+        "total": "1,500",
+        "totalNumber": 1500,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "세트 옵션",
+        "name": "펫 세트 (페어리의 가호)",
+        "value": "1,500",
+        "valueNumber": 1500
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 89618,
+       "totalText": "89,618",
+       "groups": {
+        "기본 옵션": {
+         "total": "70,433",
+         "totalNumber": 70433,
+         "itemCount": 2
+        },
+        "소울 게이지": {
+         "total": "30",
+         "totalNumber": 30,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "180",
+         "totalNumber": 180,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "18,975",
+         "totalNumber": 18975,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "호크아이 · 마법 공격력",
+         "value": "153",
+         "valueNumber": 153
+        },
+        {
+         "group": "기본 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 공격력",
+         "value": "70,280",
+         "valueNumber": 70280
+        },
+        {
+         "group": "소울 게이지",
+         "name": "소울 게이지 (0~199)",
+         "value": "30",
+         "valueNumber": 30
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 포인팅건 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 200, 마법 공격력 2,225",
+         "value": "6,675",
+         "valueNumber": 6675
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 190, 마법 공격력 2,100",
+         "value": "6,300",
+         "valueNumber": 6300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 110, 마법 공격력 3,300",
+         "value": "3,300",
+         "valueNumber": 3300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 90, 마법 공격력 2,700",
+         "value": "2,700",
+         "valueNumber": 2700
+        }
+       ]
+      },
+      "스킬": {
+       "total": 19706,
+       "totalText": "19,706",
+       "groups": {
+        "기본 공격력": {
+         "total": "19,706",
+         "totalNumber": 19706,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 공격력",
+         "name": "레벨 기준 기본 공격력",
+         "value": "19,706",
+         "valueNumber": 19706
+        }
+       ]
+      },
+      "성장": {
+       "total": 1500,
+       "totalText": "1,500",
+       "groups": {
+        "세트 옵션": {
+         "total": "1,500",
+         "totalNumber": 1500,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "1,500",
+         "valueNumber": 1500
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 82715,
+       "totalText": "82,715",
+       "groups": {
+        "기본 옵션": {
+         "total": "63,170",
+         "totalNumber": 63170,
+         "itemCount": 2
+        },
+        "소울 게이지": {
+         "total": "30",
+         "totalNumber": 30,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "540",
+         "totalNumber": 540,
+         "itemCount": 3
+        },
+        "심볼": {
+         "total": "18,975",
+         "totalNumber": 18975,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "팔콘아이 · 마법 공격력",
+         "value": "702",
+         "valueNumber": 702
+        },
+        {
+         "group": "기본 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 공격력",
+         "value": "62,468",
+         "valueNumber": 62468
+        },
+        {
+         "group": "소울 게이지",
+         "name": "소울 게이지 (0~199)",
+         "value": "30",
+         "valueNumber": 30
+        },
+        {
+         "group": "세트 옵션",
+         "name": "팔콘아이 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 파이렛숄더 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 포인팅건 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 200, 마법 공격력 2,225",
+         "value": "6,675",
+         "valueNumber": 6675
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 190, 마법 공격력 2,100",
+         "value": "6,300",
+         "valueNumber": 6300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 110, 마법 공격력 3,300",
+         "value": "3,300",
+         "valueNumber": 3300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 90, 마법 공격력 2,700",
+         "value": "2,700",
+         "valueNumber": 2700
+        }
+       ]
+      },
+      "스킬": {
+       "total": 19706,
+       "totalText": "19,706",
+       "groups": {
+        "기본 공격력": {
+         "total": "19,706",
+         "totalNumber": 19706,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 공격력",
+         "name": "레벨 기준 기본 공격력",
+         "value": "19,706",
+         "valueNumber": 19706
+        }
+       ]
+      },
+      "성장": {
+       "total": 1500,
+       "totalText": "1,500",
+       "groups": {
+        "세트 옵션": {
+         "total": "1,500",
+         "totalNumber": 1500,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "1,500",
+         "valueNumber": 1500
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 89618,
+       "totalText": "89,618",
+       "groups": {
+        "기본 옵션": {
+         "total": "70,433",
+         "totalNumber": 70433,
+         "itemCount": 2
+        },
+        "소울 게이지": {
+         "total": "30",
+         "totalNumber": 30,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "180",
+         "totalNumber": 180,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "18,975",
+         "totalNumber": 18975,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "호크아이 · 마법 공격력",
+         "value": "153",
+         "valueNumber": 153
+        },
+        {
+         "group": "기본 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 공격력",
+         "value": "70,280",
+         "valueNumber": 70280
+        },
+        {
+         "group": "소울 게이지",
+         "name": "소울 게이지 (0~199)",
+         "value": "30",
+         "valueNumber": 30
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 포인팅건 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 200, 마법 공격력 2,225",
+         "value": "6,675",
+         "valueNumber": 6675
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 190, 마법 공격력 2,100",
+         "value": "6,300",
+         "valueNumber": 6300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 110, 마법 공격력 3,300",
+         "value": "3,300",
+         "valueNumber": 3300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 90, 마법 공격력 2,700",
+         "value": "2,700",
+         "valueNumber": 2700
+        }
+       ]
+      },
+      "스킬": {
+       "total": 19706,
+       "totalText": "19,706",
+       "groups": {
+        "기본 공격력": {
+         "total": "19,706",
+         "totalNumber": 19706,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 공격력",
+         "name": "레벨 기준 기본 공격력",
+         "value": "19,706",
+         "valueNumber": 19706
+        }
+       ]
+      },
+      "성장": {
+       "total": 1500,
+       "totalText": "1,500",
+       "groups": {
+        "세트 옵션": {
+         "total": "1,500",
+         "totalNumber": 1500,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "1,500",
+         "valueNumber": 1500
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 82715,
+       "totalText": "82,715",
+       "groups": {
+        "기본 옵션": {
+         "total": "63,170",
+         "totalNumber": 63170,
+         "itemCount": 2
+        },
+        "소울 게이지": {
+         "total": "30",
+         "totalNumber": 30,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "540",
+         "totalNumber": 540,
+         "itemCount": 3
+        },
+        "심볼": {
+         "total": "18,975",
+         "totalNumber": 18975,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "팔콘아이 · 마법 공격력",
+         "value": "702",
+         "valueNumber": 702
+        },
+        {
+         "group": "기본 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 공격력",
+         "value": "62,468",
+         "valueNumber": 62468
+        },
+        {
+         "group": "소울 게이지",
+         "name": "소울 게이지 (0~199)",
+         "value": "30",
+         "valueNumber": 30
+        },
+        {
+         "group": "세트 옵션",
+         "name": "팔콘아이 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 파이렛숄더 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔랩스 포인팅건 · 벨룸 소울",
+         "value": "180",
+         "valueNumber": 180
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 200, 마법 공격력 2,225",
+         "value": "6,675",
+         "valueNumber": 6675
+        },
+        {
+         "group": "심볼",
+         "name": "아케인포스 증가 190, 마법 공격력 2,100",
+         "value": "6,300",
+         "valueNumber": 6300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 110, 마법 공격력 3,300",
+         "value": "3,300",
+         "valueNumber": 3300
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 90, 마법 공격력 2,700",
+         "value": "2,700",
+         "valueNumber": 2700
+        }
+       ]
+      },
+      "스킬": {
+       "total": 19706,
+       "totalText": "19,706",
+       "groups": {
+        "기본 공격력": {
+         "total": "19,706",
+         "totalNumber": 19706,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 공격력",
+         "name": "레벨 기준 기본 공격력",
+         "value": "19,706",
+         "valueNumber": 19706
+        }
+       ]
+      },
+      "성장": {
+       "total": 1500,
+       "totalText": "1,500",
+       "groups": {
+        "세트 옵션": {
+         "total": "1,500",
+         "totalNumber": 1500,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "1,500",
+         "valueNumber": 1500
+        }
+       ]
+      }
+     }
+    }
+   },
+   "마법 공격력%": {
+    "total": "400%",
+    "totalNumber": 400,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "400%",
+     "게임 현재 조합": "342%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "400%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "342%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "400%"
+    },
+    "categories": {
+     "장비": {
+      "total": 82.5,
+      "totalText": "82.5%",
+      "groups": {
+       "기본 옵션": {
+        "total": "6%",
+        "totalNumber": 6,
+        "itemCount": 2
+       },
+       "세트 옵션": {
+        "total": "57%",
+        "totalNumber": 57,
+        "itemCount": 1
+       },
+       "스타포스 강화옵션": {
+        "total": "19.5%",
+        "totalNumber": 19.5,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "기본 옵션",
+        "name": "고귀한 이피아의 반지 · 마법 공격력",
+        "value": "3%",
+        "valueNumber": 3
+       },
+       {
+        "group": "기본 옵션",
+        "name": "도미네이터 펜던트 · 마법 공격력",
+        "value": "3%",
+        "valueNumber": 3
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "57%",
+        "valueNumber": 57
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "19.5%",
+        "valueNumber": 19.5
+       }
+      ]
+     },
+     "스킬": {
+      "total": 300,
+      "totalText": "300%",
+      "groups": {
+       "스킬": {
+        "total": "300%",
+        "totalNumber": 300,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "300%",
+        "valueNumber": 300
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 17.5,
+      "totalText": "17.5%",
+      "groups": {
+       "유니온": {
+        "total": "5%",
+        "totalNumber": 5,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "12.5%",
+        "totalNumber": 12.5,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "5%",
+        "valueNumber": 5,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "12.5%",
+        "valueNumber": 12.5,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 24.5,
+       "totalText": "24.5%",
+       "groups": {
+        "기본 옵션": {
+         "total": "6%",
+         "totalNumber": 6,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "6.5%",
+         "totalNumber": 6.5,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "12%",
+         "totalNumber": 12,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "6.5%",
+         "valueNumber": 6.5
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "12%",
+         "valueNumber": 12
+        }
+       ]
+      },
+      "스킬": {
+       "total": 300,
+       "totalText": "300%",
+       "groups": {
+        "스킬": {
+         "total": "300%",
+         "totalNumber": 300,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "300%",
+         "valueNumber": 300
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "5%",
+         "valueNumber": 5,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 82.5,
+       "totalText": "82.5%",
+       "groups": {
+        "기본 옵션": {
+         "total": "6%",
+         "totalNumber": 6,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "57%",
+         "totalNumber": 57,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "19.5%",
+         "totalNumber": 19.5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "57%",
+         "valueNumber": 57
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "19.5%",
+         "valueNumber": 19.5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 300,
+       "totalText": "300%",
+       "groups": {
+        "스킬": {
+         "total": "300%",
+         "totalNumber": 300,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "300%",
+         "valueNumber": 300
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "5%",
+         "valueNumber": 5,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 24.5,
+       "totalText": "24.5%",
+       "groups": {
+        "기본 옵션": {
+         "total": "6%",
+         "totalNumber": 6,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "6.5%",
+         "totalNumber": 6.5,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "12%",
+         "totalNumber": 12,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "6.5%",
+         "valueNumber": 6.5
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "12%",
+         "valueNumber": 12
+        }
+       ]
+      },
+      "스킬": {
+       "total": 300,
+       "totalText": "300%",
+       "groups": {
+        "스킬": {
+         "total": "300%",
+         "totalNumber": 300,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "300%",
+         "valueNumber": 300
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "5%",
+         "valueNumber": 5,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 82.5,
+       "totalText": "82.5%",
+       "groups": {
+        "기본 옵션": {
+         "total": "6%",
+         "totalNumber": 6,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "57%",
+         "totalNumber": 57,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "19.5%",
+         "totalNumber": 19.5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 공격력",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "57%",
+         "valueNumber": 57
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "19.5%",
+         "valueNumber": 19.5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 300,
+       "totalText": "300%",
+       "groups": {
+        "스킬": {
+         "total": "300%",
+         "totalNumber": 300,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "300%",
+         "valueNumber": 300
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "5%",
+         "valueNumber": 5,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "마법 대미지": {
+    "total": "318.53%",
+    "totalNumber": 318.53,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "318.53%",
+     "게임 현재 조합": "194.83%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "318.53%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "194.83%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "318.53%"
+    },
+    "categories": {
+     "장비": {
+      "total": 236.03,
+      "totalText": "236.03%",
+      "groups": {
+       "잠재 옵션": {
+        "total": "107.24%",
+        "totalNumber": 107.24,
+        "itemCount": 3
+       },
+       "에디셔널 잠재": {
+        "total": "18.2%",
+        "totalNumber": 18.2,
+        "itemCount": 3
+       },
+       "추가 옵션": {
+        "total": "11.09%",
+        "totalNumber": 11.09,
+        "itemCount": 2
+       },
+       "기본 옵션": {
+        "total": "28%",
+        "totalNumber": 28,
+        "itemCount": 5
+       },
+       "세트 옵션": {
+        "total": "50%",
+        "totalNumber": 50,
+        "itemCount": 1
+       },
+       "스타포스 강화옵션": {
+        "total": "21.5%",
+        "totalNumber": 21.5,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "잠재 옵션",
+        "name": "팔콘아이 · 마법 대미지",
+        "value": "10.12%",
+        "valueNumber": 10.12
+       },
+       {
+        "group": "잠재 옵션",
+        "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+        "value": "47.88%",
+        "valueNumber": 47.88
+       },
+       {
+        "group": "잠재 옵션",
+        "name": "앱솔랩스 포인팅건 · 마법 대미지",
+        "value": "49.24%",
+        "valueNumber": 49.24
+       },
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+        "value": "8.5%",
+        "valueNumber": 8.5
+       },
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛케이프 · 마법 대미지",
+        "value": "5.8%",
+        "valueNumber": 5.8
+       },
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛슈즈 · 마법 대미지",
+        "value": "3.9%",
+        "valueNumber": 3.9
+       },
+       {
+        "group": "추가 옵션",
+        "name": "카오스 영생의 돌 · 마법 대미지",
+        "value": "6.45%",
+        "valueNumber": 6.45
+       },
+       {
+        "group": "추가 옵션",
+        "name": "골드 하트 · 마법 대미지",
+        "value": "4.64%",
+        "valueNumber": 4.64
+       },
+       {
+        "group": "기본 옵션",
+        "name": "고귀한 이피아의 반지 · 마법 대미지",
+        "value": "1%",
+        "valueNumber": 1
+       },
+       {
+        "group": "기본 옵션",
+        "name": "거대한 공포 · 마법 대미지",
+        "value": "7%",
+        "valueNumber": 7
+       },
+       {
+        "group": "기본 옵션",
+        "name": "도미네이터 펜던트 · 마법 대미지",
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "group": "기본 옵션",
+        "name": "마력이 깃든 안대 · 마법 대미지",
+        "value": "7%",
+        "valueNumber": 7
+       },
+       {
+        "group": "기본 옵션",
+        "name": "루즈 컨트롤 머신 마크 · 마법 대미지",
+        "value": "8%",
+        "valueNumber": 8
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "50%",
+        "valueNumber": 50
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "21.5%",
+        "valueNumber": 21.5
+       }
+      ]
+     },
+     "스킬": {
+      "total": 60,
+      "totalText": "60%",
+      "groups": {
+       "스킬": {
+        "total": "60%",
+        "totalNumber": 60,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "60%",
+        "valueNumber": 60
+       }
+      ]
+     },
+     "성장": {
+      "total": 5,
+      "totalText": "5%",
+      "groups": {
+       "세트 옵션": {
+        "total": "5%",
+        "totalNumber": 5,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "세트 옵션",
+        "name": "펫 세트 (페어리의 가호)",
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 17.5,
+      "totalText": "17.5%",
+      "groups": {
+       "유니온": {
+        "total": "10%",
+        "totalNumber": 10,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "7.5%",
+        "totalNumber": 7.5,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "10%",
+        "valueNumber": 10,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "7.5%",
+        "valueNumber": 7.5,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 112.33,
+       "totalText": "112.33%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "54.74%",
+         "totalNumber": 54.74,
+         "itemCount": 2
+        },
+        "추가 옵션": {
+         "total": "11.09%",
+         "totalNumber": 11.09,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "26%",
+         "totalNumber": 26,
+         "itemCount": 5
+        },
+        "세트 옵션": {
+         "total": "6.5%",
+         "totalNumber": 6.5,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "14%",
+         "totalNumber": 14,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 대미지",
+         "value": "49.24%",
+         "valueNumber": 49.24
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "강인함의로얄숄더 · 마법 대미지",
+         "value": "5.5%",
+         "valueNumber": 5.5
+        },
+        {
+         "group": "추가 옵션",
+         "name": "카오스 영생의 돌 · 마법 대미지",
+         "value": "6.45%",
+         "valueNumber": 6.45
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 마법 대미지",
+         "value": "4.64%",
+         "valueNumber": 4.64
+        },
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 대미지",
+         "value": "1%",
+         "valueNumber": 1
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 마법 대미지",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "기본 옵션",
+         "name": "메이플M 출석왕 반지 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "6.5%",
+         "valueNumber": 6.5
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "14%",
+         "valueNumber": 14
+        }
+       ]
+      },
+      "스킬": {
+       "total": 60,
+       "totalText": "60%",
+       "groups": {
+        "스킬": {
+         "total": "60%",
+         "totalNumber": 60,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "60%",
+         "valueNumber": 60
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "7.5%",
+         "totalNumber": 7.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "10%",
+         "valueNumber": 10,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "7.5%",
+         "valueNumber": 7.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 236.03,
+       "totalText": "236.03%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "107.24%",
+         "totalNumber": 107.24,
+         "itemCount": 3
+        },
+        "에디셔널 잠재": {
+         "total": "18.2%",
+         "totalNumber": 18.2,
+         "itemCount": 3
+        },
+        "추가 옵션": {
+         "total": "11.09%",
+         "totalNumber": 11.09,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "28%",
+         "totalNumber": 28,
+         "itemCount": 5
+        },
+        "세트 옵션": {
+         "total": "50%",
+         "totalNumber": 50,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "21.5%",
+         "totalNumber": 21.5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "팔콘아이 · 마법 대미지",
+         "value": "10.12%",
+         "valueNumber": 10.12
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+         "value": "47.88%",
+         "valueNumber": 47.88
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 대미지",
+         "value": "49.24%",
+         "valueNumber": 49.24
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+         "value": "8.5%",
+         "valueNumber": 8.5
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛케이프 · 마법 대미지",
+         "value": "5.8%",
+         "valueNumber": 5.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈즈 · 마법 대미지",
+         "value": "3.9%",
+         "valueNumber": 3.9
+        },
+        {
+         "group": "추가 옵션",
+         "name": "카오스 영생의 돌 · 마법 대미지",
+         "value": "6.45%",
+         "valueNumber": 6.45
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 마법 대미지",
+         "value": "4.64%",
+         "valueNumber": 4.64
+        },
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 대미지",
+         "value": "1%",
+         "valueNumber": 1
+        },
+        {
+         "group": "기본 옵션",
+         "name": "거대한 공포 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 마법 대미지",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "50%",
+         "valueNumber": 50
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "21.5%",
+         "valueNumber": 21.5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 60,
+       "totalText": "60%",
+       "groups": {
+        "스킬": {
+         "total": "60%",
+         "totalNumber": 60,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "60%",
+         "valueNumber": 60
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "7.5%",
+         "totalNumber": 7.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "10%",
+         "valueNumber": 10,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "7.5%",
+         "valueNumber": 7.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 112.33,
+       "totalText": "112.33%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "54.74%",
+         "totalNumber": 54.74,
+         "itemCount": 2
+        },
+        "추가 옵션": {
+         "total": "11.09%",
+         "totalNumber": 11.09,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "26%",
+         "totalNumber": 26,
+         "itemCount": 5
+        },
+        "세트 옵션": {
+         "total": "6.5%",
+         "totalNumber": 6.5,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "14%",
+         "totalNumber": 14,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 대미지",
+         "value": "49.24%",
+         "valueNumber": 49.24
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "강인함의로얄숄더 · 마법 대미지",
+         "value": "5.5%",
+         "valueNumber": 5.5
+        },
+        {
+         "group": "추가 옵션",
+         "name": "카오스 영생의 돌 · 마법 대미지",
+         "value": "6.45%",
+         "valueNumber": 6.45
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 마법 대미지",
+         "value": "4.64%",
+         "valueNumber": 4.64
+        },
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 대미지",
+         "value": "1%",
+         "valueNumber": 1
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 마법 대미지",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "기본 옵션",
+         "name": "메이플M 출석왕 반지 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "6.5%",
+         "valueNumber": 6.5
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "14%",
+         "valueNumber": 14
+        }
+       ]
+      },
+      "스킬": {
+       "total": 60,
+       "totalText": "60%",
+       "groups": {
+        "스킬": {
+         "total": "60%",
+         "totalNumber": 60,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "60%",
+         "valueNumber": 60
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "7.5%",
+         "totalNumber": 7.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "10%",
+         "valueNumber": 10,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "7.5%",
+         "valueNumber": 7.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 236.03,
+       "totalText": "236.03%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "107.24%",
+         "totalNumber": 107.24,
+         "itemCount": 3
+        },
+        "에디셔널 잠재": {
+         "total": "18.2%",
+         "totalNumber": 18.2,
+         "itemCount": 3
+        },
+        "추가 옵션": {
+         "total": "11.09%",
+         "totalNumber": 11.09,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "28%",
+         "totalNumber": 28,
+         "itemCount": 5
+        },
+        "세트 옵션": {
+         "total": "50%",
+         "totalNumber": 50,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "21.5%",
+         "totalNumber": 21.5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "팔콘아이 · 마법 대미지",
+         "value": "10.12%",
+         "valueNumber": 10.12
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+         "value": "47.88%",
+         "valueNumber": 47.88
+        },
+        {
+         "group": "잠재 옵션",
+         "name": "앱솔랩스 포인팅건 · 마법 대미지",
+         "value": "49.24%",
+         "valueNumber": 49.24
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛숄더 · 마법 대미지",
+         "value": "8.5%",
+         "valueNumber": 8.5
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛케이프 · 마법 대미지",
+         "value": "5.8%",
+         "valueNumber": 5.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈즈 · 마법 대미지",
+         "value": "3.9%",
+         "valueNumber": 3.9
+        },
+        {
+         "group": "추가 옵션",
+         "name": "카오스 영생의 돌 · 마법 대미지",
+         "value": "6.45%",
+         "valueNumber": 6.45
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 마법 대미지",
+         "value": "4.64%",
+         "valueNumber": 4.64
+        },
+        {
+         "group": "기본 옵션",
+         "name": "고귀한 이피아의 반지 · 마법 대미지",
+         "value": "1%",
+         "valueNumber": 1
+        },
+        {
+         "group": "기본 옵션",
+         "name": "거대한 공포 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "도미네이터 펜던트 · 마법 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 마법 대미지",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 마법 대미지",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "50%",
+         "valueNumber": 50
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "21.5%",
+         "valueNumber": 21.5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 60,
+       "totalText": "60%",
+       "groups": {
+        "스킬": {
+         "total": "60%",
+         "totalNumber": 60,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "60%",
+         "valueNumber": 60
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 17.5,
+       "totalText": "17.5%",
+       "groups": {
+        "유니온": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "7.5%",
+         "totalNumber": 7.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "10%",
+         "valueNumber": 10,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "7.5%",
+         "valueNumber": 7.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "보스 공격력": {
+    "total": "102.4%",
+    "totalNumber": 102.4,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "102.4%",
+     "게임 현재 조합": "106.62%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "102.4%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "106.62%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "102.4%"
+    },
+    "categories": {
+     "장비": {
+      "total": 54.9,
+      "totalText": "54.9%",
+      "groups": {
+       "에디셔널 잠재": {
+        "total": "16.9%",
+        "totalNumber": 16.9,
+        "itemCount": 3
+       },
+       "기본 옵션": {
+        "total": "5%",
+        "totalNumber": 5,
+        "itemCount": 1
+       },
+       "세트 옵션": {
+        "total": "14%",
+        "totalNumber": 14,
+        "itemCount": 2
+       },
+       "스타포스 강화옵션": {
+        "total": "19%",
+        "totalNumber": 19,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛페도라 · 보스 공격력",
+        "value": "6.8%",
+        "valueNumber": 6.8
+       },
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛슈트 · 보스 공격력",
+        "value": "3.5%",
+        "valueNumber": 3.5
+       },
+       {
+        "group": "에디셔널 잠재",
+        "name": "앱솔랩스 파이렛글러브 · 보스 공격력",
+        "value": "6.6%",
+        "valueNumber": 6.6
+       },
+       {
+        "group": "기본 옵션",
+        "name": "이터니티 트리니티 · 보스 공격력",
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "11%",
+        "valueNumber": 11
+       },
+       {
+        "group": "세트 옵션",
+        "name": "칠흑 3세트",
+        "value": "3%",
+        "valueNumber": 3
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "19%",
+        "valueNumber": 19
+       }
+      ]
+     },
+     "스킬": {
+      "total": 10,
+      "totalText": "10%",
+      "groups": {
+       "스킬": {
+        "total": "10%",
+        "totalNumber": 10,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "10%",
+        "valueNumber": 10
+       }
+      ]
+     },
+     "성장": {
+      "total": 5,
+      "totalText": "5%",
+      "groups": {
+       "세트 옵션": {
+        "total": "5%",
+        "totalNumber": 5,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "세트 옵션",
+        "name": "펫 세트 (페어리의 가호)",
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 32.5,
+      "totalText": "32.5%",
+      "groups": {
+       "유니온": {
+        "total": "20%",
+        "totalNumber": 20,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "12.5%",
+        "totalNumber": 12.5,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "20%",
+        "valueNumber": 20,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "12.5%",
+        "valueNumber": 12.5,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 59.12,
+       "totalText": "59.12%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "28.82%",
+         "totalNumber": 28.82,
+         "itemCount": 1
+        },
+        "에디셔널 잠재": {
+         "total": "10.3%",
+         "totalNumber": 10.3,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "펜살리르 스키퍼글러브 · 보스 공격력",
+         "value": "28.82%",
+         "valueNumber": 28.82
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛페도라 · 보스 공격력",
+         "value": "6.8%",
+         "valueNumber": 6.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈트 · 보스 공격력",
+         "value": "3.5%",
+         "valueNumber": 3.5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 2세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 32.5,
+       "totalText": "32.5%",
+       "groups": {
+        "유니온": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 54.9,
+       "totalText": "54.9%",
+       "groups": {
+        "에디셔널 잠재": {
+         "total": "16.9%",
+         "totalNumber": 16.9,
+         "itemCount": 3
+        },
+        "기본 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "14%",
+         "totalNumber": 14,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "19%",
+         "totalNumber": 19,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛페도라 · 보스 공격력",
+         "value": "6.8%",
+         "valueNumber": 6.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈트 · 보스 공격력",
+         "value": "3.5%",
+         "valueNumber": 3.5
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛글러브 · 보스 공격력",
+         "value": "6.6%",
+         "valueNumber": 6.6
+        },
+        {
+         "group": "기본 옵션",
+         "name": "이터니티 트리니티 · 보스 공격력",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "11%",
+         "valueNumber": 11
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "19%",
+         "valueNumber": 19
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 32.5,
+       "totalText": "32.5%",
+       "groups": {
+        "유니온": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 59.12,
+       "totalText": "59.12%",
+       "groups": {
+        "잠재 옵션": {
+         "total": "28.82%",
+         "totalNumber": 28.82,
+         "itemCount": 1
+        },
+        "에디셔널 잠재": {
+         "total": "10.3%",
+         "totalNumber": 10.3,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "잠재 옵션",
+         "name": "펜살리르 스키퍼글러브 · 보스 공격력",
+         "value": "28.82%",
+         "valueNumber": 28.82
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛페도라 · 보스 공격력",
+         "value": "6.8%",
+         "valueNumber": 6.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈트 · 보스 공격력",
+         "value": "3.5%",
+         "valueNumber": 3.5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "7%",
+         "valueNumber": 7
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 2세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 32.5,
+       "totalText": "32.5%",
+       "groups": {
+        "유니온": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 54.9,
+       "totalText": "54.9%",
+       "groups": {
+        "에디셔널 잠재": {
+         "total": "16.9%",
+         "totalNumber": 16.9,
+         "itemCount": 3
+        },
+        "기본 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "14%",
+         "totalNumber": 14,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "19%",
+         "totalNumber": 19,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛페도라 · 보스 공격력",
+         "value": "6.8%",
+         "valueNumber": 6.8
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛슈트 · 보스 공격력",
+         "value": "3.5%",
+         "valueNumber": 3.5
+        },
+        {
+         "group": "에디셔널 잠재",
+         "name": "앱솔랩스 파이렛글러브 · 보스 공격력",
+         "value": "6.6%",
+         "valueNumber": 6.6
+        },
+        {
+         "group": "기본 옵션",
+         "name": "샤인 트리니티 · 보스 공격력",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "11%",
+         "valueNumber": 11
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "19%",
+         "valueNumber": 19
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 32.5,
+       "totalText": "32.5%",
+       "groups": {
+        "유니온": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "12.5%",
+         "totalNumber": 12.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "12.5%",
+         "valueNumber": 12.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "치명타 피해": {
+    "total": "294%",
+    "totalNumber": 294,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "294%",
+     "게임 현재 조합": "150.5%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "294%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "173%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "294%"
+    },
+    "categories": {
+     "장비": {
+      "total": 194,
+      "totalText": "194%",
+      "groups": {
+       "기본 옵션": {
+        "total": "30%",
+        "totalNumber": 30,
+        "itemCount": 3
+       },
+       "세트 옵션": {
+        "total": "130%",
+        "totalNumber": 130,
+        "itemCount": 1
+       },
+       "심볼": {
+        "total": "34%",
+        "totalNumber": 34,
+        "itemCount": 4
+       }
+      },
+      "items": [
+       {
+        "group": "기본 옵션",
+        "name": "검은 노바의 휘장 · 치명타 피해",
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "group": "기본 옵션",
+        "name": "마력이 깃든 안대 · 치명타 피해",
+        "value": "15%",
+        "valueNumber": 15
+       },
+       {
+        "group": "기본 옵션",
+        "name": "이터니티 프라임 · 치명타 피해",
+        "value": "10%",
+        "valueNumber": 10
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "130%",
+        "valueNumber": 130
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 100, 치명타 피해 10%",
+        "value": "10%",
+        "valueNumber": 10
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 70, 치명타 피해 7%",
+        "value": "14%",
+        "valueNumber": 14
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 60, 치명타 피해 6%",
+        "value": "6%",
+        "valueNumber": 6
+       },
+       {
+        "group": "심볼",
+        "name": "어센틱포스 증가 40, 치명타 피해 4%",
+        "value": "4%",
+        "valueNumber": 4
+       }
+      ]
+     },
+     "스킬": {
+      "total": 30,
+      "totalText": "30%",
+      "groups": {
+       "스킬": {
+        "total": "30%",
+        "totalNumber": 30,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "30%",
+        "valueNumber": 30
+       }
+      ]
+     },
+     "성장": {
+      "total": 27.5,
+      "totalText": "27.5%",
+      "groups": {
+       "쥬얼": {
+        "total": "22.5%",
+        "totalNumber": 22.5,
+        "itemCount": 1
+       },
+       "세트 옵션": {
+        "total": "5%",
+        "totalNumber": 5,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "쥬얼",
+        "name": "치명타 피해 4.5%",
+        "value": "22.5%",
+        "valueNumber": 22.5
+       },
+       {
+        "group": "세트 옵션",
+        "name": "펫 세트 (페어리의 가호)",
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 42.5,
+      "totalText": "42.5%",
+      "groups": {
+       "유니온": {
+        "total": "25%",
+        "totalNumber": 25,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "17.5%",
+        "totalNumber": 17.5,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "25%",
+        "valueNumber": 25,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "17.5%",
+        "valueNumber": 17.5,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 73,
+       "totalText": "73%",
+       "groups": {
+        "기본 옵션": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "24%",
+         "totalNumber": 24,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "34%",
+         "totalNumber": 34,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 치명타 피해",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "24%",
+         "valueNumber": 24
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 100, 치명타 피해 10%",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 70, 치명타 피해 7%",
+         "value": "14%",
+         "valueNumber": 14
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 60, 치명타 피해 6%",
+         "value": "6%",
+         "valueNumber": 6
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 40, 치명타 피해 4%",
+         "value": "4%",
+         "valueNumber": 4
+        }
+       ]
+      },
+      "스킬": {
+       "total": 30,
+       "totalText": "30%",
+       "groups": {
+        "스킬": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "30%",
+         "valueNumber": 30
+        }
+       ]
+      },
+      "성장": {
+       "total": 5,
+       "totalText": "5%",
+       "groups": {
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 42.5,
+       "totalText": "42.5%",
+       "groups": {
+        "유니온": {
+         "total": "25%",
+         "totalNumber": 25,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "17.5%",
+         "totalNumber": 17.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "25%",
+         "valueNumber": 25,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "17.5%",
+         "valueNumber": 17.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 194,
+       "totalText": "194%",
+       "groups": {
+        "기본 옵션": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 3
+        },
+        "세트 옵션": {
+         "total": "130%",
+         "totalNumber": 130,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "34%",
+         "totalNumber": 34,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "검은 노바의 휘장 · 치명타 피해",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 치명타 피해",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "이터니티 프라임 · 치명타 피해",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "130%",
+         "valueNumber": 130
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 100, 치명타 피해 10%",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 70, 치명타 피해 7%",
+         "value": "14%",
+         "valueNumber": 14
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 60, 치명타 피해 6%",
+         "value": "6%",
+         "valueNumber": 6
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 40, 치명타 피해 4%",
+         "value": "4%",
+         "valueNumber": 4
+        }
+       ]
+      },
+      "스킬": {
+       "total": 30,
+       "totalText": "30%",
+       "groups": {
+        "스킬": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "30%",
+         "valueNumber": 30
+        }
+       ]
+      },
+      "성장": {
+       "total": 27.5,
+       "totalText": "27.5%",
+       "groups": {
+        "쥬얼": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "치명타 피해 4.5%",
+         "value": "22.5%",
+         "valueNumber": 22.5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 42.5,
+       "totalText": "42.5%",
+       "groups": {
+        "유니온": {
+         "total": "25%",
+         "totalNumber": 25,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "17.5%",
+         "totalNumber": 17.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "25%",
+         "valueNumber": 25,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "17.5%",
+         "valueNumber": 17.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 73,
+       "totalText": "73%",
+       "groups": {
+        "기본 옵션": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "24%",
+         "totalNumber": 24,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "34%",
+         "totalNumber": 34,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 치명타 피해",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "24%",
+         "valueNumber": 24
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 100, 치명타 피해 10%",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 70, 치명타 피해 7%",
+         "value": "14%",
+         "valueNumber": 14
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 60, 치명타 피해 6%",
+         "value": "6%",
+         "valueNumber": 6
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 40, 치명타 피해 4%",
+         "value": "4%",
+         "valueNumber": 4
+        }
+       ]
+      },
+      "스킬": {
+       "total": 30,
+       "totalText": "30%",
+       "groups": {
+        "스킬": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "30%",
+         "valueNumber": 30
+        }
+       ]
+      },
+      "성장": {
+       "total": 27.5,
+       "totalText": "27.5%",
+       "groups": {
+        "쥬얼": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "치명타 피해 4.5%",
+         "value": "22.5%",
+         "valueNumber": 22.5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 42.5,
+       "totalText": "42.5%",
+       "groups": {
+        "유니온": {
+         "total": "25%",
+         "totalNumber": 25,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "17.5%",
+         "totalNumber": 17.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "25%",
+         "valueNumber": 25,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "17.5%",
+         "valueNumber": 17.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 194,
+       "totalText": "194%",
+       "groups": {
+        "기본 옵션": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 3
+        },
+        "세트 옵션": {
+         "total": "130%",
+         "totalNumber": 130,
+         "itemCount": 1
+        },
+        "심볼": {
+         "total": "34%",
+         "totalNumber": 34,
+         "itemCount": 4
+        }
+       },
+       "items": [
+        {
+         "group": "기본 옵션",
+         "name": "마력이 깃든 안대 · 치명타 피해",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "검은 노바의 휘장 · 치명타 피해",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "문라이트 프라임 · 치명타 피해",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "130%",
+         "valueNumber": 130
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 100, 치명타 피해 10%",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 70, 치명타 피해 7%",
+         "value": "14%",
+         "valueNumber": 14
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 60, 치명타 피해 6%",
+         "value": "6%",
+         "valueNumber": 6
+        },
+        {
+         "group": "심볼",
+         "name": "어센틱포스 증가 40, 치명타 피해 4%",
+         "value": "4%",
+         "valueNumber": 4
+        }
+       ]
+      },
+      "스킬": {
+       "total": 30,
+       "totalText": "30%",
+       "groups": {
+        "스킬": {
+         "total": "30%",
+         "totalNumber": 30,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "30%",
+         "valueNumber": 30
+        }
+       ]
+      },
+      "성장": {
+       "total": 27.5,
+       "totalText": "27.5%",
+       "groups": {
+        "쥬얼": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "치명타 피해 4.5%",
+         "value": "22.5%",
+         "valueNumber": 22.5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "펫 세트 (페어리의 가호)",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 42.5,
+       "totalText": "42.5%",
+       "groups": {
+        "유니온": {
+         "total": "25%",
+         "totalNumber": 25,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "17.5%",
+         "totalNumber": 17.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "25%",
+         "valueNumber": 25,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "17.5%",
+         "valueNumber": 17.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "최대 대미지": {
+    "total": "763,630,000",
+    "totalNumber": 763630000,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "763,630,000",
+     "게임 현재 조합": "696,680,000",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "763,630,000",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "696,680,000",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "763,630,000"
+    },
+    "categories": {
+     "장비": {
+      "total": 85950000,
+      "totalText": "85,950,000",
+      "groups": {
+       "소울": {
+        "total": "450,000",
+        "totalNumber": 450000,
+        "itemCount": 1
+       },
+       "세트 옵션": {
+        "total": "56,500,000",
+        "totalNumber": 56500000,
+        "itemCount": 2
+       },
+       "스타포스 강화옵션": {
+        "total": "29,000,000",
+        "totalNumber": 29000000,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "소울",
+        "name": "앱솔랩스 파이렛숄더",
+        "value": "450,000",
+        "valueNumber": 450000
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "49,000,000",
+        "valueNumber": 49000000
+       },
+       {
+        "group": "세트 옵션",
+        "name": "칠흑 3세트",
+        "value": "7,500,000",
+        "valueNumber": 7500000
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "29,000,000",
+        "valueNumber": 29000000
+       }
+      ]
+     },
+     "스킬": {
+      "total": 400000000,
+      "totalText": "400,000,000",
+      "groups": {
+       "스킬": {
+        "total": "400,000,000",
+        "totalNumber": 400000000,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "400,000,000",
+        "valueNumber": 400000000
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 277680000,
+      "totalText": "277,680,000",
+      "groups": {
+       "하이퍼 스탯": {
+        "total": "60,000",
+        "totalNumber": 60000,
+        "itemCount": 0
+       },
+       "유니온": {
+        "total": "17,500,000",
+        "totalNumber": 17500000,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "120,000",
+        "totalNumber": 120000,
+        "itemCount": 0
+       },
+       "헥사 스탯": {
+        "total": "260,000,000",
+        "totalNumber": 260000000,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "하이퍼 스탯",
+        "name": "하이퍼 스탯",
+        "value": "60,000",
+        "valueNumber": 60000,
+        "groupOnly": true
+       },
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "17,500,000",
+        "valueNumber": 17500000,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "120,000",
+        "valueNumber": 120000,
+        "groupOnly": true
+       },
+       {
+        "group": "헥사 스탯",
+        "name": "헥사 스탯",
+        "value": "260,000,000",
+        "valueNumber": 260000000,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 19000000,
+       "totalText": "19,000,000",
+       "groups": {
+        "세트 옵션": {
+         "total": "14,000,000",
+         "totalNumber": 14000000,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "5,000,000",
+         "totalNumber": 5000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "11,000,000",
+         "valueNumber": 11000000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 2세트",
+         "value": "3,000,000",
+         "valueNumber": 3000000
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "5,000,000",
+         "valueNumber": 5000000
+        }
+       ]
+      },
+      "스킬": {
+       "total": 400000000,
+       "totalText": "400,000,000",
+       "groups": {
+        "스킬": {
+         "total": "400,000,000",
+         "totalNumber": 400000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "400,000,000",
+         "valueNumber": 400000000
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 277680000,
+       "totalText": "277,680,000",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "60,000",
+         "totalNumber": 60000,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "17,500,000",
+         "totalNumber": 17500000,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "120,000",
+         "totalNumber": 120000,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "260,000,000",
+         "totalNumber": 260000000,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "60,000",
+         "valueNumber": 60000,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "17,500,000",
+         "valueNumber": 17500000,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "120,000",
+         "valueNumber": 120000,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "260,000,000",
+         "valueNumber": 260000000,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 85950000,
+       "totalText": "85,950,000",
+       "groups": {
+        "소울": {
+         "total": "450,000",
+         "totalNumber": 450000,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "56,500,000",
+         "totalNumber": 56500000,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "29,000,000",
+         "totalNumber": 29000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "소울",
+         "name": "앱솔랩스 파이렛숄더",
+         "value": "450,000",
+         "valueNumber": 450000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "49,000,000",
+         "valueNumber": 49000000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "7,500,000",
+         "valueNumber": 7500000
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "29,000,000",
+         "valueNumber": 29000000
+        }
+       ]
+      },
+      "스킬": {
+       "total": 400000000,
+       "totalText": "400,000,000",
+       "groups": {
+        "스킬": {
+         "total": "400,000,000",
+         "totalNumber": 400000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "400,000,000",
+         "valueNumber": 400000000
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 277680000,
+       "totalText": "277,680,000",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "60,000",
+         "totalNumber": 60000,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "17,500,000",
+         "totalNumber": 17500000,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "120,000",
+         "totalNumber": 120000,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "260,000,000",
+         "totalNumber": 260000000,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "60,000",
+         "valueNumber": 60000,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "17,500,000",
+         "valueNumber": 17500000,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "120,000",
+         "valueNumber": 120000,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "260,000,000",
+         "valueNumber": 260000000,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 19000000,
+       "totalText": "19,000,000",
+       "groups": {
+        "세트 옵션": {
+         "total": "14,000,000",
+         "totalNumber": 14000000,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "5,000,000",
+         "totalNumber": 5000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "11,000,000",
+         "valueNumber": 11000000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 2세트",
+         "value": "3,000,000",
+         "valueNumber": 3000000
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "5,000,000",
+         "valueNumber": 5000000
+        }
+       ]
+      },
+      "스킬": {
+       "total": 400000000,
+       "totalText": "400,000,000",
+       "groups": {
+        "스킬": {
+         "total": "400,000,000",
+         "totalNumber": 400000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "400,000,000",
+         "valueNumber": 400000000
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 277680000,
+       "totalText": "277,680,000",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "60,000",
+         "totalNumber": 60000,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "17,500,000",
+         "totalNumber": 17500000,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "120,000",
+         "totalNumber": 120000,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "260,000,000",
+         "totalNumber": 260000000,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "60,000",
+         "valueNumber": 60000,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "17,500,000",
+         "valueNumber": 17500000,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "120,000",
+         "valueNumber": 120000,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "260,000,000",
+         "valueNumber": 260000000,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 85950000,
+       "totalText": "85,950,000",
+       "groups": {
+        "소울": {
+         "total": "450,000",
+         "totalNumber": 450000,
+         "itemCount": 1
+        },
+        "세트 옵션": {
+         "total": "56,500,000",
+         "totalNumber": 56500000,
+         "itemCount": 2
+        },
+        "스타포스 강화옵션": {
+         "total": "29,000,000",
+         "totalNumber": 29000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "소울",
+         "name": "앱솔랩스 파이렛숄더",
+         "value": "450,000",
+         "valueNumber": 450000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "49,000,000",
+         "valueNumber": 49000000
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "7,500,000",
+         "valueNumber": 7500000
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "29,000,000",
+         "valueNumber": 29000000
+        }
+       ]
+      },
+      "스킬": {
+       "total": 400000000,
+       "totalText": "400,000,000",
+       "groups": {
+        "스킬": {
+         "total": "400,000,000",
+         "totalNumber": 400000000,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "400,000,000",
+         "valueNumber": 400000000
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 277680000,
+       "totalText": "277,680,000",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "60,000",
+         "totalNumber": 60000,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "17,500,000",
+         "totalNumber": 17500000,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "120,000",
+         "totalNumber": 120000,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "260,000,000",
+         "totalNumber": 260000000,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "60,000",
+         "valueNumber": 60000,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "17,500,000",
+         "valueNumber": 17500000,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "120,000",
+         "valueNumber": 120000,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "260,000,000",
+         "valueNumber": 260000000,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "최종 대미지": {
+    "total": "112.2%",
+    "totalNumber": 112.2,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "112.2%",
+     "게임 현재 조합": "93.2%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "112.2%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "93.2%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "112.2%"
+    },
+    "categories": {
+     "장비": {
+      "total": 51.6,
+      "totalText": "51.6%",
+      "groups": {
+       "추가 옵션": {
+        "total": "8.6%",
+        "totalNumber": 8.6,
+        "itemCount": 2
+       },
+       "소울": {
+        "total": "15%",
+        "totalNumber": 15,
+        "itemCount": 1
+       },
+       "기본 옵션": {
+        "total": "15%",
+        "totalNumber": 15,
+        "itemCount": 2
+       },
+       "세트 옵션": {
+        "total": "3%",
+        "totalNumber": 3,
+        "itemCount": 1
+       },
+       "스타포스 강화옵션": {
+        "total": "10%",
+        "totalNumber": 10,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "추가 옵션",
+        "name": "앱솔랩스 포인팅건 · 최종 대미지",
+        "value": "5.2%",
+        "valueNumber": 5.2
+       },
+       {
+        "group": "추가 옵션",
+        "name": "골드 하트 · 최종 대미지",
+        "value": "3.4%",
+        "valueNumber": 3.4
+       },
+       {
+        "group": "소울",
+        "name": "앱솔랩스 포인팅건",
+        "value": "15%",
+        "valueNumber": 15
+       },
+       {
+        "group": "기본 옵션",
+        "name": "루즈 컨트롤 머신 마크 · 최종 대미지",
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "group": "기본 옵션",
+        "name": "이터니티 트리니티 · 최종 대미지",
+        "value": "10%",
+        "valueNumber": 10
+       },
+       {
+        "group": "세트 옵션",
+        "name": "칠흑 3세트",
+        "value": "3%",
+        "valueNumber": 3
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "10%",
+        "valueNumber": 10
+       }
+      ]
+     },
+     "스킬": {
+      "total": 10,
+      "totalText": "10%",
+      "groups": {
+       "스킬": {
+        "total": "10%",
+        "totalNumber": 10,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "스킬",
+        "name": "패시브",
+        "value": "10%",
+        "valueNumber": 10
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 50.6,
+      "totalText": "50.6%",
+      "groups": {
+       "하이퍼 스탯": {
+        "total": "22.5%",
+        "totalNumber": 22.5,
+        "itemCount": 0
+       },
+       "유니온": {
+        "total": "3.2%",
+        "totalNumber": 3.2,
+        "itemCount": 0
+       },
+       "길드": {
+        "total": "20%",
+        "totalNumber": 20,
+        "itemCount": 0
+       },
+       "헥사 스탯": {
+        "total": "2.9%",
+        "totalNumber": 2.9,
+        "itemCount": 0
+       },
+       "솔 야누스": {
+        "total": "0.5%",
+        "totalNumber": 0.5,
+        "itemCount": 0
+       },
+       "링크 스킬": {
+        "total": "1.5%",
+        "totalNumber": 1.5,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "하이퍼 스탯",
+        "name": "하이퍼 스탯",
+        "value": "22.5%",
+        "valueNumber": 22.5,
+        "groupOnly": true
+       },
+       {
+        "group": "유니온",
+        "name": "유니온",
+        "value": "3.2%",
+        "valueNumber": 3.2,
+        "groupOnly": true
+       },
+       {
+        "group": "길드",
+        "name": "길드",
+        "value": "20%",
+        "valueNumber": 20,
+        "groupOnly": true
+       },
+       {
+        "group": "헥사 스탯",
+        "name": "헥사 스탯",
+        "value": "2.9%",
+        "valueNumber": 2.9,
+        "groupOnly": true
+       },
+       {
+        "group": "솔 야누스",
+        "name": "솔 야누스",
+        "value": "0.5%",
+        "valueNumber": 0.5,
+        "groupOnly": true
+       },
+       {
+        "group": "링크 스킬",
+        "name": "링크 스킬",
+        "value": "1.5%",
+        "valueNumber": 1.5,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 32.6,
+       "totalText": "32.6%",
+       "groups": {
+        "추가 옵션": {
+         "total": "12.6%",
+         "totalNumber": 12.6,
+         "itemCount": 2
+        },
+        "소울": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "기본 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 포인팅건 · 최종 대미지",
+         "value": "9.2%",
+         "valueNumber": 9.2
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 최종 대미지",
+         "value": "3.4%",
+         "valueNumber": 3.4
+        },
+        {
+         "group": "소울",
+         "name": "앱솔랩스 포인팅건",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 최종 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 50.6,
+       "totalText": "50.6%",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "3.2%",
+         "totalNumber": 3.2,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "2.9%",
+         "totalNumber": 2.9,
+         "itemCount": 0
+        },
+        "솔 야누스": {
+         "total": "0.5%",
+         "totalNumber": 0.5,
+         "itemCount": 0
+        },
+        "링크 스킬": {
+         "total": "1.5%",
+         "totalNumber": 1.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "22.5%",
+         "valueNumber": 22.5,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "3.2%",
+         "valueNumber": 3.2,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.9%",
+         "valueNumber": 2.9,
+         "groupOnly": true
+        },
+        {
+         "group": "솔 야누스",
+         "name": "솔 야누스",
+         "value": "0.5%",
+         "valueNumber": 0.5,
+         "groupOnly": true
+        },
+        {
+         "group": "링크 스킬",
+         "name": "링크 스킬",
+         "value": "1.5%",
+         "valueNumber": 1.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 51.6,
+       "totalText": "51.6%",
+       "groups": {
+        "추가 옵션": {
+         "total": "8.6%",
+         "totalNumber": 8.6,
+         "itemCount": 2
+        },
+        "소울": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "기본 옵션": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "3%",
+         "totalNumber": 3,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 포인팅건 · 최종 대미지",
+         "value": "5.2%",
+         "valueNumber": 5.2
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 최종 대미지",
+         "value": "3.4%",
+         "valueNumber": 3.4
+        },
+        {
+         "group": "소울",
+         "name": "앱솔랩스 포인팅건",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 최종 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "이터니티 트리니티 · 최종 대미지",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 50.6,
+       "totalText": "50.6%",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "3.2%",
+         "totalNumber": 3.2,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "2.9%",
+         "totalNumber": 2.9,
+         "itemCount": 0
+        },
+        "솔 야누스": {
+         "total": "0.5%",
+         "totalNumber": 0.5,
+         "itemCount": 0
+        },
+        "링크 스킬": {
+         "total": "1.5%",
+         "totalNumber": 1.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "22.5%",
+         "valueNumber": 22.5,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "3.2%",
+         "valueNumber": 3.2,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.9%",
+         "valueNumber": 2.9,
+         "groupOnly": true
+        },
+        {
+         "group": "솔 야누스",
+         "name": "솔 야누스",
+         "value": "0.5%",
+         "valueNumber": 0.5,
+         "groupOnly": true
+        },
+        {
+         "group": "링크 스킬",
+         "name": "링크 스킬",
+         "value": "1.5%",
+         "valueNumber": 1.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 32.6,
+       "totalText": "32.6%",
+       "groups": {
+        "추가 옵션": {
+         "total": "12.6%",
+         "totalNumber": 12.6,
+         "itemCount": 2
+        },
+        "소울": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "기본 옵션": {
+         "total": "5%",
+         "totalNumber": 5,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 포인팅건 · 최종 대미지",
+         "value": "9.2%",
+         "valueNumber": 9.2
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 최종 대미지",
+         "value": "3.4%",
+         "valueNumber": 3.4
+        },
+        {
+         "group": "소울",
+         "name": "앱솔랩스 포인팅건",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 최종 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 50.6,
+       "totalText": "50.6%",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "3.2%",
+         "totalNumber": 3.2,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "2.9%",
+         "totalNumber": 2.9,
+         "itemCount": 0
+        },
+        "솔 야누스": {
+         "total": "0.5%",
+         "totalNumber": 0.5,
+         "itemCount": 0
+        },
+        "링크 스킬": {
+         "total": "1.5%",
+         "totalNumber": 1.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "22.5%",
+         "valueNumber": 22.5,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "3.2%",
+         "valueNumber": 3.2,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.9%",
+         "valueNumber": 2.9,
+         "groupOnly": true
+        },
+        {
+         "group": "솔 야누스",
+         "name": "솔 야누스",
+         "value": "0.5%",
+         "valueNumber": 0.5,
+         "groupOnly": true
+        },
+        {
+         "group": "링크 스킬",
+         "name": "링크 스킬",
+         "value": "1.5%",
+         "valueNumber": 1.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 51.6,
+       "totalText": "51.6%",
+       "groups": {
+        "추가 옵션": {
+         "total": "8.6%",
+         "totalNumber": 8.6,
+         "itemCount": 2
+        },
+        "소울": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 1
+        },
+        "기본 옵션": {
+         "total": "15%",
+         "totalNumber": 15,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "3%",
+         "totalNumber": 3,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 포인팅건 · 최종 대미지",
+         "value": "5.2%",
+         "valueNumber": 5.2
+        },
+        {
+         "group": "추가 옵션",
+         "name": "골드 하트 · 최종 대미지",
+         "value": "3.4%",
+         "valueNumber": 3.4
+        },
+        {
+         "group": "소울",
+         "name": "앱솔랩스 포인팅건",
+         "value": "15%",
+         "valueNumber": 15
+        },
+        {
+         "group": "기본 옵션",
+         "name": "루즈 컨트롤 머신 마크 · 최종 대미지",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "기본 옵션",
+         "name": "샤인 트리니티 · 최종 대미지",
+         "value": "10%",
+         "valueNumber": 10
+        },
+        {
+         "group": "세트 옵션",
+         "name": "칠흑 3세트",
+         "value": "3%",
+         "valueNumber": 3
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "스킬": {
+       "total": 10,
+       "totalText": "10%",
+       "groups": {
+        "스킬": {
+         "total": "10%",
+         "totalNumber": 10,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "스킬",
+         "name": "패시브",
+         "value": "10%",
+         "valueNumber": 10
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 50.6,
+       "totalText": "50.6%",
+       "groups": {
+        "하이퍼 스탯": {
+         "total": "22.5%",
+         "totalNumber": 22.5,
+         "itemCount": 0
+        },
+        "유니온": {
+         "total": "3.2%",
+         "totalNumber": 3.2,
+         "itemCount": 0
+        },
+        "길드": {
+         "total": "20%",
+         "totalNumber": 20,
+         "itemCount": 0
+        },
+        "헥사 스탯": {
+         "total": "2.9%",
+         "totalNumber": 2.9,
+         "itemCount": 0
+        },
+        "솔 야누스": {
+         "total": "0.5%",
+         "totalNumber": 0.5,
+         "itemCount": 0
+        },
+        "링크 스킬": {
+         "total": "1.5%",
+         "totalNumber": 1.5,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "하이퍼 스탯",
+         "name": "하이퍼 스탯",
+         "value": "22.5%",
+         "valueNumber": 22.5,
+         "groupOnly": true
+        },
+        {
+         "group": "유니온",
+         "name": "유니온",
+         "value": "3.2%",
+         "valueNumber": 3.2,
+         "groupOnly": true
+        },
+        {
+         "group": "길드",
+         "name": "길드",
+         "value": "20%",
+         "valueNumber": 20,
+         "groupOnly": true
+        },
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.9%",
+         "valueNumber": 2.9,
+         "groupOnly": true
+        },
+        {
+         "group": "솔 야누스",
+         "name": "솔 야누스",
+         "value": "0.5%",
+         "valueNumber": 0.5,
+         "groupOnly": true
+        },
+        {
+         "group": "링크 스킬",
+         "name": "링크 스킬",
+         "value": "1.5%",
+         "valueNumber": 1.5,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   },
+   "방어율 무시": {
+    "total": "42.697%",
+    "totalNumber": 42.697,
+    "byToggle": {
+     "보스 세팅 켬(기본)": "42.697%",
+     "게임 현재 조합": "14.381%",
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": "42.697%",
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": "14.381%",
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": "42.697%"
+    },
+    "categories": {
+     "장비": {
+      "total": 47.63,
+      "totalText": "47.63%",
+      "groups": {
+       "추가 옵션": {
+        "total": "8.63%",
+        "totalNumber": 8.63,
+        "itemCount": 2
+       },
+       "기본 옵션": {
+        "total": "7%",
+        "totalNumber": 7,
+        "itemCount": 2
+       },
+       "세트 옵션": {
+        "total": "23%",
+        "totalNumber": 23,
+        "itemCount": 1
+       },
+       "스타포스 강화옵션": {
+        "total": "9%",
+        "totalNumber": 9,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "추가 옵션",
+        "name": "앱솔랩스 파이렛케이프 · 방어율 무시",
+        "value": "4.35%",
+        "valueNumber": 4.35
+       },
+       {
+        "group": "추가 옵션",
+        "name": "앱솔랩스 파이렛슈즈 · 방어율 무시",
+        "value": "4.28%",
+        "valueNumber": 4.28
+       },
+       {
+        "group": "기본 옵션",
+        "name": "거대한 공포 · 방어율 무시",
+        "value": "2%",
+        "valueNumber": 2
+       },
+       {
+        "group": "기본 옵션",
+        "name": "이터니티 프라임 · 방어율 무시",
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "group": "세트 옵션",
+        "name": "앱솔 7세트",
+        "value": "23%",
+        "valueNumber": 23
+       },
+       {
+        "group": "스타포스 강화옵션",
+        "name": "앱솔 261성",
+        "value": "9%",
+        "valueNumber": 9
+       }
+      ]
+     },
+     "성장": {
+      "total": 2,
+      "totalText": "2%",
+      "groups": {
+       "쥬얼": {
+        "total": "2%",
+        "totalNumber": 2,
+        "itemCount": 1
+       }
+      },
+      "items": [
+       {
+        "group": "쥬얼",
+        "name": "SSS 쥬얼 5개",
+        "value": "2%",
+        "valueNumber": 2
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 2.1,
+      "totalText": "2.1%",
+      "groups": {
+       "헥사 스탯": {
+        "total": "2.1%",
+        "totalNumber": 2.1,
+        "itemCount": 0
+       }
+      },
+      "items": [
+       {
+        "group": "헥사 스탯",
+        "name": "헥사 스탯",
+        "value": "2.1%",
+        "valueNumber": 2.1,
+        "groupOnly": true
+       }
+      ]
+     }
+    },
+    "categoriesByToggle": {
+     "게임 현재 조합": {
+      "장비": {
+       "total": 11,
+       "totalText": "11%",
+       "groups": {
+        "세트 옵션": {
+         "total": "8%",
+         "totalNumber": 8,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "3%",
+         "totalNumber": 3,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "3%",
+         "valueNumber": 3
+        }
+       ]
+      },
+      "성장": {
+       "total": 2,
+       "totalText": "2%",
+       "groups": {
+        "쥬얼": {
+         "total": "2%",
+         "totalNumber": 2,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "SSS 쥬얼 5개",
+         "value": "2%",
+         "valueNumber": 2
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 2.1,
+       "totalText": "2.1%",
+       "groups": {
+        "헥사 스탯": {
+         "total": "2.1%",
+         "totalNumber": 2.1,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.1%",
+         "valueNumber": 2.1,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 47.63,
+       "totalText": "47.63%",
+       "groups": {
+        "추가 옵션": {
+         "total": "8.63%",
+         "totalNumber": 8.63,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "7%",
+         "totalNumber": 7,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "23%",
+         "totalNumber": 23,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "9%",
+         "totalNumber": 9,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 파이렛케이프 · 방어율 무시",
+         "value": "4.35%",
+         "valueNumber": 4.35
+        },
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 파이렛슈즈 · 방어율 무시",
+         "value": "4.28%",
+         "valueNumber": 4.28
+        },
+        {
+         "group": "기본 옵션",
+         "name": "거대한 공포 · 방어율 무시",
+         "value": "2%",
+         "valueNumber": 2
+        },
+        {
+         "group": "기본 옵션",
+         "name": "이터니티 프라임 · 방어율 무시",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "23%",
+         "valueNumber": 23
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "9%",
+         "valueNumber": 9
+        }
+       ]
+      },
+      "성장": {
+       "total": 2,
+       "totalText": "2%",
+       "groups": {
+        "쥬얼": {
+         "total": "2%",
+         "totalNumber": 2,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "SSS 쥬얼 5개",
+         "value": "2%",
+         "valueNumber": 2
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 2.1,
+       "totalText": "2.1%",
+       "groups": {
+        "헥사 스탯": {
+         "total": "2.1%",
+         "totalNumber": 2.1,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.1%",
+         "valueNumber": 2.1,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 11,
+       "totalText": "11%",
+       "groups": {
+        "세트 옵션": {
+         "total": "8%",
+         "totalNumber": 8,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "3%",
+         "totalNumber": 3,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 3세트",
+         "value": "8%",
+         "valueNumber": 8
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 125성",
+         "value": "3%",
+         "valueNumber": 3
+        }
+       ]
+      },
+      "성장": {
+       "total": 2,
+       "totalText": "2%",
+       "groups": {
+        "쥬얼": {
+         "total": "2%",
+         "totalNumber": 2,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "SSS 쥬얼 5개",
+         "value": "2%",
+         "valueNumber": 2
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 2.1,
+       "totalText": "2.1%",
+       "groups": {
+        "헥사 스탯": {
+         "total": "2.1%",
+         "totalNumber": 2.1,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.1%",
+         "valueNumber": 2.1,
+         "groupOnly": true
+        }
+       ]
+      }
+     },
+     "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+      "장비": {
+       "total": 47.63,
+       "totalText": "47.63%",
+       "groups": {
+        "추가 옵션": {
+         "total": "8.63%",
+         "totalNumber": 8.63,
+         "itemCount": 2
+        },
+        "기본 옵션": {
+         "total": "7%",
+         "totalNumber": 7,
+         "itemCount": 2
+        },
+        "세트 옵션": {
+         "total": "23%",
+         "totalNumber": 23,
+         "itemCount": 1
+        },
+        "스타포스 강화옵션": {
+         "total": "9%",
+         "totalNumber": 9,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 파이렛케이프 · 방어율 무시",
+         "value": "4.35%",
+         "valueNumber": 4.35
+        },
+        {
+         "group": "추가 옵션",
+         "name": "앱솔랩스 파이렛슈즈 · 방어율 무시",
+         "value": "4.28%",
+         "valueNumber": 4.28
+        },
+        {
+         "group": "기본 옵션",
+         "name": "거대한 공포 · 방어율 무시",
+         "value": "2%",
+         "valueNumber": 2
+        },
+        {
+         "group": "기본 옵션",
+         "name": "문라이트 프라임 · 방어율 무시",
+         "value": "5%",
+         "valueNumber": 5
+        },
+        {
+         "group": "세트 옵션",
+         "name": "앱솔 7세트",
+         "value": "23%",
+         "valueNumber": 23
+        },
+        {
+         "group": "스타포스 강화옵션",
+         "name": "앱솔 261성",
+         "value": "9%",
+         "valueNumber": 9
+        }
+       ]
+      },
+      "성장": {
+       "total": 2,
+       "totalText": "2%",
+       "groups": {
+        "쥬얼": {
+         "total": "2%",
+         "totalNumber": 2,
+         "itemCount": 1
+        }
+       },
+       "items": [
+        {
+         "group": "쥬얼",
+         "name": "SSS 쥬얼 5개",
+         "value": "2%",
+         "valueNumber": 2
+        }
+       ]
+      },
+      "콘텐츠": {
+       "total": 2.1,
+       "totalText": "2.1%",
+       "groups": {
+        "헥사 스탯": {
+         "total": "2.1%",
+         "totalNumber": 2.1,
+         "itemCount": 0
+        }
+       },
+       "items": [
+        {
+         "group": "헥사 스탯",
+         "name": "헥사 스탯",
+         "value": "2.1%",
+         "valueNumber": 2.1,
+         "groupOnly": true
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "optionSummary": {
+   "보스 세팅(기본)": {
+    "potentialTable": {
+     "마댐": {
+      "잠재": "107.24%",
+      "에디": "18.2%",
+      "합산": "125.44%"
+     },
+     "보공": {
+      "잠재": "0%",
+      "에디": "16.9%",
+      "합산": "16.9%"
+     },
+     "합산": {
+      "잠재": "107.24%",
+      "에디": "35.1%",
+      "합산": "142.34%"
+     }
+    },
+    "values": {
+     "방어율 무시": {
+      "value": "42.697%",
+      "valueNumber": 42.697
+     },
+     "아이템 드롭률": {
+      "value": "43.5%",
+      "valueNumber": 43.5
+     },
+     "메소 획득량": {
+      "value": "32.9%",
+      "valueNumber": 32.9
+     },
+     "최대 대미지": {
+      "value": "763,630,000",
+      "valueNumber": 763630000
+     },
+     "경험치 획득량": {
+      "value": "318.8%",
+      "valueNumber": 318.8
+     },
+     "파티 경험치 획득량": {
+      "value": "30%",
+      "valueNumber": 30
+     }
+    }
+   },
+   "게임 현재 조합": {
+    "potentialTable": {
+     "마댐": {
+      "잠재": "54.74%",
+      "에디": "0%",
+      "합산": "54.74%"
+     },
+     "보공": {
+      "잠재": "28.82%",
+      "에디": "10.3%",
+      "합산": "39.12%"
+     },
+     "합산": {
+      "잠재": "83.56%",
+      "에디": "10.3%",
+      "합산": "93.86%"
+     }
+    },
+    "values": {
+     "방어율 무시": {
+      "value": "14.381%",
+      "valueNumber": 14.381
+     },
+     "아이템 드롭률": {
+      "value": "27.8%",
+      "valueNumber": 27.8
+     },
+     "메소 획득량": {
+      "value": "32%",
+      "valueNumber": 32
+     },
+     "최대 대미지": {
+      "value": "696,680,000",
+      "valueNumber": 696680000
+     },
+     "경험치 획득량": {
+      "value": "409.8%",
+      "valueNumber": 409.8
+     },
+     "파티 경험치 획득량": {
+      "value": "70%",
+      "valueNumber": 70
+     }
+    }
+   },
+   "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+    "potentialTable": {
+     "마댐": {
+      "잠재": "107.24%",
+      "에디": "18.2%",
+      "합산": "125.44%"
+     },
+     "보공": {
+      "잠재": "0%",
+      "에디": "16.9%",
+      "합산": "16.9%"
+     },
+     "합산": {
+      "잠재": "107.24%",
+      "에디": "35.1%",
+      "합산": "142.34%"
+     }
+    },
+    "values": {
+     "방어율 무시": {
+      "value": "42.697%",
+      "valueNumber": 42.697
+     },
+     "아이템 드롭률": {
+      "value": "43.5%",
+      "valueNumber": 43.5
+     },
+     "메소 획득량": {
+      "value": "32.9%",
+      "valueNumber": 32.9
+     },
+     "최대 대미지": {
+      "value": "763,630,000",
+      "valueNumber": 763630000
+     },
+     "경험치 획득량": {
+      "value": "318.8%",
+      "valueNumber": 318.8
+     },
+     "파티 경험치 획득량": {
+      "value": "30%",
+      "valueNumber": 30
+     }
+    }
+   },
+   "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+    "potentialTable": {
+     "마댐": {
+      "잠재": "54.74%",
+      "에디": "0%",
+      "합산": "54.74%"
+     },
+     "보공": {
+      "잠재": "28.82%",
+      "에디": "10.3%",
+      "합산": "39.12%"
+     },
+     "합산": {
+      "잠재": "83.56%",
+      "에디": "10.3%",
+      "합산": "93.86%"
+     }
+    },
+    "values": {
+     "방어율 무시": {
+      "value": "14.381%",
+      "valueNumber": 14.381
+     },
+     "아이템 드롭률": {
+      "value": "27.8%",
+      "valueNumber": 27.8
+     },
+     "메소 획득량": {
+      "value": "32%",
+      "valueNumber": 32
+     },
+     "최대 대미지": {
+      "value": "696,680,000",
+      "valueNumber": 696680000
+     },
+     "경험치 획득량": {
+      "value": "387.3%",
+      "valueNumber": 387.3
+     },
+     "파티 경험치 획득량": {
+      "value": "70%",
+      "valueNumber": 70
+     }
+    }
+   },
+   "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+    "potentialTable": {
+     "마댐": {
+      "잠재": "107.24%",
+      "에디": "18.2%",
+      "합산": "125.44%"
+     },
+     "보공": {
+      "잠재": "0%",
+      "에디": "16.9%",
+      "합산": "16.9%"
+     },
+     "합산": {
+      "잠재": "107.24%",
+      "에디": "35.1%",
+      "합산": "142.34%"
+     }
+    },
+    "values": {
+     "방어율 무시": {
+      "value": "42.697%",
+      "valueNumber": 42.697
+     },
+     "아이템 드롭률": {
+      "value": "43.5%",
+      "valueNumber": 43.5
+     },
+     "메소 획득량": {
+      "value": "32.9%",
+      "valueNumber": 32.9
+     },
+     "최대 대미지": {
+      "value": "763,630,000",
+      "valueNumber": 763630000
+     },
+     "경험치 획득량": {
+      "value": "368.8%",
+      "valueNumber": 368.8
+     },
+     "파티 경험치 획득량": {
+      "value": "50%",
+      "valueNumber": 50
+     }
+    }
+   }
+  },
+  "statEfficiency": {
+   "보스 세팅(기본)": {
+    "baseStat": "최종 대미지",
+    "amount": "1",
+    "result": {
+     "label": "오르는 전투력",
+     "value": "+124,579 (0.471%)"
+    },
+    "selects": [
+     {
+      "value": "finalDmg",
+      "selectedText": "최종 대미지",
+      "options": [
+       "최종 대미지",
+       "치명타 피해",
+       "마법 공격력%",
+       "마법 대미지",
+       "마법 공격력",
+       "보스 공격력",
+       "방어율 무시",
+       "최대 대미지"
+      ]
+     }
+    ],
+    "rows": [
+     {
+      "stat": "최종 대미지",
+      "equivalent": "+1.00%",
+      "gain": "+124,579",
+      "gainNumber": 124579,
+      "selected": true
+     },
+     {
+      "stat": "치명타 피해",
+      "equivalent": "+1.95%",
+      "gain": "+63,854",
+      "gainNumber": 63854,
+      "selected": false
+     },
+     {
+      "stat": "마법 대미지",
+      "equivalent": "+1.97%",
+      "gain": "+63,163",
+      "gainNumber": 63163,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력%",
+      "equivalent": "+2.17%",
+      "gain": "+57,379",
+      "gainNumber": 57379,
+      "selected": false
+     },
+     {
+      "stat": "보스 공격력",
+      "equivalent": "+7.24%",
+      "gain": "+17,214",
+      "gainNumber": 17214,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력",
+      "equivalent": "+490",
+      "gain": "+25,438",
+      "gainNumber": 25438,
+      "selected": false
+     },
+     {
+      "stat": "최대 대미지",
+      "equivalent": "+18163555",
+      "gain": "+68,877",
+      "gainNumber": 68877,
+      "selected": false
+     }
+    ]
+   },
+   "게임 현재 조합": {
+    "baseStat": "최종 대미지",
+    "amount": "1",
+    "result": {
+     "label": "오르는 전투력",
+     "value": "+52,644 (0.518%)"
+    },
+    "selects": [
+     {
+      "value": "finalDmg",
+      "selectedText": "최종 대미지",
+      "options": [
+       "최종 대미지",
+       "치명타 피해",
+       "마법 공격력%",
+       "마법 대미지",
+       "마법 공격력",
+       "보스 공격력",
+       "방어율 무시",
+       "최대 대미지"
+      ]
+     }
+    ],
+    "rows": [
+     {
+      "stat": "최종 대미지",
+      "equivalent": "+1.00%",
+      "gain": "+52,644",
+      "gainNumber": 52644,
+      "selected": true
+     },
+     {
+      "stat": "치명타 피해",
+      "equivalent": "+1.40%",
+      "gain": "+37,600",
+      "gainNumber": 37600,
+      "selected": false
+     },
+     {
+      "stat": "마법 대미지",
+      "equivalent": "+1.53%",
+      "gain": "+34,497",
+      "gainNumber": 34497,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력%",
+      "equivalent": "+2.09%",
+      "gain": "+25,176",
+      "gainNumber": 25176,
+      "selected": false
+     },
+     {
+      "stat": "보스 공격력",
+      "equivalent": "+6.97%",
+      "gain": "+7,553",
+      "gainNumber": 7553,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력",
+      "equivalent": "+574",
+      "gain": "+9,177",
+      "gainNumber": 9177,
+      "selected": false
+     },
+     {
+      "stat": "최대 대미지",
+      "equivalent": "+18217635",
+      "gain": "+29,032",
+      "gainNumber": 29032,
+      "selected": false
+     }
+    ]
+   },
+   "장비 프리셋 1만 변경(나머지 보스 세팅 값)": {
+    "baseStat": "최종 대미지",
+    "amount": "1",
+    "result": {
+     "label": "오르는 전투력",
+     "value": "+124,579 (0.471%)"
+    },
+    "selects": [
+     {
+      "value": "finalDmg",
+      "selectedText": "최종 대미지",
+      "options": [
+       "최종 대미지",
+       "치명타 피해",
+       "마법 공격력%",
+       "마법 대미지",
+       "마법 공격력",
+       "보스 공격력",
+       "방어율 무시",
+       "최대 대미지"
+      ]
+     }
+    ],
+    "rows": [
+     {
+      "stat": "최종 대미지",
+      "equivalent": "+1.00%",
+      "gain": "+124,579",
+      "gainNumber": 124579,
+      "selected": true
+     },
+     {
+      "stat": "치명타 피해",
+      "equivalent": "+1.95%",
+      "gain": "+63,854",
+      "gainNumber": 63854,
+      "selected": false
+     },
+     {
+      "stat": "마법 대미지",
+      "equivalent": "+1.97%",
+      "gain": "+63,163",
+      "gainNumber": 63163,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력%",
+      "equivalent": "+2.17%",
+      "gain": "+57,379",
+      "gainNumber": 57379,
+      "selected": false
+     },
+     {
+      "stat": "보스 공격력",
+      "equivalent": "+7.24%",
+      "gain": "+17,214",
+      "gainNumber": 17214,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력",
+      "equivalent": "+490",
+      "gain": "+25,438",
+      "gainNumber": 25438,
+      "selected": false
+     },
+     {
+      "stat": "최대 대미지",
+      "equivalent": "+18163555",
+      "gain": "+68,877",
+      "gainNumber": 68877,
+      "selected": false
+     }
+    ]
+   },
+   "장비 프리셋 2만 변경(나머지 보스 세팅 값)": {
+    "baseStat": "최종 대미지",
+    "amount": "1",
+    "result": {
+     "label": "오르는 전투력",
+     "value": "+57,022 (0.518%)"
+    },
+    "selects": [
+     {
+      "value": "finalDmg",
+      "selectedText": "최종 대미지",
+      "options": [
+       "최종 대미지",
+       "치명타 피해",
+       "마법 공격력%",
+       "마법 대미지",
+       "마법 공격력",
+       "보스 공격력",
+       "방어율 무시",
+       "최대 대미지"
+      ]
+     }
+    ],
+    "rows": [
+     {
+      "stat": "최종 대미지",
+      "equivalent": "+1.00%",
+      "gain": "+57,022",
+      "gainNumber": 57022,
+      "selected": true
+     },
+     {
+      "stat": "치명타 피해",
+      "equivalent": "+1.52%",
+      "gain": "+37,600",
+      "gainNumber": 37600,
+      "selected": false
+     },
+     {
+      "stat": "마법 대미지",
+      "equivalent": "+1.53%",
+      "gain": "+37,366",
+      "gainNumber": 37366,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력%",
+      "equivalent": "+2.09%",
+      "gain": "+27,270",
+      "gainNumber": 27270,
+      "selected": false
+     },
+     {
+      "stat": "보스 공격력",
+      "equivalent": "+6.97%",
+      "gain": "+8,181",
+      "gainNumber": 8181,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력",
+      "equivalent": "+574",
+      "gain": "+9,941",
+      "gainNumber": 9941,
+      "selected": false
+     },
+     {
+      "stat": "최대 대미지",
+      "equivalent": "+18217635",
+      "gain": "+31,446",
+      "gainNumber": 31446,
+      "selected": false
+     }
+    ]
+   },
+   "장비 프리셋 3만 변경(나머지 보스 세팅 값)": {
+    "baseStat": "최종 대미지",
+    "amount": "1",
+    "result": {
+     "label": "오르는 전투력",
+     "value": "+124,579 (0.471%)"
+    },
+    "selects": [
+     {
+      "value": "finalDmg",
+      "selectedText": "최종 대미지",
+      "options": [
+       "최종 대미지",
+       "치명타 피해",
+       "마법 공격력%",
+       "마법 대미지",
+       "마법 공격력",
+       "보스 공격력",
+       "방어율 무시",
+       "최대 대미지"
+      ]
+     }
+    ],
+    "rows": [
+     {
+      "stat": "최종 대미지",
+      "equivalent": "+1.00%",
+      "gain": "+124,579",
+      "gainNumber": 124579,
+      "selected": true
+     },
+     {
+      "stat": "치명타 피해",
+      "equivalent": "+1.95%",
+      "gain": "+63,854",
+      "gainNumber": 63854,
+      "selected": false
+     },
+     {
+      "stat": "마법 대미지",
+      "equivalent": "+1.97%",
+      "gain": "+63,163",
+      "gainNumber": 63163,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력%",
+      "equivalent": "+2.17%",
+      "gain": "+57,379",
+      "gainNumber": 57379,
+      "selected": false
+     },
+     {
+      "stat": "보스 공격력",
+      "equivalent": "+7.24%",
+      "gain": "+17,214",
+      "gainNumber": 17214,
+      "selected": false
+     },
+     {
+      "stat": "마법 공격력",
+      "equivalent": "+490",
+      "gain": "+25,438",
+      "gainNumber": 25438,
+      "selected": false
+     },
+     {
+      "stat": "최대 대미지",
+      "equivalent": "+18163555",
+      "gain": "+68,877",
+      "gainNumber": 68877,
+      "selected": false
+     }
+    ]
+   }
+  },
+  "manualInputs": {
+   "status": [
+    {
+     "item": "스타코러스",
+     "status": "미입력"
+    },
+    {
+     "item": "성흔",
+     "status": "미입력"
+    },
+    {
+     "item": "축복",
+     "status": "미입력"
+    },
+    {
+     "item": "펫",
+     "status": "입력 완료"
+    },
+    {
+     "item": "유니온 챔피언",
+     "status": "미입력"
+    },
+    {
+     "item": "명예 배지",
+     "status": "미입력"
+    },
+    {
+     "item": "몬스터 컬렉션",
+     "status": "미입력"
+    }
+   ],
+   "filledExceptPet": [],
+   "note": "수동 입력 없음(펫 칩만 '입력 완료' 표시, 펫 세트는 API 값으로 반영).",
+   "defaultsText": {
+    "스타코러스": "스타코러스\n내 브라우저 · 로컬 저장 데이터\n초기화\n전부 열기\n스텔라코드\n›\n스타코러스\n마법 계열\n\n개방 0 / 32 · 누적 개방비용 0개\n\n✦\n최대 대미지\n+3,000만\n+3,000만\n✦\n마법 대미지\n+5%\n✦\n마법 대미지\n+6%\n✦\n마법 대미지\n+7%\n✦\n마법 대미지\n+5%\n✦\n마법 대미지\n+6%\n✦\n마법 대미지\n+7%\n✦\n최대 대미지\n+3,000만\n✦\n최대 대미지\n+3,000만\n✦\n최대 대미지\n+3,000만\n✦\n마법 공격력%\n+5%\n✦\n마법 공격력%\n+6%\n✦\n마법 공격력%\n+7%\n✦\n마법 공격력%\n+5%\n✦\n마법 공격력%\n+6%\n✦\n마법 공격력%\n+7%\n✦\n최종 대미지\n+5.5%\n+5.5%\n✦\n최대 대미지\n+3,000만\n+3,000만\n✦\n최종 대미지\n+5.5%\n+5.5%\n✦\n치명타 피해\n+5%\n✦\n치명타 피해\n+6%\n✦\n치명타 피해\n+10%\n✦\n치명타 피해\n+7%\n✦\n최대 대미지\n+5,000만\n✦\n최대 대미지\n+5,000만\n✦\n보스 공격력\n+5%\n✦\n보스 공격력\n+6%\n✦\n보스 공격력\n+10%\n✦\n보스 공격력\n+7%\n✦\n최대 대미지\n+3,000만\n+3,000만\n✦\n최종 대미지\n+10%\n✦\n최종 대미지\n+10%\n\n",
+    "성흔": "성흔\n내 브라우저 · 로컬 저장 데이터\n1\n2\n3\n없음\n초기화\n아칸\n유니크\n에픽\n초록빛\n경험치 획득량 +8%\n붉은빛\n보스 공격력 +5%\n주황빛\n치명타 피해 +6%\n푸른빛\n마법 대미지 +8%\n아자젤\n유니크\n에픽\n초록빛\n경험치 획득량 +15%\n붉은빛\n보스 공격력 +7%\n주황빛\n치명타 피해 +9%\n푸른빛\n마법 대미지 +12%\n적용된 성흔 효과\n성흔을 고르면 효과가 표시됩니다.\n\n",
+    "축복": "축복\n내 브라우저 · 로컬 저장 데이터\n1\n2\n3\n없음\n초기화\n✥ 기도 레벨\nLv.15\n선택한 등급에 맞춰 자동 설정\n01\n축복을 선택해 주세요\n×\n등급\n노말\n레어\n에픽\n유니크\n레전더리\n축복\n물리 공격력\n마법 공격력\n회피율\n명중률\n보스 방어력\n치명타 확률\n최대 HP\n최대 MP\n피버 버프 시간 증가\n맥스 피버 확률\n경험치 획득량\n파티 경험치 획득량\n보스 공격력\n물리 대미지\n마법 대미지\n치명타 피해\n최종 대미지\n방어율 무시\n값\n02\n축복을 선택해 주세요\n×\n등급\n노말\n레어\n에픽\n유니크\n레전더리\n축복\n물리 공격력\n마법 공격력\n회피율\n명중률\n보스 방어력\n치명타 확률\n최대 HP\n최대 MP\n피버 버프 시간 증가\n맥스 피버 확률\n경험치 획득량\n파티 경험치 획득량\n보스 공격력\n물리 대미지\n마법 대미지\n치명타 피해\n최종 대미지\n방어율 무시\n값\n03\n축복을 선택해 주세요\n×\n등급\n노말\n레어\n에픽\n유니크\n레전더리\n축복\n물리 공격력\n마법 공격력\n회피율\n명중률\n보스 방어력\n치명타 확률\n최대 HP\n최대 MP\n피버 버프 시간 증가\n맥스 피버 확률\n경험치 획득량\n파티 경험치 획득량\n보스 공격력\n물리 대미지\n마법 대미지\n치명타 피해\n최종 대미지\n방어율 무시\n값\n04\n축복을 선택해 주세요\n×\n등급\n노말\n레어\n에픽\n유니크\n레전더리\n축복\n물리 공격력\n마법 공격력\n회피율\n명중률\n보스 방어력\n치명타 확률\n최대 HP\n최대 MP\n피버 버프 시간 증가\n맥스 피버 확률\n경험치 획득량\n파티 경험치 획득량\n보스 공격력\n물리 대미지\n마법 대미지\n치명타 피해\n최종 대미지\n방어율 무시\n값\n05\n축복을 선택해 주세요\n×\n등급\n노말\n레어\n에픽\n유니크\n레전더리\n축복\n물리 공격력\n마법 공격력\n회피율\n명중률\n보스 방어력\n치명타 확률\n최대 HP\n최대 MP\n피버 버프 시간 증가\n맥스 피버 확률\n경험치 획득량\n파티 경험치 획득량\n보스 공격력\n물리 대미지\n마법 대미지\n치명타 피해\n최종 대미지\n방어율 무시\n값\n\n",
+    "펫": "펫\n내 브라우저 · 로컬 저장 데이터\n없음\n초기화\nMAX\n티타니아\n최고 Lv.50\n\n공격력 +0 (레벨 + HP 펫 장비)\n\n레벨\nMIN\n−\n+\nMAX\n장비\n미착용\nMIN\n−\n+\nMAX\n오베론\n최고 Lv.50\n\n공격력 +0 (레벨)\n\n레벨\nMIN\n−\n+\nMAX\n장비공격력 미반영\n미착용\nMIN\n−\n+\nMAX\n쁘띠 피코\n최고 Lv.50\n\n공격력 +0 (레벨)\n\n레벨\nMIN\n−\n+\nMAX\n장비공격력 미반영\n미착용\nMIN\n−\n+\nMAX\n\n합계 공격력 0레벨 0 · 장비 0\n\n",
+    "유니온 챔피언": "유니온 챔피언\n내 브라우저 · 로컬 저장 데이터\n없음\n초기화\n1번 챔피언\n초기화\nB\n마법 공격력\n+4%\nA\n보스 공격력\n+4%\nS\n마법 대미지\n+4%\nSS\n치명타 피해\n+4%\n2번 챔피언\n초기화\nB\n마법 공격력\n+4%\nA\n보스 공격력\n+4%\nS\n마법 대미지\n+4%\nSS\n치명타 피해\n+4%\n3번 챔피언\n초기화\nB\n마법 공격력\n+4%\nA\n보스 공격력\n+4%\nS\n마법 대미지\n+4%\nSS\n치명타 피해\n+4%\n4번 챔피언\n초기화\nB\n마법 공격력\n+4%\nA\n보스 공격력\n+4%\nS\n마법 대미지\n+4%\nSS\n치명타 피해\n+4%\n\n",
+    "명예 배지": "명예 배지\n계정 공유\n내 브라우저 · 로컬 저장 데이터\n1\n2\n3\n없음\n초기화\n보스 헌터 자동장착\n보스·스타일 자동장착\n+\n배지를 선택하세요\n—\n없음\n[1레벨] 만물상 · 경험치 획득량 +3%\n[2레벨] 만물상 · 경험치 획득량 +5%\n[3레벨] 만물상 · 경험치 획득량 +7%\n[4레벨] 만물상 · 경험치 획득량 +10%\n[1레벨] 육성의 달인 · 파티 경험치 획득량 +1%\n[2레벨] 육성의 달인 · 파티 경험치 획득량 +2%\n[3레벨] 육성의 달인 · 파티 경험치 획득량 +3%\n[4레벨] 육성의 달인 · 파티 경험치 획득량 +5%\n[1레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +1%\n[2레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +3%\n[3레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +5%\n[4레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +7%\n[1레벨] 재주꾼 · 치명타 확률 +3%\n[2레벨] 재주꾼 · 치명타 확률 +5%\n[3레벨] 재주꾼 · 치명타 확률 +7%\n[4레벨] 재주꾼 · 치명타 확률 +10%\n[1레벨] 보스 헌터 · 치명타 피해 +1%\n[2레벨] 보스 헌터 · 치명타 피해 +3%\n[3레벨] 보스 헌터 · 치명타 피해 +5%\n[4레벨] 보스 헌터 · 치명타 피해 +7%\n+\n배지를 선택하세요\n—\n없음\n[1레벨] 만물상 · 경험치 획득량 +3%\n[2레벨] 만물상 · 경험치 획득량 +5%\n[3레벨] 만물상 · 경험치 획득량 +7%\n[4레벨] 만물상 · 경험치 획득량 +10%\n[1레벨] 육성의 달인 · 파티 경험치 획득량 +1%\n[2레벨] 육성의 달인 · 파티 경험치 획득량 +2%\n[3레벨] 육성의 달인 · 파티 경험치 획득량 +3%\n[4레벨] 육성의 달인 · 파티 경험치 획득량 +5%\n[1레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +1%\n[2레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +3%\n[3레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +5%\n[4레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +7%\n[1레벨] 재주꾼 · 치명타 확률 +3%\n[2레벨] 재주꾼 · 치명타 확률 +5%\n[3레벨] 재주꾼 · 치명타 확률 +7%\n[4레벨] 재주꾼 · 치명타 확률 +10%\n[1레벨] 보스 헌터 · 치명타 피해 +1%\n[2레벨] 보스 헌터 · 치명타 피해 +3%\n[3레벨] 보스 헌터 · 치명타 피해 +5%\n[4레벨] 보스 헌터 · 치명타 피해 +7%\n+\n배지를 선택하세요\n—\n없음\n[1레벨] 만물상 · 경험치 획득량 +3%\n[2레벨] 만물상 · 경험치 획득량 +5%\n[3레벨] 만물상 · 경험치 획득량 +7%\n[4레벨] 만물상 · 경험치 획득량 +10%\n[1레벨] 육성의 달인 · 파티 경험치 획득량 +1%\n[2레벨] 육성의 달인 · 파티 경험치 획득량 +2%\n[3레벨] 육성의 달인 · 파티 경험치 획득량 +3%\n[4레벨] 육성의 달인 · 파티 경험치 획득량 +5%\n[1레벨] 스타일리스트 · 물리 공격력 · 마법 공격력 +1%\n[2레벨] 스타일리스트 · 물리 공격력 · 마법 공격력",
+    "몬스터 컬렉션": "몬스터 컬렉션\n계정 공유\n내 브라우저 · 로컬 저장 데이터\n없음\n초기화\nMAX\n빅토리아 아일랜드\n치명타 확률\n+2%\n엘나스 산맥\n경험치 획득량\n+3%\n호텔 아르크스\n경험치 획득량\n+2%\n무릉도원\n치명타 피해\n+2%\n에스페라\n치명타 피해\n+2%\n불타는 세르니움\n치명타 피해\n+2%\n미래의 문\n관통률\n+3%\n모라스\n보스 공격력\n+3%\n리멘\n보스 공격력\n+2%\n이에르\n보스 공격력\n+1%\n고통의 미궁\n최종 대미지\n+2%\n도원경\n최종 대미지\n+2%\n세르니움\n파티 경험치 획득량\n+2%\n아르테리아\n파티 경험치 획득량\n+2%\n\n"
+   }
+  },
+  "rulesSeen": [
+   "[마법 공격력] 장비 > 소울 게이지 > 소울 게이지 (0~199) = 30",
+   "[마법 공격력] 장비 > 세트 옵션 > (장비별) · 벨룸 소울 ×3 = 개당 180 (합 540)",
+   "[마법 공격력] 스킬 > 기본 공격력 > 레벨 기준 기본 공격력 = 19,706",
+   "[마법 공격력] 성장 > 세트 옵션 > 펫 세트 (페어리의 가호) = 1,500",
+   "[마법 공격력%] 장비 > 세트 옵션 > 앱솔 7세트 = 57%",
+   "[마법 공격력%] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 19.5%",
+   "[마법 공격력%] 스킬 > 스킬 > 패시브 = 300%",
+   "[마법 대미지] 장비 > 세트 옵션 > 앱솔 7세트 = 50%",
+   "[마법 대미지] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 21.5%",
+   "[마법 대미지] 스킬 > 스킬 > 패시브 = 60%",
+   "[마법 대미지] 성장 > 세트 옵션 > 펫 세트 (페어리의 가호) = 5%",
+   "[보스 공격력] 장비 > 세트 옵션 > 앱솔 7세트 = 11%",
+   "[보스 공격력] 장비 > 세트 옵션 > 칠흑 3세트 = 3%",
+   "[보스 공격력] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 19%",
+   "[보스 공격력] 스킬 > 스킬 > 패시브 = 10%",
+   "[보스 공격력] 성장 > 세트 옵션 > 펫 세트 (페어리의 가호) = 5%",
+   "[치명타 피해] 장비 > 세트 옵션 > 앱솔 7세트 = 130%",
+   "[치명타 피해] 스킬 > 스킬 > 패시브 = 30%",
+   "[치명타 피해] 성장 > 세트 옵션 > 펫 세트 (페어리의 가호) = 5%",
+   "[최대 대미지] 장비 > 세트 옵션 > 앱솔 7세트 = 49,000,000",
+   "[최대 대미지] 장비 > 세트 옵션 > 칠흑 3세트 = 7,500,000",
+   "[최대 대미지] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 29,000,000",
+   "[최대 대미지] 스킬 > 스킬 > 패시브 = 400,000,000",
+   "[최종 대미지] 장비 > 세트 옵션 > 칠흑 3세트 = 3%",
+   "[최종 대미지] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 10%",
+   "[최종 대미지] 스킬 > 스킬 > 패시브 = 10%",
+   "[방어율 무시] 장비 > 세트 옵션 > 앱솔 7세트 = 23%",
+   "[방어율 무시] 장비 > 스타포스 강화옵션 > 앱솔 261성 = 9%",
+   "[대미지 효율 도핑 기본값] 5종: 마법 공격력 +30% · 보스 공격력 +30% · 마법 대미지 +30% · 치명타 피해 +30% (기본 체크) / 맥피: 마법 공격력 +50% · 치명타 피해 +50% (기본 체크) / 일피: 마법 공격력 +25% · 치명타 피해 +25% / 탕탕: 보스 공격력 +20% · 마법 대미지 +20% / 보킬: 보스 공격력 +50% / 고보킬: 보스 공격력 +100% / MVP: 마법 공격력 +30% / 길스: 마법 대미지 +10% / 유니온: 마법 공격력 +30% / 요리: 보스 공격력 +10% · 치명타 피해 +5%",
+   "[대미지 효율 보스 방어율 선택지] 기본 하드 감시자 칼로스 (77.89%); 목록: 하드 감시자 칼로스 (77.89%), 하드 선택받은 세렌 (77.89%), 하드 검은 마법사 (77.89%), 하드 진 힐라 (68.15%), 카오스 윌 (68.15%), 하드 윌 (58.4%), 하드 아칸 (48.68%), 하드 데미안 (30%), 하드 스우 (30%)",
+   "[길드 탭] 전투력에 반영되는 공격력·대미지·치명타 피해 옵션만 표시합니다.",
+   "[보스 탭] 초록색 행은 현재 전투력으로 입장 가능한 난이도입니다.",
+   "[기본정보] 캐릭터 최고 기록은 '최고치 기준'"
+  ],
+  "rawCapture": "/home/jhc/mapleM/.claude/worktrees/renewal/.cache/calibration/competitor/스카니아-몬밀/mw/dom.json",
+  "hexaStatPages": {
+   "1": [
+    {
+     "slot": "메인",
+     "text": "최대 대미지 160,000,000 증가 Lv.5",
+     "level": 5,
+     "amount": "160,000,000",
+     "amountNumber": 160000000
+    },
+    {
+     "slot": "서브 1",
+     "text": "최종 대미지 2.4% 증가 Lv.6",
+     "level": 6,
+     "amount": "2.4%",
+     "amountNumber": 2.4
+    },
+    {
+     "slot": "서브 2",
+     "text": "방어율 무시 4% 증가 Lv.9",
+     "level": 9,
+     "amount": "4%",
+     "amountNumber": 4
+    }
+   ],
+   "2": [
+    {
+     "slot": "메인",
+     "text": "최대 대미지 260,000,000 증가 Lv.7",
+     "level": 7,
+     "amount": "260,000,000",
+     "amountNumber": 260000000
+    },
+    {
+     "slot": "서브 1",
+     "text": "최종 대미지 2.9% 증가 Lv.7",
+     "level": 7,
+     "amount": "2.9%",
+     "amountNumber": 2.9
+    },
+    {
+     "slot": "서브 2",
+     "text": "방어율 무시 2.1% 증가 Lv.6",
+     "level": 6,
+     "amount": "2.1%",
+     "amountNumber": 2.1
+    }
+   ]
+  },
+  "hexaContribution": {
+   "최대 대미지": 260000000,
+   "최종 대미지": 2.9,
+   "방어율 무시": 2.1
+  },
+  "bestRecord": {
+   "템환산 합계 · 문장 미포함": "485.3",
+   "템환산 합계 · 문장 포함": "485.3",
+   "최고 전투력": "26,435,607",
+   "최대 대미지": "763,630,000",
+   "경험치 획득량": "0.0%",
+   "파티 경험치 획득량": "0.0%",
+   "아이템 드롭률": "43.5%",
+   "메소 획득량": "32.9%"
+  },
+  "statEfficiencyDamageMode": {
+   "baseStat": "최종 대미지",
+   "amount": "1",
+   "result": {
+    "label": "오르는 대미지 효율",
+    "value": "+179,707 (0.471%)"
+   },
+   "selects": [
+    {
+     "value": "finalDmg",
+     "selectedText": "최종 대미지",
+     "options": [
+      "최종 대미지",
+      "치명타 피해",
+      "마법 공격력%",
+      "마법 대미지",
+      "마법 공격력",
+      "보스 공격력",
+      "방어율 무시",
+      "최대 대미지"
+     ]
+    },
+    {
+     "value": "77.89",
+     "selectedText": "하드 감시자 칼로스 (77.89%)",
+     "options": [
+      "하드 감시자 칼로스 (77.89%)",
+      "하드 선택받은 세렌 (77.89%)",
+      "하드 검은 마법사 (77.89%)",
+      "하드 진 힐라 (68.15%)",
+      "카오스 윌 (68.15%)",
+      "하드 윌 (58.4%)",
+      "하드 아칸 (48.68%)",
+      "하드 데미안 (30%)",
+      "하드 스우 (30%)"
+     ]
+    }
+   ],
+   "rows": [
+    {
+     "stat": "방어율 무시",
+     "equivalent": "+1% 효율: 최종 피해 +0.81%",
+     "gain": "+0.58%",
+     "gainNumber": 0.58,
+     "selected": false
+    },
+    {
+     "stat": "최종 대미지",
+     "equivalent": "기준 +1% · 최종 피해 +0.47%",
+     "gain": "기준 +1%",
+     "gainNumber": null,
+     "selected": true
+    },
+    {
+     "stat": "보스 공격력",
+     "equivalent": "+1% 효율: 최종 피해 +0.28%",
+     "gain": "+1.66%",
+     "gainNumber": 1.66,
+     "selected": false
+    },
+    {
+     "stat": "마법 대미지",
+     "equivalent": "+1% 효율: 최종 피해 +0.22%",
+     "gain": "+2.11%",
+     "gainNumber": 2.11,
+     "selected": false
+    },
+    {
+     "stat": "치명타 피해",
+     "equivalent": "+1% 효율: 최종 피해 +0.20%",
+     "gain": "+2.33%",
+     "gainNumber": 2.33,
+     "selected": false
+    },
+    {
+     "stat": "마법 공격력%",
+     "equivalent": "+1% 효율: 최종 피해 +0.07%",
+     "gain": "+6.64%",
+     "gainNumber": 6.64,
+     "selected": false
+    },
+    {
+     "stat": "마법 공격력",
+     "equivalent": "+300 공격력 효율: 최종 피해 +0.29%",
+     "gain": "+490 공격력",
+     "gainNumber": 490,
+     "selected": false
+    }
+   ],
+   "doping": {
+    "head": [
+     "도핑 효과 · 체크 시 효율에 합산",
+     "전체 체크",
+     "해제"
+    ],
+    "items": [
+     {
+      "text": "5종\n마법 공격력 +30% · 보스 공격력 +30% · 마법 대미지 +30% · 치명타 피해 +30%",
+      "checked": true
+     },
+     {
+      "text": "맥피\n마법 공격력 +50% · 치명타 피해 +50%",
+      "checked": true
+     },
+     {
+      "text": "일피\n마법 공격력 +25% · 치명타 피해 +25%",
+      "checked": false
+     },
+     {
+      "text": "탕탕\n보스 공격력 +20% · 마법 대미지 +20%",
+      "checked": false
+     },
+     {
+      "text": "보킬\n보스 공격력 +50%",
+      "checked": false
+     },
+     {
+      "text": "고보킬\n보스 공격력 +100%",
+      "checked": false
+     },
+     {
+      "text": "MVP\n마법 공격력 +30%",
+      "checked": false
+     },
+     {
+      "text": "길스\n마법 대미지 +10%",
+      "checked": false
+     },
+     {
+      "text": "유니온\n마법 공격력 +30%",
+      "checked": false
+     },
+     {
+      "text": "요리\n보스 공격력 +10% · 치명타 피해 +5%",
+      "checked": false
+     }
+    ]
+   },
+   "note": "대미지 효율 모드 기본 상태"
+  },
+  "verification": "인증 안 됨",
+  "blockedRequests": [
+   "POST https://api.maplemworlds.kr/api/logs/action"
+  ]
+ },
+ "maplemtool": {
+  "captured": true,
+  "url": "https://maplemtool.com/?name=%EB%AA%AC%EB%B0%80&world=%EC%8A%A4%EC%B9%B4%EB%8B%88%EC%95%84",
+  "capturedAt": "2026-10-28T08:09:11.091Z",
+  "capturedAtKST": "2026-10-28 17:09:11 KST",
+  "dataAsOf": "10. 28. 17:09 KST",
+  "header": {
+   "sub": "Lv.295 · 캡틴 · 스카니아 · 모들",
+   "lookupTime": "메엠툴 · 10.28 17:09 기준\n마지막 갱신 10. 28. 17:09 KST"
+  },
+  "combatPower": {
+   "계산 전투력 · 보스 프리셋(기본 표시)": 25916500,
+   "계산 전투력 · 처음 조회 조합(게임 현재)": 11618836,
+   "넥슨 API 표기 전투력": 14523198,
+   "프리셋 창 · 1위": 25916500,
+   "프리셋 창 · 2위": 25916500,
+   "프리셋 창 · 3위": 24507994,
+   "빈칸 채우기 · 수동 입력이 더하는 전투력(만 단위 반올림)": 7481
+  },
+  "combatPowerText": {
+   "빈칸 채우기 · 수동 입력이 더하는 전투력(만 단위 반올림)": "+7,481"
+  },
+  "presets": {
+   "보스 프리셋(기본)": {
+    "장비": 1,
+    "하이퍼 스탯": null,
+    "링크 스킬": null,
+    "쥬얼": 1,
+    "기계 심장": null,
+    "유니온 스탯": null
+   },
+   "처음 조회 조합(게임 현재)": {
+    "장비": 2,
+    "하이퍼 스탯": null,
+    "링크 스킬": null,
+    "쥬얼": 2,
+    "기계 심장": null,
+    "유니온 스탯": null
+   },
+   "프리셋 창 '처음 N' 표기(보스와 다른 항목만 표시됨)": {
+    "장비": 2,
+    "하이퍼 스탯": null,
+    "링크 스킬": null,
+    "쥬얼": 2,
+    "기계 심장": null,
+    "유니온 스탯": null
+   },
+   "프리셋 창에 없는 항목": [
+    "하이퍼 스탯",
+    "링크 스킬",
+    "기계 심장",
+    "유니온 스탯"
+   ],
+   "조합 수": "9",
+   "HEXA 스탯(스펙 카드 표기) · 보스 프리셋": [
+    {
+     "stat": "최댐 Lv.7",
+     "value": "+2.6억"
+    },
+    {
+     "stat": "최종 Lv.7",
+     "value": "+2.9%"
+    },
+    {
+     "stat": "방무 Lv.6",
+     "value": "+2.1%"
+    }
+   ],
+   "HEXA 스탯(스펙 카드 표기) · 처음 조회 조합": [
+    {
+     "stat": "최댐 Lv.7",
+     "value": "+2.6억"
+    },
+    {
+     "stat": "최종 Lv.7",
+     "value": "+2.9%"
+    },
+    {
+     "stat": "방무 Lv.6",
+     "value": "+2.1%"
+    }
+   ],
+   "하위 메뉴 표기 · 보스 프리셋": {
+    "쥬얼": "1번 페이지 (1번 페이지 사용 중)",
+    "하이퍼 스탯": "1번 프리셋 (1번 프리셋 · 남은 포인트 3)",
+    "장착 스킬": "15개 (세팅 2번 · 장착 15개)",
+    "링크 스킬": "1번 프리셋 (1번 프리셋 · 1칸)"
+   },
+   "하위 메뉴 표기 · 처음 조회 조합": {
+    "쥬얼": "2번 페이지 (2번 페이지 사용 중)",
+    "하이퍼 스탯": "1번 프리셋 (1번 프리셋 · 남은 포인트 3)",
+    "장착 스킬": "15개 (세팅 2번 · 장착 15개)",
+    "링크 스킬": "1번 프리셋 (1번 프리셋 · 1칸)"
+   }
+  },
+  "stats": {
+   "마법 공격력": {
+    "total": "103,936",
+    "totalNumber": 103936,
+    "byToggle": {
+     "보스 프리셋(기본)": "103,936",
+     "처음 조회 조합(게임 현재)": "110,839"
+    },
+    "note": "표시값은 출처 합산(계산값)입니다 · API 표기 112,170 (계산값이 -8,234)"
+   },
+   "마법 공격력%": {
+    "total": "382.6%",
+    "totalNumber": 382.6,
+    "byToggle": {
+     "보스 프리셋(기본)": "382.6%",
+     "처음 조회 조합(게임 현재)": "327.6%"
+    }
+   },
+   "마법 대미지": {
+    "total": "318.53%",
+    "totalNumber": 318.53,
+    "byToggle": {
+     "보스 프리셋(기본)": "318.53%",
+     "처음 조회 조합(게임 현재)": "197.83%"
+    }
+   },
+   "보스 공격력": {
+    "total": "112.4%",
+    "totalNumber": 112.4,
+    "byToggle": {
+     "보스 프리셋(기본)": "112.4%",
+     "처음 조회 조합(게임 현재)": "113.62%"
+    }
+   },
+   "치명타 피해": {
+    "total": "294%",
+    "totalNumber": 294,
+    "byToggle": {
+     "보스 프리셋(기본)": "294%",
+     "처음 조회 조합(게임 현재)": "194.6%"
+    }
+   },
+   "최대 대미지": {
+    "total": "763,880,000",
+    "totalNumber": 763880000,
+    "byToggle": {
+     "보스 프리셋(기본)": "763,880,000",
+     "처음 조회 조합(게임 현재)": "697,230,000"
+    }
+   },
+   "최종 대미지": {
+    "total": "114.7%",
+    "totalNumber": 114.7,
+    "byToggle": {
+     "보스 프리셋(기본)": "114.7%",
+     "처음 조회 조합(게임 현재)": "93.7%"
+    }
+   },
+   "방어율 무시": {
+    "total": "44.414%",
+    "totalNumber": 44.414,
+    "byToggle": {
+     "보스 프리셋(기본)": "44.414%",
+     "처음 조회 조합(게임 현재)": "14.649%"
+    }
+   },
+   "공격숙련도": {
+    "total": "67.94%",
+    "totalNumber": 67.94,
+    "byToggle": {
+     "보스 프리셋(기본)": "67.94%",
+     "처음 조회 조합(게임 현재)": "58.71%"
+    },
+    "note": "공격숙련도 = (명중률 + 관통률) ÷ (명중률 + 관통률 + 50) × 100"
+   }
+  },
+  "breakdown": {
+   "마법 공격력": {
+    "캐릭터": {
+     "total": 19721,
+     "totalText": "19,721",
+     "sub": []
+    },
+    "장비": {
+     "total": 82685,
+     "totalText": "82,685",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "31,508",
+       "valueNumber": 31508
+      },
+      {
+       "name": "강화",
+       "expandable": false,
+       "value": "31,662",
+       "valueNumber": 31662
+      },
+      {
+       "name": "심볼",
+       "expandable": false,
+       "value": "18,975",
+       "valueNumber": 18975
+      },
+      {
+       "name": "소울 세트옵션",
+       "expandable": false,
+       "value": "540",
+       "valueNumber": 540
+      }
+     ]
+    },
+    "성장": {
+     "total": 1530,
+     "totalText": "1,530",
+     "sub": [
+      {
+       "name": "펫 세트",
+       "expandable": false,
+       "value": "1,500",
+       "valueNumber": 1500
+      },
+      {
+       "name": "펫 (개별·펫장비)",
+       "expandable": false,
+       "value": "30",
+       "valueNumber": 30
+      }
+     ]
+    }
+   },
+   "마법 공격력%": {
+    "장비": {
+     "total": 82.5,
+     "totalText": "82.5%",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "6%",
+       "valueNumber": 6
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "57%",
+       "valueNumber": 57
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "19.5%",
+       "valueNumber": 19.5
+      }
+     ]
+    },
+    "스킬": {
+     "total": 282.6,
+     "totalText": "282.6%",
+     "sub": [
+      {
+       "name": "패시브",
+       "expandable": true,
+       "value": "282.6%",
+       "valueNumber": 282.6
+      }
+     ]
+    },
+    "콘텐츠": {
+     "total": 17.5,
+     "totalText": "17.5%",
+     "sub": [
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "5%",
+       "valueNumber": 5
+      },
+      {
+       "name": "길드 개인 스킬",
+       "expandable": false,
+       "value": "7.5%",
+       "valueNumber": 7.5
+      },
+      {
+       "name": "길드 어빌리티",
+       "expandable": false,
+       "value": "5%",
+       "valueNumber": 5
+      }
+     ]
+    }
+   },
+   "마법 대미지": {
+    "장비": {
+     "total": 231.39,
+     "totalText": "231.39%",
+     "sub": [
+      {
+       "name": "강화",
+       "expandable": false,
+       "value": "28%",
+       "valueNumber": 28
+      },
+      {
+       "name": "추가옵션",
+       "expandable": false,
+       "value": "6.45%",
+       "valueNumber": 6.45
+      },
+      {
+       "name": "잠재옵션",
+       "expandable": true,
+       "value": "125.44%",
+       "valueNumber": 125.44
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "50%",
+       "valueNumber": 50
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "21.5%",
+       "valueNumber": 21.5
+      }
+     ]
+    },
+    "스킬": {
+     "total": 60,
+     "totalText": "60%",
+     "sub": [
+      {
+       "name": "패시브",
+       "expandable": true,
+       "value": "60%",
+       "valueNumber": 60
+      }
+     ]
+    },
+    "성장": {
+     "total": 9.64,
+     "totalText": "9.64%",
+     "sub": [
+      {
+       "name": "펫 세트",
+       "expandable": false,
+       "value": "5%",
+       "valueNumber": 5
+      },
+      {
+       "name": "기계 심장",
+       "expandable": false,
+       "value": "4.64%",
+       "valueNumber": 4.64
+      }
+     ]
+    },
+    "콘텐츠": {
+     "total": 17.5,
+     "totalText": "17.5%",
+     "sub": [
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "10%",
+       "valueNumber": 10
+      },
+      {
+       "name": "길드 개인 스킬",
+       "expandable": false,
+       "value": "7.5%",
+       "valueNumber": 7.5
+      }
+     ]
+    }
+   },
+   "보스 공격력": {
+    "장비": {
+     "total": 64.9,
+     "totalText": "64.9%",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "5%",
+       "valueNumber": 5
+      },
+      {
+       "name": "잠재옵션",
+       "expandable": true,
+       "value": "16.9%",
+       "valueNumber": 16.9
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "24%",
+       "valueNumber": 24
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "19%",
+       "valueNumber": 19
+      }
+     ]
+    },
+    "스킬": {
+     "total": 10,
+     "totalText": "10%",
+     "sub": [
+      {
+       "name": "패시브",
+       "expandable": true,
+       "value": "10%",
+       "valueNumber": 10
+      }
+     ]
+    },
+    "성장": {
+     "total": 5,
+     "totalText": "5%",
+     "sub": []
+    },
+    "콘텐츠": {
+     "total": 32.5,
+     "totalText": "32.5%",
+     "sub": [
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "20%",
+       "valueNumber": 20
+      },
+      {
+       "name": "길드 개인 스킬",
+       "expandable": false,
+       "value": "12.5%",
+       "valueNumber": 12.5
+      }
+     ]
+    }
+   },
+   "치명타 피해": {
+    "장비": {
+     "total": 194,
+     "totalText": "194%",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "30%",
+       "valueNumber": 30
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "130%",
+       "valueNumber": 130
+      },
+      {
+       "name": "심볼",
+       "expandable": false,
+       "value": "34%",
+       "valueNumber": 34
+      }
+     ]
+    },
+    "스킬": {
+     "total": 30,
+     "totalText": "30%",
+     "sub": [
+      {
+       "name": "패시브",
+       "expandable": true,
+       "value": "30%",
+       "valueNumber": 30
+      }
+     ]
+    },
+    "성장": {
+     "total": 27.5,
+     "totalText": "27.5%",
+     "sub": [
+      {
+       "name": "펫 세트",
+       "expandable": false,
+       "value": "5%",
+       "valueNumber": 5
+      },
+      {
+       "name": "쥬얼",
+       "expandable": false,
+       "value": "22.5%",
+       "valueNumber": 22.5
+      }
+     ]
+    },
+    "콘텐츠": {
+     "total": 42.5,
+     "totalText": "42.5%",
+     "sub": [
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "25%",
+       "valueNumber": 25
+      },
+      {
+       "name": "길드 개인 스킬",
+       "expandable": false,
+       "value": "10%",
+       "valueNumber": 10
+      },
+      {
+       "name": "길드 어빌리티",
+       "expandable": false,
+       "value": "7.5%",
+       "valueNumber": 7.5
+      }
+     ]
+    }
+   },
+   "최대 대미지": {
+    "캐릭터": {
+     "total": 400000000,
+     "totalText": "400,000,000",
+     "sub": []
+    },
+    "장비": {
+     "total": 86200000,
+     "totalText": "86,200,000",
+     "sub": [
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "56,750,000",
+       "valueNumber": 56750000
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "29,000,000",
+       "valueNumber": 29000000
+      },
+      {
+       "name": "소울",
+       "expandable": false,
+       "value": "450,000",
+       "valueNumber": 450000
+      }
+     ]
+    },
+    "콘텐츠": {
+     "total": 277680000,
+     "totalText": "277,680,000",
+     "sub": [
+      {
+       "name": "하이퍼 스탯",
+       "expandable": false,
+       "value": "60,000",
+       "valueNumber": 60000
+      },
+      {
+       "name": "HEXA 스탯",
+       "expandable": false,
+       "value": "260,000,000",
+       "valueNumber": 260000000
+      },
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "17,500,000",
+       "valueNumber": 17500000
+      },
+      {
+       "name": "길드 어빌리티",
+       "expandable": false,
+       "value": "120,000",
+       "valueNumber": 120000
+      }
+     ]
+    }
+   },
+   "최종 대미지": {
+    "장비": {
+     "total": 50.7,
+     "totalText": "50.7%",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "15%",
+       "valueNumber": 15
+      },
+      {
+       "name": "추가옵션",
+       "expandable": false,
+       "value": "5.2%",
+       "valueNumber": 5.2
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "5.5%",
+       "valueNumber": 5.5
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "10%",
+       "valueNumber": 10
+      },
+      {
+       "name": "소울",
+       "expandable": false,
+       "value": "15%",
+       "valueNumber": 15
+      }
+     ]
+    },
+    "스킬": {
+     "total": 10.5,
+     "totalText": "10.5%",
+     "sub": [
+      {
+       "name": "패시브",
+       "expandable": true,
+       "value": "10.5%",
+       "valueNumber": 10.5
+      }
+     ]
+    },
+    "성장": {
+     "total": 3.4,
+     "totalText": "3.4%",
+     "sub": []
+    },
+    "콘텐츠": {
+     "total": 50.1,
+     "totalText": "50.1%",
+     "sub": [
+      {
+       "name": "링크 스킬",
+       "expandable": true,
+       "value": "1.5%",
+       "valueNumber": 1.5
+      },
+      {
+       "name": "하이퍼 스탯",
+       "expandable": false,
+       "value": "22.5%",
+       "valueNumber": 22.5
+      },
+      {
+       "name": "HEXA 스탯",
+       "expandable": false,
+       "value": "2.9%",
+       "valueNumber": 2.9
+      },
+      {
+       "name": "유니온",
+       "expandable": true,
+       "value": "3.2%",
+       "valueNumber": 3.2
+      },
+      {
+       "name": "길드 개인 스킬",
+       "expandable": false,
+       "value": "8%",
+       "valueNumber": 8
+      },
+      {
+       "name": "길드 어빌리티",
+       "expandable": false,
+       "value": "12%",
+       "valueNumber": 12
+      }
+     ]
+    }
+   },
+   "방어율 무시": {
+    "장비": {
+     "total": 47.63,
+     "totalText": "47.63%",
+     "sub": [
+      {
+       "name": "기본",
+       "expandable": false,
+       "value": "7%",
+       "valueNumber": 7
+      },
+      {
+       "name": "추가옵션",
+       "expandable": false,
+       "value": "8.63%",
+       "valueNumber": 8.63
+      },
+      {
+       "name": "세트 옵션",
+       "expandable": false,
+       "value": "23%",
+       "valueNumber": 23
+      },
+      {
+       "name": "스타포스 강화옵션",
+       "expandable": true,
+       "value": "9%",
+       "valueNumber": 9
+      }
+     ]
+    },
+    "성장": {
+     "total": 2,
+     "totalText": "2%",
+     "sub": []
+    },
+    "콘텐츠": {
+     "total": 2.1,
+     "totalText": "2.1%",
+     "sub": []
+    }
+   },
+   "공격숙련도": {
+    "명중률": {
+     "total": 37.5,
+     "totalText": "37.5%",
+     "sub": [
+      {
+       "name": "장비",
+       "expandable": true,
+       "value": "27.5%",
+       "valueNumber": 27.5
+      },
+      {
+       "name": "스킬",
+       "expandable": true,
+       "value": "5%",
+       "valueNumber": 5
+      },
+      {
+       "name": "성장",
+       "expandable": true,
+       "value": "5%",
+       "valueNumber": 5
+      }
+     ]
+    },
+    "관통률": {
+     "total": 68.5,
+     "totalText": "68.5%",
+     "sub": [
+      {
+       "name": "장비",
+       "expandable": true,
+       "value": "63.5%",
+       "valueNumber": 63.5
+      },
+      {
+       "name": "스킬",
+       "expandable": true,
+       "value": "5%",
+       "valueNumber": 5
+      }
+     ]
+    }
+   }
+  },
+  "breakdownByToggle": {
+   "마법 공격력": {
+    "처음 조회 조합(게임 현재)": {
+     "캐릭터": {
+      "total": 19721,
+      "totalText": "19,721",
+      "sub": []
+     },
+     "장비": {
+      "total": 89588,
+      "totalText": "89,588",
+      "sub": [
+       {
+        "name": "기본",
+        "expandable": false,
+        "value": "39,122",
+        "valueNumber": 39122
+       },
+       {
+        "name": "강화",
+        "expandable": false,
+        "value": "31,311",
+        "valueNumber": 31311
+       },
+       {
+        "name": "심볼",
+        "expandable": false,
+        "value": "18,975",
+        "valueNumber": 18975
+       },
+       {
+        "name": "소울 세트옵션",
+        "expandable": false,
+        "value": "180",
+        "valueNumber": 180
+       }
+      ]
+     },
+     "성장": {
+      "total": 1530,
+      "totalText": "1,530",
+      "sub": [
+       {
+        "name": "펫 세트",
+        "expandable": false,
+        "value": "1,500",
+        "valueNumber": 1500
+       },
+       {
+        "name": "펫 (개별·펫장비)",
+        "expandable": false,
+        "value": "30",
+        "valueNumber": 30
+       }
+      ]
+     }
+    },
+    "note": "표시값은 출처 합산(계산값)입니다 · API 표기 112,170 (계산값이 -1,331)"
+   },
+   "마법 공격력%": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 27.5,
+      "totalText": "27.5%",
+      "sub": [
+       {
+        "name": "기본",
+        "expandable": false,
+        "value": "6%",
+        "valueNumber": 6
+       },
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "6.5%",
+        "valueNumber": 6.5
+       },
+       {
+        "name": "스타포스 강화옵션",
+        "expandable": true,
+        "value": "15%",
+        "valueNumber": 15
+       }
+      ]
+     },
+     "스킬": {
+      "total": 282.6,
+      "totalText": "282.6%",
+      "sub": [
+       {
+        "name": "패시브",
+        "expandable": true,
+        "value": "282.6%",
+        "valueNumber": 282.6
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 17.5,
+      "totalText": "17.5%",
+      "sub": [
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "name": "길드 개인 스킬",
+        "expandable": false,
+        "value": "7.5%",
+        "valueNumber": 7.5
+       },
+       {
+        "name": "길드 어빌리티",
+        "expandable": false,
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     }
+    }
+   },
+   "마법 대미지": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 110.69,
+      "totalText": "110.69%",
+      "sub": [
+       {
+        "name": "기본",
+        "expandable": false,
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "name": "강화",
+        "expandable": false,
+        "value": "21%",
+        "valueNumber": 21
+       },
+       {
+        "name": "추가옵션",
+        "expandable": false,
+        "value": "6.45%",
+        "valueNumber": 6.45
+       },
+       {
+        "name": "잠재옵션",
+        "expandable": true,
+        "value": "54.74%",
+        "valueNumber": 54.74
+       },
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "6.5%",
+        "valueNumber": 6.5
+       },
+       {
+        "name": "스타포스 강화옵션",
+        "expandable": true,
+        "value": "17%",
+        "valueNumber": 17
+       }
+      ]
+     },
+     "스킬": {
+      "total": 60,
+      "totalText": "60%",
+      "sub": [
+       {
+        "name": "패시브",
+        "expandable": true,
+        "value": "60%",
+        "valueNumber": 60
+       }
+      ]
+     },
+     "성장": {
+      "total": 9.64,
+      "totalText": "9.64%",
+      "sub": [
+       {
+        "name": "펫 세트",
+        "expandable": false,
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "name": "기계 심장",
+        "expandable": false,
+        "value": "4.64%",
+        "valueNumber": 4.64
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 17.5,
+      "totalText": "17.5%",
+      "sub": [
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "10%",
+        "valueNumber": 10
+       },
+       {
+        "name": "길드 개인 스킬",
+        "expandable": false,
+        "value": "7.5%",
+        "valueNumber": 7.5
+       }
+      ]
+     }
+    }
+   },
+   "보스 공격력": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 66.12,
+      "totalText": "66.12%",
+      "sub": [
+       {
+        "name": "잠재옵션",
+        "expandable": true,
+        "value": "39.12%",
+        "valueNumber": 39.12
+       },
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "17%",
+        "valueNumber": 17
+       },
+       {
+        "name": "스타포스 강화옵션",
+        "expandable": true,
+        "value": "10%",
+        "valueNumber": 10
+       }
+      ]
+     },
+     "스킬": {
+      "total": 10,
+      "totalText": "10%",
+      "sub": [
+       {
+        "name": "패시브",
+        "expandable": true,
+        "value": "10%",
+        "valueNumber": 10
+       }
+      ]
+     },
+     "성장": {
+      "total": 5,
+      "totalText": "5%",
+      "sub": []
+     },
+     "콘텐츠": {
+      "total": 32.5,
+      "totalText": "32.5%",
+      "sub": [
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "20%",
+        "valueNumber": 20
+       },
+       {
+        "name": "길드 개인 스킬",
+        "expandable": false,
+        "value": "12.5%",
+        "valueNumber": 12.5
+       }
+      ]
+     }
+    }
+   },
+   "치명타 피해": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 117.1,
+      "totalText": "117.1%",
+      "sub": [
+       {
+        "name": "기본",
+        "expandable": false,
+        "value": "15%",
+        "valueNumber": 15
+       },
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "68.1%",
+        "valueNumber": 68.1
+       },
+       {
+        "name": "심볼",
+        "expandable": false,
+        "value": "34%",
+        "valueNumber": 34
+       }
+      ]
+     },
+     "스킬": {
+      "total": 30,
+      "totalText": "30%",
+      "sub": [
+       {
+        "name": "패시브",
+        "expandable": true,
+        "value": "30%",
+        "valueNumber": 30
+       }
+      ]
+     },
+     "성장": {
+      "total": 5,
+      "totalText": "5%",
+      "sub": []
+     },
+     "콘텐츠": {
+      "total": 42.5,
+      "totalText": "42.5%",
+      "sub": [
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "25%",
+        "valueNumber": 25
+       },
+       {
+        "name": "길드 개인 스킬",
+        "expandable": false,
+        "value": "10%",
+        "valueNumber": 10
+       },
+       {
+        "name": "길드 어빌리티",
+        "expandable": false,
+        "value": "7.5%",
+        "valueNumber": 7.5
+       }
+      ]
+     }
+    }
+   },
+   "최대 대미지": {
+    "처음 조회 조합(게임 현재)": {
+     "캐릭터": {
+      "total": 400000000,
+      "totalText": "400,000,000",
+      "sub": []
+     },
+     "장비": {
+      "total": 19550000,
+      "totalText": "19,550,000",
+      "sub": [
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "14,050,000",
+        "valueNumber": 14050000
+       },
+       {
+        "name": "스타포스 강화옵션",
+        "expandable": true,
+        "value": "5,500,000",
+        "valueNumber": 5500000
+       }
+      ]
+     },
+     "콘텐츠": {
+      "total": 277680000,
+      "totalText": "277,680,000",
+      "sub": [
+       {
+        "name": "하이퍼 스탯",
+        "expandable": false,
+        "value": "60,000",
+        "valueNumber": 60000
+       },
+       {
+        "name": "HEXA 스탯",
+        "expandable": false,
+        "value": "260,000,000",
+        "valueNumber": 260000000
+       },
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "17,500,000",
+        "valueNumber": 17500000
+       },
+       {
+        "name": "길드 어빌리티",
+        "expandable": false,
+        "value": "120,000",
+        "valueNumber": 120000
+       }
+      ]
+     }
+    }
+   },
+   "최종 대미지": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 29.7,
+      "totalText": "29.7%",
+      "sub": [
+       {
+        "name": "기본",
+        "expandable": false,
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "name": "추가옵션",
+        "expandable": false,
+        "value": "9.2%",
+        "valueNumber": 9.2
+       },
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "0.5%",
+        "valueNumber": 0.5
+       },
+       {
+        "name": "소울",
+        "expandable": false,
+        "value": "15%",
+        "valueNumber": 15
+       }
+      ]
+     },
+     "스킬": {
+      "total": 10.5,
+      "totalText": "10.5%",
+      "sub": [
+       {
+        "name": "패시브",
+        "expandable": true,
+        "value": "10.5%",
+        "valueNumber": 10.5
+       }
+      ]
+     },
+     "성장": {
+      "total": 3.4,
+      "totalText": "3.4%",
+      "sub": []
+     },
+     "콘텐츠": {
+      "total": 50.1,
+      "totalText": "50.1%",
+      "sub": [
+       {
+        "name": "링크 스킬",
+        "expandable": true,
+        "value": "1.5%",
+        "valueNumber": 1.5
+       },
+       {
+        "name": "하이퍼 스탯",
+        "expandable": false,
+        "value": "22.5%",
+        "valueNumber": 22.5
+       },
+       {
+        "name": "HEXA 스탯",
+        "expandable": false,
+        "value": "2.9%",
+        "valueNumber": 2.9
+       },
+       {
+        "name": "유니온",
+        "expandable": true,
+        "value": "3.2%",
+        "valueNumber": 3.2
+       },
+       {
+        "name": "길드 개인 스킬",
+        "expandable": false,
+        "value": "8%",
+        "valueNumber": 8
+       },
+       {
+        "name": "길드 어빌리티",
+        "expandable": false,
+        "value": "12%",
+        "valueNumber": 12
+       }
+      ]
+     }
+    }
+   },
+   "방어율 무시": {
+    "처음 조회 조합(게임 현재)": {
+     "장비": {
+      "total": 11,
+      "totalText": "11%",
+      "sub": [
+       {
+        "name": "세트 옵션",
+        "expandable": false,
+        "value": "8%",
+        "valueNumber": 8
+       },
+       {
+        "name": "스타포스 강화옵션",
+        "expandable": true,
+        "value": "3%",
+        "valueNumber": 3
+       }
+      ]
+     },
+     "성장": {
+      "total": 2,
+      "totalText": "2%",
+      "sub": []
+     },
+     "콘텐츠": {
+      "total": 2.1,
+      "totalText": "2.1%",
+      "sub": []
+     }
+    }
+   },
+   "공격숙련도": {
+    "처음 조회 조합(게임 현재)": {
+     "명중률": {
+      "total": 29.8,
+      "totalText": "29.8%",
+      "sub": [
+       {
+        "name": "장비",
+        "expandable": true,
+        "value": "19.8%",
+        "valueNumber": 19.8
+       },
+       {
+        "name": "스킬",
+        "expandable": true,
+        "value": "5%",
+        "valueNumber": 5
+       },
+       {
+        "name": "성장",
+        "expandable": true,
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     },
+     "관통률": {
+      "total": 41.3,
+      "totalText": "41.3%",
+      "sub": [
+       {
+        "name": "장비",
+        "expandable": true,
+        "value": "36.3%",
+        "valueNumber": 36.3
+       },
+       {
+        "name": "스킬",
+        "expandable": true,
+        "value": "5%",
+        "valueNumber": 5
+       }
+      ]
+     }
+    },
+    "note": "공격숙련도 = (명중률 + 관통률) ÷ (명중률 + 관통률 + 50) × 100"
+   }
+  },
+  "otherStats": {
+   "보스 프리셋(기본)": {
+    "경험치 획득량": {
+     "value": "338.3%",
+     "valueNumber": 338.3
+    },
+    "파티 경험치 획득량": {
+     "value": "98.5%",
+     "valueNumber": 98.5
+    },
+    "아이템 드롭률": {
+     "value": "43.5%",
+     "valueNumber": 43.5
+    },
+    "메소 획득량": {
+     "value": "39.9%",
+     "valueNumber": 39.9
+    },
+    "_note": "부가 능력치 출처 분해 성흔 · 업적(명예 배지) · 몬스터 컬렉션을 제외한 값이에요. (API 미제공)"
+   },
+   "처음 조회 조합(게임 현재)": {
+    "경험치 획득량": {
+     "value": "432.3%",
+     "valueNumber": 432.3
+    },
+    "파티 경험치 획득량": {
+     "value": "146.5%",
+     "valueNumber": 146.5
+    },
+    "아이템 드롭률": {
+     "value": "27.8%",
+     "valueNumber": 27.8
+    },
+    "메소 획득량": {
+     "value": "39%",
+     "valueNumber": 39
+    },
+    "_note": "부가 능력치 출처 분해 성흔 · 업적(명예 배지) · 몬스터 컬렉션을 제외한 값이에요. (API 미제공)"
+   }
+  },
+  "specCard": {
+   "보스 프리셋(기본)": {
+    "잠재합": "107.24%",
+    "에디합": "35.1%",
+    "방어율 무시": "44.4%",
+    "최대 대미지": "7.64억",
+    "솔 에르다 조각": "27%",
+    "스타코러스": "0 / 32"
+   },
+   "처음 조회 조합(게임 현재)": {
+    "잠재합": "83.56%",
+    "에디합": "10.3%",
+    "방어율 무시": "14.6%",
+    "최대 대미지": "6.97억",
+    "솔 에르다 조각": "27%",
+    "스타코러스": "0 / 32"
+   }
+  },
+  "assumedDefaults": {
+   "빈칸 채우기": {
+    "badge": "빈칸 채우기 8개 남음",
+    "summary": "아직 8개 항목이 비어 있습니다",
+    "manualCombatPower": "+7,481",
+    "note": "API에 없는 값이라 비워 두면 그만큼 전투력이 낮게 나와요.",
+    "items": {
+     "스타코러스": {
+      "mark": "○",
+      "after": null
+     },
+     "컨스텔라 코어": {
+      "mark": "○",
+      "after": null
+     },
+     "유니온 챔피언": {
+      "mark": "○",
+      "after": null
+     },
+     "축복": {
+      "mark": "○",
+      "after": null
+     },
+     "성흔": {
+      "mark": "○",
+      "after": null
+     },
+     "명예 배지": {
+      "mark": "○",
+      "after": null
+     },
+     "몬스터 컬렉션": {
+      "mark": "○",
+      "after": null
+     },
+     "펫": {
+      "mark": "○",
+      "after": "+7,481"
+     }
+    },
+    "perItemScreens": {
+     "스타코러스": "스텔라코드\n스타코러스\n입력 필요\n해당 없음\n✕\n비우기\n마법 공격력%\n최대\n마법 대미지\n최대\n보스 공격력\n최대\n치명타 피해\n최대\n최종 대미지\n최대\n최대 대미지\n최대\n전부 열기\n개방 0 / 32 · 누적 개방비용 0개\n최대 대미지\n+3,000만\n+5,000만\n+6,000만\n+7,000만\n+7,500만\n+8,000만\n+8,500만\n+9,000만\n+1억\n+1억 2,000만\n마법 대미지\n+5%\n마법 대미지\n+6%\n마법 대미지\n+7%\n마법 대미지\n+5%\n마법 대미지\n+6%\n마법 대미지\n+7%\n최대 대미지\n+3,000만\n최대 대미지\n+3,000만\n최대 대미지\n+3,000만\n마법 공격력%\n+5%\n마법 공격력%\n+6%\n마법 공격력%\n+7%\n마법 공격력%\n+5%\n마법 공격력%\n+6%\n마법 공격력%\n+7%\n최종 대미지\n+5.5%\n+6%\n+6.5%\n+7%\n+7.5%\n+8%\n+8.5%\n+9%\n+9.5%\n+10%\n최대 대미지\n+3,000만\n+5,000만\n+6,000만\n+7,000만\n+7,500만\n+8,000만\n+8,500만\n+9,000만\n+1억\n+1억 2,000만\n최종 대미지\n+5.5%\n+6%\n+6.5%\n+7%\n+7.5%\n+8%\n+8.5%\n+9%\n+9.5%\n+10%\n치명타 피해\n+5%\n치명타 피해\n+6%\n치명타 피해\n+10%\n치명타 피해\n+7%\n최대 대미지\n+5,000만\n최대 대미지\n+5,000만\n보스 공격력\n+5%\n보스 공격력\n+6%\n보스 공격력\n+10%\n보스 공격력\n+7%\n최대 대미지\n+3,000만\n+5,000만\n+6,000만\n+7,000만\n+7,500만\n+8,000만\n+8,500만\n+9,000만\n+1억\n+1억 2,000만\n최종 대미지\n+10%\n최종 대미지\n+10%\n−\n맞춤\n+",
+     "컨스텔라 코어": "스텔라코드\n컨스텔라 코어\n미입력\n해당 없음\n✕\n비우기\n타이딘의 나침반\n해적\n라비안의 영창\n액티브\nLv.\nMAX\n코어 점수\n0\n▶\n다음 레벨\n100,000\n강화 비용\n1\nLv.1\n스킬 레벨\nLv.0\n▶\n다음 레벨\nLv.1\n재사용 대기 시간\n120초\n대상\n상대방\n공격 타입\n물리/마법\n타겟 인원\n15\n타격 횟수\n30\n스킬 대미지\n—\n▶\n다음 레벨\n136%\n최대 공격 횟수\n—\n▶\n다음 레벨\n18\n[마무리 일격] 타격 횟수\n40\n[마무리 일격] 스킬 대미지\n—\n▶\n다음 레벨\n117%\n[마무리 일격] 최대 공격 횟수\n—\n▶\n다음 레벨\n24\n천해의 개척\n버프\nLv.\nMAX\n코어 점수\n0\n▶\n다음 레벨\n100,000\n강화 비용\n1\nLv.1\n스킬 레벨\nLv.0\n▶\n다음 레벨\nLv.1\n재사용 대기 시간\n120초\n대상\n자신\n무적 버프 시간\n—\n▶\n다음 레벨\n2초\n[패시브] 타겟 인원\n7\n[패시브] 타격 횟수\n36\n[패시브] 스킬 대미지\n—\n▶\n다음 레벨\n156%\n[패시브] 재발동 대기 시간\n5초\n코어 점수 합\n0\n전투력 밖\n두 코어 모두 Lv.30\n← 스타코러스",
+     "유니온 챔피언": "유니온 챔피언\n입력 필요\n해당 없음\n✕\n비우기\n1번 챔피언\n비우기\nB\n마법 공격력 +4%\nA\n보스 공격력 +4%\nS\n마법 대미지 +4%\nSS\n치명타 피해 +4%\n2번 챔피언\n비우기\nB\n마법 공격력 +4%\nA\n보스 공격력 +4%\nS\n마법 대미지 +4%\nSS\n치명타 피해 +4%\n3번 챔피언\n비우기\nB\n마법 공격력 +4%\nA\n보스 공격력 +4%\nS\n마법 대미지 +4%\nSS\n치명타 피해 +4%\n4번 챔피언\n비우기\nB\n마법 공격력 +4%\nA\n보스 공격력 +4%\nS\n마법 대미지 +4%\nSS\n치명타 피해 +4%\n최대로 채우기\n네 자리 모두 SS\n← 컨스텔라 코어",
+     "축복": "빛의 성소 : 축복\n1\n2\n3\n입력 필요\n해당 없음\n✕\n비우기\n기도 레벨\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n아직 비어 있습니다\n1\n·\n등급\nL · 레전더리\nU · 유니크\nE · 에픽\nR · 레어\nN · 노말\n축복\n값\n \n2\n·\n등급\nL · 레전더리\nU · 유니크\nE · 에픽\nR · 레어\nN · 노말\n축복\n값\n \n3\n·\n등급\nL · 레전더리\nU · 유니크\nE · 에픽\nR · 레어\nN · 노말\n축복\n값\nLv.4 개방\n4\n·\n등급\nL · 레전더리\nU · 유니크\nE · 에픽\nR · 레어\nN · 노말\n축복\n값\nLv.9 개방\n5\n·\n등급\nL · 레전더리\nU · 유니크\nE · 에픽\nR · 레어\nN · 노말\n축복\n값\nLv.13 개방\n전투력 기준\n최고 전투력\n수동 입력\n축복 효과\n칸 0 / 2\n축복 시뮬레이터 열기\n\n목표까지 평균 기도 횟수 · 직접 돌려 보기\n\n← 유니온 챔피언",
+     "성흔": "성흔\n1\n2\n3\n입력 필요\n해당 없음\n✕\n비우기\n2세트 효과 없음\n아칸 슬롯\n— 비어 있음 —\n유니크 · 초록빛\n유니크 · 붉은빛\n유니크 · 주황빛\n유니크 · 푸른빛\n에픽 · 초록빛\n에픽 · 붉은빛\n에픽 · 주황빛\n에픽 · 푸른빛\n유니크\n에픽\n초록빛\n경험치 획득량 +8%\n붉은빛\n보스 공격력 +5%\n주황빛\n치명타 피해 +6%\n푸른빛\n마법 대미지 +8%\n \n아자젤 슬롯\n— 비어 있음 —\n유니크 · 초록빛\n유니크 · 붉은빛\n유니크 · 주황빛\n유니크 · 푸른빛\n에픽 · 초록빛\n에픽 · 붉은빛\n에픽 · 주황빛\n에픽 · 푸른빛\n유니크\n에픽\n초록빛\n경험치 획득량 +15%\n붉은빛\n보스 공격력 +7%\n주황빛\n치명타 피해 +9%\n푸른빛\n마법 대미지 +12%\n \n빛깔별 최대\n초록빛\n붉은빛\n주황빛\n푸른빛\n← 축복",
+     "명예 배지": "명예 배지\n1\n2\n3\n입력 필요\n해당 없음\n✕\n비우기\n+\n— 비어 있음 —\n보스 헌터 1레벨\n보스 헌터 2레벨\n보스 헌터 3레벨\n보스 헌터 4레벨\n재주꾼 1레벨\n재주꾼 2레벨\n재주꾼 3레벨\n재주꾼 4레벨\n해방된 무기의 주인\n욕망의 마녀\n검은 마법사의 친위대장\n타락한 빛의 초월자\n선택받은 자\n의지의 감시자\n오염에 물든 연구자\n스타일리스트 1레벨\n스타일리스트 2레벨\n스타일리스트 3레벨\n스타일리스트 4레벨\n만물상 1레벨\n만물상 2레벨\n만물상 3레벨\n만물상 4레벨\n육성의 달인 1레벨\n육성의 달인 2레벨\n육성의 달인 3레벨\n육성의 달인 4레벨\n명예로운 용사\n찬란히 빛나는 용사\n위대한 용사\n[MVP] 다이아\n[MVP] 레드\n \n+\n— 비어 있음 —\n보스 헌터 1레벨\n보스 헌터 2레벨\n보스 헌터 3레벨\n보스 헌터 4레벨\n재주꾼 1레벨\n재주꾼 2레벨\n재주꾼 3레벨\n재주꾼 4레벨\n해방된 무기의 주인\n욕망의 마녀\n검은 마법사의 친위대장\n타락한 빛의 초월자\n선택받은 자\n의지의 감시자\n오염에 물든 연구자\n스타일리스트 1레벨\n스타일리스트 2레벨\n스타일리스트 3레벨\n스타일리스트 4레벨\n만물상 1레벨\n만물상 2레벨\n만물상 3레벨\n만물상 4레벨\n육성의 달인 1레벨\n육성의 달인 2레벨\n육성의 달인 3레벨\n육성의 달인 4레벨\n명예로운 용사\n찬란히 빛나는 용사\n위대한 용사\n[MVP] 다이아\n[MVP] 레드\n \n+\n— 비어 있음 —\n보스 헌터 1레벨\n보스 헌터 2레벨\n보스 헌터 3레벨\n보스 헌터 4레벨\n재주꾼 1레벨\n재주꾼 2레벨\n재주꾼 3레벨\n재주꾼 4레벨\n해방된 무기의 주인\n욕망의 마녀\n검은 마법사의 친위대장\n타락한 빛의 초월자\n선택받은 자\n의지의 감시자\n오염에 물든 연구자\n스타일리스트 1레벨\n스타일리스트 2레벨\n스타일리스트 3레벨\n스타일리스트 4레벨\n만물상 1레벨\n만물상 2레벨\n만물상 3레벨\n만물상 4레벨\n육성의 달인 1레벨\n육성의 달인 2레벨\n육성의 달인 3레벨\n육성의 달인 4레벨\n명예로운 용사\n찬란히 빛나는 용사\n위대한 용사\n[MVP] 다이아\n[MVP] 레드\n \n전투력 기준\n최고 전투력\n스탯 최대로\n치명타 피해\n파티 경험치 획득량\n경험치 획득량\n← 성흔",
+     "몬스터 컬렉션": "몬스터 컬렉션\n입력 필요\n해당 없음\n✕\n비우기\n보스 공격력\n+1%\n+2%\n+3%\n치명타 피해\n+2%\n+2%\n+2%\n최종 대미지\n+2%\n+2%\n관통률\n+3%\n경험치 획득량\n+2%\n+3%\n+3%\n파티 경험치 획득량\n+2%\n+3%\n최대로 채우기\n모두 MAX\n← 명예 배지",
+     "펫": "펫 (개별·펫장비)\n입력 필요\n해당 없음\n✕\n비우기\n티타니아\n루나 쁘띠 · ~2026-11-03\n오베론\n루나 쁘띠 · ~2026-11-03\n쁘띠 피코\n루나 쁘띠 · ~2026-11-03\n루나 쁘띠\n페어리의 가호\nMAX Lv.50\n펫 레벨\n티타니아\n오베론\n쁘띠 피코\nLv.30\n레벨 MAX\n펫장비\n미착용\n강화\n장비 MAX\n장비 하나 기준 100\n한 번에\n레벨 50 · 장비 10강\n자석펫 최대\n합계 공격력 30 레벨 30\n\n오가닉 펫 먹이\n1→30 301개\n30→50 429개\n한 마리 MAX까지 약 730개\n\n물리 공격력\n마법 공격력\n페어리의 가호 3세트\n물리 공격력 1,500, 명중률 5%, 치명타 확률 5%, 마법 공격력 1,500, 물리 대미지 5%, 치명타 피해 5%, 마법 대미지 5%, 보스 공격력 5%, 보스 방어력 5%, 버프 자동 사용 슬롯 추가 펫 당 6개로 확장, 피버버프 자동 발동, 룬 자동 사용, 피버 마그네틱 사용\n← 몬스터 컬렉션"
+    }
+   },
+   "스탯 환산": {
+    "note": "게임 전투력 공식으로 계산했어요 · 실제 보스 대미지와는 달라요",
+    "modes": [
+     {
+      "text": "전투력",
+      "on": false,
+      "pressed": "true"
+     },
+     {
+      "text": "예상딜",
+      "on": false,
+      "pressed": "false"
+     }
+    ],
+    "selects": [
+     {
+      "value": "final",
+      "selectedText": "최종 대미지"
+     },
+     {
+      "value": "진 힐라|HARD",
+      "selectedText": "진 힐라 HARD · 방어율 70%"
+     }
+    ],
+    "inputs": [
+     {
+      "value": "1"
+     },
+     {
+      "value": ""
+     },
+     {
+      "value": ""
+     }
+    ],
+    "gain": "+120,710 (+0.47%)",
+    "gainRange": "25,916,500 → 26,037,210",
+    "unit": "한 칸 = % 스탯 1%p · 공격력 100",
+    "myIgnoreDefense": "44.414%",
+    "authenticForce": null,
+    "maxDamageWithForce": "771,380,000",
+    "maxDamageNote": "내 최대 대미지 763,880,000 + 아케인포스 효과 7,500,000",
+    "normalSkill": "518,675,912 (67.2%)",
+    "originSkill": "627,749,044 (81.4%)"
+   },
+   "성장 시뮬레이터": {
+    "top": "메엠툴 | 성장 시뮬레이터 | 조회 화면으로 | 변경 후 전투력현재 25,916,500 | 25,916,500 | 변화 없음 | 변경 후 예상 수로 점수베타현재 모름 | 모름 | 밸런스 패치 | 예상딜 | 베타 | 모름 | 진 힐라 HARD | 버프 7 | 다음 컷 | 진 힐라 | HARD | 2,890,500 남음 | 14 / 28 | 조회 프리셋 | 보스 프리셋 | 배분 추천 | 전부 조회값으로 | 프리셋 | 성장 가이드 | 배분 추천 | 큐브 · 불꽃 효율 | 보스 컷 | 장비 | 심볼 | 쥬얼",
+    "expectedDealBoss": "진 힐라 HARD · 버프 아이템 7개",
+    "presetBasis": [
+     {
+      "text": "조회 프리셋",
+      "title": "조회 화면에서 고른 프리셋으로 계산해요",
+      "on": false,
+      "pressed": "true"
+     },
+     {
+      "text": "보스 프리셋",
+      "title": "조회 화면이 찾은 전투력이 가장 높은 조합으로 계산해요",
+      "on": false,
+      "pressed": "false"
+     }
+    ],
+    "unentered": [
+     "빛의 성소",
+     "펫",
+     "스텔라코드",
+     "유니온 챔피언",
+     "몬스터 컬렉션",
+     "명예 배지"
+    ]
+   },
+   "보스 프리셋 규칙": "프리셋 조합 중 전투력이 가장 높은 조합을 찾아 적용하고, 프리셋 창에서 1~3위를 보여요"
+  },
+  "rulesSeen": [
+   "[마법 공격력] 표시값은 출처 합산(계산값)입니다 · API 표기 112,170 (계산값이 -8,234)",
+   "[공격숙련도] 공격숙련도 = (명중률 + 관통률) ÷ (명중률 + 관통률 + 50) × 100",
+   "[기타 능력치] 부가 능력치 출처 분해 성흔 · 업적(명예 배지) · 몬스터 컬렉션을 제외한 값이에요. (API 미제공)",
+   "[스탯 환산] 게임 전투력 공식으로 계산했어요 · 실제 보스 대미지와는 달라요",
+   "[스탯 환산] 한 칸 = % 스탯 1%p · 공격력 100",
+   "[스탯 환산] 장비 옵션의 방무를 3% → 5%처럼 넣어요. 새 옵션은 '지금'을, 없애는 옵션은 '바꾼 뒤'를 비워요. 옵션마다 따로 곱해져 3% → 5%는 +2%와 조금 달라요.",
+   "[스탯 환산] 일반 스킬 추가 방무 15% (V 코어 마스터 기준)",
+   "[스탯 환산] 오리진 Lv.30 · 추가 방무 50%",
+   "[스탯 환산] 내 최대 대미지 763,880,000 + 아케인포스 효과 7,500,000",
+   "[스탯 환산] 실전 ↓전투력보다 실제 딜 기여가 작아요",
+   "[스탯 환산] 최대 대미지로 쳤을 때 보스에게 들어가는 피해예요",
+   "[보스 버튼] 프리셋 조합 중 전투력이 가장 높은 조합을 찾아 적용하고, 프리셋 창에서 1~3위를 보여요",
+   "[장비 옵션 · 세트] 칠흑의 보스 세트 3세트군단장 전리품 세트 6세트앱솔랩스 세트 7세트",
+   "[메뉴 툴팁] 쥬얼: 1번 페이지 사용 중",
+   "[메뉴 툴팁] 하이퍼 스탯: 1번 프리셋 · 남은 포인트 3",
+   "[메뉴 툴팁] V매트릭스: 점수 5,910만 · 전투력 공식 밖",
+   "[메뉴 툴팁] 장착 스킬: 세팅 2번 · 장착 15개",
+   "[빈칸 채우기] API에 없는 값이라 비워 두면 그만큼 전투력이 낮게 나와요."
+  ],
+  "rawCapture": "/home/jhc/mapleM/.claude/worktrees/renewal/.cache/calibration/competitor/스카니아-몬밀/mt/dom.json",
+  "partialError": null,
+  "blockedRequests": [
+   "POST https://maplemtool.com/cdn-cgi/rum",
+   "POST https://maplemtool.com/api/real-damage"
+  ]
+ }
+}

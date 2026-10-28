@@ -1,0 +1,196 @@
+{
+ "name": "combat-power.json",
+ "description": "계산 전투력 공식과 공식 전투력과의 관계",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "formula",
+     "formula": "CP = floor( A × (P + 0.3×(1+B)) × (1+D) × (1.2+C) × (1+F) × (M/1e8)^0.2 )",
+     "variables": {
+      "A": "직업 계열 깡공 합(출처 합 + 레벨 기본 공격력)",
+      "P": "공격력%/100",
+      "B": "보스 공격력/100",
+      "D": "대미지/100",
+      "C": "치명타 피해/100",
+      "F": "최종 대미지/100",
+      "M": "최대 대미지"
+     },
+     "notIncluded": [
+      "방어율 무시",
+      "치명타 확률"
+     ],
+     "nullWhen": "깡공 또는 최대 대미지가 0이면 null",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": ".3*(1+l(\"보스 공격력\"))",
+     "prettyLine": 1303
+    },
+    {
+     "id": "yt",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "Math.pow(a.max/1e8,.2)",
+     "prettyLine": 1312
+    },
+    {
+     "id": "floor",
+     "rule": "Math.floor",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function fn(a,o){",
+     "prettyLine": 3434
+    },
+    {
+     "id": "element",
+     "rule": "msm-class-elements 표로 물리/마법 결정, 없으면 물리 깡공 ≥ 마법 깡공이면 물리",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Tn(a,o={}){",
+     "prettyLine": 3174
+    },
+    {
+     "id": "official",
+     "rule": "API stat의 '전투력'은 character.combatPowerApi로만 보관하고 화면 하단에 '넥슨 API 표기 전투력'으로 따로 보여 준다. 보정·비교 계수 없음",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "넥슨 API 표기 전투력",
+     "prettyLine": 179992
+    },
+    {
+     "id": "boss-preset",
+     "rule": "장비·하이퍼·링크·쥬얼·기계 심장·유니온 스탯 프리셋 조합 전체를 계산해 최고 전투력 조합을 기본 표시(이전 조사: 디올 324개 조합)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Tn(a,o={}){",
+     "prettyLine": 3174
+    },
+    {
+     "id": "validation",
+     "rule": "이 문서 작성자가 위 규칙을 다시 구현해 우리 고정 데이터(test/fixtures)로 계산한 값(그 사이트 코드는 실행하지 않음). 디올 '조회 당시 착용 조합' 계산값은 이전 조사 화면값 64,096,437과 0.02% 차이. statApiCp는 API 능력치의 '전투력'",
+     "rows": [
+      {
+       "fixture": "스카니아-디올.json",
+       "class": "듀얼블레이드",
+       "level": 297,
+       "reimplCpOwnFlat": 64080892,
+       "reimplCpApiFlat": 63304668,
+       "statApiCp": 6106152
+      },
+      {
+       "fixture": "스카니아-몬밀.json",
+       "class": "캡틴",
+       "level": 295,
+       "reimplCpOwnFlat": 11615691,
+       "reimplCpApiFlat": 11758360,
+       "statApiCp": 14523198
+      },
+      {
+       "fixture": "스카니아-버디.json",
+       "class": "소울마스터",
+       "level": 298,
+       "reimplCpOwnFlat": 42629379,
+       "reimplCpApiFlat": 42052236,
+       "statApiCp": 3295586
+      },
+      {
+       "fixture": "스카니아-성령.json",
+       "class": "에릴",
+       "level": 291,
+       "reimplCpOwnFlat": 743840165,
+       "reimplCpApiFlat": 765677623,
+       "statApiCp": 1155042129
+      },
+      {
+       "fixture": "유니온-피카츄.json",
+       "class": "아크메이지(썬,콜)",
+       "level": 298,
+       "reimplCpOwnFlat": 173419392,
+       "reimplCpApiFlat": 171496064,
+       "statApiCp": 34344107
+      }
+     ],
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function fn(a,o){",
+     "prettyLine": 3434
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "계산 전투력 공식과 사용 방식",
+   "entries": [
+    {
+     "id": "formula",
+     "formula": "CP = round( A × (P + 0.3×(1+B)) × (1+D) × (1.2+C) × (1+F) × (M / 1e8)^0.2 )",
+     "variables": {
+      "A": "max(마법 공격력 합, 물리 공격력 합, 1) — 깡공(레벨 기본 공격력 포함)",
+      "P": "max(마공%, 물공%)/100",
+      "B": "보스 공격력/100",
+      "D": "max(마댐, 물댐)/100",
+      "C": "치명타 피해/100",
+      "F": "최종 대미지/100",
+      "M": "max(최대 대미지 합, 1)"
+     },
+     "notIncluded": [
+      "방어율 무시",
+      "치명타 확률"
+     ],
+     "constants": {
+      "bossBase": 0.3,
+      "critBase": 1.2,
+      "maxDamageRef": 100000000,
+      "maxDamageExponent": 0.2
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "const o=e+.3*(1+t),f=1+n,m=1.2+l,d=1+r,c=Math.pow(i/i8,.2)",
+     "prettyLine": 15431
+    },
+    {
+     "id": "inputs",
+     "rule": "xf 합산 결과(11개 키)를 Lt가 위 공식에 넣는다. 공식 API 전투력 값은 읽지 않는다",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "rawAttack:Math.max(m[\"마법 공격력\"],m[\"물리 공격력\"],1)",
+     "prettyLine": 15981
+    },
+    {
+     "id": "boss-setting-search",
+     "rule": "장비 프리셋 1~3 × 안드로이드 하트 프리셋 1~3 × 하이퍼 프리셋 × 쥬얼 페이지 × 링크 프리셋(엘프의 축복이 경험치 문구로 들어간 프리셋 제외) × 유니온 스탯 프리셋을 모두 계산해 최고 전투력 조합을 '보스 세팅'으로 고른다. HEXA 스탯 페이지는 넘기지 않아 API 활성(activate_flag=1) 코어를 쓴다",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "androidPresetNo:it,hyperPresetNo:ot",
+     "prettyLine": 43053
+    },
+    {
+     "id": "highest",
+     "rule": "'최고 전투력'(기본정보) = max(현재 장비 계산값, 장비 프리셋 1~3 각각의 계산값). 보스 입장 표는 서버 기록(characterRecord.combat_power)을 쓴다",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "ba=Math.max(da,...ze.map(X=>X.power))",
+     "prettyLine": 43075
+    }
+   ]
+  }
+ }
+}

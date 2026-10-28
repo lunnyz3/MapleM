@@ -1,8 +1,10 @@
 {
   "_meta": {
-    "source": "assistanceweapon_potential_prob.html",
-    "generated_at": "2026-03-05T09:43:18",
-    "note": "This file also contains separate tables about grade assignment/upgrade; this JSON focuses on option probability tables (first vs second/third). Second and third are identical in the source layout."
+    "source": "https://m.nexon.com/probability/5799?language=ko",
+    "source_title": "큐브 (잠재옵션) - 보조무기",
+    "generated_at": "2026-10-28T16:38:22+09:00",
+    "generator": "scripts/data/sync-probability.js",
+    "note": "first = 공식 '첫번째 옵션', second·third = 공식 '두번째 / 세번째 옵션'(같은 분포). option·value·p 는 공식 표기 그대로."
   },
   "보조무기 60": {
     "레어": {

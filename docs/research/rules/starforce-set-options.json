@@ -1,0 +1,1604 @@
+{
+ "name": "starforce-set-options.json",
+ "description": "스타포스(세트) 강화 옵션 표와 적용 규칙",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "set:도전자의 장비 세트",
+     "set": "도전자의 장비 세트",
+     "memberRule": {
+      "members": [],
+      "memberPrefix": "도전자의",
+      "grade": null
+     },
+     "tiers": [
+      {
+       "threshold": 160,
+       "stats": {
+        "블록률": 4,
+        "관통률": 4,
+        "최대 대미지": 10000000,
+        "물리 공격력%": 14.5,
+        "물리 대미지": 16.5,
+        "물리 피해 감소": 7.5,
+        "치명타 피해": 7.5,
+        "치명타 피해 감소": 7.5,
+        "마법 공격력%": 14.5,
+        "마법 대미지": 16.5,
+        "마법 피해 감소": 7.5,
+        "보스 공격력": 13,
+        "보스 방어력": 5,
+        "이동 속도": 11,
+        "점프 높이": 12.5,
+        "방어율 무시": 10
+       }
+      },
+      {
+       "threshold": 170,
+       "stats": {
+        "블록률": 8,
+        "관통률": 8,
+        "최대 대미지": 15000000,
+        "최종 대미지": 5,
+        "물리 공격력%": 17,
+        "물리 대미지": 19,
+        "물리 피해 감소": 15,
+        "치명타 피해": 15,
+        "치명타 피해 감소": 15,
+        "마법 공격력%": 17,
+        "마법 대미지": 19,
+        "마법 피해 감소": 15,
+        "보스 공격력": 16,
+        "보스 방어력": 10,
+        "이동 속도": 22,
+        "점프 높이": 25,
+        "방어율 무시": 15
+       }
+      },
+      {
+       "threshold": 200,
+       "stats": {
+        "블록률": 15.9,
+        "관통률": 15.9,
+        "최대 대미지": 35000000,
+        "최종 대미지": 10,
+        "물리 공격력%": 19.5,
+        "물리 대미지": 21.5,
+        "물리 피해 감소": 29.7,
+        "치명타 피해": 30.5,
+        "치명타 피해 감소": 30.5,
+        "마법 공격력%": 19.5,
+        "마법 대미지": 21.5,
+        "마법 피해 감소": 29.7,
+        "보스 공격력": 19,
+        "보스 방어력": 11,
+        "이동 속도": 44.1,
+        "점프 높이": 50.4,
+        "방어율 무시": 20
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"도전자의 장비 세트\"]"
+    },
+    {
+     "id": "set:아케인셰이드 세트",
+     "set": "아케인셰이드 세트",
+     "memberRule": {
+      "members": [
+       "아케인셰이드 아처햇",
+       "아케인셰이드 아처숄더",
+       "아케인셰이드 아처케이프",
+       "아케인셰이드 아처슈트",
+       "아케인셰이드 아처글러브",
+       "아케인셰이드 아처슈즈",
+       "아케인셰이드 보우"
+      ],
+      "memberPrefix": "아케인셰이드",
+      "grade": null
+     },
+     "tiers": [
+      {
+       "threshold": 55,
+       "stats": {
+        "최종 대미지": 9,
+        "최대 대미지": 75000000,
+        "물리 공격력%": 17,
+        "물리 대미지": 17,
+        "마법 공격력%": 17,
+        "마법 대미지": 17,
+        "보스 공격력": 16,
+        "방어율 무시": 7
+       }
+      },
+      {
+       "threshold": 80,
+       "stats": {
+        "최종 대미지": 11,
+        "최대 대미지": 90000000,
+        "물리 공격력%": 19.5,
+        "물리 대미지": 19.5,
+        "마법 공격력%": 19.5,
+        "마법 대미지": 19.5,
+        "보스 공격력": 19,
+        "방어율 무시": 8
+       }
+      },
+      {
+       "threshold": 105,
+       "stats": {
+        "최종 대미지": 13,
+        "최대 대미지": 105000000,
+        "물리 공격력%": 22,
+        "물리 대미지": 22,
+        "마법 공격력%": 22,
+        "마법 대미지": 22,
+        "보스 공격력": 22,
+        "방어율 무시": 9
+       }
+      },
+      {
+       "threshold": 130,
+       "stats": {
+        "최종 대미지": 15,
+        "최대 대미지": 120000000,
+        "물리 공격력%": 24.5,
+        "물리 대미지": 24.5,
+        "마법 공격력%": 24.5,
+        "마법 대미지": 24.5,
+        "보스 공격력": 25,
+        "방어율 무시": 10
+       }
+      },
+      {
+       "threshold": 155,
+       "stats": {
+        "최종 대미지": 17,
+        "최대 대미지": 135000000,
+        "물리 공격력%": 27,
+        "물리 대미지": 27,
+        "마법 공격력%": 27,
+        "마법 대미지": 27,
+        "보스 공격력": 28,
+        "방어율 무시": 11
+       }
+      },
+      {
+       "threshold": 180,
+       "stats": {
+        "최종 대미지": 19,
+        "최대 대미지": 150000000,
+        "물리 공격력%": 29.5,
+        "물리 대미지": 29.5,
+        "마법 공격력%": 29.5,
+        "마법 대미지": 29.5,
+        "보스 공격력": 31,
+        "방어율 무시": 12
+       }
+      },
+      {
+       "threshold": 205,
+       "stats": {
+        "최종 대미지": 21,
+        "최대 대미지": 195000000,
+        "물리 공격력%": 32,
+        "물리 대미지": 32,
+        "마법 공격력%": 32,
+        "마법 대미지": 32,
+        "보스 공격력": 34,
+        "방어율 무시": 13
+       }
+      },
+      {
+       "threshold": 230,
+       "stats": {
+        "최종 대미지": 23,
+        "최대 대미지": 300000000,
+        "물리 공격력%": 34.5,
+        "물리 대미지": 34.5,
+        "마법 공격력%": 34.5,
+        "마법 대미지": 34.5,
+        "보스 공격력": 37,
+        "방어율 무시": 14
+       }
+      },
+      {
+       "threshold": 255,
+       "stats": {
+        "최종 대미지": 25,
+        "최대 대미지": 465000000,
+        "물리 공격력%": 37,
+        "물리 대미지": 37,
+        "마법 공격력%": 37,
+        "마법 대미지": 37,
+        "보스 공격력": 40,
+        "방어율 무시": 15
+       }
+      },
+      {
+       "threshold": 280,
+       "stats": {
+        "최종 대미지": 27,
+        "최대 대미지": 660000000,
+        "물리 공격력%": 39.5,
+        "물리 대미지": 39.5,
+        "마법 공격력%": 39.5,
+        "마법 대미지": 39.5,
+        "보스 공격력": 43,
+        "방어율 무시": 16
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"아케인셰이드 세트\"]"
+    },
+    {
+     "id": "set:앱솔랩스 세트",
+     "set": "앱솔랩스 세트",
+     "memberRule": {
+      "members": [],
+      "memberPrefix": "앱솔랩스",
+      "grade": null
+     },
+     "tiers": [
+      {
+       "threshold": 70,
+       "stats": {
+        "최대 대미지": 5500000,
+        "물리 공격력%": 12,
+        "물리 대미지": 14,
+        "마법 공격력%": 12,
+        "마법 대미지": 14,
+        "보스 공격력": 10,
+        "방어율 무시": 3
+       }
+      },
+      {
+       "threshold": 140,
+       "stats": {
+        "최대 대미지": 11000000,
+        "물리 공격력%": 14.5,
+        "물리 대미지": 16.5,
+        "마법 공격력%": 14.5,
+        "마법 대미지": 16.5,
+        "보스 공격력": 13,
+        "방어율 무시": 5
+       }
+      },
+      {
+       "threshold": 210,
+       "stats": {
+        "최종 대미지": 5,
+        "최대 대미지": 18500000,
+        "물리 공격력%": 17,
+        "물리 대미지": 19,
+        "마법 공격력%": 17,
+        "마법 대미지": 19,
+        "보스 공격력": 16,
+        "방어율 무시": 7
+       }
+      },
+      {
+       "threshold": 245,
+       "stats": {
+        "최종 대미지": 10,
+        "최대 대미지": 29000000,
+        "물리 공격력%": 19.5,
+        "물리 대미지": 21.5,
+        "마법 공격력%": 19.5,
+        "마법 대미지": 21.5,
+        "보스 공격력": 19,
+        "방어율 무시": 9
+       }
+      },
+      {
+       "threshold": 280,
+       "stats": {
+        "최종 대미지": 15,
+        "최대 대미지": 42500000,
+        "물리 공격력%": 22,
+        "물리 대미지": 24,
+        "마법 공격력%": 22,
+        "마법 대미지": 24,
+        "보스 공격력": 22,
+        "방어율 무시": 11
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"앱솔랩스 세트\"]"
+    },
+    {
+     "id": "set:루타비스 세트(레전더리)",
+     "set": "루타비스 세트(레전더리)",
+     "memberRule": {
+      "memberKeywords": {
+       "하이네스": "모자",
+       "이글아이": "상의",
+       "트릭스터": "하의",
+       "파프니르": "무기"
+      },
+      "grade": "레전더리"
+     },
+     "tiers": [
+      {
+       "threshold": 30,
+       "stats": {
+        "최대 대미지": 2100000,
+        "물리 공격력%": 9,
+        "물리 대미지": 10,
+        "마법 공격력%": 9,
+        "마법 대미지": 10,
+        "보스 공격력": 7.5
+       }
+      },
+      {
+       "threshold": 60,
+       "stats": {
+        "최대 대미지": 4100000,
+        "물리 공격력%": 10.5,
+        "물리 대미지": 11.5,
+        "마법 공격력%": 10.5,
+        "마법 대미지": 11.5,
+        "보스 공격력": 10
+       }
+      },
+      {
+       "threshold": 90,
+       "stats": {
+        "최종 대미지": 4,
+        "최대 대미지": 6100000,
+        "물리 공격력%": 12,
+        "물리 대미지": 13,
+        "마법 공격력%": 12,
+        "마법 대미지": 13,
+        "보스 공격력": 12.5,
+        "방어율 무시": 2
+       }
+      },
+      {
+       "threshold": 120,
+       "stats": {
+        "최종 대미지": 9,
+        "최대 대미지": 11600000,
+        "물리 공격력%": 13.5,
+        "물리 대미지": 14.5,
+        "마법 공격력%": 13.5,
+        "마법 대미지": 14.5,
+        "보스 공격력": 15,
+        "방어율 무시": 7
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"루타비스 세트(레전더리)\"]"
+    },
+    {
+     "id": "set:루타비스 세트(유니크)",
+     "set": "루타비스 세트(유니크)",
+     "memberRule": {
+      "memberKeywords": {
+       "하이네스": "모자",
+       "이글아이": "상의",
+       "트릭스터": "하의",
+       "파프니르": "무기"
+      },
+      "grade": "유니크"
+     },
+     "tiers": [
+      {
+       "threshold": 30,
+       "stats": {
+        "물리 공격력%": 8,
+        "물리 대미지": 9,
+        "마법 공격력%": 8,
+        "마법 대미지": 9,
+        "보스 공격력": 5
+       }
+      },
+      {
+       "threshold": 60,
+       "stats": {
+        "물리 공격력%": 9.5,
+        "물리 대미지": 10.5,
+        "마법 공격력%": 9.5,
+        "마법 대미지": 10.5,
+        "보스 공격력": 7.5
+       }
+      },
+      {
+       "threshold": 90,
+       "stats": {
+        "최대 대미지": 1000000,
+        "물리 공격력%": 11,
+        "물리 대미지": 12,
+        "마법 공격력%": 11,
+        "마법 대미지": 12,
+        "보스 공격력": 10
+       }
+      },
+      {
+       "threshold": 120,
+       "stats": {
+        "최종 대미지": 5,
+        "최대 대미지": 2400000,
+        "물리 공격력%": 12.5,
+        "물리 대미지": 13.5,
+        "마법 공격력%": 12.5,
+        "마법 대미지": 13.5,
+        "보스 공격력": 12.5,
+        "방어율 무시": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"루타비스 세트(유니크)\"]"
+    },
+    {
+     "id": "set:궁수 160레벨 세트 (레전더리)",
+     "set": "궁수 160레벨 세트 (레전더리)",
+     "memberRule": {
+      "members": [
+       "펜살리르 센티널슈트",
+       "펜살리르 센티널글러브",
+       "펜살리르 센티널부츠"
+      ],
+      "memberPrefix": "펜살리르",
+      "grade": "레전더리"
+     },
+     "tiers": [
+      {
+       "threshold": 30,
+       "stats": {
+        "물리 공격력%": 4,
+        "물리 대미지": 4,
+        "마법 공격력%": 4,
+        "마법 대미지": 4
+       }
+      },
+      {
+       "threshold": 60,
+       "stats": {
+        "물리 공격력%": 8,
+        "물리 대미지": 8,
+        "마법 공격력%": 8,
+        "마법 대미지": 8
+       }
+      },
+      {
+       "threshold": 90,
+       "stats": {
+        "물리 공격력%": 12,
+        "물리 대미지": 12,
+        "마법 공격력%": 12,
+        "마법 대미지": 12
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"궁수 160레벨 세트 (레전더리)\"]"
+    },
+    {
+     "id": "set:궁수 160레벨 세트 (유니크)",
+     "set": "궁수 160레벨 세트 (유니크)",
+     "memberRule": {
+      "members": [
+       "펜살리르 센티널슈트",
+       "펜살리르 센티널글러브",
+       "펜살리르 센티널부츠"
+      ],
+      "memberPrefix": "펜살리르",
+      "memberKeywords": {
+       "우트가르드": "무기(택1)"
+      },
+      "grade": "유니크"
+     },
+     "tiers": [
+      {
+       "threshold": 30,
+       "stats": {
+        "물리 공격력%": 3,
+        "물리 대미지": 3,
+        "마법 공격력%": 3,
+        "마법 대미지": 3
+       }
+      },
+      {
+       "threshold": 60,
+       "stats": {
+        "물리 공격력%": 6,
+        "물리 대미지": 6,
+        "마법 공격력%": 6,
+        "마법 대미지": 6
+       }
+      },
+      {
+       "threshold": 90,
+       "stats": {
+        "물리 공격력%": 9,
+        "물리 대미지": 9,
+        "마법 공격력%": 9,
+        "마법 대미지": 9
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력% 키는 % 공격력)"
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json sets[\"궁수 160레벨 세트 (유니크)\"]"
+    },
+    {
+     "id": "rule:apply",
+     "rule": "자체 표로 계산해 '보정:<세트명>' 출처로 더한다(API set-effect에는 스타포스 옵션이 없다). 세트 장비 스타포스 합 이상인 가장 큰 threshold 행을 쓴다.",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function za(a,o,{adjust:i}={}){",
+     "prettyLine": 1526
+    },
+    {
+     "id": "rule:onepiece",
+     "rule": "한벌옷은 스타포스 ×2",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "o*(a.item_equipment_slot_name===\"한벌옷\"?2:1)",
+     "prettyLine": 1344
+    },
+    {
+     "id": "rule:lucky",
+     "rule": "무기 칸의 '제네시스' 아이템은 럭키 아이템. weaponSlot 세트(도전자·아케인·앱솔·루타비스·160제·마스터 스노우) 가운데 이미 3개 이상(빌림 포함)인 세트마다 개수 +1, 그 무기의 스타포스를 세트 스타포스 합에 더한다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Kt(a,o=!0,i=lt(a)){",
+     "prettyLine": 1366
+    },
+    {
+     "id": "rule:borrow",
+     "rule": "앱솔랩스 1개 이상 + 아케인셰이드가 정확히 1개면 앱솔랩스 개수 +1, 그 아케인 장비 스타포스를 앱솔랩스 스타포스 합에 더한다(대여 장비 제외)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json _rules.borrow"
+    },
+    {
+     "id": "rule:noStarforce",
+     "rule": "스타포스 옵션이 없는 세트 목록",
+     "value": [
+      "칠흑의 보스 세트",
+      "군단장 전리품 세트",
+      "보스 전리품 세트",
+      "마스터 스노우 세트",
+      "차원 균열의 반지 세트",
+      "커닝M타워 반지",
+      "RE:BOOST 칭호 훈장 세트",
+      "궁수 140레벨 세트 (유니크)",
+      "무릉도장의 투신 세트",
+      "아스완의 빛 세트",
+      "악몽의 주인 격파자 세트",
+      "축복받은 커닝M타워 반지",
+      "타락한 빛의 인장",
+      "힐라를 잘 아는 자 세트"
+     ],
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-starforce-sets.json",
+     "anchor": "msm-starforce-sets.json _noStarforce"
+    },
+    {
+     "id": "rule:alias",
+     "rule": "API 세트명 '(전사|마법사|궁수|도적|해적) (140|160)레벨 세트 (등급)'은 '궁수 …' 표로, '노바 디멘션 X 세트'는 '노바 디멘션 전사 세트' 표로 본다(표 이름은 궁수지만 접두어 '펜살리르'·'무스펠'로 모든 직업 장비를 센다)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "`궁수 ${i[1]}레벨 세트 (${i[2]})`",
+     "prettyLine": 728
+    },
+    {
+     "id": "rule:rental",
+     "rule": "'[장비 대여]' 접두어 장비는 일반 장비와 따로 세어 개수가 많은 쪽을 쓰고, 다른 쪽은 '(장비 대여)'/'(일반 장비)' 접미어 세트로 따로 계산",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Kt(a,o=!0,i=lt(a)){",
+     "prettyLine": 1366
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "스타포스 강화(세트) 옵션 표. 캐릭터 합산은 s8(아케인·앱솔만), 세트 계산기는 o0(팦레·팦유·펜살·무스펠 추가)",
+   "entries": [
+    {
+     "id": "charpage:아케인",
+     "usedBy": "캐릭터 상세 스탯 합산(xf)",
+     "set": "아케인",
+     "setItemRule": "아이템명에 '아케인셰이드' 포함",
+     "tierRule": "세트 장비 스타포스 합(한벌옷 2배, 제네시스 무기 럭키 적용)을 280에서 자르고, 이하인 가장 큰 구간 키를 고른다",
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력은 % 공격력으로 변환)"
+     },
+     "tiers": {
+      "55": {
+       "최대 대미지": 75000000,
+       "최종 대미지": 9,
+       "보스 공격력": 16,
+       "마법 대미지": 17,
+       "물리 대미지": 17,
+       "마법 공격력": 17,
+       "물리 공격력": 17,
+       "방어율 무시": 7
+      },
+      "80": {
+       "최대 대미지": 90000000,
+       "최종 대미지": 11,
+       "보스 공격력": 19,
+       "마법 대미지": 19.5,
+       "물리 대미지": 19.5,
+       "마법 공격력": 19.5,
+       "물리 공격력": 19.5,
+       "방어율 무시": 8
+      },
+      "105": {
+       "최대 대미지": 105000000,
+       "최종 대미지": 13,
+       "보스 공격력": 22,
+       "마법 대미지": 22,
+       "물리 대미지": 22,
+       "마법 공격력": 22,
+       "물리 공격력": 22,
+       "방어율 무시": 9
+      },
+      "130": {
+       "최대 대미지": 120000000,
+       "최종 대미지": 15,
+       "보스 공격력": 25,
+       "마법 대미지": 24.5,
+       "물리 대미지": 24.5,
+       "마법 공격력": 24.5,
+       "물리 공격력": 24.5,
+       "방어율 무시": 10
+      },
+      "155": {
+       "최대 대미지": 135000000,
+       "최종 대미지": 17,
+       "보스 공격력": 28,
+       "마법 대미지": 27,
+       "물리 대미지": 27,
+       "마법 공격력": 27,
+       "물리 공격력": 27,
+       "방어율 무시": 11
+      },
+      "180": {
+       "최대 대미지": 150000000,
+       "최종 대미지": 19,
+       "보스 공격력": 31,
+       "마법 대미지": 29.5,
+       "물리 대미지": 29.5,
+       "마법 공격력": 29.5,
+       "물리 공격력": 29.5,
+       "방어율 무시": 12
+      },
+      "205": {
+       "최대 대미지": 195000000,
+       "최종 대미지": 21,
+       "보스 공격력": 34,
+       "마법 대미지": 32,
+       "물리 대미지": 32,
+       "마법 공격력": 32,
+       "물리 공격력": 32,
+       "방어율 무시": 13
+      },
+      "230": {
+       "최대 대미지": 300000000,
+       "최종 대미지": 23,
+       "보스 공격력": 37,
+       "마법 대미지": 34.5,
+       "물리 대미지": 34.5,
+       "마법 공격력": 34.5,
+       "물리 공격력": 34.5,
+       "방어율 무시": 14
+      },
+      "255": {
+       "최대 대미지": 465000000,
+       "최종 대미지": 25,
+       "보스 공격력": 40,
+       "마법 대미지": 37,
+       "물리 대미지": 37,
+       "마법 공격력": 37,
+       "물리 공격력": 37,
+       "방어율 무시": 15
+      },
+      "280": {
+       "최대 대미지": 660000000,
+       "최종 대미지": 27,
+       "보스 공격력": 43,
+       "마법 대미지": 39.5,
+       "물리 대미지": 39.5,
+       "마법 공격력": 39.5,
+       "물리 공격력": 39.5,
+       "방어율 무시": 16
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "s8={아케인:{55:{\"",
+     "prettyLine": 15266
+    },
+    {
+     "id": "charpage:앱솔",
+     "usedBy": "캐릭터 상세 스탯 합산(xf)",
+     "set": "앱솔",
+     "setItemRule": "아이템명에 '앱솔랩스' 포함",
+     "tierRule": "세트 장비 스타포스 합(한벌옷 2배, 제네시스 무기 럭키 적용)을 280에서 자르고, 이하인 가장 큰 구간 키를 고른다",
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력은 % 공격력으로 변환)"
+     },
+     "tiers": {
+      "70": {
+       "최대 대미지": 5000000,
+       "보스 공격력": 10,
+       "물리 대미지": 14,
+       "마법 대미지": 14,
+       "물리 공격력": 12,
+       "마법 공격력": 12,
+       "방어율 무시": 3
+      },
+      "140": {
+       "최대 대미지": 11000000,
+       "보스 공격력": 13,
+       "물리 대미지": 16.5,
+       "마법 대미지": 16.5,
+       "물리 공격력": 14.5,
+       "마법 공격력": 14.5,
+       "방어율 무시": 5
+      },
+      "210": {
+       "최대 대미지": 18500000,
+       "최종 대미지": 5,
+       "보스 공격력": 16,
+       "물리 대미지": 19,
+       "마법 대미지": 19,
+       "물리 공격력": 17,
+       "마법 공격력": 17,
+       "방어율 무시": 7
+      },
+      "245": {
+       "최대 대미지": 29000000,
+       "최종 대미지": 10,
+       "보스 공격력": 19,
+       "물리 대미지": 21.5,
+       "마법 대미지": 21.5,
+       "물리 공격력": 19.5,
+       "마법 공격력": 19.5,
+       "방어율 무시": 9
+      },
+      "280": {
+       "최대 대미지": 42500000,
+       "최종 대미지": 15,
+       "보스 공격력": 22,
+       "물리 대미지": 24,
+       "마법 대미지": 24,
+       "물리 공격력": 22,
+       "마법 공격력": 22,
+       "방어율 무시": 11
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "s8={아케인:{55:{\"",
+     "prettyLine": 15266
+    },
+    {
+     "id": "setcalc:팦레",
+     "usedBy": "/calculator/set 세트 효과 비교 계산기 전용(캐릭터 합산에는 미사용)",
+     "set": "팦레",
+     "note": "짧은 키: 최댐=최대 대미지, 종댐=최종 대미지, 치피=치명타 피해, 보공=보스 공격력, 대미지=물/마 대미지, 공격력=물/마 공격력%, 방무=방어율 무시, 이속=의미 불명(값 오류로 보임)",
+     "tiers": {
+      "30": {
+       "최댐": 2100000,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 7.5,
+       "대미지": 10,
+       "공격력": 9,
+       "방무": 0,
+       "이속": 0
+      },
+      "60": {
+       "최댐": 4100000,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 10,
+       "대미지": 11.5,
+       "공격력": 10.5,
+       "방무": 0,
+       "이속": 0
+      },
+      "90": {
+       "최댐": 6100000,
+       "종댐": 4,
+       "치피": 0,
+       "보공": 12.5,
+       "대미지": 13,
+       "공격력": 12,
+       "방무": 0,
+       "이속": 0
+      },
+      "120": {
+       "최댐": 11600000,
+       "종댐": 9,
+       "치피": 0,
+       "보공": 15,
+       "대미지": 14.5,
+       "공격력": 13.5,
+       "방무": 0,
+       "이속": 0
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "o0={아케인:{0:{최댐",
+     "prettyLine": 13963
+    },
+    {
+     "id": "setcalc:팦유",
+     "usedBy": "/calculator/set 세트 효과 비교 계산기 전용(캐릭터 합산에는 미사용)",
+     "set": "팦유",
+     "note": "짧은 키: 최댐=최대 대미지, 종댐=최종 대미지, 치피=치명타 피해, 보공=보스 공격력, 대미지=물/마 대미지, 공격력=물/마 공격력%, 방무=방어율 무시, 이속=의미 불명(값 오류로 보임)",
+     "tiers": {
+      "0": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "30": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 5,
+       "대미지": 9,
+       "공격력": 8,
+       "방무": 0,
+       "이속": 0
+      },
+      "60": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 7.5,
+       "대미지": 10.5,
+       "공격력": 9.5,
+       "방무": 0,
+       "이속": 0
+      },
+      "90": {
+       "최댐": 1000000,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 10,
+       "대미지": 12,
+       "공격력": 11,
+       "방무": 0,
+       "이속": 0
+      },
+      "120": {
+       "최댐": 2400000,
+       "종댐": 5,
+       "치피": 0,
+       "보공": 12.5,
+       "대미지": 13.5,
+       "공격력": 12.5,
+       "방무": 5,
+       "이속": 0
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "o0={아케인:{0:{최댐",
+     "prettyLine": 13963
+    },
+    {
+     "id": "setcalc:펜살",
+     "usedBy": "/calculator/set 세트 효과 비교 계산기 전용(캐릭터 합산에는 미사용)",
+     "set": "펜살",
+     "note": "짧은 키: 최댐=최대 대미지, 종댐=최종 대미지, 치피=치명타 피해, 보공=보스 공격력, 대미지=물/마 대미지, 공격력=물/마 공격력%, 방무=방어율 무시, 이속=의미 불명(값 오류로 보임)",
+     "tiers": {
+      "0": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "30": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 3,
+       "공격력": 3,
+       "방무": 0,
+       "이속": 0
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "o0={아케인:{0:{최댐",
+     "prettyLine": 13963
+    },
+    {
+     "id": "setcalc:무스펠",
+     "usedBy": "/calculator/set 세트 효과 비교 계산기 전용(캐릭터 합산에는 미사용)",
+     "set": "무스펠",
+     "note": "짧은 키: 최댐=최대 대미지, 종댐=최종 대미지, 치피=치명타 피해, 보공=보스 공격력, 대미지=물/마 대미지, 공격력=물/마 공격력%, 방무=방어율 무시, 이속=의미 불명(값 오류로 보임)",
+     "tiers": {
+      "0": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "25": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 1,
+       "공격력": 1,
+       "방무": 0,
+       "이속": 0
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "o0={아케인:{0:{최댐",
+     "prettyLine": 13963
+    },
+    {
+     "id": "setcalc:칠흑",
+     "usedBy": "/calculator/set 세트 효과 비교 계산기 전용(캐릭터 합산에는 미사용)",
+     "set": "칠흑",
+     "note": "칠흑 키는 세트 개수(1~9)이며 값이 세트 효과(qr 칠흑)와 같다. 스타포스 옵션이 아니다",
+     "tiers": {
+      "0": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "1": {
+       "최댐": 0,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 0,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "2": {
+       "최댐": 3000000,
+       "종댐": 0,
+       "치피": 0,
+       "보공": 3,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "3": {
+       "최댐": 7500000,
+       "종댐": 3,
+       "치피": 0,
+       "보공": 3,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 0,
+       "이속": 0
+      },
+      "4": {
+       "최댐": 12000000,
+       "종댐": 5,
+       "치피": 0,
+       "보공": 6,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 5,
+       "이속": 0
+      },
+      "5": {
+       "최댐": 16500000,
+       "종댐": 7,
+       "치피": 0,
+       "보공": 6,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 10,
+       "이속": 0
+      },
+      "6": {
+       "최댐": 19500000,
+       "종댐": 9,
+       "치피": 0,
+       "보공": 9,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 15,
+       "이속": 0
+      },
+      "7": {
+       "최댐": 22500000,
+       "종댐": 12,
+       "치피": 0,
+       "보공": 12,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 20,
+       "이속": 0
+      },
+      "8": {
+       "최댐": 45000000,
+       "종댐": 20,
+       "치피": 0,
+       "보공": 20,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 25,
+       "이속": 0
+      },
+      "9": {
+       "최댐": 60000000,
+       "종댐": 28,
+       "치피": 0,
+       "보공": 28,
+       "대미지": 0,
+       "공격력": 0,
+       "방무": 30,
+       "이속": 0
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "o0={아케인:{0:{최댐",
+     "prettyLine": 13963
+    }
+   ]
+  }
+ },
+ "ours": {
+  "file": "src/config/starforce-set-options.js",
+  "groups": [
+   {
+    "id": "arcaneShade",
+    "label": "아케인셰이드",
+    "keywords": [
+     "아케인셰이드"
+    ],
+    "tiers": [
+     {
+      "min": 55,
+      "max": 79,
+      "stats": {
+       "finalDamage": 9,
+       "maxDamage": 50000000,
+       "physicalAttackPercent": 17,
+       "physicalDamagePercent": 17,
+       "magicalAttackPercent": 17,
+       "magicalDamagePercent": 17,
+       "bossDamage": 16,
+       "ignoreDefense": 7
+      }
+     },
+     {
+      "min": 80,
+      "max": 104,
+      "stats": {
+       "finalDamage": 11,
+       "maxDamage": 60000000,
+       "physicalAttackPercent": 19.5,
+       "physicalDamagePercent": 19.5,
+       "magicalAttackPercent": 19.5,
+       "magicalDamagePercent": 19.5,
+       "bossDamage": 19,
+       "ignoreDefense": 8
+      }
+     },
+     {
+      "min": 105,
+      "max": 129,
+      "stats": {
+       "finalDamage": 13,
+       "maxDamage": 70000000,
+       "physicalAttackPercent": 22,
+       "physicalDamagePercent": 22,
+       "magicalAttackPercent": 22,
+       "magicalDamagePercent": 22,
+       "bossDamage": 22,
+       "ignoreDefense": 9
+      }
+     },
+     {
+      "min": 130,
+      "max": 154,
+      "stats": {
+       "finalDamage": 15,
+       "maxDamage": 80000000,
+       "physicalAttackPercent": 24.5,
+       "physicalDamagePercent": 24.5,
+       "magicalAttackPercent": 24.5,
+       "magicalDamagePercent": 24.5,
+       "bossDamage": 25,
+       "ignoreDefense": 10
+      }
+     },
+     {
+      "min": 155,
+      "max": 179,
+      "stats": {
+       "finalDamage": 17,
+       "maxDamage": 90000000,
+       "physicalAttackPercent": 27,
+       "physicalDamagePercent": 27,
+       "magicalAttackPercent": 27,
+       "magicalDamagePercent": 27,
+       "bossDamage": 28,
+       "ignoreDefense": 11
+      }
+     },
+     {
+      "min": 180,
+      "max": 204,
+      "stats": {
+       "finalDamage": 19,
+       "maxDamage": 100000000,
+       "physicalAttackPercent": 29.5,
+       "physicalDamagePercent": 29.5,
+       "magicalAttackPercent": 29.5,
+       "magicalDamagePercent": 29.5,
+       "bossDamage": 31,
+       "ignoreDefense": 12
+      }
+     },
+     {
+      "min": 205,
+      "max": 229,
+      "stats": {
+       "finalDamage": 21,
+       "maxDamage": 130000000,
+       "physicalAttackPercent": 32,
+       "physicalDamagePercent": 32,
+       "magicalAttackPercent": 32,
+       "magicalDamagePercent": 32,
+       "bossDamage": 34,
+       "ignoreDefense": 13
+      }
+     },
+     {
+      "min": 230,
+      "max": 254,
+      "stats": {
+       "finalDamage": 23,
+       "maxDamage": 200000000,
+       "physicalAttackPercent": 34.5,
+       "physicalDamagePercent": 34.5,
+       "magicalAttackPercent": 34.5,
+       "magicalDamagePercent": 34.5,
+       "bossDamage": 37,
+       "ignoreDefense": 14
+      }
+     },
+     {
+      "min": 255,
+      "max": 279,
+      "stats": {
+       "finalDamage": 25,
+       "maxDamage": 310000000,
+       "physicalAttackPercent": 37,
+       "physicalDamagePercent": 37,
+       "magicalAttackPercent": 37,
+       "magicalDamagePercent": 37,
+       "bossDamage": 40,
+       "ignoreDefense": 15
+      }
+     },
+     {
+      "min": 280,
+      "max": 280,
+      "stats": {
+       "finalDamage": 27,
+       "maxDamage": 440000000,
+       "physicalAttackPercent": 39.5,
+       "physicalDamagePercent": 39.5,
+       "magicalAttackPercent": 39.5,
+       "magicalDamagePercent": 39.5,
+       "bossDamage": 43,
+       "ignoreDefense": 16
+      }
+     }
+    ]
+   },
+   {
+    "id": "absolabs",
+    "label": "앱솔랩스",
+    "keywords": [
+     "앱솔랩스"
+    ],
+    "tiers": [
+     {
+      "min": 70,
+      "max": 139,
+      "stats": {
+       "maxDamage": 5500000,
+       "physicalAttackPercent": 12,
+       "physicalDamagePercent": 14,
+       "magicalAttackPercent": 12,
+       "magicalDamagePercent": 14,
+       "bossDamage": 10,
+       "ignoreDefense": 3
+      }
+     },
+     {
+      "min": 140,
+      "max": 209,
+      "stats": {
+       "maxDamage": 11000000,
+       "physicalAttackPercent": 14.5,
+       "physicalDamagePercent": 16.5,
+       "magicalAttackPercent": 14.5,
+       "magicalDamagePercent": 16.5,
+       "bossDamage": 13,
+       "ignoreDefense": 5
+      }
+     },
+     {
+      "min": 210,
+      "max": 244,
+      "stats": {
+       "finalDamage": 5,
+       "maxDamage": 18500000,
+       "physicalAttackPercent": 17,
+       "physicalDamagePercent": 19,
+       "magicalAttackPercent": 17,
+       "magicalDamagePercent": 19,
+       "bossDamage": 16,
+       "ignoreDefense": 7
+      }
+     },
+     {
+      "min": 245,
+      "max": 279,
+      "stats": {
+       "finalDamage": 10,
+       "maxDamage": 29000000,
+       "physicalAttackPercent": 19.5,
+       "physicalDamagePercent": 21.5,
+       "magicalAttackPercent": 19.5,
+       "magicalDamagePercent": 21.5,
+       "bossDamage": 19,
+       "ignoreDefense": 9
+      }
+     },
+     {
+      "min": 280,
+      "max": 280,
+      "stats": {
+       "finalDamage": 15,
+       "maxDamage": 42500000,
+       "physicalAttackPercent": 22,
+       "physicalDamagePercent": 24,
+       "magicalAttackPercent": 22,
+       "magicalDamagePercent": 24,
+       "bossDamage": 22,
+       "ignoreDefense": 11
+      }
+     }
+    ]
+   },
+   {
+    "id": "fafnirHighnessTricksterEagleEye",
+    "label": "파프니르/하이네스/트릭스터/이글아이",
+    "keywords": [
+     "파프니르",
+     "하이네스",
+     "트릭스터",
+     "이글아이"
+    ],
+    "tiers": [
+     {
+      "min": 30,
+      "max": 59,
+      "stats": {
+       "physicalAttackPercent": 8,
+       "physicalDamagePercent": 9,
+       "magicalAttackPercent": 8,
+       "magicalDamagePercent": 9,
+       "bossDamage": 5
+      }
+     },
+     {
+      "min": 60,
+      "max": 89,
+      "stats": {
+       "physicalAttackPercent": 9.5,
+       "physicalDamagePercent": 10.5,
+       "magicalAttackPercent": 9.5,
+       "magicalDamagePercent": 10.5,
+       "bossDamage": 7.5
+      }
+     },
+     {
+      "min": 90,
+      "max": 119,
+      "stats": {
+       "maxDamage": 1000000,
+       "physicalAttackPercent": 11,
+       "physicalDamagePercent": 12,
+       "magicalAttackPercent": 11,
+       "magicalDamagePercent": 12,
+       "bossDamage": 10
+      }
+     },
+     {
+      "min": 120,
+      "max": 120,
+      "stats": {
+       "finalDamage": 5,
+       "maxDamage": 2400000,
+       "physicalAttackPercent": 12.5,
+       "physicalDamagePercent": 13.5,
+       "magicalAttackPercent": 12.5,
+       "magicalDamagePercent": 13.5,
+       "bossDamage": 12.5,
+       "ignoreDefense": 5
+      }
+     }
+    ]
+   },
+   {
+    "id": "ravenhornLegendary",
+    "label": "레이븐혼/라이온하트/팔콘윙/드래곤테일/샤크투스 (레전더리)",
+    "keywords": [
+     "레이븐혼",
+     "라이온하트",
+     "팔콘윙",
+     "드래곤테일",
+     "샤크투스"
+    ],
+    "itemGrades": [
+     "레전더리"
+    ],
+    "tiers": [
+     {
+      "min": 30,
+      "max": 59,
+      "stats": {
+       "physicalAttackPercent": 2.5,
+       "physicalDamagePercent": 2.5,
+       "magicalAttackPercent": 2.5,
+       "magicalDamagePercent": 2.5
+      }
+     },
+     {
+      "min": 60,
+      "max": 89,
+      "stats": {
+       "physicalAttackPercent": 5,
+       "physicalDamagePercent": 5,
+       "magicalAttackPercent": 5,
+       "magicalDamagePercent": 5
+      }
+     },
+     {
+      "min": 90,
+      "max": 90,
+      "stats": {
+       "physicalAttackPercent": 7.5,
+       "physicalDamagePercent": 7.5,
+       "magicalAttackPercent": 7.5,
+       "magicalDamagePercent": 7.5
+      }
+     }
+    ]
+   },
+   {
+    "id": "ravenhornUnique",
+    "label": "레이븐혼/라이온하트/팔콘윙/드래곤테일/샤크투스 (유니크)",
+    "keywords": [
+     "레이븐혼",
+     "라이온하트",
+     "팔콘윙",
+     "드래곤테일",
+     "샤크투스"
+    ],
+    "itemGrades": [
+     "유니크"
+    ],
+    "tiers": [
+     {
+      "min": 30,
+      "max": 59,
+      "stats": {
+       "physicalAttackPercent": 2,
+       "physicalDamagePercent": 2,
+       "magicalAttackPercent": 2,
+       "magicalDamagePercent": 2
+      }
+     },
+     {
+      "min": 60,
+      "max": 89,
+      "stats": {
+       "physicalAttackPercent": 4,
+       "physicalDamagePercent": 4,
+       "magicalAttackPercent": 4,
+       "magicalDamagePercent": 4
+      }
+     },
+     {
+      "min": 90,
+      "max": 90,
+      "stats": {
+       "physicalAttackPercent": 6,
+       "physicalDamagePercent": 6,
+       "magicalAttackPercent": 6,
+       "magicalDamagePercent": 6
+      }
+     }
+    ]
+   },
+   {
+    "id": "challenger",
+    "label": "도전자의",
+    "keywords": [
+     "도전자의"
+    ],
+    "tiers": [
+     {
+      "min": 160,
+      "max": 169,
+      "stats": {
+       "maxDamage": 10000000,
+       "physicalAttackPercent": 14.5,
+       "physicalDamagePercent": 16.5,
+       "criticalDamage": 7.5,
+       "magicalAttackPercent": 14.5,
+       "magicalDamagePercent": 16.5,
+       "bossDamage": 13,
+       "ignoreDefense": 10
+      }
+     },
+     {
+      "min": 170,
+      "max": 199,
+      "stats": {
+       "ignoreDefense": 15,
+       "bossDamage": 16,
+       "magicalDamagePercent": 19,
+       "magicalAttackPercent": 17,
+       "physicalDamagePercent": 19,
+       "physicalAttackPercent": 17,
+       "maxDamage": 15000000,
+       "finalDamage": 5,
+       "criticalDamage": 15
+      }
+     },
+     {
+      "min": 200,
+      "max": null,
+      "stats": {
+       "ignoreDefense": 20,
+       "bossDamage": 19,
+       "magicalDamagePercent": 21.5,
+       "magicalAttackPercent": 19.5,
+       "physicalDamagePercent": 21.5,
+       "physicalAttackPercent": 19.5,
+       "maxDamage": 35000000,
+       "finalDamage": 10,
+       "criticalDamage": 30.5
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

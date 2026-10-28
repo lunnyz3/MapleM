@@ -1,7 +1,13 @@
 {
   "_meta": {
-    "source": "무기에디잠재.html",
-    "generated_at": "2026-03-05T10:10:51"
+    "source": "https://m.nexon.com/probability/6258?language=ko",
+    "source_title": "큐브 (에디셔널 잠재능력) - 무기",
+    "generated_at": "2026-10-28T16:38:22+09:00",
+    "generator": "scripts/data/sync-probability.js",
+    "note": "first = 공식 '첫번째 옵션', second·third = 공식 '두번째 / 세번째 옵션'(같은 분포). option·value·p 는 공식 표기 그대로.",
+    "official_notes": [
+      "⊙ 제네시스 무기는 장비 레벨 200에 해당하는 잠재능력이 부여됩니다."
+    ]
   },
   "무기 170": {
     "레어": {

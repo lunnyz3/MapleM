@@ -1,0 +1,1027 @@
+{
+ "name": "equipment-mastery.json",
+ "description": "장비 마스터리(기본·추가·잠재 포인트) 표",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "table",
+     "value": {
+      "heartAdditionalGrade": {
+       "rows": [
+        {
+         "code": 1,
+         "name": "레어",
+         "source": "manual",
+         "patch": "2026-09",
+         "confidence": 0.98
+        },
+        {
+         "code": 2,
+         "name": "에픽",
+         "source": "manual",
+         "patch": "2026-09",
+         "confidence": 0.98
+        },
+        {
+         "code": 3,
+         "name": "유니크",
+         "source": "manual",
+         "patch": "2026-09",
+         "confidence": 0.98
+        }
+       ]
+      },
+      "baseOption": {
+       "무기": {
+        "아케인셰이드": [
+         515,
+         1030
+        ],
+        "앱솔랩스": [
+         429,
+         859
+        ],
+        "제네시스": [
+         618,
+         1237
+        ]
+       }
+      },
+      "additionalOption": {
+       "percentPerPointByGrade": {
+        "유니크": 2,
+        "에픽": 1.5,
+        "레어": 1
+       },
+       "byGrade": {
+        "유니크": [
+         600,
+         1200
+        ],
+        "에픽": [
+         450,
+         900
+        ],
+        "레어": [
+         300,
+         600
+        ]
+       }
+      },
+      "potentialOption": {
+       "byGrade": {
+        "레전더리": [
+         2,
+         4
+        ],
+        "유니크": [
+         1.5,
+         3
+        ],
+        "에픽": [
+         1,
+         2
+        ],
+        "레어": [
+         0.5,
+         1
+        ]
+       }
+      },
+      "maxPointsPerOptionLine": 2,
+      "optionIncrements": {
+       "templates": [
+        {
+         "unit": "raw",
+         "values": [
+          10,
+          10,
+          10,
+          10
+         ]
+        },
+        {
+         "unit": "number",
+         "values": [
+          150,
+          300,
+          450,
+          600
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          null,
+          null,
+          null,
+          2
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          0.5,
+          1,
+          1.5,
+          2
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          0.4,
+          0.8,
+          1.2,
+          1.6
+         ]
+        },
+        {
+         "unit": "number",
+         "values": [
+          null,
+          300,
+          null,
+          null
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          null,
+          1,
+          null,
+          null
+         ]
+        },
+        {
+         "unit": "number",
+         "values": [
+          null,
+          null,
+          null,
+          600
+         ]
+        },
+        {
+         "unit": "number",
+         "values": [
+          150,
+          null,
+          null,
+          null
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          0.5,
+          null,
+          null,
+          null
+         ]
+        },
+        {
+         "unit": "number",
+         "values": [
+          null,
+          null,
+          450,
+          null
+         ]
+        },
+        {
+         "unit": "percent",
+         "values": [
+          null,
+          null,
+          1.5,
+          null
+         ]
+        }
+       ],
+       "sections": {
+        "additionalOption": {
+         "grades": [
+          "Normal",
+          "CashNormal",
+          "Powerful",
+          "Eternal"
+         ],
+         "groups": {
+          "Armor_180": {
+           "AntiDamageAddPermill.Enemy(표시명미확인)": 0,
+           "DamageAddPermill.Enemy(표시명미확인)": 0,
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "경험치획득량": 2,
+           "메소획득량": 3,
+           "명중률": 3,
+           "방어율무시": 4,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3,
+           "회피율": 3
+          },
+          "Armor_200": {
+           "AntiDamageAddPermill.Enemy(표시명미확인)": 0,
+           "DamageAddPermill.Enemy(표시명미확인)": 0,
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "경험치획득량": 2,
+           "메소획득량": 3,
+           "명중률": 3,
+           "방어율무시": 4,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3,
+           "회피율": 3
+          },
+          "Weapon_180": {
+           "AntiDamageAddPermill.Enemy(표시명미확인)": 0,
+           "DamageAddPermill.Enemy(표시명미확인)": 0,
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법공격력": 1,
+           "마법대미지": 2,
+           "메소획득량": 3,
+           "명중률": 3,
+           "물리공격력": 1,
+           "물리대미지": 2,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "최종대미지": 3,
+           "치명타확률": 3,
+           "회피율": 3
+          },
+          "Weapon_200": {
+           "AntiDamageAddPermill.Enemy(표시명미확인)": 0,
+           "DamageAddPermill.Enemy(표시명미확인)": 0,
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법공격력": 1,
+           "마법대미지": 2,
+           "메소획득량": 3,
+           "명중률": 3,
+           "물리공격력": 1,
+           "물리대미지": 2,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "최종대미지": 3,
+           "치명타확률": 3,
+           "회피율": 3
+          }
+         }
+        },
+        "potential": {
+         "grades": [
+          "레어",
+          "에픽",
+          "유니크",
+          "레전더리"
+         ],
+         "groups": {
+          "Cap_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "경험치획득량": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3
+          },
+          "Cap_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "경험치획득량": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3
+          },
+          "Cape_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "회피율": 3
+          },
+          "Cape_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "회피율": 3
+          },
+          "Gloves_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "명중률": 3,
+           "보스공격력": 3,
+           "최대HP": 1,
+           "최대MP": 1
+          },
+          "Gloves_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "명중률": 3,
+           "보스공격력": 3,
+           "최대HP": 1,
+           "최대MP": 1
+          },
+          "LongCoat_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "메소획득량": 3,
+           "보스방어력": 3,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타저항": 3
+          },
+          "LongCoat_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "메소획득량": 3,
+           "보스방어력": 3,
+           "아이템드롭률": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타저항": 3
+          },
+          "Shoes_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "메소획득량": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "회피율": 3
+          },
+          "Shoes_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "메소획득량": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "회피율": 3
+          },
+          "Shoulder_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법대미지": 3,
+           "물리대미지": 3,
+           "최대HP": 1,
+           "최대MP": 1
+          },
+          "Shoulder_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법대미지": 3,
+           "물리대미지": 3,
+           "최대HP": 1,
+           "최대MP": 1
+          },
+          "Weapon_Legendary_180": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법대미지": 3,
+           "명중률": 3,
+           "물리대미지": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3
+          },
+          "Weapon_Legendary_200": {
+           "HP회복력": 1,
+           "MP회복력": 1,
+           "마법대미지": 3,
+           "명중률": 3,
+           "물리대미지": 3,
+           "최대HP": 1,
+           "최대MP": 1,
+           "치명타확률": 3
+          }
+         }
+        },
+        "additional": {
+         "grades": [
+          "레어",
+          "에픽",
+          "유니크",
+          "레전더리"
+         ],
+         "groups": {
+          "Additional_Cp_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "보스공격력": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타확률": 6
+          },
+          "Additional_Cp_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "보스공격력": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타확률": 2
+          },
+          "Additional_Cp_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "보스공격력": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타확률": 9
+          },
+          "Additional_Cp_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "보스공격력": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타확률": 11
+          },
+          "Additional_Cp_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "보스공격력": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타확률": 6
+          },
+          "Additional_Cp_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "보스공격력": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타확률": 2
+          },
+          "Additional_Cp_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "보스공격력": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타확률": 9
+          },
+          "Additional_Cp_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "보스공격력": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타확률": 11
+          },
+          "Additional_Gl_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "명중률": 6,
+           "보스공격력": 6,
+           "최대HP": 5,
+           "최대MP": 5
+          },
+          "Additional_Gl_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "명중률": 2,
+           "보스공격력": 2,
+           "최대HP": 7,
+           "최대MP": 7
+          },
+          "Additional_Gl_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "명중률": 9,
+           "보스공격력": 9,
+           "최대HP": 8,
+           "최대MP": 8
+          },
+          "Additional_Gl_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "명중률": 11,
+           "보스공격력": 11,
+           "최대HP": 10,
+           "최대MP": 10
+          },
+          "Additional_Gl_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "명중률": 6,
+           "보스공격력": 6,
+           "최대HP": 5,
+           "최대MP": 5
+          },
+          "Additional_Gl_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "명중률": 2,
+           "보스공격력": 2,
+           "최대HP": 7,
+           "최대MP": 7
+          },
+          "Additional_Gl_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "명중률": 9,
+           "보스공격력": 9,
+           "최대HP": 8,
+           "최대MP": 8
+          },
+          "Additional_Gl_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "명중률": 11,
+           "보스공격력": 11,
+           "최대HP": 10,
+           "최대MP": 10
+          },
+          "Additional_Lct_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "보스공격력": 6,
+           "보스방어력": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타저항": 6
+          },
+          "Additional_Lct_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "보스공격력": 2,
+           "보스방어력": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타저항": 2
+          },
+          "Additional_Lct_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "보스공격력": 9,
+           "보스방어력": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타저항": 9
+          },
+          "Additional_Lct_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "보스공격력": 11,
+           "보스방어력": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타저항": 11
+          },
+          "Additional_Lct_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "보스공격력": 6,
+           "보스방어력": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타저항": 6
+          },
+          "Additional_Lct_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "보스공격력": 2,
+           "보스방어력": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타저항": 2
+          },
+          "Additional_Lct_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "보스공격력": 9,
+           "보스방어력": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타저항": 9
+          },
+          "Additional_Lct_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "보스공격력": 11,
+           "보스방어력": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타저항": 11
+          },
+          "Additional_Sc_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "회피율": 6
+          },
+          "Additional_Sc_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "회피율": 2
+          },
+          "Additional_Sc_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "회피율": 9
+          },
+          "Additional_Sc_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "회피율": 11
+          },
+          "Additional_Sc_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "회피율": 6
+          },
+          "Additional_Sc_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "회피율": 2
+          },
+          "Additional_Sc_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "회피율": 9
+          },
+          "Additional_Sc_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "회피율": 11
+          },
+          "Additional_Sh_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5
+          },
+          "Additional_Sh_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7
+          },
+          "Additional_Sh_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8
+          },
+          "Additional_Sh_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10
+          },
+          "Additional_Sh_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5
+          },
+          "Additional_Sh_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7
+          },
+          "Additional_Sh_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8
+          },
+          "Additional_Sh_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10
+          },
+          "Additional_Wp_Legendary_180_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "명중률": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타확률": 6
+          },
+          "Additional_Wp_Legendary_180_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "명중률": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타확률": 2
+          },
+          "Additional_Wp_Legendary_180_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "명중률": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타확률": 9
+          },
+          "Additional_Wp_Legendary_180_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "명중률": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타확률": 11
+          },
+          "Additional_Wp_Legendary_200_Epic": {
+           "HP회복력": 5,
+           "MP회복력": 5,
+           "마법대미지": 6,
+           "명중률": 6,
+           "물리대미지": 6,
+           "최대HP": 5,
+           "최대MP": 5,
+           "치명타확률": 6
+          },
+          "Additional_Wp_Legendary_200_Legendary": {
+           "HP회복력": 7,
+           "MP회복력": 7,
+           "마법대미지": 2,
+           "명중률": 2,
+           "물리대미지": 2,
+           "최대HP": 7,
+           "최대MP": 7,
+           "치명타확률": 2
+          },
+          "Additional_Wp_Legendary_200_Rare": {
+           "HP회복력": 8,
+           "MP회복력": 8,
+           "마법대미지": 9,
+           "명중률": 9,
+           "물리대미지": 9,
+           "최대HP": 8,
+           "최대MP": 8,
+           "치명타확률": 9
+          },
+          "Additional_Wp_Legendary_200_Unique": {
+           "HP회복력": 10,
+           "MP회복력": 10,
+           "마법대미지": 11,
+           "명중률": 11,
+           "물리대미지": 11,
+           "최대HP": 10,
+           "최대MP": 10,
+           "치명타확률": 11
+          }
+         }
+        }
+       }
+      }
+     },
+     "rule": "기본 옵션 분해 시 마스터리 몫을 '장비:기본'에 포함",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-mastery.json",
+     "anchor": "msm-mastery.json"
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "장비 마스터리 추정·체험 상수(장비 체험 기능)",
+   "entries": [
+    {
+     "id": "weapon-base-attack-by-star",
+     "value": {
+      "제네시스": {
+       "35": 40567,
+       "36": 42583
+      },
+      "아케인셰이드": {
+       "15": 12627,
+       "17": 14309,
+       "35": 34972,
+       "36": 36710
+      },
+      "앱솔랩스": {
+       "29": 23333,
+       "30": 24499,
+       "35": 31227,
+       "36": 32779
+      }
+     },
+     "unit": "무기 기본 공격력",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "pc=Object.free",
+     "prettyLine": 33178
+    },
+    {
+     "id": "genesis",
+     "mainAttack": 56235,
+     "masteryBonusByPoints": [
+      0,
+      618,
+      1237
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "vw=56235,Yd=[0",
+     "prettyLine": 33197
+    },
+    {
+     "id": "arcane-weapon",
+     "mainAttack": 46863,
+     "masteryBonusByPoints": [
+      0,
+      515,
+      1030
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "ww=46863,Kd=[0",
+     "prettyLine": 33200
+    },
+    {
+     "id": "absolab-weapon",
+     "masteryBonusByPoints": [
+      0,
+      429,
+      859
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "gw=[0,429,859]",
+     "prettyLine": 33202
+    },
+    {
+     "id": "additional-option-increment",
+     "rows": [
+      [
+       10,
+       10,
+       10,
+       10
+      ],
+      [
+       150,
+       300,
+       450,
+       600
+      ],
+      [
+       null,
+       null,
+       null,
+       2
+      ],
+      [
+       0.5,
+       1,
+       1.5,
+       2
+      ],
+      [
+       0.4,
+       0.8,
+       1.2,
+       1.6
+      ]
+     ],
+     "statGroup": {
+      "hp회복력": 1,
+      "mp회복력": 1,
+      "최대hp": 1,
+      "최대mp": 1,
+      "물리공격력": 1,
+      "마법공격력": 1,
+      "경험치획득량": 2,
+      "물리대미지": 2,
+      "마법대미지": 2,
+      "메소획득량": 3,
+      "명중률": 3,
+      "아이템드롭률": 3,
+      "최종대미지": 3,
+      "치명타확률": 3,
+      "회피율": 3,
+      "방어율무시": 4
+     },
+     "rule": "추가 옵션 마스터리 1포인트당 증가량: 행=스탯 그룹(1 깡공·HP류, 2 대미지·경험치, 3 최종·치확 등, 4 방무), 열=추가옵션 등급(1 레어, 2 에픽, 3 유니크). 표에 없는 스탯은 포인트당 +30% 배율",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "zw=[[10,10,10,",
+     "prettyLine": 33281
+    },
+    {
+     "id": "potential-increment",
+     "hpGroup": [
+      150,
+      300,
+      450,
+      600
+     ],
+     "pctGroup": [
+      0.5,
+      1,
+      1.5,
+      2
+     ],
+     "gradeOrder": [
+      "Rare",
+      "Epic",
+      "Unique",
+      "Legendary"
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "kw.has(l)?[150,300,450,600][i]:Dw.has(l)?[.5,1,1.5,2][i]",
+     "prettyLine": 33243
+    },
+    {
+     "id": "max-points",
+     "rule": "아케인셰이드·제네시스 6, 앱솔랩스 3(무기·모자·상의·하의·신발·장갑·한벌옷·어깨·망토, 보조무기 제외)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "e.includes(\"아케인셰이드\")||e.includes(\"제네시스\")?6:e.includes(\"앱솔랩스\")?3:0",
+     "prettyLine": 33211
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "description": "콘텐츠·성장 출처 규칙: 길드, 쥬얼, HEXA 스탯·솔 야누스.",
+    "sources": [
+      "maplemworlds.kr index-5Pk4vujo.js — 길드 제외 어빌리티(앵커 n8=new Set([442,445,454,466,469,478])), SSS 쥬얼 5개 방무 2(앵커 detail:\"SSS 쥬얼 5개\"), HEXA 스탯 문구 파싱·가중치(앵커 [\"sub_1_stat\",\"sub_1_stat_level\",.75]), 솔 야누스(앵커 label:\"솔 야누스\")",
+      "maplemtool.com app.3b4c69e71622b30c.js — 지하수로·전장 전용 어빌리티 번호(앵커 [440,441,442,443,444,445,452,453,454]), 솔 야누스(앵커 function qa(a){)"
+    ],
+    "extractedAt": "2026-10-28",
+    "notes": [
+      "길드: 길드원 목록의 본인 개인 스킬과 길드 어빌리티만 더한다. 길드 공용 스킬(guild_skill)은 두 사이트 모두 넣지 않는다. 지하수로·전장 전용 어빌리티는 두 사이트 제외 목록의 합집합과 maplemworlds 이름 목록으로 뺀다.",
+      "쥬얼: 사용 페이지 쥬얼 옵션 문구 + 같은 페이지에 SSS 같은 색 5개 이상이면 방어율 무시 2(별도 항목). 두 사이트 같음.",
+      "HEXA 스탯: 활성(activate_flag=1) 코어의 메인·부가 문구. 문구에 숫자가 없으면(레벨 0) 더하지 않는다.",
+      "솔 야누스: 최종 대미지 = 0.5×Lv + (Lv≥10: 3) + (Lv≥20: 5) + (Lv≥30: 7). Lv.30 = 30%. 두 사이트 같음."
+    ]
+  },
+  "guild": {
+    "excludedAbilityNumbers": [440, 441, 442, 443, 444, 445, 452, 453, 454, 464, 465, 466, 467, 468, 469, 476, 477, 478],
+    "excludedAbilityNameIncludes": ["힘으로 끝낸다", "지능으로 끝낸다", "대장 나와"]
+  },
+  "jewel": {
+    "sssSet": { "grade": "SSS", "minSameColor": 5, "ignoreDefense": 2 }
+  },
+  "solJanus": {
+    "skillName": "솔 야누스",
+    "finalDamagePerLevel": 0.5,
+    "levelBonuses": [
+      { "minLevel": 10, "finalDamage": 3 },
+      { "minLevel": 20, "finalDamage": 5 },
+      { "minLevel": 30, "finalDamage": 7 }
+    ]
+  }
+}

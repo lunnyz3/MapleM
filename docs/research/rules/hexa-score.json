@@ -1,0 +1,465 @@
+{
+ "name": "hexa-score.json",
+ "description": "HEXA 매트릭스 점수 표(보스 권장 조건 비교용)",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "levels",
+     "value": [
+      {
+       "level": 1,
+       "skill": 500000,
+       "mastery": 10000,
+       "essential": 12000,
+       "optional": 8000,
+       "enhance": 20000,
+       "common": 2000000
+      },
+      {
+       "level": 2,
+       "skill": 580000,
+       "mastery": 30000,
+       "essential": 36000,
+       "optional": 24000,
+       "enhance": 80000,
+       "common": 2220000
+      },
+      {
+       "level": 3,
+       "skill": 730000,
+       "mastery": 55000,
+       "essential": 66000,
+       "optional": 44000,
+       "enhance": 150000,
+       "common": 2496000
+      },
+      {
+       "level": 4,
+       "skill": 910000,
+       "mastery": 115000,
+       "essential": 138000,
+       "optional": 92000,
+       "enhance": 230000,
+       "common": 2911000
+      },
+      {
+       "level": 5,
+       "skill": 1120000,
+       "mastery": 185000,
+       "essential": 222000,
+       "optional": 148000,
+       "enhance": 320000,
+       "common": 3396000
+      },
+      {
+       "level": 6,
+       "skill": 1440000,
+       "mastery": 265000,
+       "essential": 318000,
+       "optional": 212000,
+       "enhance": 420000,
+       "common": 4056000
+      },
+      {
+       "level": 7,
+       "skill": 1800000,
+       "mastery": 400000,
+       "essential": 480000,
+       "optional": 320000,
+       "enhance": 530000,
+       "common": 4800000
+      },
+      {
+       "level": 8,
+       "skill": 2300000,
+       "mastery": 550000,
+       "essential": 660000,
+       "optional": 440000,
+       "enhance": 650000,
+       "common": 5766000
+      },
+      {
+       "level": 9,
+       "skill": 2850000,
+       "mastery": 715000,
+       "essential": 858000,
+       "optional": 572000,
+       "enhance": 780000,
+       "common": 6830000
+      },
+      {
+       "level": 10,
+       "skill": 3600000,
+       "mastery": 963000,
+       "essential": 1155600,
+       "optional": 770400,
+       "enhance": 1155000,
+       "common": 8560000
+      },
+      {
+       "level": 11,
+       "skill": 4440000,
+       "mastery": 1239000,
+       "essential": 1486800,
+       "optional": 991200,
+       "enhance": 1580000,
+       "common": 10490000
+      },
+      {
+       "level": 12,
+       "skill": 5525000,
+       "mastery": 1543000,
+       "essential": 1851600,
+       "optional": 1234400,
+       "enhance": 2055000,
+       "common": 12844000
+      },
+      {
+       "level": 13,
+       "skill": 6715000,
+       "mastery": 1958000,
+       "essential": 2349600,
+       "optional": 1566400,
+       "enhance": 2580000,
+       "common": 15429000
+      },
+      {
+       "level": 14,
+       "skill": 8195000,
+       "mastery": 2408000,
+       "essential": 2889600,
+       "optional": 1926400,
+       "enhance": 3155000,
+       "common": 18489000
+      },
+      {
+       "level": 15,
+       "skill": 9795000,
+       "mastery": 2893000,
+       "essential": 3471600,
+       "optional": 2314400,
+       "enhance": 3780000,
+       "common": 21801000
+      },
+      {
+       "level": 16,
+       "skill": 11730000,
+       "mastery": 3517000,
+       "essential": 4220400,
+       "optional": 2813600,
+       "enhance": 4455000,
+       "common": 25662000
+      },
+      {
+       "level": 17,
+       "skill": 13800000,
+       "mastery": 4183000,
+       "essential": 5019600,
+       "optional": 3346400,
+       "enhance": 5180000,
+       "common": 29783000
+      },
+      {
+       "level": 18,
+       "skill": 16250000,
+       "mastery": 4891000,
+       "essential": 5869200,
+       "optional": 3912800,
+       "enhance": 5955000,
+       "common": 34515000
+      },
+      {
+       "level": 19,
+       "skill": 18850000,
+       "mastery": 5641000,
+       "essential": 6769200,
+       "optional": 4512800,
+       "enhance": 6780000,
+       "common": 39541000
+      },
+      {
+       "level": 20,
+       "skill": 21930000,
+       "mastery": 6586000,
+       "essential": 7903200,
+       "optional": 5268800,
+       "enhance": 8580000,
+       "common": 46103000
+      },
+      {
+       "level": 21,
+       "skill": 25230000,
+       "mastery": 7601000,
+       "essential": 9121200,
+       "optional": 6080800,
+       "enhance": 10530000,
+       "common": 53141000
+      },
+      {
+       "level": 22,
+       "skill": 29070000,
+       "mastery": 8686000,
+       "essential": 10423200,
+       "optional": 6948800,
+       "enhance": 12630000,
+       "common": 60655000
+      },
+      {
+       "level": 23,
+       "skill": 33150000,
+       "mastery": 9841000,
+       "essential": 11809200,
+       "optional": 7872800,
+       "enhance": 14880000,
+       "common": 69097000
+      },
+      {
+       "level": 24,
+       "skill": 37830000,
+       "mastery": 11241000,
+       "essential": 13489200,
+       "optional": 8992800,
+       "enhance": 17280000,
+       "common": 78043000
+      },
+      {
+       "level": 25,
+       "skill": 42770000,
+       "mastery": 12721000,
+       "essential": 15265200,
+       "optional": 10176800,
+       "enhance": 19830000,
+       "common": 87475000
+      },
+      {
+       "level": 26,
+       "skill": 48370000,
+       "mastery": 14281000,
+       "essential": 17137200,
+       "optional": 11424800,
+       "enhance": 22530000,
+       "common": 97963000
+      },
+      {
+       "level": 27,
+       "skill": 54250000,
+       "mastery": 15921000,
+       "essential": 19105200,
+       "optional": 12736800,
+       "enhance": 25380000,
+       "common": 108983000
+      },
+      {
+       "level": 28,
+       "skill": 60850000,
+       "mastery": 17856000,
+       "essential": 21427200,
+       "optional": 14284800,
+       "enhance": 28380000,
+       "common": 120516000
+      },
+      {
+       "level": 29,
+       "skill": 67750000,
+       "mastery": 19881000,
+       "essential": 23857200,
+       "optional": 15904800,
+       "enhance": 31530000,
+       "common": 132581000
+      },
+      {
+       "level": 30,
+       "skill": 75250000,
+       "mastery": 22281000,
+       "essential": 26737200,
+       "optional": 17824800,
+       "enhance": 36555000,
+       "common": 146381000
+      }
+     ],
+     "rule": "코어 종류별 레벨 누적 점수. 마스터리는 직업별 필수(essential)/선택(optional) 구분",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-hexa-score.json",
+     "anchor": "msm-hexa-score.json levels"
+    },
+    {
+     "id": "masteryKinds",
+     "value": {
+      "나이트로드": {
+       "쿼드러플 스로우 VI": "필수",
+       "마크 오브 어쌔신 VI": "선택"
+      },
+      "나이트워커": {
+       "퀸터플 스로우 VI": "선택",
+       "쉐도우 배트 VI / 래버너스 배트 VI": "필수"
+      },
+      "다크나이트": {
+       "궁니르 디센트 VI": "필수",
+       "다크 임페일 VI / 다크 신서시스 VI": "선택"
+      },
+      "데몬 슬레이어": {
+       "데몬 임팩트 VI": "필수",
+       "데몬 슬래시 VI / 데몬 익스플로젼 VI": "선택"
+      },
+      "데몬 어벤져": {
+       "실드 체이싱 VI": "선택",
+       "익시드 : 엑스큐션 VI": "필수"
+      },
+      "듀얼블레이드": {
+       "팬텀 블로우 VI": "필수",
+       "아수라 VI": "선택"
+      },
+      "라라": {
+       "정기 뿌리기 VI": "선택",
+       "용맥 분출 VI": "필수"
+      },
+      "렌": {
+       "매화검 본초 : 선참 VI": "필수",
+       "망혼검 본초 : 영격 VI / 망혼검 2초식 : 연참 VI": "선택"
+      },
+      "루미너스": {
+       "앱솔루트 킬 VI": "필수",
+       "라이트 리플렉션 VI": "선택"
+      },
+      "메르세데스": {
+       "이슈타르의 링 VI": "필수",
+       "리프 토네이도 VI / 레전드리 스피어 VI / 래쓰 오브 엔릴 VI": "선택"
+      },
+      "메카닉": {
+       "매시브 파이어 : SPLASH-F VI / IRON-B VI": "필수",
+       "호밍 미사일 VI": "선택"
+      },
+      "미하일": {
+       "샤이닝 크로스 VI": "필수",
+       "로얄 가드 VI": "선택"
+      },
+      "바이퍼": {
+       "피스트 인레이지 VI": "필수",
+       "씨 서펜트 VI / 전함 노틸러스 VI": "선택"
+      },
+      "보우마스터": {
+       "폭풍의 시 VI": "필수",
+       "애로우 플래터 VI / 언카운터블 애로우 VI": "선택"
+      },
+      "블래스터": {
+       "매그넘 펀치 VI / 더블 팡 VI": "필수",
+       "릴리즈 파일 벙커 VI": "선택"
+      },
+      "소울마스터": {
+       "솔라 슬래시 VI / 루나 디바이드 VI": "필수",
+       "코스믹 샤워 VI": "선택"
+      },
+      "스트라이커": {
+       "섬멸 VI": "필수",
+       "벽력 VI": "선택"
+      },
+      "신궁": {
+       "스나이핑 VI": "필수",
+       "피어싱 VI": "선택"
+      },
+      "아델": {
+       "디바이드 VI / 샤드 VI / 원더 VI": "선택",
+       "오더 VI / 트레드 VI": "필수"
+      },
+      "아란": {
+       "비욘더 VI": "필수",
+       "부스트 엔드 - 헌터즈 타겟팅 VI": "선택"
+      },
+      "아이엘": {
+       "레디언트 링크 VI": "필수",
+       "벨로스 체임버 VI / 셰터링 프리즘 VI": "선택"
+      },
+      "아크": {
+       "차지드라이브 VI": "필수",
+       "지워지지 않는 상처 VI / 채워지지 않는 굶주림 VI / 걷잡을 수 없는 혼돈 VI": "선택"
+      },
+      "아크메이지(썬,콜)": {
+       "체인 라이트닝 VI": "필수",
+       "프로즌 오브 VI / 블리자드 VI": "선택"
+      },
+      "에릴": {
+       "스피어 오브 루 VI": "필수",
+       "퓨리 오브 론 VI / 스팅 오브 론 VI": "선택"
+      },
+      "에반": {
+       "서클 오브 마나 VI": "필수",
+       "드래곤 스위프트 VI / 서클 오브 썬더 VI / 스위프트 오브 썬더 VI / 스위프트 오브 윈드 VI": "선택"
+      },
+      "엔젤릭버스터": {
+       "트리니티 VI": "필수",
+       "소울 시커 VI / 소울 시커 엑스퍼트 VI": "선택"
+      },
+      "와일드헌터": {
+       "와일드 발칸 VI": "선택",
+       "재규어 스킬 VI": "필수"
+      },
+      "윈드브레이커": {
+       "천공의 노래 VI": "선택",
+       "트라이플링 윔 VI": "필수"
+      },
+      "은월": {
+       "귀참 VI": "필수",
+       "여우령 VI": "선택"
+      },
+      "일리움": {
+       "크래프트 : 자벨린 VI / 글로리 윙 : 자벨린 VI": "필수",
+       "리액션:도미네이션 VI / 리액션:디스트럭션 VI / 글로리 윙:모탈 윙비트 VI": "선택"
+      },
+      "카이저": {
+       "기가 슬래셔 VI": "필수",
+       "소드 스트라이크 VI / 윌 오브 소드 VI": "선택"
+      },
+      "카인": {
+       "폴링 더스트 VI / 포이즌 니들 VI": "선택",
+       "스트라이크 애로우 VI / 스캐터링 샷 VI / 테어링 나이프 VI / 체인 시클 VI": "필수"
+      },
+      "캐논슈터": {
+       "캐논 버스터 VI": "필수",
+       "캐논 바주카 VI / 미니 캐논볼 VI / 마그네틱 앵커 VI / 전함 노틸러스 VI": "선택"
+      },
+      "키네시스": {
+       "얼티메이트-메테리얼 VI": "선택",
+       "싸이킥 그랩 VI / 얼티메이트 - 싸이킥 샷 VI": "필수"
+      },
+      "팔라딘": {
+       "블래스트 VI / 디바인 저지먼트 VI": "필수",
+       "디바인 차지 VI / 디바인 스티그마 VI": "선택"
+      },
+      "팬텀": {
+       "템페스트 오브 카드 VI": "선택",
+       "얼티밋 드라이브 VI": "필수"
+      },
+      "플레임위자드": {
+       "오비탈 플레임 VI": "필수",
+       "블레이징 익스팅션 VI": "선택"
+      },
+      "히어로": {
+       "레이징 블로우 VI": "필수",
+       "레이지 업라이징 VI": "선택"
+      }
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-hexa-score.json",
+     "anchor": "msm-hexa-score.json masteryKinds"
+    }
+   ]
+  },
+  "maplemworlds": {
+   "note": "maplemworlds 번들에서 이 범주의 표를 찾지 못했다(maplemworlds.md 참고)."
+  }
+ }
+}

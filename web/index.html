@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#EAF3FF" />
+    <!-- 개편 미리보기: 검색 노출 안 함 -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content="메이플스토리M 캐릭터·길드 검색과 공식 랭킹을 한눈에 보는 메이플M 플러스의 새 메인 화면 미리보기입니다." />
+    <title>메이플M 플러스 · 새 메인 미리보기</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // 저장된 테마를 첫 화면 그리기 전에 적용한다(깜빡임 방지). 저장값이 없으면 시스템 설정을 따른다.
+      (function () {
+        try {
+          var theme = window.localStorage.getItem("mmp.theme");
+          if (theme === "light" || theme === "dark") {
+            document.documentElement.setAttribute("data-theme", theme);
+          }
+        } catch (error) {
+          /* 저장소를 쓸 수 없는 환경: 시스템 설정을 따른다 */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <p style="padding: 24px; font-family: sans-serif">
+        이 화면은 자바스크립트가 필요합니다. <a href="/">기존 화면으로 이동</a>
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

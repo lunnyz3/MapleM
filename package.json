@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "node server.js",
     "db:dedupe-daily": "node scripts/dedupe-requestlogs-daily.js",
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test \"test/**/*.test.js\"",
+    "build:web": "vite build --config web/vite.config.mjs",
+    "dev:web": "vite --config web/vite.config.mjs"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,10 @@
     "multer": "^2.1.0"
   },
   "devDependencies": {
-    "playwright": "^1.49.1"
+    "@preact/preset-vite": "2.10.6",
+    "playwright": "^1.49.1",
+    "preact": "10.29.8",
+    "pretendard": "1.3.9",
+    "vite": "8.3.4"
   }
 }

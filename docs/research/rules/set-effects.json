@@ -1,0 +1,3256 @@
+{
+ "name": "set-effects.json",
+ "description": "아이템 세트 효과 처리 방식과 세트 표(개수별 누적값)",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "rule:api-first",
+     "rule": "선택 장비 프리셋이 API의 사용 중 프리셋이면 set-effect API의 set_info 문구를 그대로 파싱('세트효과' 출처). 다른 프리셋을 계산할 때만 자체 표로 세트 개수·효과를 만든다(표에 없는 세트는 빠진다는 경고를 낸다)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Tn(a,o={}){",
+     "prettyLine": 3174
+    },
+    {
+     "id": "rule:stigma-skip",
+     "rule": "세트명에 '성흔'이 들어간 API 세트 효과는 합산에서 뺀다(성흔은 수동 입력 '성흔'으로 받는다)",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "Qe=ya=>/성흔/.test(ya?.set_name||\"\")",
+     "prettyLine": 3226
+    },
+    {
+     "id": "rule:cash",
+     "rule": "캐시 세트: 표의 equipmentSource=cash 세트, 세트명에 '마스터'/'스페셜' 단어가 있는 세트(마스터라벨/스페셜라벨), 스페셜라벨 옵션 서명(물댐·마댐 2, 보공 3 등)과 같은 세트는 캐시 세트로 본다. 비활성 프리셋 계산 때도 API의 캐시 세트를 유지",
+     "value": {
+      "_cashSetRules": [
+       {
+        "namePattern": "마스터",
+        "label": "마스터라벨",
+        "source": "manual",
+        "patch": "2026-09",
+        "confidence": 0.95
+       },
+       {
+        "namePattern": "스페셜",
+        "label": "스페셜라벨",
+        "source": "manual",
+        "patch": "2026-09",
+        "confidence": 0.95
+       }
+      ],
+      "_cashSetEffects": {
+       "signatures": [
+        {
+         "label": "스페셜라벨",
+         "option": {
+          "물리 대미지": 2,
+          "물리 피해 감소": 2,
+          "마법 대미지": 2,
+          "마법 피해 감소": 2,
+          "보스 공격력": 3,
+          "보스 방어력": 3
+         },
+         "source": "manual",
+         "patch": "2026-09",
+         "confidence": 0.95
+        }
+       ]
+      }
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json _cashSetRules"
+    },
+    {
+     "id": "rule:lucky",
+     "value": {
+      "keyword": "제네시스",
+      "slot": "무기",
+      "minCount": 3
+     },
+     "rule": "럭키 아이템(제네시스 무기)은 3세트 이상인 weaponSlot 세트의 개수를 +1",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json _rules.lucky"
+    },
+    {
+     "id": "rule:borrow",
+     "value": {
+      "host": "앱솔랩스 세트",
+      "donor": "아케인셰이드 세트"
+     },
+     "rule": "앱솔랩스(host)가 아케인셰이드(donor) 1개를 빌려 개수 +1",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json _rules.borrow"
+    },
+    {
+     "id": "set:도전자의 장비 세트",
+     "set": "도전자의 장비 세트",
+     "memberRule": {
+      "members": [
+       "도전자의 장비 전사 무기 중 택1",
+       "도전자의 상의",
+       "도전자의 하의",
+       "도전자의 모자",
+       "도전자의 장갑",
+       "도전자의 신발",
+       "도전자의 어깨장식",
+       "도전자의 망토"
+      ],
+      "memberPrefix": "도전자의",
+      "slots": [
+       "무기(택1)",
+       "상의",
+       "하의",
+       "모자",
+       "장갑",
+       "신발",
+       "어깨",
+       "망토"
+      ],
+      "grade": null,
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 8,
+       "stats": {
+        "블록률": 23.6,
+        "관통률": 23.6,
+        "물리 공격력%": 45,
+        "물리 대미지": 40,
+        "물리 피해 감소": 26.3,
+        "치명타 피해": 52.5,
+        "치명타 피해 감소": 52.5,
+        "마법 공격력%": 45,
+        "마법 대미지": 40,
+        "마법 피해 감소": 26.3
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"도전자의 장비 세트\"]"
+    },
+    {
+     "id": "set:페어리 세트",
+     "set": "페어리 세트",
+     "memberRule": {
+      "members": [
+       "로망 로즈",
+       "베이비돌 푸카 (남)",
+       "베이비돌 링카 (여)",
+       "페어리 스파크",
+       "스타 윙클",
+       "페어리 피코"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "장갑",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"페어리 세트\"]"
+    },
+    {
+     "id": "set:초롱나비 세트",
+     "set": "초롱나비 세트",
+     "memberRule": {
+      "members": [
+       "붉은 황혼 (남)",
+       "푸른 신야 (여)",
+       "휘황 초롱 (남)",
+       "찬란 초롱 (여)",
+       "초롱 당혜",
+       "넘실 초롱",
+       "이슬 초롱"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "신발",
+       "망토",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"초롱나비 세트\"]"
+    },
+    {
+     "id": "set:죽음의 데스 세트",
+     "set": "죽음의 데스 세트",
+     "memberRule": {
+      "members": [
+       "크로스윙",
+       "판타스마 토트(남)",
+       "판타스마 벨라(여)",
+       "블랙 포르테",
+       "데스 왈츠",
+       "죽음의 데스"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "신발",
+       "망토",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"죽음의 데스 세트\"]"
+    },
+    {
+     "id": "set:마스터 타임 세트",
+     "set": "마스터 타임 세트",
+     "memberRule": {
+      "members": [
+       "화이트 타임(남)",
+       "블랙 타임(여)",
+       "타임 마주르카(남)",
+       "타임 칸타빌레(여)",
+       "영원의 시계태엽",
+       "미스터 타임 슈즈(남)",
+       "미스 타임 슈즈(여)",
+       "마스터 타임"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 타임 세트\"]"
+    },
+    {
+     "id": "set:플로라 세트",
+     "set": "플로라 세트",
+     "memberRule": {
+      "members": [
+       "화원의 아침",
+       "맑은 이슬(남)",
+       "수정 이슬(여)",
+       "알리샤의 꽃날개",
+       "나빌레라 공단화 (남)",
+       "나빌레라 비단화 (여)",
+       "페어리 플로라"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"플로라 세트\"]"
+    },
+    {
+     "id": "set:포니 기프트 세트",
+     "set": "포니 기프트 세트",
+     "memberRule": {
+      "members": [
+       "봉봉 포니 모자(남)",
+       "퐁퐁 포니 모자(여)",
+       "그랜드 포니 (남)",
+       "글로리 포니 (여)",
+       "포니 윙 슈즈",
+       "포니 글러브",
+       "포니의 구리구리 당근"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "신발",
+       "장갑",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"포니 기프트 세트\"]"
+    },
+    {
+     "id": "set:마스터 블러드 세트",
+     "set": "마스터 블러드 세트",
+     "memberRule": {
+      "members": [
+       "낙원의 증표 (남)",
+       "낙원의 장미 (여)",
+       "약속의 끝 (남)",
+       "염원의 끝 (여)",
+       "붉은 각인",
+       "이른 하교 (남)",
+       "이른 하교 (여)",
+       "피의 서약"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 블러드 세트\"]"
+    },
+    {
+     "id": "set:마스터 스텔라 세트",
+     "set": "마스터 스텔라 세트",
+     "memberRule": {
+      "members": [
+       "안개 속 달빛",
+       "안개 속 별빛",
+       "달빛 대공자 (남)",
+       "별빛 대공녀 (여)",
+       "안개 야상곡",
+       "안개 환상곡",
+       "달의 항해 (남)",
+       "별의 항해 (여)",
+       "무한성단"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 스텔라 세트\"]"
+    },
+    {
+     "id": "set:마스터 쉐도우 세트",
+     "set": "마스터 쉐도우 세트",
+     "memberRule": {
+      "members": [
+       "미혹의 파편",
+       "그림자 영주 (남)",
+       "그림자 성주 (여)",
+       "운명의 굴레",
+       "새벽 전진 (남)",
+       "새벽 출진 (여)",
+       "여명의 빛"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 쉐도우 세트\"]"
+    },
+    {
+     "id": "set:마스터 별의 전령 세트",
+     "set": "마스터 별의 전령 세트",
+     "memberRule": {
+      "members": [
+       "별의 전언",
+       "꿈의 인도자 (남)",
+       "꿈의 안내자 (여)",
+       "빛의 가호",
+       "별빛 걸음",
+       "별의 전령"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 별의 전령 세트\"]"
+    },
+    {
+     "id": "set:마스터 이터니티 세트",
+     "set": "마스터 이터니티 세트",
+     "memberRule": {
+      "members": [
+       "영겁의 고리",
+       "영원의 유산 (남)",
+       "시간의 유산 (여)",
+       "이터니티 플레임",
+       "영원의 발걸음",
+       "영겁의 굴레"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "장갑",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 이터니티 세트\"]"
+    },
+    {
+     "id": "set:마스터 메이즈 세트",
+     "set": "마스터 메이즈 세트",
+     "memberRule": {
+      "members": [
+       "시련의 무게",
+       "로드 라비린스 (남)",
+       "레이디 라비린스 (여)",
+       "이스케이프 키",
+       "해답의 조각",
+       "미궁의 연무"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 메이즈 세트\"]"
+    },
+    {
+     "id": "set:마스터 데스티니 세트",
+     "set": "마스터 데스티니 세트",
+     "memberRule": {
+      "members": [
+       "영원 맹세",
+       "운명 심판관 (남)",
+       "운명 집행관 (여)",
+       "영원 궤도",
+       "머무른 영원 (남)",
+       "떠도는 영원 (여)",
+       "운명의 데스티니"
+      ],
+      "slots": [
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 데스티니 세트\"]"
+    },
+    {
+     "id": "set:마스터 나이트메어 세트",
+     "set": "마스터 나이트메어 세트",
+     "memberRule": {
+      "members": [
+       "피어난 악몽",
+       "흐드러진 악몽",
+       "서린 장미 (남)",
+       "아린 장미 (여)",
+       "악몽 행진곡 (남)",
+       "악몽 무도곡 (여)",
+       "악몽 경계",
+       "악몽 진주"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "신발",
+       "신발",
+       "망토",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 나이트메어 세트\"]"
+    },
+    {
+     "id": "set:아케인셰이드 세트",
+     "set": "아케인셰이드 세트",
+     "memberRule": {
+      "memberPrefix": "아케인셰이드",
+      "slots": [
+       "무기(택1)",
+       "모자",
+       "한벌옷",
+       "망토",
+       "어깨",
+       "장갑",
+       "신발"
+      ],
+      "grade": null,
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "방어율 무시": 15,
+        "이동 속도": 11,
+        "보스 방어력": 17,
+        "보스 공격력": 17,
+        "마법 피해 감소": 27,
+        "마법 대미지": 20,
+        "점프 높이": 11,
+        "치명타 피해 감소": 50,
+        "물리 피해 감소": 27,
+        "물리 대미지": 20,
+        "최대 대미지": 165000000,
+        "최종 대미지": 7,
+        "관통률": 12,
+        "치명타 피해": 50,
+        "블록률": 12,
+        "물리 공격력%": 30,
+        "마법 공격력%": 30
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "방어율 무시": 20,
+        "이동 속도": 27,
+        "보스 방어력": 19,
+        "보스 공격력": 19,
+        "마법 피해 감소": 27.5,
+        "마법 대미지": 24,
+        "점프 높이": 27,
+        "치명타 피해 감소": 60,
+        "물리 피해 감소": 27.5,
+        "물리 대미지": 24,
+        "최대 대미지": 210000000,
+        "최종 대미지": 9,
+        "관통률": 13.5,
+        "치명타 피해": 60,
+        "블록률": 13.5,
+        "물리 공격력%": 34,
+        "마법 공격력%": 34
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "방어율 무시": 25,
+        "이동 속도": 43,
+        "보스 방어력": 21,
+        "보스 공격력": 21,
+        "마법 피해 감소": 55,
+        "마법 대미지": 28,
+        "점프 높이": 43,
+        "치명타 피해 감소": 80,
+        "물리 피해 감소": 55,
+        "물리 대미지": 28,
+        "최대 대미지": 255000000,
+        "최종 대미지": 12,
+        "관통률": 36.5,
+        "치명타 피해": 80,
+        "블록률": 36.5,
+        "물리 공격력%": 38,
+        "마법 공격력%": 38
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "방어율 무시": 30,
+        "이동 속도": 59,
+        "보스 방어력": 24,
+        "보스 공격력": 24,
+        "마법 피해 감소": 55.5,
+        "마법 대미지": 32,
+        "점프 높이": 59,
+        "치명타 피해 감소": 104,
+        "물리 피해 감소": 55.5,
+        "물리 대미지": 32,
+        "최대 대미지": 300000000,
+        "최종 대미지": 16,
+        "관통률": 38,
+        "치명타 피해": 104,
+        "블록률": 38,
+        "물리 공격력%": 42,
+        "마법 공격력%": 42
+       }
+      },
+      {
+       "count": 6,
+       "stats": {
+        "방어율 무시": 35,
+        "이동 속도": 75,
+        "보스 방어력": 28,
+        "보스 공격력": 28,
+        "마법 피해 감소": 56,
+        "마법 대미지": 37,
+        "점프 높이": 75,
+        "치명타 피해 감소": 128,
+        "물리 피해 감소": 56,
+        "물리 대미지": 37,
+        "최대 대미지": 375000000,
+        "최종 대미지": 21,
+        "관통률": 39.5,
+        "치명타 피해": 128,
+        "블록률": 39.5,
+        "물리 공격력%": 47,
+        "마법 공격력%": 47
+       }
+      },
+      {
+       "count": 7,
+       "stats": {
+        "방어율 무시": 40,
+        "이동 속도": 91,
+        "보스 방어력": 33,
+        "보스 공격력": 33,
+        "마법 피해 감소": 84,
+        "마법 대미지": 62,
+        "점프 높이": 91,
+        "치명타 피해 감소": 158,
+        "물리 피해 감소": 84,
+        "물리 대미지": 62,
+        "최대 대미지": 525000000,
+        "최종 대미지": 27,
+        "관통률": 63.5,
+        "치명타 피해": 158,
+        "블록률": 63.5,
+        "물리 공격력%": 77,
+        "마법 공격력%": 77
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"아케인셰이드 세트\"]"
+    },
+    {
+     "id": "set:칠흑의 보스 세트",
+     "set": "칠흑의 보스 세트",
+     "memberRule": {
+      "members": [
+       "루즈 컨트롤 머신 마크",
+       "마력이 깃든 안대",
+       "몽환의 벨트",
+       "거대한 공포",
+       "고통의 근원",
+       "커맨더 포스 이어링",
+       "창세의 뱃지"
+      ],
+      "memberKeywords": {
+       "마도서": "포켓(저주받은 마도서 중 택1)",
+       "미트라의 분노": "엠블렘(택1)"
+      },
+      "slots": [
+       "얼굴장식",
+       "눈장식",
+       "벨트",
+       "포켓(택1)",
+       "반지",
+       "목걸이",
+       "귀고리",
+       "뱃지",
+       "엠블렘(택1)"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "최대 HP": 5000,
+        "최대 MP": 3000,
+        "경험치 획득량": 3,
+        "최대 대미지": 3000000,
+        "보스 공격력": 3,
+        "보스 방어력": 3
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "최대 HP": 5000,
+        "최대 MP": 3000,
+        "경험치 획득량": 3,
+        "최종 대미지": 3,
+        "최대 대미지": 7500000,
+        "보스 공격력": 3,
+        "보스 방어력": 3
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "최대 HP": 7000,
+        "최대 MP": 5000,
+        "경험치 획득량": 5,
+        "스탠스": 10,
+        "최종 대미지": 5,
+        "최대 대미지": 12000000,
+        "보스 공격력": 6,
+        "보스 방어력": 6,
+        "방어율 무시": 5
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "최대 HP": 7000,
+        "최대 MP": 5000,
+        "경험치 획득량": 5,
+        "스탠스": 10,
+        "최종 대미지": 7,
+        "최대 대미지": 16500000,
+        "보스 공격력": 6,
+        "보스 방어력": 6,
+        "방어율 무시": 10
+       }
+      },
+      {
+       "count": 6,
+       "stats": {
+        "최대 HP": 10000,
+        "최대 MP": 7000,
+        "경험치 획득량": 7,
+        "스탠스": 15,
+        "최종 대미지": 9,
+        "최대 대미지": 19500000,
+        "보스 공격력": 9,
+        "보스 방어력": 9,
+        "방어율 무시": 15
+       }
+      },
+      {
+       "count": 7,
+       "stats": {
+        "최대 HP": 15000,
+        "최대 MP": 9000,
+        "경험치 획득량": 10,
+        "스탠스": 20,
+        "최종 대미지": 12,
+        "최대 대미지": 22500000,
+        "보스 공격력": 12,
+        "보스 방어력": 12,
+        "방어율 무시": 20
+       }
+      },
+      {
+       "count": 8,
+       "stats": {
+        "최대 HP": 30000,
+        "최대 MP": 20000,
+        "경험치 획득량": 15,
+        "스탠스": 25,
+        "최종 대미지": 20,
+        "최대 대미지": 45000000,
+        "보스 공격력": 20,
+        "보스 방어력": 20,
+        "방어율 무시": 25
+       }
+      },
+      {
+       "count": 9,
+       "stats": {
+        "최대 HP": 40000,
+        "최대 MP": 25000,
+        "경험치 획득량": 20,
+        "스탠스": 30,
+        "최종 대미지": 28,
+        "최대 대미지": 60000000,
+        "보스 공격력": 28,
+        "보스 방어력": 28,
+        "방어율 무시": 30
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"칠흑의 보스 세트\"]"
+    },
+    {
+     "id": "set:군단장 전리품 세트",
+     "set": "군단장 전리품 세트",
+     "memberRule": {
+      "members": [
+       "카오스 영생의 돌",
+       "영생의 돌",
+       "지옥의 불꽃",
+       "고귀한 이피아의 반지",
+       "검은 노바의 휘장",
+       "폭군의 위상",
+       "매커네이터 펜던트",
+       "도미네이터 펜던트"
+      ],
+      "slots": [
+       "포켓",
+       "포켓",
+       "귀고리",
+       "반지",
+       "뱃지",
+       "목걸이",
+       "목걸이",
+       "목걸이"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "최대 MP": 2000,
+        "최대 HP": 3000,
+        "명중률": 5
+       }
+      },
+      {
+       "count": 2,
+       "stats": {
+        "명중률": 8,
+        "최대 HP": 5000,
+        "최대 MP": 4000,
+        "보스 방어력": 4
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "명중률": 12,
+        "최대 HP": 8000,
+        "최대 MP": 6000,
+        "물리 피해 감소": 1,
+        "마법 피해 감소": 1,
+        "보스 공격력": 4,
+        "보스 방어력": 4
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "명중률": 15,
+        "최대 HP": 12000,
+        "최대 MP": 10000,
+        "경험치 획득량": 5,
+        "스탠스": 5,
+        "물리 피해 감소": 4,
+        "마법 피해 감소": 4,
+        "보스 공격력": 7,
+        "보스 방어력": 7
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "명중률": 18,
+        "최대 HP": 14000,
+        "최대 MP": 12000,
+        "경험치 획득량": 7,
+        "스탠스": 10,
+        "최종 대미지": 0.5,
+        "최대 대미지": 50000,
+        "물리 피해 감소": 8,
+        "마법 피해 감소": 8,
+        "보스 공격력": 7,
+        "보스 방어력": 7
+       }
+      },
+      {
+       "count": 6,
+       "stats": {
+        "명중률": 21,
+        "최대 HP": 16000,
+        "최대 MP": 14000,
+        "경험치 획득량": 9,
+        "스탠스": 20,
+        "최종 대미지": 2.5,
+        "최대 대미지": 250000,
+        "물리 피해 감소": 8,
+        "마법 피해 감소": 8,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"군단장 전리품 세트\"]"
+    },
+    {
+     "id": "set:아스완의 빛 세트",
+     "set": "아스완의 빛 세트",
+     "memberRule": {
+      "members": [
+       "아스완의 빛"
+      ],
+      "slots": [
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "보스 방어력": 3,
+        "보스 공격력": 3
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"아스완의 빛 세트\"]"
+    },
+    {
+     "id": "set:힐라를 잘 아는 자 세트",
+     "set": "힐라를 잘 아는 자 세트",
+     "memberRule": {
+      "members": [
+       "힐라를 잘 아는자"
+      ],
+      "slots": [
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "보스 방어력": 5,
+        "보스 공격력": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"힐라를 잘 아는 자 세트\"]"
+    },
+    {
+     "id": "set:악몽의 주인 격파자 세트",
+     "set": "악몽의 주인 격파자 세트",
+     "memberRule": {
+      "members": [
+       "악몽의 주인 격파자"
+      ],
+      "slots": [
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "보스 방어력": 5,
+        "보스 공격력": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"악몽의 주인 격파자 세트\"]"
+    },
+    {
+     "id": "set:무릉도장의 투신 세트",
+     "set": "무릉도장의 투신 세트",
+     "memberRule": {
+      "members": [
+       "10갑자의 내공을 가진 자",
+       "무릉도장의 투신"
+      ],
+      "slots": [
+       "칭호",
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "마법 대미지": 5,
+        "물리 대미지": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"무릉도장의 투신 세트\"]"
+    },
+    {
+     "id": "set:RE:BOOST 칭호 훈장 세트",
+     "set": "RE:BOOST 칭호 훈장 세트",
+     "memberRule": {
+      "members": [
+       "RE:BOOST 칭호",
+       "RE:BOOST 훈장"
+      ],
+      "slots": [
+       "칭호",
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "보스 공격력": 8,
+        "마법 공격력%": 8,
+        "물리 공격력%": 8
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"RE:BOOST 칭호 훈장 세트\"]"
+    },
+    {
+     "id": "set:타락한 빛의 인장",
+     "set": "타락한 빛의 인장",
+     "memberRule": {
+      "members": [
+       "타락한 빛의 인장"
+      ],
+      "slots": [
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "보스 방어력": 5,
+        "보스 공격력": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"타락한 빛의 인장\"]"
+    },
+    {
+     "id": "set:커닝M타워 반지",
+     "set": "커닝M타워 반지",
+     "memberRule": {
+      "members": [
+       "커닝M반지 (30일)",
+       "커닝M반지",
+       "커닝M반지 (7일)"
+      ],
+      "slots": [
+       "반지"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "경험치 획득량": 15
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"커닝M타워 반지\"]"
+    },
+    {
+     "id": "set:축복받은 커닝M타워 반지",
+     "set": "축복받은 커닝M타워 반지",
+     "memberRule": {
+      "members": [
+       "축복받은 커닝M반지 (30일)"
+      ],
+      "slots": [
+       "반지"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "물리 공격력%": 10,
+        "마법 공격력%": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"축복받은 커닝M타워 반지\"]"
+    },
+    {
+     "id": "set:차원 균열의 반지 세트",
+     "set": "차원 균열의 반지 세트",
+     "memberRule": {
+      "members": [
+       "차원 균열의 반지"
+      ],
+      "slots": [
+       "반지"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "물리 공격력%": 3,
+        "마법 공격력%": 3,
+        "맥스 피버 확률": 3
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"차원 균열의 반지 세트\"]"
+    },
+    {
+     "id": "set:노바 디멘션 전사 세트",
+     "set": "노바 디멘션 전사 세트",
+     "memberRule": {
+      "members": [
+       "노바 히아데스 부츠",
+       "노바 히아데스 숄더",
+       "노바 히아데스 클록",
+       "노바 디멘션 심볼"
+      ],
+      "slots": [
+       "신발",
+       "어깨",
+       "망토",
+       "얼굴장식"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 4,
+        "관통률": 4,
+        "물리 피해 감소": 4,
+        "치명타 피해": 9,
+        "치명타 피해 감소": 9,
+        "마법 피해 감소": 4,
+        "보스 공격력": 1,
+        "보스 방어력": 1
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 5,
+        "관통률": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 11,
+        "치명타 피해 감소": 11,
+        "마법 피해 감소": 5,
+        "보스 공격력": 1.5,
+        "보스 방어력": 1.5
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 6,
+        "관통률": 6,
+        "물리 피해 감소": 6,
+        "치명타 피해": 13,
+        "치명타 피해 감소": 13,
+        "마법 피해 감소": 6,
+        "보스 공격력": 2,
+        "보스 방어력": 2
+       }
+      }
+     ],
+     "provenance": {
+      "source": "user-provided-ingame-image",
+      "patch": "2026-09",
+      "confidence": 1
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"노바 디멘션 전사 세트\"]"
+    },
+    {
+     "id": "set:궁수 160레벨 세트 (레전더리)",
+     "set": "궁수 160레벨 세트 (레전더리)",
+     "memberRule": {
+      "members": [
+       "펜살리르 센티널캡",
+       "펜살리르 센티널슈트",
+       "펜살리르 센티널글러브",
+       "펜살리르 센티널부츠"
+      ],
+      "memberPrefix": "펜살리르",
+      "slots": [
+       "모자",
+       "한벌옷",
+       "장갑",
+       "신발"
+      ],
+      "grade": "레전더리",
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 23,
+        "관통률": 23,
+        "물리 피해 감소": 25.8,
+        "치명타 피해": 44.5,
+        "치명타 피해 감소": 44.5,
+        "마법 피해 감소": 25.8,
+        "이동 속도": 44.5,
+        "점프 높이": 50.9
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 23.7,
+        "관통률": 23.7,
+        "최대 대미지": 500000,
+        "물리 피해 감소": 26.4,
+        "치명타 피해": 49.3,
+        "치명타 피해 감소": 49.3,
+        "마법 피해 감소": 26.4,
+        "이동 속도": 49.3,
+        "점프 높이": 52.5
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 24.3,
+        "관통률": 24.3,
+        "최대 대미지": 1000000,
+        "물리 피해 감소": 27.1,
+        "치명타 피해": 54.1,
+        "치명타 피해 감소": 54.1,
+        "마법 피해 감소": 27.1,
+        "이동 속도": 54.1,
+        "점프 높이": 54.1
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"궁수 160레벨 세트 (레전더리)\"]"
+    },
+    {
+     "id": "set:루타비스 세트(레전더리)",
+     "set": "루타비스 세트(레전더리)",
+     "memberRule": {
+      "memberKeywords": {
+       "하이네스": "모자",
+       "이글아이": "상의",
+       "트릭스터": "하의",
+       "파프니르": "무기(택1)"
+      },
+      "grade": "레전더리",
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 23,
+        "관통률": 23,
+        "최대 대미지": 500000,
+        "물리 공격력%": 30,
+        "물리 대미지": 25,
+        "물리 피해 감소": 25.8,
+        "치명타 피해": 44.5,
+        "치명타 피해 감소": 44.5,
+        "마법 공격력%": 30,
+        "마법 대미지": 25,
+        "마법 피해 감소": 25.8,
+        "방어율 무시": 5
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 23.7,
+        "관통률": 23.7,
+        "최대 대미지": 1050000,
+        "물리 공격력%": 45,
+        "물리 대미지": 35,
+        "물리 피해 감소": 26.4,
+        "치명타 피해": 49.3,
+        "치명타 피해 감소": 49.3,
+        "마법 공격력%": 45,
+        "마법 대미지": 35,
+        "마법 피해 감소": 26.4,
+        "방어율 무시": 10
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 24.3,
+        "관통률": 24.3,
+        "최대 대미지": 3150000,
+        "물리 공격력%": 50,
+        "물리 대미지": 45,
+        "물리 피해 감소": 27.1,
+        "치명타 피해": 54.1,
+        "치명타 피해 감소": 54.1,
+        "마법 공격력%": 50,
+        "마법 대미지": 45,
+        "마법 피해 감소": 27.1,
+        "방어율 무시": 15
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"루타비스 세트(레전더리)\"]"
+    },
+    {
+     "id": "set:마스터 스노우 세트",
+     "set": "마스터 스노우 세트",
+     "memberRule": {
+      "members": [
+       "눈의 군주 (남)",
+       "눈의 여왕 (여)",
+       "왕의 연회 (남)",
+       "여왕의 야회 (여)",
+       "고운 속삭임",
+       "화려한 춤 (남)",
+       "찬란한 춤 (여)",
+       "얼음 누각"
+      ],
+      "slots": [
+       "모자",
+       "모자",
+       "한벌옷",
+       "한벌옷",
+       "망토",
+       "신발",
+       "신발",
+       "무기"
+      ],
+      "grade": null,
+      "weaponSlot": true,
+      "equipmentSource": "cash"
+     },
+     "tiers": [
+      {
+       "count": 3,
+       "stats": {
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "치명타 확률": 10,
+        "물리 대미지": 5,
+        "물리 피해 감소": 5,
+        "치명타 피해": 10,
+        "마법 대미지": 5,
+        "마법 피해 감소": 5,
+        "보스 공격력": 10,
+        "보스 방어력": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.98
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"마스터 스노우 세트\"]"
+    },
+    {
+     "id": "set:보스 전리품 세트",
+     "set": "보스 전리품 세트",
+     "memberRule": {
+      "members": [
+       "혼테일의 목걸이",
+       "카오스 혼테일의 목걸이",
+       "분노한 자쿰의 벨트",
+       "데아 시두스 이어링",
+       "블랙빈 마크",
+       "카오스 핑크빈 마크",
+       "아쿠아틱 레터 눈장식",
+       "응축된 힘의 결정석",
+       "실버블라썸 링",
+       "시그너스의 코히누르(에픽)",
+       "다크 프리미엄 심볼",
+       "시그너스의 코히누르(유니크)",
+       "크리스탈 윈투스 뱃지",
+       "카오스 데아 시두스 이어링",
+       "카오스 골든 클로버 벨트",
+       "핑크빛 성배"
+      ],
+      "slots": [
+       "목걸이",
+       "목걸이",
+       "벨트",
+       "귀고리",
+       "눈장식",
+       "눈장식",
+       "눈장식",
+       "얼굴장식",
+       "반지",
+       "반지",
+       "얼굴장식",
+       "반지",
+       "뱃지",
+       "귀고리",
+       "벨트",
+       "포켓"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "물리 방어력": 300,
+        "명중률": 3,
+        "마법 방어력": 300,
+        "최대 HP": 1000,
+        "HP 회복력": 100
+       }
+      },
+      {
+       "count": 2,
+       "stats": {
+        "물리 방어력": 500,
+        "명중률": 6,
+        "마법 방어력": 500,
+        "최대 HP": 2000,
+        "HP 회복력": 200
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "물리 방어력": 700,
+        "명중률": 10,
+        "마법 방어력": 700,
+        "최대 HP": 4000,
+        "HP 회복력": 300,
+        "경험치 획득량": 3
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "물리 방어력": 1000,
+        "명중률": 15,
+        "마법 방어력": 1000,
+        "최대 HP": 6000,
+        "HP 회복력": 400,
+        "경험치 획득량": 7,
+        "보스 방어력": 3
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "물리 방어력": 1500,
+        "명중률": 18,
+        "마법 방어력": 1500,
+        "최대 HP": 8000,
+        "HP 회복력": 500,
+        "경험치 획득량": 7,
+        "보스 공격력": 3,
+        "보스 방어력": 3
+       }
+      },
+      {
+       "count": 6,
+       "stats": {
+        "물리 방어력": 1500,
+        "명중률": 20,
+        "마법 방어력": 1500,
+        "최대 HP": 10000,
+        "HP 회복력": 500,
+        "경험치 획득량": 7,
+        "물리 피해 감소": 4,
+        "마법 피해 감소": 4,
+        "보스 공격력": 7,
+        "보스 방어력": 3
+       }
+      },
+      {
+       "count": 7,
+       "stats": {
+        "물리 방어력": 1500,
+        "명중률": 20,
+        "마법 방어력": 1500,
+        "최대 HP": 12000,
+        "최대 MP": 10000,
+        "HP 회복력": 500,
+        "경험치 획득량": 7,
+        "물리 대미지": 5,
+        "물리 피해 감소": 8,
+        "마법 대미지": 5,
+        "마법 피해 감소": 8,
+        "보스 공격력": 7,
+        "보스 방어력": 7
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"보스 전리품 세트\"]"
+    },
+    {
+     "id": "set:루타비스 세트(유니크)",
+     "set": "루타비스 세트(유니크)",
+     "memberRule": {
+      "memberKeywords": {
+       "하이네스": "모자",
+       "이글아이": "상의",
+       "트릭스터": "하의",
+       "파프니르": "무기(택1)"
+      },
+      "grade": "유니크",
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 22.8,
+        "관통률": 22.8,
+        "물리 피해 감소": 25.5,
+        "치명타 피해": 44.1,
+        "치명타 피해 감소": 44.1,
+        "마법 피해 감소": 25.5
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 23.2,
+        "관통률": 23.2,
+        "물리 공격력%": 40,
+        "물리 피해 감소": 25.9,
+        "치명타 피해": 48.3,
+        "치명타 피해 감소": 48.3,
+        "마법 공격력%": 40,
+        "마법 피해 감소": 25.9
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 23.6,
+        "관통률": 23.6,
+        "물리 공격력%": 45,
+        "물리 대미지": 40,
+        "물리 피해 감소": 26.3,
+        "치명타 피해": 52.5,
+        "치명타 피해 감소": 52.5,
+        "마법 공격력%": 45,
+        "마법 대미지": 40,
+        "마법 피해 감소": 26.3
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"루타비스 세트(유니크)\"]"
+    },
+    {
+     "id": "set:궁수 160레벨 세트 (유니크)",
+     "set": "궁수 160레벨 세트 (유니크)",
+     "memberRule": {
+      "members": [
+       "펜살리르 센티널캡",
+       "펜살리르 센티널슈트",
+       "펜살리르 센티널글러브",
+       "펜살리르 센티널부츠",
+       "우트가르드 보우"
+      ],
+      "memberPrefix": "펜살리르",
+      "memberKeywords": {
+       "우트가르드": "무기(택1)"
+      },
+      "slots": [
+       "모자",
+       "한벌옷",
+       "장갑",
+       "신발",
+       "무기(택1)"
+      ],
+      "grade": "유니크",
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 22.8,
+        "관통률": 22.8,
+        "물리 피해 감소": 25.5,
+        "치명타 피해": 44.1,
+        "치명타 피해 감소": 44.1,
+        "마법 피해 감소": 25.5,
+        "이동 속도": 44.1,
+        "점프 높이": 50.4
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 23.2,
+        "관통률": 23.2,
+        "물리 피해 감소": 25.9,
+        "치명타 피해": 48.3,
+        "치명타 피해 감소": 48.3,
+        "마법 피해 감소": 25.9,
+        "이동 속도": 48.3,
+        "점프 높이": 51.5
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 23.6,
+        "관통률": 23.6,
+        "물리 피해 감소": 26.3,
+        "치명타 피해": 52.5,
+        "치명타 피해 감소": 52.5,
+        "마법 피해 감소": 26.3,
+        "이동 속도": 52.5,
+        "점프 높이": 52.5
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "블록률": 24.8,
+        "관통률": 24.8,
+        "물리 피해 감소": 27.7,
+        "치명타 피해": 55.2,
+        "치명타 피해 감소": 55.2,
+        "마법 피해 감소": 27.7,
+        "이동 속도": 55.2,
+        "점프 높이": 55.2
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"궁수 160레벨 세트 (유니크)\"]"
+    },
+    {
+     "id": "set:궁수 140레벨 세트 (레전더리)",
+     "set": "궁수 140레벨 세트 (레전더리)",
+     "memberRule": {
+      "members": [
+       "무스펠 아처햇",
+       "무스펠 아처슈트",
+       "무스펠 아처글러브",
+       "무스펠 아처슈즈"
+      ],
+      "memberPrefix": "무스펠",
+      "slots": [
+       "모자",
+       "한벌옷",
+       "장갑",
+       "신발"
+      ],
+      "grade": "레전더리",
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 21.9,
+        "관통률": 21.9,
+        "물리 피해 감소": 24.6,
+        "치명타 피해": 42.4,
+        "치명타 피해 감소": 42.4,
+        "마법 피해 감소": 24.6,
+        "이동 속도": 42.4,
+        "점프 높이": 48.5
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 22.5,
+        "관통률": 22.5,
+        "물리 피해 감소": 25.2,
+        "치명타 피해": 46.9,
+        "치명타 피해 감소": 46.9,
+        "마법 피해 감소": 25.2,
+        "이동 속도": 46.9,
+        "점프 높이": 50
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 23.2,
+        "관통률": 23.2,
+        "물리 피해 감소": 25.8,
+        "치명타 피해": 51.5,
+        "치명타 피해 감소": 51.5,
+        "마법 피해 감소": 25.8,
+        "이동 속도": 51.5,
+        "점프 높이": 51.5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "user-provided-ingame-image",
+      "patch": "2026-09",
+      "confidence": 1
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"궁수 140레벨 세트 (레전더리)\"]"
+    },
+    {
+     "id": "set:궁수 140레벨 세트 (유니크)",
+     "set": "궁수 140레벨 세트 (유니크)",
+     "memberRule": {
+      "members": [
+       "무스펠 아처햇",
+       "무스펠 아처슈트",
+       "무스펠 아처글러브",
+       "무스펠 아처슈즈"
+      ],
+      "memberPrefix": "무스펠",
+      "slots": [
+       "모자",
+       "한벌옷",
+       "장갑",
+       "신발"
+      ],
+      "grade": "유니크",
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 21.7,
+        "관통률": 21.7,
+        "물리 피해 감소": 24.4,
+        "치명타 피해": 42,
+        "치명타 피해 감소": 42,
+        "마법 피해 감소": 24.4,
+        "이동 속도": 42,
+        "점프 높이": 48
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 22.1,
+        "관통률": 22.1,
+        "물리 피해 감소": 24.7,
+        "치명타 피해": 46,
+        "치명타 피해 감소": 46,
+        "마법 피해 감소": 24.7,
+        "이동 속도": 46,
+        "점프 높이": 49
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 22.5,
+        "관통률": 22.5,
+        "물리 피해 감소": 25,
+        "치명타 피해": 50,
+        "치명타 피해 감소": 50,
+        "마법 피해 감소": 25,
+        "이동 속도": 50,
+        "점프 높이": 50
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"궁수 140레벨 세트 (유니크)\"]"
+    },
+    {
+     "id": "set:앱솔랩스 세트",
+     "set": "앱솔랩스 세트",
+     "memberRule": {
+      "members": [
+       "앱솔랩스 아처슈트",
+       "앱솔랩스 아처후드",
+       "앱솔랩스 아처글러브",
+       "앱솔랩스 아처슈즈",
+       "앱솔랩스 아처숄더",
+       "앱솔랩스 아처케이프"
+      ],
+      "memberPrefix": "앱솔랩스",
+      "slots": [
+       "한벌옷",
+       "모자",
+       "장갑",
+       "신발",
+       "어깨",
+       "망토"
+      ],
+      "grade": null,
+      "weaponSlot": true,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "블록률": 12,
+        "관통률": 12,
+        "최대 대미지": 5500000,
+        "물리 공격력%": 5,
+        "물리 대미지": 5,
+        "물리 피해 감소": 27,
+        "치명타 피해": 22,
+        "치명타 피해 감소": 22,
+        "마법 공격력%": 5,
+        "마법 대미지": 5,
+        "마법 피해 감소": 27,
+        "보스 공격력": 6,
+        "보스 방어력": 6,
+        "이동 속도": 11,
+        "점프 높이": 11,
+        "방어율 무시": 5
+       }
+      },
+      {
+       "count": 3,
+       "stats": {
+        "블록률": 13.5,
+        "관통률": 13.5,
+        "최대 대미지": 11000000,
+        "물리 공격력%": 6.5,
+        "물리 대미지": 6.5,
+        "물리 피해 감소": 27.5,
+        "치명타 피해": 24,
+        "치명타 피해 감소": 24,
+        "마법 공격력%": 6.5,
+        "마법 대미지": 6.5,
+        "마법 피해 감소": 27.5,
+        "보스 공격력": 7,
+        "보스 방어력": 7,
+        "이동 속도": 27,
+        "점프 높이": 27,
+        "방어율 무시": 8
+       }
+      },
+      {
+       "count": 4,
+       "stats": {
+        "블록률": 36.5,
+        "관통률": 36.5,
+        "최대 대미지": 18500000,
+        "물리 공격력%": 8,
+        "물리 대미지": 8,
+        "물리 피해 감소": 55,
+        "치명타 피해": 69,
+        "치명타 피해 감소": 69,
+        "마법 공격력%": 8,
+        "마법 대미지": 8,
+        "마법 피해 감소": 55,
+        "보스 공격력": 8,
+        "보스 방어력": 8,
+        "이동 속도": 43,
+        "점프 높이": 43,
+        "방어율 무시": 11
+       }
+      },
+      {
+       "count": 5,
+       "stats": {
+        "블록률": 38,
+        "관통률": 38,
+        "최대 대미지": 28000000,
+        "물리 공격력%": 9.5,
+        "물리 대미지": 9.5,
+        "물리 피해 감소": 55.5,
+        "치명타 피해": 76,
+        "치명타 피해 감소": 76,
+        "마법 공격력%": 9.5,
+        "마법 대미지": 9.5,
+        "마법 피해 감소": 55.5,
+        "보스 공격력": 9,
+        "보스 방어력": 9,
+        "이동 속도": 59,
+        "점프 높이": 59,
+        "방어율 무시": 14
+       }
+      },
+      {
+       "count": 6,
+       "stats": {
+        "블록률": 39.5,
+        "관통률": 39.5,
+        "최대 대미지": 38500000,
+        "물리 공격력%": 11,
+        "물리 대미지": 11,
+        "물리 피해 감소": 56,
+        "치명타 피해": 83,
+        "치명타 피해 감소": 83,
+        "마법 공격력%": 11,
+        "마법 대미지": 11,
+        "마법 피해 감소": 56,
+        "보스 공격력": 10,
+        "보스 방어력": 10,
+        "이동 속도": 75,
+        "점프 높이": 75,
+        "방어율 무시": 17
+       }
+      },
+      {
+       "count": 7,
+       "stats": {
+        "블록률": 63.5,
+        "관통률": 63.5,
+        "최대 대미지": 49000000,
+        "물리 공격력%": 57,
+        "물리 대미지": 50,
+        "물리 피해 감소": 84,
+        "치명타 피해": 130,
+        "치명타 피해 감소": 130,
+        "마법 공격력%": 57,
+        "마법 대미지": 50,
+        "마법 피해 감소": 84,
+        "보스 공격력": 11,
+        "보스 방어력": 11,
+        "이동 속도": 91,
+        "점프 높이": 91,
+        "방어율 무시": 23
+       }
+      }
+     ],
+     "provenance": {
+      "source": null,
+      "patch": null,
+      "confidence": null
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"앱솔랩스 세트\"]"
+    },
+    {
+     "id": "set:무릉도장의 화신 세트",
+     "set": "무릉도장의 화신 세트",
+     "memberRule": {
+      "members": [
+       "100갑자의 내공을 가진 자",
+       "무릉도장의 화신"
+      ],
+      "slots": [
+       "칭호",
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "마법 대미지": 10,
+        "물리 대미지": 10
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"무릉도장의 화신 세트\"]"
+    },
+    {
+     "id": "set:아르카누스 정복자 세트",
+     "set": "아르카누스 정복자 세트",
+     "memberRule": {
+      "members": [
+       "샤레니안의 빛",
+       "아르카누스 정복자"
+      ],
+      "slots": [
+       "칭호",
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 2,
+       "stats": {
+        "보스 공격력": 5,
+        "치명타 확률": 5
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"아르카누스 정복자 세트\"]"
+    },
+    {
+     "id": "set:커스터마이저",
+     "set": "커스터마이저",
+     "memberRule": {
+      "members": [
+       "커스터마이저"
+      ],
+      "slots": [
+       "훈장"
+      ],
+      "grade": null,
+      "weaponSlot": false,
+      "equipmentSource": null
+     },
+     "tiers": [
+      {
+       "count": 1,
+       "stats": {
+        "물리 대미지": 1,
+        "마법 대미지": 1,
+        "치명타 피해": 2,
+        "보스 공격력": 1
+       }
+      }
+     ],
+     "provenance": {
+      "source": "measured",
+      "patch": "2026-09",
+      "confidence": 0.99
+     },
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-set-effects.json",
+     "anchor": "msm-set-effects.json sets[\"커스터마이저\"]"
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "아이템 세트 효과 표와 세트 판정 규칙",
+   "entries": [
+    {
+     "id": "charpage:item-set-effects",
+     "usedBy": "xf",
+     "unit": {
+      "최대 대미지": "절대값",
+      "other": "%(공격력은 % 공격력)"
+     },
+     "countRule": "세트 장착 수 이하 가장 큰 키(Od)",
+     "table": {
+      "아케인": {
+       "2": {
+        "최대 대미지": 165000000,
+        "최종 대미지": 7,
+        "치명타 피해": 50,
+        "보스 공격력": 17,
+        "마법 대미지": 20,
+        "물리 대미지": 20,
+        "마법 공격력": 30,
+        "물리 공격력": 30,
+        "방어율 무시": 15
+       },
+       "3": {
+        "최대 대미지": 210000000,
+        "최종 대미지": 9,
+        "치명타 피해": 60,
+        "보스 공격력": 19,
+        "마법 대미지": 24,
+        "물리 대미지": 24,
+        "마법 공격력": 34,
+        "물리 공격력": 34,
+        "방어율 무시": 20
+       },
+       "4": {
+        "최대 대미지": 255000000,
+        "최종 대미지": 12,
+        "치명타 피해": 80,
+        "보스 공격력": 21,
+        "마법 대미지": 28,
+        "물리 대미지": 28,
+        "마법 공격력": 38,
+        "물리 공격력": 38,
+        "방어율 무시": 25
+       },
+       "5": {
+        "최대 대미지": 300000000,
+        "최종 대미지": 16,
+        "치명타 피해": 104,
+        "보스 공격력": 24,
+        "마법 대미지": 32,
+        "물리 대미지": 32,
+        "마법 공격력": 42,
+        "물리 공격력": 42,
+        "방어율 무시": 30
+       },
+       "6": {
+        "최대 대미지": 375000000,
+        "최종 대미지": 21,
+        "치명타 피해": 128,
+        "보스 공격력": 28,
+        "마법 대미지": 37,
+        "물리 대미지": 37,
+        "마법 공격력": 47,
+        "물리 공격력": 47,
+        "방어율 무시": 35
+       },
+       "7": {
+        "최대 대미지": 525000000,
+        "최종 대미지": 27,
+        "치명타 피해": 158,
+        "보스 공격력": 33,
+        "마법 대미지": 62,
+        "물리 대미지": 62,
+        "마법 공격력": 77,
+        "물리 공격력": 77,
+        "방어율 무시": 40
+       }
+      },
+      "앱솔": {
+       "2": {
+        "최대 대미지": 5500000,
+        "치명타 피해": 22,
+        "보스 공격력": 6,
+        "마법 대미지": 5,
+        "물리 대미지": 5,
+        "마법 공격력": 5,
+        "물리 공격력": 5,
+        "방어율 무시": 5
+       },
+       "3": {
+        "최대 대미지": 11000000,
+        "치명타 피해": 24,
+        "보스 공격력": 7,
+        "마법 대미지": 6.5,
+        "물리 대미지": 6.5,
+        "마법 공격력": 6.5,
+        "물리 공격력": 6.5,
+        "방어율 무시": 8
+       },
+       "4": {
+        "최대 대미지": 18500000,
+        "치명타 피해": 69,
+        "보스 공격력": 8,
+        "마법 대미지": 8,
+        "물리 대미지": 8,
+        "마법 공격력": 8,
+        "물리 공격력": 8,
+        "방어율 무시": 11
+       },
+       "5": {
+        "최대 대미지": 28000000,
+        "치명타 피해": 76,
+        "보스 공격력": 9,
+        "마법 대미지": 9.5,
+        "물리 대미지": 9.5,
+        "마법 공격력": 9.5,
+        "물리 공격력": 9.5,
+        "방어율 무시": 14
+       },
+       "6": {
+        "최대 대미지": 38500000,
+        "치명타 피해": 83,
+        "보스 공격력": 10,
+        "마법 대미지": 11,
+        "물리 대미지": 11,
+        "마법 공격력": 11,
+        "물리 공격력": 11,
+        "방어율 무시": 17
+       },
+       "7": {
+        "최대 대미지": 49000000,
+        "치명타 피해": 130,
+        "보스 공격력": 11,
+        "마법 대미지": 50,
+        "물리 대미지": 50,
+        "마법 공격력": 57,
+        "물리 공격력": 57,
+        "방어율 무시": 23
+       }
+      },
+      "칠흑": {
+       "2": {
+        "최대 대미지": 3000000,
+        "보스 공격력": 3
+       },
+       "3": {
+        "최대 대미지": 7500000,
+        "최종 대미지": 3,
+        "보스 공격력": 3
+       },
+       "4": {
+        "최대 대미지": 12000000,
+        "최종 대미지": 5,
+        "보스 공격력": 6,
+        "방어율 무시": 5
+       },
+       "5": {
+        "최대 대미지": 16500000,
+        "최종 대미지": 7,
+        "보스 공격력": 6,
+        "방어율 무시": 10
+       },
+       "6": {
+        "최대 대미지": 19500000,
+        "최종 대미지": 9,
+        "보스 공격력": 9,
+        "방어율 무시": 15
+       },
+       "7": {
+        "최대 대미지": 22500000,
+        "최종 대미지": 12,
+        "보스 공격력": 12,
+        "방어율 무시": 20
+       },
+       "8": {
+        "최대 대미지": 45000000,
+        "최종 대미지": 20,
+        "보스 공격력": 20,
+        "방어율 무시": 25
+       },
+       "9": {
+        "최대 대미지": 60000000,
+        "최종 대미지": 28,
+        "보스 공격력": 28,
+        "방어율 무시": 30
+       }
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "r8={아케인:{2:{\"최",
+     "prettyLine": 15087
+    },
+    {
+     "id": "charpage:chaos-set-items",
+     "note": "이 이름이 아이템명에 포함되면 '칠흑' 세트 1개로 센다",
+     "items": [
+      "루즈 컨트롤",
+      "마력이 깃든",
+      "몽환의 벨트",
+      "저주받은 청의",
+      "저주받은 적의",
+      "거대한 공포",
+      "고통의 근원",
+      "커맨더 포스 이어링",
+      "창세의 뱃지",
+      "미트라의 분노",
+      "감시자의 눈"
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "g=[\"루즈 컨트롤\",\"마력이 깃든\"",
+     "prettyLine": 15862
+    },
+    {
+     "id": "charpage:lucky-genesis",
+     "rule": "무기 이름에 '제네시스'가 있으면 아케인·앱솔 각각 이미 3세트 이상일 때 세트 수 +1, 스타포스 합 += 무기 스타포스",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "for(const R of[\"아케인\",\"앱솔\"])",
+     "prettyLine": 15941
+    },
+    {
+     "id": "charpage:overall-starforce",
+     "rule": "한벌옷 슬롯은 스타포스 2배로 합산",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "R.item_equipment_slot_name===\"한벌옷\"?2:1",
+     "prettyLine": 15909
+    },
+    {
+     "id": "charpage:arcane-ied-merge",
+     "rule": "아케인 세트효과와 아케인 스타포스 옵션의 방어율 무시는 서로 더해 하나의 항목('아케인셰이드 세트 (합산)')으로 만든 뒤, 다른 방무와는 곱연산",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "label:\"아케인셰이드 세트 (합산)\"",
+     "prettyLine": 15948
+    },
+    {
+     "id": "charpage:api-set-filter",
+     "rule": "API set-effect 중 '차원 균열의 반지 세트'(문구 파싱)와 마스터 라벨 세트(이름이 '마스터 '로 시작하거나 플로라·포니 기프트·죽음의 데스·초롱나비·페어리 포함, 3세트 이상)만 반영. 그 밖의 API 세트효과는 무시",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "R.set_name===\"차원 균열의 반지 세트\"",
+     "prettyLine": 15959
+    },
+    {
+     "id": "charpage:master-label-3set",
+     "value": {
+      "물리 대미지": 5,
+      "마법 대미지": 5,
+      "보스 공격력": 10
+     },
+     "unit": "%",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "b8={\"물리 대미지\":5",
+     "prettyLine": 15599
+    },
+    {
+     "id": "charpage:master-label-5set",
+     "value": {
+      "물리 대미지": 5,
+      "치명타 피해": 10,
+      "마법 대미지": 5,
+      "보스 공격력": 10
+     },
+     "unit": "%",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "c8={\"물리 대미지\":5",
+     "prettyLine": 15604
+    },
+    {
+     "id": "charpage:master-label-names",
+     "value": [
+      "플로라",
+      "포니 기프트",
+      "죽음의 데스",
+      "초롱나비",
+      "페어리"
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "d8=[\"플로라\",\"포니 ",
+     "prettyLine": 15597
+    },
+    {
+     "id": "setcalc:extra-sets",
+     "usedBy": "/calculator/set 전용",
+     "note": "아케인·앱솔·칠흑 값은 r8과 동일(검증함). 팦레/팦유/펜살/무스펠은 계산기에만 있음. 키 의미는 starforce-set-options.json 참고",
+     "table": {
+      "팦레": {
+       "1": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 0,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 0
+       },
+       "2": {
+        "최댐": 500000,
+        "종댐": 0,
+        "치피": 44.5,
+        "보공": 0,
+        "대미지": 25,
+        "공격력": 30,
+        "방무": 5,
+        "이속": 0
+       },
+       "3": {
+        "최댐": 1050000,
+        "종댐": 0,
+        "치피": 49.3,
+        "보공": 0,
+        "대미지": 35,
+        "공격력": 45,
+        "방무": 10,
+        "이속": 0
+       },
+       "4": {
+        "최댐": 3150000,
+        "종댐": 0,
+        "치피": 54.1,
+        "보공": 0,
+        "대미지": 45,
+        "공격력": 50,
+        "방무": 15,
+        "이속": 0
+       }
+      },
+      "팦유": {
+       "1": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 0,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 0
+       },
+       "2": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 44.1,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 0
+       },
+       "3": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 48.3,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 40,
+        "방무": 0,
+        "이속": 0
+       },
+       "4": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 52.5,
+        "보공": 0,
+        "대미지": 40,
+        "공격력": 45,
+        "방무": 0,
+        "이속": 0
+       }
+      },
+      "펜살": {
+       "1": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 0,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 0
+       },
+       "2": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 44.1,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 44.1
+       },
+       "3": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 48.3,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 48.3
+       },
+       "4": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 52.5,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 52.5
+       }
+      },
+      "무스펠": {
+       "1": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 0,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 0
+       },
+       "2": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 42,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 42
+       },
+       "3": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 46,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 46
+       },
+       "4": {
+        "최댐": 0,
+        "종댐": 0,
+        "치피": 50,
+        "보공": 0,
+        "대미지": 0,
+        "공격력": 0,
+        "방무": 0,
+        "이속": 50
+       }
+      }
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "qr={아케인:{1:{최댐",
+     "prettyLine": 13545
+    },
+    {
+     "id": "setcalc:presets",
+     "value": [
+      {
+       "name": "2앜5앱 → 3앜4앱",
+       "before": {
+        "gear": "아케인",
+        "set": "2",
+        "starforce": "0"
+       },
+       "after": {
+        "gear": "아케인",
+        "set": "3",
+        "starforce": "0"
+       }
+      },
+      {
+       "name": "5앜2앱 → 6앜1앱",
+       "before": {
+        "gear": "아케인",
+        "set": "5",
+        "starforce": "0"
+       },
+       "after": {
+        "gear": "아케인",
+        "set": "6",
+        "starforce": "0"
+       }
+      },
+      {
+       "name": "5앜2앱 → 7앜",
+       "before": {
+        "gear": "아케인",
+        "set": "5",
+        "starforce": "0"
+       },
+       "after": {
+        "gear": "아케인",
+        "set": "7",
+        "starforce": "0"
+       }
+      },
+      {
+       "name": "7앱 280성 → 2앜80·5앱140",
+       "before": {
+        "gear": "앱솔",
+        "set": "7",
+        "starforce": "280"
+       },
+       "after": {
+        "gear": "아케인",
+        "set": "2",
+        "starforce": "80"
+       }
+      }
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "Y9=[{name:\"2앜5",
+     "prettyLine": 14392
+    }
+   ]
+  }
+ }
+}

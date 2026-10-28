@@ -1,7 +1,119 @@
 {
   "_meta": {
-    "source": "벨트잠재.html",
-    "generated_at": "2026-03-05T10:37:16"
+    "source": "https://m.nexon.com/probability/5803?language=ko",
+    "source_title": "큐브 (잠재옵션) - 벨트",
+    "generated_at": "2026-10-28T16:56:47+09:00",
+    "generator": "scripts/data/sync-probability.js",
+    "note": "first = 공식 '첫번째 옵션', second·third = 공식 '두번째 / 세번째 옵션'(같은 분포). option·value·p 는 공식 표기 그대로.",
+    "official_notes": [
+      "⊙ 일부 장비는 아래 잠재옵션 범위에 해당하는 잠재옵션 수치로 적용됩니다."
+    ],
+    "level_exceptions": [
+      {
+        "equipment": "1주년 세인트 장비",
+        "range": "40레벨 장비",
+        "levels": {
+          "default": 40,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "2주년 화이트 장비",
+        "range": "100레벨 장비 (망토(케이프)의 경우, 90레벨 장비)",
+        "levels": {
+          "default": 100,
+          "bySlot": {
+            "망토": 90
+          }
+        }
+      },
+      {
+        "equipment": "2주년 블랙 장비",
+        "range": "120레벨 장비",
+        "levels": {
+          "default": 120,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "3주년 화이트 장비",
+        "range": "100레벨 장비 (망토(케이프)의 경우, 90레벨 장비)",
+        "levels": {
+          "default": 100,
+          "bySlot": {
+            "망토": 90
+          }
+        }
+      },
+      {
+        "equipment": "3주년 블랙 장비",
+        "range": "120레벨 장비",
+        "levels": {
+          "default": 120,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "5주년 블랙 장비",
+        "range": "120레벨 장비",
+        "levels": {
+          "default": 120,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "노바 디멘션 장비",
+        "range": "신발 / 어깨 : 100레벨 장비 망토 : 120레벨 장비",
+        "levels": {
+          "default": null,
+          "bySlot": {
+            "신발": 100,
+            "어깨": 100,
+            "망토": 120
+          }
+        }
+      },
+      {
+        "equipment": "시그너스 여제 장비",
+        "range": "140레벨 장비",
+        "levels": {
+          "default": 140,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "루타비스 장비",
+        "range": "160레벨 장비",
+        "levels": {
+          "default": 160,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "네크로 장비 (모두의 성장 지원 시즌 3)",
+        "range": "60레벨 장비",
+        "levels": {
+          "default": 60,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "네크로 장비 (모두의 성장 지원 시즌 4)",
+        "range": "80레벨 장비",
+        "levels": {
+          "default": 80,
+          "bySlot": {}
+        }
+      },
+      {
+        "equipment": "아가레스, 엘리고스, 이포스, 헬파스, 베파르 장비 (프리미엄 성장 지원 시즌 3, 4)",
+        "range": "160레벨 장비",
+        "levels": {
+          "default": 160,
+          "bySlot": {}
+        }
+      }
+    ]
   },
   "벨트 40": {
     "레어": {

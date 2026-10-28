@@ -12,3 +12,6 @@ __pycache__/
 
 # local tooling caches (headless browser libs)
 .cache/
+
+# Vite build output (web/ -> dist/preview)
+dist/

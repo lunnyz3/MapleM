@@ -94,9 +94,8 @@ const SLOT_PROBABILITY_CONFIG = Object.freeze({
     keyLabel: LABEL.HAT,
   },
   [SLOT_KIND.GLOVES]: {
-    // If these files are not present in probability/, calculation gracefully falls back.
-    potentialFile: "gloves_potential_prob.json.json",
-    additionalFile: "gloves_additional_potential_prob.json.json",
+    potentialFile: "gloves_potential_prob.json",
+    additionalFile: "gloves_additional_potential_prob.json",
     keyLabel: LABEL.GLOVES,
   },
   [SLOT_KIND.SHOES]: {
@@ -120,6 +119,100 @@ const SLOT_PROBABILITY_CONFIG = Object.freeze({
     keyLabel: LABEL.BELT,
   },
 });
+
+// Official table-selection exceptions (m.nexon.com/probability cube pages, checked 2026-10-28).
+// - "제네시스 무기는 장비 레벨 200에 해당하는 잠재능력이 부여됩니다." (weapon potential and additional pages)
+// - "일부 장비는 아래 잠재옵션 범위에 해당하는 잠재옵션 수치로 적용됩니다." (potential pages; the table is copied
+//   into _meta.level_exceptions of public/probability/*_potential_prob.json, and test/probability.test.js
+//   checks that this list matches it)
+// The official table names equipment sets only, so a rule applies only when namePattern can tell the set
+// from the item name. Rules without a pattern keep the nearest-level table (see docs/research/probability-sync.md).
+const TABLE_LEVEL_EXCEPTIONS = Object.freeze([
+  {
+    equipment: "제네시스 무기",
+    namePattern: /^제네시스\s/, // 제네시스 <무기>
+    slots: [LABEL.WEAPON],
+    sources: ["potential", "additional"],
+    level: 200,
+  },
+  {
+    equipment: "1주년 세인트 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 40,
+  },
+  {
+    equipment: "2주년 화이트 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 100,
+    levelBySlot: { [LABEL.CAPE]: 90 },
+  },
+  {
+    equipment: "2주년 블랙 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 120,
+  },
+  {
+    equipment: "3주년 화이트 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 100,
+    levelBySlot: { [LABEL.CAPE]: 90 },
+  },
+  {
+    equipment: "3주년 블랙 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 120,
+  },
+  {
+    equipment: "5주년 블랙 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 120,
+  },
+  {
+    equipment: "노바 디멘션 장비",
+    // e.g. 노바 리카온 숄더 (Lv.110): its potential values exist only in the 어깨 100 table.
+    namePattern: /^노바\s/,
+    sources: ["potential"],
+    level: null,
+    levelBySlot: { [LABEL.SHOES]: 100, [LABEL.SHOULDER]: 100, [LABEL.CAPE]: 120 },
+  },
+  {
+    equipment: "시그너스 여제 장비",
+    namePattern: null,
+    sources: ["potential"],
+    level: 140,
+  },
+  {
+    equipment: "루타비스 장비",
+    // 파프니르(무기), 하이네스(모자), 이글아이(상의), 트릭스터(하의)
+    namePattern: /^(파프니르|하이네스|이글아이|트릭스터)\s/,
+    sources: ["potential"],
+    level: 160,
+  },
+  {
+    equipment: "네크로 장비 (모두의 성장 지원 시즌 3)",
+    namePattern: null, // season 3 and 4 share the "네크로" name prefix
+    sources: ["potential"],
+    level: 60,
+  },
+  {
+    equipment: "네크로 장비 (모두의 성장 지원 시즌 4)",
+    namePattern: null,
+    sources: ["potential"],
+    level: 80,
+  },
+  {
+    equipment: "아가레스, 엘리고스, 이포스, 헬파스, 베파르 장비 (프리미엄 성장 지원 시즌 3, 4)",
+    namePattern: /^(아가레스|엘리고스|이포스|헬파스|베파르)/,
+    sources: ["potential"],
+    level: 160,
+  },
+]);
 
 const probabilityTableCache = new Map();
 
@@ -535,6 +628,38 @@ function resolveItemLevel(item) {
   return null;
 }
 
+function findTableLevelException(item, slotKind, sourceType = "potential") {
+  const itemName = String(item?.itemName || "").trim();
+  const slotLabel = SLOT_PROBABILITY_CONFIG[slotKind]?.keyLabel || "";
+  if (!itemName || !slotLabel) {
+    return null;
+  }
+
+  for (const rule of TABLE_LEVEL_EXCEPTIONS) {
+    if (!rule.namePattern || !rule.sources.includes(sourceType)) {
+      continue;
+    }
+    if (rule.slots && !rule.slots.includes(slotLabel)) {
+      continue;
+    }
+    if (!rule.namePattern.test(itemName)) {
+      continue;
+    }
+    const level = rule.levelBySlot?.[slotLabel] ?? rule.level;
+    if (Number.isFinite(level)) {
+      return { equipment: rule.equipment, level };
+    }
+  }
+  return null;
+}
+
+// Level used to pick the "<slot> <level>" table: the official exception level when one applies,
+// otherwise the item's own level (resolveTableKey then takes the nearest table).
+function resolveTableLevel(item, slotKind, sourceType = "potential") {
+  const exception = findTableLevelException(item, slotKind, sourceType);
+  return exception ? exception.level : resolveItemLevel(item);
+}
+
 function getTableEntryKeys(tableData) {
   return Object.keys(tableData || {}).filter((key) => key !== "_meta");
 }
@@ -767,6 +892,7 @@ async function resolveSourceProbability(
   config,
   validKinds,
   normalizedRows = null,
+  slotKind = "",
 ) {
   const fileName =
     sourceType === "potential" ? config.potentialFile : config.additionalFile;
@@ -789,8 +915,8 @@ async function resolveSourceProbability(
     return null;
   }
 
-  const itemLevel = resolveItemLevel(item);
-  const tableKey = resolveTableKey(tableData, config.keyLabel, itemLevel);
+  const tableLevel = resolveTableLevel(item, slotKind, sourceType);
+  const tableKey = resolveTableKey(tableData, config.keyLabel, tableLevel);
   const tableByGrade = tableData?.[tableKey];
   if (!tableByGrade || typeof tableByGrade !== "object") {
     return null;
@@ -854,6 +980,7 @@ async function resolveTopPercentBreakdown(item, profileContext = null) {
       config,
       potentialValidKinds,
       potentialRows,
+      slotKind,
     ),
     resolveSourceProbability(
       item,
@@ -861,6 +988,7 @@ async function resolveTopPercentBreakdown(item, profileContext = null) {
       config,
       additionalValidKinds,
       additionalRows,
+      slotKind,
     ),
   ]);
 
@@ -890,8 +1018,13 @@ async function resolveTopPercent(item, profileContext = null) {
 }
 
 export {
+  SLOT_PROBABILITY_CONFIG,
+  TABLE_LEVEL_EXCEPTIONS,
   buildItemShareFileName,
   buildTopPercentCaption,
+  classifyProbabilitySlot,
+  resolveTableKey,
+  resolveTableLevel,
   resolveTopPercent,
   resolveTopPercentBreakdown,
 };

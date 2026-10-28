@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { getActiveVcores, normalizeVcore } = require("../src/transform/vmatrix");
-const { buildMajorStats } = require("../src/controllers/maplestorym.controller");
+const { computeStatSheets } = require("../src/domain/stats/engine");
 
 // Shape of /maplestorym/v1/character/vmatrix since 2026-09-17 (docs/research/api-shapes/character-vmatrix.json).
 const currentCore = (name, level, { equipped = "1", expired = "0", type = "Common" } = {}) => ({
@@ -17,25 +17,14 @@ const currentCore = (name, level, { equipped = "1", expired = "0", type = "Commo
   vcore_equipment_flag: equipped
 });
 
-const statsFor = (...cores) =>
-  buildMajorStats({ vmatrix: { ok: true, data: { character_v_core_equipment: cores } } });
-
-function withEnv(t, values) {
-  const previous = {};
-  for (const [key, value] of Object.entries(values)) {
-    previous[key] = process.env[key];
-    process.env[key] = value;
-  }
-  t.after(() => {
-    for (const [key, value] of Object.entries(previous)) {
-      if (value === undefined) {
-        delete process.env[key];
-      } else {
-        process.env[key] = value;
-      }
-    }
-  });
+function vmatrixSum(details, key) {
+  const { boss } = computeStatSheets(details);
+  return boss.contributions
+    .filter((entry) => entry.group === "vmatrix" && entry.key === key)
+    .reduce((sum, entry) => sum + entry.value, 0);
 }
+
+const coresOf = (...cores) => ({ vmatrix: { ok: true, data: { character_v_core_equipment: cores } } });
 
 test("normalizeVcore names cores from vcore_skill_name1 after vcore_name was removed", () => {
   const core = normalizeVcore(currentCore("쓸만한 샤프 아이즈", 25));
@@ -67,34 +56,49 @@ test("getActiveVcores drops unequipped and expired cores", () => {
 test("attack % per core level matches the observed table and caps at 25 at Lv.30", () => {
   const observed = { 1: 7.6, 2: 8.2, 10: 13, 20: 19, 29: 24.4, 30: 25 };
   for (const [level, expected] of Object.entries(observed)) {
-    const value = statsFor(currentCore("블링크", Number(level))).physicalAttackPercent.value;
+    const value = vmatrixSum(coresOf(currentCore("블링크", Number(level))), "physicalAttackPercent");
     assert.ok(Math.abs(value - expected) < 1e-9, `Lv.${level}: expected ${expected}, got ${value}`);
   }
 });
 
-test("only equipped target cores add attack %; Erda and non-target cores add nothing", () => {
-  const stats = statsFor(
+test("only equipped common cores add attack %; Erda, 판테온 and other cores add nothing", () => {
+  const details = coresOf(
     currentCore("쓸만한 샤프 아이즈", 30),
     currentCore("로프 커넥트", 30),
     currentCore("쓸만한 윈드 부스터", 30, { equipped: "0" }),
     currentCore("에르다 노바", 30),
+    currentCore("판테온", 30),
     currentCore("크레스트 오브 더 솔라", 30)
   );
-  assert.equal(stats.physicalAttackPercent.value, 50);
-  assert.equal(stats.magicalAttackPercent.value, 50);
+  assert.equal(vmatrixSum(details, "physicalAttackPercent"), 50);
+  assert.equal(vmatrixSum(details, "magicalAttackPercent"), 50);
 });
 
-test("unverified base effects stay off by default and can be enabled explicitly", (t) => {
-  const defaults = statsFor(currentCore("쓸만한 샤프 아이즈", 30), currentCore("쓸만한 윈드 부스터", 30));
-  assert.equal(defaults.criticalDamage.value, 0);
-  assert.equal(defaults.bossDamage.value, 0);
-
-  withEnv(t, { VMATRIX_BASE_EFFECTS: "on" });
-  const enabled = statsFor(currentCore("쓸만한 샤프 아이즈", 30));
-  assert.equal(enabled.criticalDamage.value, 12);
+test("useful-skill base effects (+9/+12) are not added, as on both reference sites", () => {
+  const details = coresOf(currentCore("쓸만한 샤프 아이즈", 30), currentCore("쓸만한 윈드 부스터", 30));
+  assert.equal(vmatrixSum(details, "criticalDamage"), 0);
+  assert.equal(vmatrixSum(details, "bossDamage"), 0);
 });
 
-test("VMATRIX_STAT_RULES=off turns the attack % rule off", (t) => {
-  withEnv(t, { VMATRIX_STAT_RULES: "off" });
-  assert.equal(statsFor(currentCore("블링크", 30)).physicalAttackPercent.value, 0);
+test("job passive 50 plus ten Lv.30 common cores equals the 300% both sites show", () => {
+  const names = [
+    "블링크",
+    "로프 커넥트",
+    "쓸만한 샤프 아이즈",
+    "쓸만한 홀리 심볼",
+    "쓸만한 컴뱃 오더스",
+    "쓸만한 윈드 부스터",
+    "쓸만한 어드밴스드 블레스",
+    "쓸만한 하이퍼 바디",
+    "쓸만한 홀리 파운틴",
+    "쓸만한 마녀 모자 자리"
+  ];
+  const details = {
+    basic: { ok: true, data: { character_class: "캡틴", character_level: 295 } },
+    ...coresOf(...names.map((name) => currentCore(name, 30)), currentCore("오버 드라이브", 30, { type: "JobList" }))
+  };
+  const { boss } = computeStatSheets(details);
+  assert.equal(boss.totals.magicalAttackPercent, 300);
+  // 캡틴 job-line core (오버 드라이브 Lv.30, 16 + 0.3×30) + job passive 35 = 60.
+  assert.equal(boss.totals.magicalDamagePercent, 60);
 });

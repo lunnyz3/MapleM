@@ -1,0 +1,916 @@
+{
+ "name": "link-skills.json",
+ "description": "링크 스킬 표와 본인 링크 규칙",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "skills",
+     "value": [
+      {
+       "id": "adventurer-curious",
+       "name": "어드벤쳐러 큐리어스",
+       "classes": [
+        "보우마스터",
+        "신궁",
+        "패스파인더"
+       ],
+       "maxLevel": 9,
+       "perLevel": {
+        "critRate": 1,
+        "critDmg": 1
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "pirate-bless",
+       "name": "파이렛 블레스",
+       "classes": [
+        "캡틴",
+        "바이퍼",
+        "캐논슈터"
+       ],
+       "maxLevel": 9,
+       "perLevel": {
+        "finalPct": 0.5,
+        "maxHpPct": 1,
+        "maxMpPct": 1
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "hybrid-logic",
+       "name": "하이브리드 로직",
+       "classes": [
+        "제논"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "finalPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "noblesse",
+       "name": "노블레스",
+       "classes": [
+        "아델"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "finalPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "intensive-insult",
+       "name": "인텐시브 인썰트",
+       "classes": [
+        "카데나"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "finalPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "tree-of-starlight",
+       "name": "트리 오브 스타라이트",
+       "classes": [
+        "시아",
+        "에릴",
+        "아이엘"
+       ],
+       "maxLevel": 9,
+       "perLevel": {
+        "finalPct": 1
+       },
+       "conditionalEffect": {
+        "trigger": "공격 시 10% 확률",
+        "effect": {
+         "name": "최종 대미지",
+         "value": 10,
+         "unit": "%"
+        },
+        "durationSeconds": 10,
+        "cooldownSeconds": 60
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "invincible-belief",
+       "name": "인빈서블 빌리프",
+       "classes": [
+        "다크나이트",
+        "팔라딘",
+        "히어로"
+       ],
+       "maxLevel": 9,
+       "perLevel": {
+        "bossPct": 1,
+        "critDmg": 0.2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "thief-cunning",
+       "name": "시프 커닝",
+       "classes": [
+        "나이트로드",
+        "듀얼블레이드",
+        "섀도어"
+       ],
+       "element": "phys",
+       "maxLevel": 9,
+       "perLevel": {
+        "atkPct": 1.5,
+        "dmgPct": 0.3
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "fever-kill-advantage",
+       "name": "피버킬 어드밴티지",
+       "classes": [
+        "아란"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "bossPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "boss-attacker",
+       "name": "보스 어태커",
+       "classes": [
+        "에반"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "bossPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "permeate",
+       "name": "퍼미에이트",
+       "classes": [
+        "루미너스"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "bossPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "demons-fury",
+       "name": "데몬스 퓨리",
+       "classes": [
+        "데몬슬레이어"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "bossPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "deadly-instinct",
+       "name": "데들리 인스팅트",
+       "classes": [
+        "팬텀"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "critRate": 1,
+        "critDmg": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "judgment",
+       "name": "판단",
+       "classes": [
+        "키네시스"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "critRate": 1,
+        "critDmg": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "ecstasy",
+       "name": "무아",
+       "classes": [
+        "아크"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "critRate": 1,
+        "critDmg": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "prior-preparation",
+       "name": "프라이어 프리퍼레이션",
+       "classes": [
+        "카인"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "critRate": 1,
+        "critDmg": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "guard-of-light",
+       "name": "빛의 수호",
+       "classes": [
+        "미하일"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "finalPct": 1
+       },
+       "conditionalEffect": {
+        "trigger": "공격 시 10% 확률",
+        "effect": {
+         "name": "받는 피해 감소",
+         "value": 10,
+         "unit": "%"
+        },
+        "durationSecondsByLevel": [
+         5,
+         10,
+         15
+        ],
+        "cooldownSeconds": 60
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "wild-rage",
+       "name": "와일드 레이지",
+       "classes": [
+        "데몬어벤져"
+       ],
+       "element": "phys",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "confidence",
+       "name": "자신감",
+       "classes": [
+        "호영"
+       ],
+       "element": "phys",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "innate-gift",
+       "name": "이네이트 기프트",
+       "classes": [
+        "칼리"
+       ],
+       "element": "phys",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "strong-body",
+       "name": "강체",
+       "classes": [
+        "렌"
+       ],
+       "element": "phys",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "elfs-blessing",
+       "name": "엘프의 축복",
+       "classes": [
+        "메르세데스"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "expPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "resistance-of-freedom",
+       "name": "레지스턴스 오브 프리덤",
+       "classes": [
+        "배틀메이지",
+        "메카닉",
+        "와일드헌터",
+        "블래스터"
+       ],
+       "maxLevel": 12,
+       "perLevel": {
+        "partyExpPct": 1
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "cygnus-bless",
+       "name": "시그너스 블레스",
+       "classes": [
+        "소울마스터",
+        "플레임위자드",
+        "윈드브레이커",
+        "나이트워커",
+        "스트라이커"
+       ],
+       "maxLevel": 15,
+       "perLevel": {},
+       "displayPerLevel": [
+        {
+         "name": "맥스 피버 확률",
+         "value": 1,
+         "unit": "%"
+        },
+        {
+         "name": "피버 시간 증가",
+         "value": 0.5,
+         "unit": "초"
+        }
+       ],
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "nine-lives",
+       "name": "구사일생",
+       "classes": [
+        "은월"
+       ],
+       "maxLevel": 3,
+       "perLevel": {},
+       "displayPerLevel": [
+        {
+         "name": "생존율",
+         "value": 5,
+         "unit": "%"
+        }
+       ],
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "iron-will",
+       "name": "아이언 윌",
+       "classes": [
+        "카이저"
+       ],
+       "maxLevel": 3,
+       "perLevel": {
+        "maxHpPct": 2
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "empirical-knowledge",
+       "name": "임피리컬 널리지",
+       "classes": [
+        "비숍",
+        "아크메이지(썬,콜)",
+        "아크메이지(불,독)"
+       ],
+       "element": "magic",
+       "maxLevel": 9,
+       "perLevel": {
+        "atkPct": 1.5,
+        "dmgPct": 0.3
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "soul-contract",
+       "name": "소울 컨트랙트",
+       "classes": [
+        "엔젤릭버스터"
+       ],
+       "element": "magic",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "friend-of-nature",
+       "name": "자연의 벗",
+       "classes": [
+        "라라"
+       ],
+       "element": "magic",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      },
+      {
+       "id": "flow-of-battle",
+       "name": "전투의 흐름",
+       "classes": [
+        "일리움"
+       ],
+       "element": "magic",
+       "maxLevel": 3,
+       "perLevel": {
+        "dmgPct": 2.5
+       },
+       "source": "manual",
+       "patch": "2026-09",
+       "confidence": 0.95
+      }
+     ],
+     "unit": "perLevel: 링크 레벨 1당 값(%)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-link-skills.json",
+     "anchor": "msm-link-skills.json skills"
+    },
+    {
+     "id": "levelRule",
+     "value": {
+      "thresholds": [
+       {
+        "characterLevel": 70,
+        "linkLevel": 1,
+        "source": "manual",
+        "patch": "2026-09",
+        "confidence": 0.95
+       },
+       {
+        "characterLevel": 120,
+        "linkLevel": 2,
+        "source": "manual",
+        "patch": "2026-09",
+        "confidence": 0.95
+       },
+       {
+        "characterLevel": 260,
+        "linkLevel": 3,
+        "source": "manual",
+        "patch": "2026-09",
+        "confidence": 0.95
+       }
+      ],
+      "source": "manual",
+      "patch": "2026-09",
+      "confidence": 0.95
+     },
+     "rule": "본인 링크 자연 레벨: 캐릭터 Lv.70→1, 120→2, 260→3",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-link-skills.json",
+     "anchor": "msm-link-skills.json levelRule"
+    },
+    {
+     "id": "own-link",
+     "rule": "API 사용 프리셋의 같은 링크 레벨 합 g에 자연 레벨을 더해 최대 레벨에서 자르고, 늘어난 만큼(=적용 레벨)×perLevel을 '본인 링크스킬'로 더한다. 챌린저스 월드는 링크 전체 제외",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function U0(a,o,i,l){",
+     "prettyLine": 2709
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "링크 스킬 합산 규칙과 표",
+   "entries": [
+    {
+     "id": "self-link",
+     "value": [
+      {
+       "jobPattern": "히어로|팔라딘|다크나이트",
+       "link": "인빈서블 빌리프",
+       "effectPerLevel": "`보스 공격력 +${A}%, 치명타 피해 +${A*.2}%`"
+      },
+      {
+       "jobPattern": "아크메이지|비숍",
+       "link": "임피리컬 널리지",
+       "effectPerLevel": "`마법 공격력 +${A*1.5}%, 마법 대미지 +${A*.3}%`"
+      },
+      {
+       "jobPattern": "보우마스터|신궁|패스파인더",
+       "link": "어드벤쳐러 큐리어스",
+       "effectPerLevel": "`치명타 확률 +${A}%, 치명타 피해 +${A}%`"
+      },
+      {
+       "jobPattern": "나이트로드|섀도어|듀얼블레이드",
+       "link": "시프 커닝",
+       "effectPerLevel": "`물리 공격력 +${A*1.5}%, 물리 대미지 +${A*.3}%`"
+      },
+      {
+       "jobPattern": "캡틴|바이퍼|캐논슈터",
+       "link": "파이렛 블레스",
+       "effectPerLevel": "`최종 대미지 +${A*.5}%`"
+      },
+      {
+       "jobPattern": "미하일",
+       "link": "빛의 수호",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "소울마스터|플레임위자드|윈드브레이커|나이트워커|스트라이커",
+       "link": "시그너스 블레스",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "아란",
+       "link": "콤보킬 어드밴티지",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "에반",
+       "link": "룬 퍼시스턴스",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "루미너스",
+       "link": "퍼미에이트",
+       "effectPerLevel": "`보스 공격력 +${A*2}%`"
+      },
+      {
+       "jobPattern": "메르세데스",
+       "link": "엘프의 축복",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "팬텀",
+       "link": "데들리 인스팅트",
+       "effectPerLevel": "`치명타 확률 +${A}%, 치명타 피해 +${A*2}%`"
+      },
+      {
+       "jobPattern": "은월",
+       "link": "구사 일생",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "배틀메이지|와일드헌터|메카닉|블래스터",
+       "link": "레지스턴스 오브 프리덤",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "제논",
+       "link": "하이브리드 로직",
+       "effectPerLevel": "`최종 대미지 +${A*2}%`"
+      },
+      {
+       "jobPattern": "데몬슬레이어",
+       "link": "데몬스 퓨리",
+       "effectPerLevel": "`보스 공격력 +${A*2}%`"
+      },
+      {
+       "jobPattern": "데몬어벤져",
+       "link": "와일드 레이지",
+       "effectPerLevel": "`물리 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "카이저",
+       "link": "아이언 윌",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "카인",
+       "link": "프라이어 프리퍼레이션",
+       "effectPerLevel": "`치명타 확률 +${A}%, 치명타 피해 +${A*2}%`"
+      },
+      {
+       "jobPattern": "카데나",
+       "link": "인텐시브 인썰트",
+       "effectPerLevel": "`최종 대미지 +${A*2}%`"
+      },
+      {
+       "jobPattern": "엔젤릭버스터",
+       "link": "소울 컨트랙트",
+       "effectPerLevel": "`마법 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "아델",
+       "link": "노블레스",
+       "effectPerLevel": "`최종 대미지 +${A*2}%`"
+      },
+      {
+       "jobPattern": "일리움",
+       "link": "전투의 흐름",
+       "effectPerLevel": "`마법 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "칼리",
+       "link": "이네이트 기프트",
+       "effectPerLevel": "`물리 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "아크",
+       "link": "무아",
+       "effectPerLevel": "`치명타 확률 +${A}%, 치명타 피해 +${A*2}%`"
+      },
+      {
+       "jobPattern": "렌",
+       "link": "강체",
+       "effectPerLevel": "`물리 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "라라",
+       "link": "자연의 벗",
+       "effectPerLevel": "`마법 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "호영",
+       "link": "자신감",
+       "effectPerLevel": "`물리 대미지 +${A*2.5}%`"
+      },
+      {
+       "jobPattern": "제로",
+       "link": "륀느의 축복",
+       "effectPerLevel": null
+      },
+      {
+       "jobPattern": "키네시스",
+       "link": "판단",
+       "effectPerLevel": "`치명타 확률 +${A}%, 치명타 피해 +${A*2}%`"
+      },
+      {
+       "jobPattern": "시아|아이엘|에릴",
+       "link": "트리 오브 스타라이트",
+       "effectPerLevel": "`최종 대미지 +${A}%`"
+      },
+      {
+       "jobPattern": "레테",
+       "link": "커버넌트",
+       "effectPerLevel": null
+      }
+     ],
+     "levelRule": {
+      "70": 1,
+      "120": 2,
+      "260": 3
+     },
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "tc=[{pattern:/",
+     "prettyLine": 15438
+    },
+    {
+     "id": "parse-rule",
+     "rule": "API 링크 프리셋(use_prest_no 또는 use_preset_no)의 skill_effect 문구를 문장 단위로 나누고, '(중|시|동안|때) + 물리/마법/보스/치명타/최대/최종 + 공격력/대미지/피해'가 들어간 문장은 버린 뒤 파싱",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "(?:중|시|동안|때)\\s*(?:물리|마법|보스|치명타|최대|최종)",
+     "prettyLine": 15738
+    },
+    {
+     "id": "guide:common",
+     "value": [
+      [
+       "파이렛 블레싱",
+       "최대 HP·MP 9% · 최종 대미지 4.5%",
+       "바이퍼 · 캡틴 · 캐논슈터"
+      ],
+      [
+       "노블레스",
+       "최종 대미지 6%",
+       "아델"
+      ],
+      [
+       "인트시브 인벨트",
+       "최종 대미지 6%",
+       "카데나"
+      ],
+      [
+       "하이브리드 로직",
+       "최종 대미지 6%",
+       "제논"
+      ],
+      [
+       "트리오브 스트라이크",
+       "최종 대미지 9% · 60초마다 10%",
+       "시아 · 에릴 · 아이엘"
+      ],
+      [
+       "판단",
+       "최대 HP 6% · 지력 3%",
+       "키네시스"
+      ],
+      [
+       "데들리 인스팅트",
+       "치명타 피해 6% · 치명타 확률 3%",
+       "팬텀"
+      ],
+      [
+       "프라이어 프리퍼레이션",
+       "치명타 피해 6% · 치명타 확률 3%",
+       "카인"
+      ],
+      [
+       "무아",
+       "치명타 피해 6% · 치명타 확률 3%",
+       "아크"
+      ],
+      [
+       "어드벤처러 큐리어스",
+       "치명타 피해 6% · 치명타 확률 3%",
+       "보마 · 신궁 · 패파"
+      ],
+      [
+       "인빈서블 빌리프",
+       "보스 공격력 9% · 치명타 피해 1.8%",
+       "다크나이트 · 히어로 · 팔라딘"
+      ],
+      [
+       "시그너스 블레스",
+       "맥스피버 15% · 피버시간 7.5%",
+       "소마 · 플위 · 윈브 · 나워 · 스커"
+      ]
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "L7=[[\"파이렛 블레싱\"",
+     "prettyLine": 45038
+    },
+    {
+     "id": "guide:physical",
+     "value": [
+      [
+       "와일드 레이지",
+       "물리 대미지 7.5%",
+       "데몬어벤져"
+      ],
+      [
+       "자신감",
+       "물리 대미지 7.5%",
+       "호영"
+      ],
+      [
+       "이네이트 기프트",
+       "물리 대미지 7.5%",
+       "칼리"
+      ],
+      [
+       "강체",
+       "물리 대미지 7.5%",
+       "렌"
+      ],
+      [
+       "시프 커닝",
+       "물리 공격력 13.5% · 물리 대미지 2.7%",
+       "나이트로드 · 섀도어 · 듀얼블레이드"
+      ]
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "O7=[[\"와일드 레이지\"",
+     "prettyLine": 45058
+    },
+    {
+     "id": "guide:magic",
+     "value": [
+      [
+       "임피리컬 널리지",
+       "마법 공격력 13.5% · 마법 대미지 2.7%",
+       "불독 · 썬콜 · 비숍"
+      ],
+      [
+       "소울 컨트랙트",
+       "마법 대미지 7.5%",
+       "엔버"
+      ],
+      [
+       "전투의 흐름",
+       "마법 대미지 7.5%",
+       "일리움"
+      ],
+      [
+       "자연의 벗",
+       "마법 대미지 7.5%",
+       "라라"
+      ]
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "N7=[[\"임피리컬 널리지",
+     "prettyLine": 45052
+    },
+    {
+     "id": "guide:hunting",
+     "value": [
+      [
+       "엘프의 축복",
+       "경험치 획득량 6%",
+       "메르세데스"
+      ],
+      [
+       "레지스탕스",
+       "파경 12%",
+       "와헌 · 배메 · 메카닉 · 블래스터"
+      ]
+     ],
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "J7=[[\"엘프의 축복\",",
+     "prettyLine": 45065
+    }
+   ]
+  }
+ }
+}

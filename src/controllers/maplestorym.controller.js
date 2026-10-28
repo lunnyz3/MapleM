@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 const { env } = require("../config/env");
-const { starforceSetOptionGroups } = require("../config/starforce-set-options");
 const { normalizeWorldName } = require("../config/worlds");
 const { RequestLog } = require("../models/request-log.model");
 const { TtlLruCache } = require("../nexon/client");
 const { getActiveVcores } = require("../transform/vmatrix");
+const { buildCharacterStats } = require("../domain/stats");
 const {
   getCharacterOcid,
   getCharacterByOcid,
@@ -54,116 +54,6 @@ const aggregateLogEndpoint = `${env.nexonBaseUrl}/maplestorym/v1/character/all`;
 const presetFallbackLookbackLimit = 30;
 // Nexon ranking data starts on 2025-11-27.
 const rankingDateFloor = "2025-11-27";
-
-const majorStatKeys = Object.freeze([
-  "physicalAttack",
-  "physicalAttackPercent",
-  "magicalAttack",
-  "magicalAttackPercent",
-  "physicalDamagePercent",
-  "magicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "maxDamage",
-  "ignoreDefense"
-]);
-
-const percentStatKeys = new Set([
-  "physicalAttackPercent",
-  "magicalAttackPercent",
-  "physicalDamagePercent",
-  "magicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "ignoreDefense"
-]);
-
-const majorStatLabels = Object.freeze({
-  physicalAttack: "물리 공격력",
-  physicalAttackPercent: "물리 공격력 %",
-  magicalAttack: "마법 공격력",
-  magicalAttackPercent: "마법 공격력 %",
-  physicalDamagePercent: "물리 데미지 %",
-  magicalDamagePercent: "마법 데미지 %",
-  bossDamage: "보스 공격력",
-  criticalDamage: "치명타 피해",
-  finalDamage: "최종 데미지",
-  maxDamage: "최대 데미지",
-  ignoreDefense: "방어율 무시 %"
-});
-
-const vmatrixAdvancedBlessName = normalizeForMatch("쓸만한 어드밴스드 블레스");
-const vmatrixCombatOrdersName = normalizeForMatch("쓸만한 컴뱃 오더스");
-const vmatrixSharpEyesName = normalizeForMatch("쓸만한 샤프 아이즈");
-const vmatrixWindBoosterName = normalizeForMatch("쓸만한 윈드 부스터");
-const vmatrixAttackScaleSkillNames = new Set(
-  [
-    "쓸만한 컴뱃 오더스",
-    "블링크",
-    "쓸만한 홀리 심볼",
-    "쓸만한 샤프 아이즈",
-    "쓸만한 하이퍼 바디",
-    "쓸만한 윈드 부스터",
-    "로프 커넥트",
-    "쓸만한 마녀 모자 자리",
-    "쓸만한 홀리 파운틴",
-    "쓸만한 어드밴스드 블레스",
-    "판테온"
-  ].map((name) => normalizeForMatch(name))
-);
-const treeOfStarlightName = normalizeForMatch("트리 오브 스타라이트");
-const guildPhysicalMagicalDamageIncreaseSkillName = normalizeForMatch("물리 및 마법 대미지 증가");
-const unionGuildContributionKeys = new Set([
-  "physicalAttackPercent",
-  "magicalAttackPercent",
-  "physicalDamagePercent",
-  "magicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "maxDamage",
-  "ignoreDefense"
-]);
-
-const guildPhysicalMagicalDamageExcludedKeys = new Set(["physicalDamagePercent", "magicalDamagePercent"]);
-const guildPhysicalMagicalDamageFilteredKeys = new Set(
-  [...unionGuildContributionKeys].filter((key) => !guildPhysicalMagicalDamageExcludedKeys.has(key))
-);
-
-const androidMajorStatContributionKeys = new Set([
-  "physicalAttackPercent",
-  "physicalDamagePercent",
-  "magicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "maxDamage",
-  "ignoreDefense"
-]);
-
-const physicalMajorStatOrder = Object.freeze([
-  "physicalAttack",
-  "physicalAttackPercent",
-  "physicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "maxDamage",
-  "ignoreDefense"
-]);
-
-const magicalMajorStatOrder = Object.freeze([
-  "magicalAttack",
-  "magicalAttackPercent",
-  "magicalDamagePercent",
-  "bossDamage",
-  "criticalDamage",
-  "finalDamage",
-  "maxDamage",
-  "ignoreDefense"
-]);
 
 const physicalJobNames = new Set(
   [
@@ -232,16 +122,6 @@ function normalizeForMatch(text) {
     .toLowerCase();
 }
 
-function parseFirstNumberFromText(text) {
-  const matched = String(text || "").match(/[-+]?\d[\d,]*(?:\.\d+)?/);
-  if (!matched) {
-    return null;
-  }
-
-  const parsed = Number(matched[0].replace(/,/g, ""));
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 function splitStatSegments(text) {
   const source = String(text || "");
   if (!source) {
@@ -282,843 +162,20 @@ function splitStatSegments(text) {
   return segments;
 }
 
-function inferMajorStatKey(text) {
-  const normalized = normalizeForMatch(text);
-  const hasPercent = String(text || "").includes("%");
-
-  if (normalized.includes("물리공격력")) {
-    return hasPercent ? "physicalAttackPercent" : "physicalAttack";
-  }
-
-  if (normalized.includes("마법공격력")) {
-    return hasPercent ? "magicalAttackPercent" : "magicalAttack";
-  }
-
-  if (normalized.includes("물리피해감소")) {
-    return null;
-  }
-
-  if (normalized.includes("마법피해감소")) {
-    return null;
-  }
-
-  if (normalized.includes("물리대미지") || normalized.includes("물리데미지")) {
-    return "physicalDamagePercent";
-  }
-
-  if (normalized.includes("마법대미지") || normalized.includes("마법데미지")) {
-    return "magicalDamagePercent";
-  }
-
-  if (normalized.includes("보스공격력")) {
-    return "bossDamage";
-  }
-
-  if (normalized.includes("방어율무시시") || normalized.includes("방어율무시") || normalized.includes("방어율 무시")) {
-    return "ignoreDefense";
-  }
-
-  if (normalized.includes("치명타피해감소")) {
-    return null;
-  }
-
-  if (normalized.includes("치명타피해")) {
-    return "criticalDamage";
-  }
-
-  if (normalized.includes("최종대미지") || normalized.includes("최종데미지")) {
-    return "finalDamage";
-  }
-
-  if (normalized.includes("최대대미지") || normalized.includes("최대데미지")) {
-    return "maxDamage";
-  }
-
-  return null;
-}
-
-function shouldSkipMajorStatContribution({ key, source, rawText, value }) {
-  const normalizedSource = normalizeForMatch(source);
-  const normalizedText = normalizeForMatch(rawText);
-
-  if (key === "finalDamage" && normalizedSource.includes(treeOfStarlightName) && value >= 10) {
-    return true;
-  }
-
-  if (key === "finalDamage" && normalizedSource.includes(treeOfStarlightName) && normalizedText.includes("버프중최종대미지")) {
-    return true;
-  }
-
-  return false;
-}
-
-function formatMajorStatValue(key, value) {
-  if (!Number.isFinite(value)) {
-    return "-";
-  }
-
-  if (percentStatKeys.has(key)) {
-    return `${value.toLocaleString("ko-KR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}%`;
-  }
-
-  if (Math.abs(value - Math.round(value)) < 1e-9) {
-    return Math.round(value).toLocaleString("ko-KR");
-  }
-
-  return value.toLocaleString("ko-KR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
-
-function formatMajorStatDelta(key, value) {
-  const sign = value >= 0 ? "+" : "";
-  const absValue = Math.abs(value);
-  const formatted = percentStatKeys.has(key)
-    ? `${absValue.toLocaleString("ko-KR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })}%`
-    : Math.abs(absValue - Math.round(absValue)) < 1e-9
-      ? Math.round(absValue).toLocaleString("ko-KR")
-      : absValue.toLocaleString("ko-KR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-
-  return `${sign}${formatted}`;
-}
-
-function createMajorStatTrackers() {
-  const trackers = {};
-
-  majorStatKeys.forEach((key) => {
-    trackers[key] = {
-      key,
-      label: majorStatLabels[key],
-      value: key === "maxDamage" ? 100000000 : 0,
-      breakdown: []
-    };
-  });
-
-  trackers.maxDamage.breakdown.push({
-    source: "기본값",
-    value: 100000000,
-    rawText: "최대 대미지 기본값"
-  });
-
-  return trackers;
-}
-
-function addMajorStatContribution(trackers, key, source, rawText, value) {
-  if (!trackers[key] || !Number.isFinite(value)) {
-    return;
-  }
-
-  if (key === "physicalAttack" || key === "magicalAttack") {
-    return;
-  }
-
-  if (shouldSkipMajorStatContribution({ key, source, rawText, value })) {
-    return;
-  }
-
-  trackers[key].value += value;
-  trackers[key].breakdown.push({
-    source,
-    value,
-    rawText
-  });
-}
-
-function addContributionsFromText(trackers, source, text, options = {}) {
-  const allowedKeys = options.allowedKeys || null;
-  const segments = splitStatSegments(text);
-  segments.forEach((segment) => {
-    const key = inferMajorStatKey(segment);
-    if (!key || key === "physicalAttack") {
-      return;
-    }
-
-    if (allowedKeys && !allowedKeys.has(key)) {
-      return;
-    }
-
-    const value = parseFirstNumberFromText(segment);
-    if (value === null) {
-      return;
-    }
-
-    addMajorStatContribution(trackers, key, source, segment, value);
-  });
-}
-
-function addContributionsFromOptionList(trackers, source, optionList, options = {}) {
-  if (!Array.isArray(optionList)) {
-    return;
-  }
-
-  optionList.forEach((option) => {
-    const name = option?.option_name || option?.stat_type || "";
-    const value = option?.option_value || option?.stat_increase || "";
-    addContributionsFromText(trackers, source, `${name} ${value}`.trim(), options);
-  });
-}
-
-function applyPhysicalAttackFromStat(trackers, details) {
-  const statList = details?.stat?.data?.stat;
-  if (!Array.isArray(statList)) {
-    return;
-  }
-
-  const physicalAttack = statList.find((item) => normalizeForMatch(item?.stat_name) === normalizeForMatch("물리 공격력"));
-  const value = parseNumericValue(physicalAttack?.stat_value);
-  if (value === null) {
-    return;
-  }
-
-  trackers.physicalAttack.value = value;
-  trackers.physicalAttack.breakdown = [
-    {
-      source: "캐릭터 스탯",
-      value,
-      rawText: `${physicalAttack.stat_name} ${physicalAttack.stat_value}`
-    }
-  ];
-}
-
-function applyMagicalAttackFromStat(trackers, details) {
-  const statList = details?.stat?.data?.stat;
-  if (!Array.isArray(statList)) {
-    return;
-  }
-
-  const magicalAttack = statList.find((item) => normalizeForMatch(item?.stat_name) === normalizeForMatch("마법 공격력"));
-  const value = parseNumericValue(magicalAttack?.stat_value);
-  if (value === null) {
-    return;
-  }
-
-  trackers.magicalAttack.value = value;
-  trackers.magicalAttack.breakdown = [
-    {
-      source: "캐릭터 스탯",
-      value,
-      rawText: `${magicalAttack.stat_name} ${magicalAttack.stat_value}`
-    }
-  ];
-}
-
-function collectSetEffectContributions(trackers, details) {
-  const setInfo = details?.setEffect?.data?.set_info;
-  if (!Array.isArray(setInfo)) {
-    return;
-  }
-
-  setInfo.forEach((item) => {
-    const source = `세트 효과 (${item?.set_name || "-"})`;
-    addContributionsFromText(trackers, source, item?.set_option);
-  });
-}
-
-function doesItemMatchStarforceRule(item, rule) {
-  const itemName = normalizeForMatch(item?.item_name);
-  if (!itemName) {
-    return false;
-  }
-
-  const keywords = Array.isArray(rule?.keywords) ? rule.keywords : [];
-  const matchesKeyword = keywords.some((keyword) => itemName.includes(normalizeForMatch(keyword)));
-  if (!matchesKeyword) {
-    return false;
-  }
-
-  const itemGrades = Array.isArray(rule?.itemGrades) ? rule.itemGrades : [];
-  if (!itemGrades.length) {
-    return true;
-  }
-
-  const itemGrade = normalizeForMatch(item?.item_grade);
-  if (!itemGrade) {
-    return false;
-  }
-
-  return itemGrades.some((grade) => itemGrade === normalizeForMatch(grade));
-}
-
-function resolveStarforceTier(tiers, totalStarforce) {
-  if (!Array.isArray(tiers) || !Number.isFinite(totalStarforce)) {
-    return null;
-  }
-
-  return (
-    tiers.find((tier) => {
-      const min = Number(tier?.min);
-      const max = tier?.max === null || tier?.max === undefined ? null : Number(tier.max);
-
-      if (!Number.isFinite(min)) {
-        return false;
-      }
-
-      if (max === null) {
-        return totalStarforce >= min;
-      }
-
-      if (!Number.isFinite(max)) {
-        return false;
-      }
-
-      return totalStarforce >= min && totalStarforce <= max;
-    }) || null
-  );
-}
-
-function formatStarforceTierRange(tier) {
-  const min = Number(tier?.min);
-  const max = tier?.max === null || tier?.max === undefined ? null : Number(tier.max);
-
-  if (!Number.isFinite(min)) {
-    return "-";
-  }
-
-  if (max === null) {
-    return `${min} 이상`;
-  }
-
-  if (min === max) {
-    return String(min);
-  }
-
-  return `${min}~${max}`;
-}
-
-function getEffectiveStarforceUpgrade(item) {
-  const baseStarforce = parseNumericValue(item?.starforce_upgrade);
-  if (!Number.isFinite(baseStarforce)) {
-    return 0;
-  }
-
-  const normalizedSlotName = normalizeForMatch(item?.item_equipment_slot_name);
-  const isOnePieceOverall = normalizedSlotName.includes(normalizeForMatch("한벌옷"));
-  const effectiveValue = isOnePieceOverall ? baseStarforce * 2 : baseStarforce;
-
-  return Math.max(0, effectiveValue);
-}
-
-function collectStarforceSetContributions(trackers, details) {
-  const itemList = details?.itemEquipment?.data?.item_equipment;
-  if (!Array.isArray(itemList) || !itemList.length) {
-    return;
-  }
-
-  starforceSetOptionGroups.forEach((rule) => {
-    const matchedItems = itemList.filter((item) => doesItemMatchStarforceRule(item, rule));
-    if (!matchedItems.length) {
-      return;
-    }
-
-    const totalStarforce = matchedItems.reduce((sum, item) => {
-      return sum + getEffectiveStarforceUpgrade(item);
-    }, 0);
-
-    const tier = resolveStarforceTier(rule?.tiers, totalStarforce);
-    if (!tier || !tier.stats) {
-      return;
-    }
-
-    const rangeText = formatStarforceTierRange(tier);
-    const source = `스타포스 세트옵션 (${rule?.label || "-"})`;
-    const rawText = `스타포스 합계 ${totalStarforce} (조건 ${rangeText})`;
-
-    Object.entries(tier.stats).forEach(([key, value]) => {
-      if (!majorStatKeys.includes(key)) {
-        return;
-      }
-
-      const numericValue = Number(value);
-      if (!Number.isFinite(numericValue)) {
-        return;
-      }
-
-      addMajorStatContribution(trackers, key, source, rawText, numericValue);
-    });
-  });
-}
-
-function collectHexaStatContributions(trackers, details) {
-  const hexaStat = details?.hexamatrixStat?.data?.hexamatrix_stat;
-  if (!Array.isArray(hexaStat)) {
-    return;
-  }
-
-  hexaStat.forEach((core) => {
-    const statInfo = Array.isArray(core?.stat_info) ? core.stat_info : [];
-    statInfo.forEach((info) => {
-      if (String(info?.activate_flag || "0") !== "1") {
-        return;
-      }
-
-      addContributionsFromText(trackers, "헥사 스탯", info?.main_stat);
-      addContributionsFromText(trackers, "헥사 스탯", info?.sub_1_stat);
-      addContributionsFromText(trackers, "헥사 스탯", info?.sub_2_stat);
-    });
-  });
-}
-
-function collectHyperStatContributions(trackers, details) {
-  const hyperData = details?.hyperStat?.data;
-  if (!hyperData) {
-    return;
-  }
-
-  const usePresetNo = Number(hyperData.use_preset_no);
-  const presetList = Array.isArray(hyperData.hyper_stat) ? hyperData.hyper_stat : [];
-  const selected = presetList.find((preset) => Number(preset?.preset_no) === usePresetNo) || presetList[0];
-  const infos = Array.isArray(selected?.hyper_stat_info) ? selected.hyper_stat_info : [];
-
-  infos.forEach((info) => {
-    const source = `하이퍼 스탯 (${info?.stat_type || "-"})`;
-    addContributionsFromText(trackers, source, info?.stat_increase);
-  });
-}
-
-function collectLinkSkillContributions(trackers, details) {
-  const linkData = details?.linkSkill?.data;
-  if (!linkData) {
-    return;
-  }
-
-  const usePresetNo = Number(linkData.use_prest_no || linkData.use_preset_no);
-  const presetList = Array.isArray(linkData.link_skill) ? linkData.link_skill : [];
-  const selectedPreset = presetList.find((preset) => Number(preset?.preset_no) === usePresetNo) || presetList[0];
-  const skills = Array.isArray(selectedPreset?.link_skill_info) ? selectedPreset.link_skill_info : [];
-
-  skills.forEach((skill) => {
-    const source = `링크 스킬 (${skill?.skill_name || "-"})`;
-    addContributionsFromText(trackers, source, skill?.skill_effect);
-  });
-}
-
-function collectSymbolContributions(trackers, details) {
-  const symbolData = details?.symbol?.data;
-  if (!symbolData) {
-    return;
-  }
-
-  const allSymbols = [
-    ...(Array.isArray(symbolData.arcane_symbol) ? symbolData.arcane_symbol : []),
-    ...(Array.isArray(symbolData.authentic_symbol) ? symbolData.authentic_symbol : [])
-  ];
-
-  allSymbols.forEach((symbol) => {
-    const source = `심볼 (${symbol?.symbol_name || "-"})`;
-    addContributionsFromText(trackers, source, symbol?.symbol_option);
-  });
-}
-
-function collectItemContributions(trackers, details) {
-  const itemData = details?.itemEquipment?.data;
-  if (!itemData) {
-    return;
-  }
-
-  addContributionsFromText(trackers, "소울 세트 효과", itemData.soul_set_option);
-
-  const itemList = Array.isArray(itemData.item_equipment) ? itemData.item_equipment : [];
-  itemList.forEach((item) => {
-    const itemName = item?.item_name || "-";
-    addContributionsFromOptionList(trackers, `아이템 기본 옵션 (${itemName})`, item?.item_basic_option);
-    addContributionsFromOptionList(trackers, `아이템 추가 옵션 (${itemName})`, item?.item_additional_option);
-    addContributionsFromOptionList(trackers, `아이템 잠재능력 (${itemName})`, item?.item_potential_option);
-    addContributionsFromOptionList(trackers, `아이템 에디셔널 잠재능력 (${itemName})`, item?.item_additional_potential_option);
-    addContributionsFromText(trackers, `소울 (${itemName})`, item?.soul_info?.soul_option);
-  });
-}
-
-function resolveActiveAndroidPreset(androidData) {
-  const presets = Array.isArray(androidData?.android_heart_equipment_preset) ? androidData.android_heart_equipment_preset : [];
-  if (!presets.length) {
-    return null;
-  }
-
-  const usePresetNo = Number(androidData?.use_preset_no);
-  return presets.find((preset) => Number(preset?.preset_no) === usePresetNo) || presets[0] || null;
-}
-
-function resolveActiveAndroidHeartEquipment(androidData) {
-  if (androidData?.heart_equipment && typeof androidData.heart_equipment === "object") {
-    return androidData.heart_equipment;
-  }
-
-  const activePreset = resolveActiveAndroidPreset(androidData);
-  if (activePreset?.heart_equipment && typeof activePreset.heart_equipment === "object") {
-    return activePreset.heart_equipment;
-  }
-
-  return null;
-}
-
-function collectAndroidEquipmentContributions(trackers, details) {
-  const androidData = details?.androidEquipment?.data;
-  if (!androidData) {
-    return;
-  }
-
-  const heartEquipment = resolveActiveAndroidHeartEquipment(androidData);
-  if (!heartEquipment) {
-    return;
-  }
-
-  const heartName = heartEquipment?.heart_name || "-";
-
-  addContributionsFromOptionList(trackers, `안드로이드 하트 추가 옵션 (${heartName})`, heartEquipment?.item_additional_option, {
-    allowedKeys: androidMajorStatContributionKeys
-  });
-  addContributionsFromOptionList(trackers, `안드로이드 하트 잠재능력 (${heartName})`, heartEquipment?.item_potential_option, {
-    allowedKeys: androidMajorStatContributionKeys
-  });
-  addContributionsFromOptionList(
-    trackers,
-    `안드로이드 하트 에디셔널 잠재능력 (${heartName})`,
-    heartEquipment?.item_additional_potential_option,
-    {
-      allowedKeys: androidMajorStatContributionKeys
-    }
-  );
-}
-
-function collectPetEquipmentContributions(trackers, details) {
-  const petData = details?.petEquipment?.data;
-  if (!petData) {
-    return;
-  }
-
-  const petSetOptions = Array.isArray(petData.pet_set_option) ? petData.pet_set_option : [];
-  petSetOptions.forEach((setOption) => {
-    addContributionsFromText(trackers, `펫 세트 효과 (${setOption?.set_name || "-"})`, setOption?.set_option);
-  });
-
-  addContributionsFromText(trackers, "펫 자동 스킬 효과", petData.pet_auto_skill_option);
-}
-
-function collectUnionContributions(trackers, details) {
-  const unionData = details?.union?.data;
-  const unionRaiderData = details?.unionRaider?.data;
-
-  addContributionsFromText(trackers, "유니온 레벨 효과", unionData?.union_level_total_option, {
-    allowedKeys: unionGuildContributionKeys
-  });
-  addContributionsFromOptionList(trackers, "유니온 스탯", mapUnionStatOptions(details?.unionStat?.data?.use_union_stat).map((stat) => ({
-    option_name: stat.name,
-    option_value: stat.value
-  })), {
-    allowedKeys: unionGuildContributionKeys
-  });
-  addContributionsFromOptionList(trackers, "유니온 공격대 효과", unionRaiderData?.use_union_raider_option, {
-    allowedKeys: unionGuildContributionKeys
-  });
-}
-
-function collectGuildContributions(trackers, details) {
-  const guildBasicData = details?.guildBasic?.data;
-  if (!guildBasicData) {
-    return;
-  }
-
-  const characterName = String(details?.basic?.data?.character_name || "").trim();
-  const memberSelf = findGuildMemberForCharacter(guildBasicData, characterName);
-  const guildSkills = Array.isArray(guildBasicData.guild_skill) ? guildBasicData.guild_skill : [];
-  const guildAbilities = Array.isArray(guildBasicData.guild_ability) ? guildBasicData.guild_ability : [];
-  const personalSkills = Array.isArray(memberSelf?.guild_personal_skill) ? memberSelf.guild_personal_skill : [];
-
-  guildSkills.forEach((skill) => {
-    const normalizedSkillName = normalizeForMatch(skill?.skill_name);
-    const allowedKeys =
-      normalizedSkillName === guildPhysicalMagicalDamageIncreaseSkillName
-        ? guildPhysicalMagicalDamageFilteredKeys
-        : unionGuildContributionKeys;
-
-    addContributionsFromText(trackers, `길드 스킬 (${skill?.skill_name || "-"})`, skill?.skill_option, {
-      allowedKeys
-    });
-  });
-
-  guildAbilities.forEach((ability) => {
-    addContributionsFromText(trackers, `길드 어빌리티 (${ability?.ability_name || "-"})`, ability?.ability_option, {
-      allowedKeys: unionGuildContributionKeys
-    });
-  });
-
-  personalSkills.forEach((skill) => {
-    addContributionsFromText(trackers, `길드 개인 스킬 (${skill?.skill_name || "-"})`, skill?.skill_option, {
-      allowedKeys: unionGuildContributionKeys
-    });
-  });
-}
-
-function getVmatrixAttackPercentBonusByLevel(level) {
-  if (!Number.isFinite(level) || level < 1) {
-    return 0;
-  }
-
-  const rawBonus = 7.6 + (level - 1) * 0.6;
-  return Math.max(0, Math.min(25, rawBonus));
-}
-
-function readSwitch(name) {
-  return String(process.env[name] || "").trim().toLowerCase();
-}
-
-// Attack % per core level (7.6 at Lv.1, +0.6 per level, 25 at the Lv.30 cap) matches the
-// official max level, the operator's in-game knowledge and maplemtool.com's observed values
-// (docs/competitor-feature-inventory.md §3), so it is on unless VMATRIX_STAT_RULES=off.
-function isVmatrixAttackRuleEnabled() {
-  return readSwitch("VMATRIX_STAT_RULES") !== "off";
-}
-
-// The four fixed base effects (+9 / +12 / +12 / +12) have no confirmed source and
-// maplemtool.com does not add them, so they stay off unless VMATRIX_BASE_EFFECTS=on.
-function isVmatrixBaseEffectsEnabled() {
-  return readSwitch("VMATRIX_BASE_EFFECTS") === "on";
-}
-
-function collectVmatrixContributions(trackers, details) {
-  const attackRuleEnabled = isVmatrixAttackRuleEnabled();
-  const baseEffectsEnabled = isVmatrixBaseEffectsEnabled();
-  if (!attackRuleEnabled && !baseEffectsEnabled) {
-    return;
-  }
-
-  const appliedBaseSkillEffects = new Set();
-
-  getActiveVcores(details?.vmatrix?.data).forEach((core) => {
-    const { name } = core;
-    const normalizedName = normalizeForMatch(name);
-    const effectiveLevel = core.level + core.legacySlotLevel;
-
-    if (attackRuleEnabled && vmatrixAttackScaleSkillNames.has(normalizedName)) {
-      const bonus = getVmatrixAttackPercentBonusByLevel(effectiveLevel);
-      if (bonus > 0) {
-        const levelText = core.legacySlotLevel
-          ? `V코어 레벨 ${core.level} + 슬롯 레벨 ${core.legacySlotLevel} = ${effectiveLevel}`
-          : `V코어 레벨 ${core.level}`;
-        addMajorStatContribution(
-          trackers,
-          "physicalAttackPercent",
-          `V매트릭스 (${name})`,
-          levelText,
-          bonus
-        );
-        addMajorStatContribution(
-          trackers,
-          "magicalAttackPercent",
-          `V매트릭스 (${name})`,
-          levelText,
-          bonus
-        );
-      }
-    }
-
-    if (!baseEffectsEnabled || appliedBaseSkillEffects.has(normalizedName)) {
-      return;
-    }
-
-    if (normalizedName === vmatrixCombatOrdersName) {
-      addMajorStatContribution(trackers, "physicalDamagePercent", `V매트릭스 (${name})`, "기본 효과", 9);
-      addMajorStatContribution(trackers, "magicalDamagePercent", `V매트릭스 (${name})`, "기본 효과", 9);
-      appliedBaseSkillEffects.add(normalizedName);
-      return;
-    }
-
-    if (normalizedName === vmatrixSharpEyesName) {
-      addMajorStatContribution(trackers, "criticalDamage", `V매트릭스 (${name})`, "기본 효과", 12);
-      appliedBaseSkillEffects.add(normalizedName);
-      return;
-    }
-
-    if (normalizedName === vmatrixWindBoosterName) {
-      addMajorStatContribution(trackers, "bossDamage", `V매트릭스 (${name})`, "기본 효과", 12);
-      appliedBaseSkillEffects.add(normalizedName);
-      return;
-    }
-
-    if (normalizedName === vmatrixAdvancedBlessName) {
-      addMajorStatContribution(trackers, "physicalAttackPercent", `V매트릭스 (${name})`, "기본 효과", 12);
-      addMajorStatContribution(trackers, "magicalAttackPercent", `V매트릭스 (${name})`, "기본 효과", 12);
-      appliedBaseSkillEffects.add(normalizedName);
-    }
-  });
-}
-
-function extractGroupNameFromSource(source, prefix) {
-  const text = String(source || "");
-  const marker = `${prefix} (`;
-  if (!text.startsWith(marker) || !text.endsWith(")")) {
-    return null;
-  }
-
-  return text.slice(marker.length, -1).trim() || null;
-}
-
-function normalizeSetGroupKey(name) {
-  return normalizeForMatch(name).replace(/세트$/, "");
-}
-
-function mergeRawTextText(left, right) {
-  const merged = new Set();
-
-  [left, right].forEach((text) => {
-    String(text || "")
-      .split(" | ")
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .forEach((part) => merged.add(part));
-  });
-
-  return [...merged].join(" | ");
-}
-
-function mergeIgnoreDefenseSetAndStarforceBreakdown(entries) {
-  if (!Array.isArray(entries) || entries.length < 2) {
-    return entries;
-  }
-
-  const setEntries = [];
-  const starforceEntries = [];
-
-  entries.forEach((entry, index) => {
-    const setGroupName = extractGroupNameFromSource(entry?.source, "세트 효과");
-    if (setGroupName) {
-      setEntries.push({
-        index,
-        entry,
-        groupName: setGroupName,
-        normalizedKey: normalizeSetGroupKey(setGroupName)
-      });
-    }
-
-    const starforceGroupName = extractGroupNameFromSource(entry?.source, "스타포스 세트옵션");
-    if (starforceGroupName) {
-      starforceEntries.push({
-        index,
-        entry,
-        groupName: starforceGroupName,
-        normalizedKey: normalizeSetGroupKey(starforceGroupName)
-      });
-    }
-  });
-
-  if (!setEntries.length || !starforceEntries.length) {
-    return entries;
-  }
-
-  const consumedIndexes = new Set();
-  const mergedEntries = [];
-
-  starforceEntries.forEach((starforceEntry) => {
-    const matchedSetEntry = setEntries.find((setEntry) => {
-      if (consumedIndexes.has(setEntry.index)) {
-        return false;
-      }
-
-      return (
-        setEntry.normalizedKey === starforceEntry.normalizedKey ||
-        setEntry.normalizedKey.includes(starforceEntry.normalizedKey) ||
-        starforceEntry.normalizedKey.includes(setEntry.normalizedKey)
-      );
-    });
-
-    if (!matchedSetEntry) {
-      return;
-    }
-
-    consumedIndexes.add(matchedSetEntry.index);
-    consumedIndexes.add(starforceEntry.index);
-
-    mergedEntries.push({
-      source: `세트효과+스타포스 (${matchedSetEntry.groupName})`,
-      value: matchedSetEntry.entry.value + starforceEntry.entry.value,
-      rawText: mergeRawTextText(matchedSetEntry.entry.rawText, starforceEntry.entry.rawText)
-    });
-  });
-
-  if (!mergedEntries.length) {
-    return entries;
-  }
-
-  const remainingEntries = entries.filter((_, index) => !consumedIndexes.has(index));
-  return [...remainingEntries, ...mergedEntries];
-}
-
+// Major stats come from the stat engine (src/domain/stats). Kept as an export for scripts and
+// tests that only need the boss-setting stats.
 function buildMajorStats(details) {
-  const trackers = createMajorStatTrackers();
+  return buildCharacterStats(details).majorStats;
+}
 
-  applyPhysicalAttackFromStat(trackers, details);
-  applyMagicalAttackFromStat(trackers, details);
-  collectSetEffectContributions(trackers, details);
-  collectStarforceSetContributions(trackers, details);
-  collectHexaStatContributions(trackers, details);
-  collectHyperStatContributions(trackers, details);
-  collectLinkSkillContributions(trackers, details);
-  collectSymbolContributions(trackers, details);
-  collectItemContributions(trackers, details);
-  collectAndroidEquipmentContributions(trackers, details);
-  collectPetEquipmentContributions(trackers, details);
-  collectUnionContributions(trackers, details);
-  collectGuildContributions(trackers, details);
-  collectVmatrixContributions(trackers, details);
-
-  return majorStatKeys.reduce((acc, key) => {
-    const tracker = trackers[key];
-    const mergedBreakdownMap = new Map();
-
-    tracker.breakdown.forEach((entry) => {
-      const source = entry.source || "-";
-      const current = mergedBreakdownMap.get(source) || {
-        source,
-        value: 0,
-        rawTexts: new Set()
-      };
-
-      current.value += entry.value;
-      if (entry.rawText) {
-        current.rawTexts.add(entry.rawText);
-      }
-
-      mergedBreakdownMap.set(source, current);
-    });
-
-    let breakdownEntries = [...mergedBreakdownMap.values()]
-      .map((entry) => ({
-        source: entry.source,
-        rawText: [...entry.rawTexts].join(" | "),
-        value: entry.value
-      }));
-
-    if (key === "ignoreDefense") {
-      breakdownEntries = mergeIgnoreDefenseSetAndStarforceBreakdown(breakdownEntries);
-    }
-
-    const breakdown = breakdownEntries
-      .map((entry) => ({
-        ...entry,
-        displayValue: formatMajorStatDelta(key, entry.value)
-      }))
-      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
-
-    acc[key] = {
-      key,
-      label: tracker.label,
-      value: tracker.value,
-      displayValue: formatMajorStatValue(key, tracker.value),
-      breakdown
-    };
-
-    return acc;
-  }, {});
+// A stat-engine failure on unexpected Nexon data must not take the whole page down.
+function buildCharacterStatsSafely(details) {
+  try {
+    return buildCharacterStats(details);
+  } catch (error) {
+    console.error("[stats] stat engine failed:", error?.message || error);
+    return { majorStats: {}, majorStatsCurrent: {}, statSetting: null, majorStatOrder: [] };
+  }
 }
 
 function buildApiKeyError() {
@@ -1756,29 +813,24 @@ function buildRecentKstDateRange(limit = 7) {
   return dates;
 }
 
-async function resolveLatestOverallRankingByOcid(ocid, options = {}) {
+// Rankings cover the top 10,000 and are aggregated once a day, so a character's row is
+// looked up for the most recent dates only.
+async function resolveLatestRankingRowByOcid(ocid, fetchRanking, days = 2) {
   const normalizedOcid = String(ocid || "").trim();
   if (!normalizedOcid) {
     return null;
   }
 
-  const days = Number.isFinite(options.days) ? options.days : 7;
-  const dateCandidates = buildRecentKstDateRange(days).filter((date) => date >= rankingDateFloor);
+  const dateCandidates = buildRecentKstDateRange(Number.isFinite(days) ? days : 2).filter(
+    (date) => date >= rankingDateFloor
+  );
 
   for (const date of dateCandidates) {
     try {
-      const result = await getRankingLevel({
-        date,
-        ocid: normalizedOcid,
-        page: 1
-      });
-      const first = toArray(result?.data?.ranking)[0];
-      const rankingValue = parseNumericValue(first?.ranking);
-      if (rankingValue !== null) {
-        return {
-          date,
-          ranking: Math.max(1, Math.floor(rankingValue))
-        };
+      const result = await fetchRanking({ date, ocid: normalizedOcid, page: 1 });
+      const row = toArray(result?.data?.ranking)[0];
+      if (row) {
+        return { date, row };
       }
     } catch (error) {
       // Ignore lookup failures and continue with older dates.
@@ -1786,6 +838,28 @@ async function resolveLatestOverallRankingByOcid(ocid, options = {}) {
   }
 
   return null;
+}
+
+async function resolveLatestOverallRankingByOcid(ocid, options = {}) {
+  const found = await resolveLatestRankingRowByOcid(ocid, getRankingLevel, options.days);
+  const rankingValue = parseNumericValue(found?.row?.ranking);
+  return rankingValue === null ? null : { date: found.date, ranking: Math.max(1, Math.floor(rankingValue)) };
+}
+
+// The stat endpoint's 전투력 reflects whatever the character is wearing right now (it can
+// be a fraction of the real value on a farming preset); the combat-power ranking holds
+// the official daily value, available for the top 10,000.
+async function resolveOfficialCombatPowerByOcid(ocid, options = {}) {
+  const found = await resolveLatestRankingRowByOcid(ocid, getRankingCombatPower, options.days);
+  const value = parseNumericValue(found?.row?.character_combat_power);
+  return value === null
+    ? null
+    : { date: found.date, value, ranking: parseNumericValue(found.row.ranking) };
+}
+
+function readStatValue(statData, statName) {
+  const entry = toArray(statData?.stat).find((item) => String(item?.stat_name || "").trim() === statName);
+  return parseNumericValue(entry?.stat_value);
 }
 
 function normalizePresetNo(value) {
@@ -2937,7 +2011,8 @@ function buildPageData({
   ocid,
   details,
   fallbackDetails,
-  overallRankingResult
+  overallRankingResult,
+  officialCombatPower = null
 }) {
   const basic = details?.basic?.data || {};
   const stat = details?.stat?.data || {};
@@ -2949,7 +2024,7 @@ function buildPageData({
   const expText = expRateValue === null
     ? "-"
     : `${expRateValue.toLocaleString("ko-KR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
-  const majorStats = buildMajorStats(details);
+  const characterStats = buildCharacterStatsSafely(details);
   const attackType = resolveAttackType({
     statData: stat,
     className: basic.character_class,
@@ -2976,7 +2051,8 @@ function buildPageData({
 
   const profile = {
     name: profileName,
-    jobName: basic.character_job_name || "",
+    // character_job_name is scheduled for removal by Nexon; character_class carries the same value.
+    jobName: basic.character_class || basic.character_job_name || "",
     className: basic.character_class || "-",
     level: basic.character_level || "-",
     imageUrl: basic.character_image || basic.character_icon || "",
@@ -2986,6 +2062,10 @@ function buildPageData({
     expRate: expRateValue,
     currentExp: parseNumericValue(expRaw),
     ranking: basic.ranking || stat.ranking || "-",
+    combatPower: {
+      official: officialCombatPower,
+      current: readStatValue(stat, "전투력")
+    },
     overallRanking: overallRankingResult?.ranking ?? fallbackOverallRanking ?? null,
     overallRankingText:
       overallRankingResult?.ranking !== null && overallRankingResult?.ranking !== undefined
@@ -2993,9 +2073,12 @@ function buildPageData({
         : fallbackOverallRanking !== null
           ? `\uC804\uCCB4\uB7AD\uD0B9 - ${Number(fallbackOverallRanking).toLocaleString("ko-KR")}\uC704`
         : "\uC804\uCCB4\uB7AD\uD0B9 - -",
-    majorStats,
+    // Boss setting first (operator decision 2026-10-28); the presets in use are a toggle.
+    majorStats: characterStats.majorStats,
+    majorStatsCurrent: characterStats.majorStatsCurrent,
+    statSetting: characterStats.statSetting,
     attackType,
-    majorStatOrder: attackType === "magical" ? [...magicalMajorStatOrder] : [...physicalMajorStatOrder]
+    majorStatOrder: characterStats.majorStatOrder
   };
 
   return {
@@ -3248,10 +2331,13 @@ async function getCharacterPageData(req, res) {
       shouldLog: false
     });
 
-    const historyAvailable = await hasExpHistory(ocid);
-    const fallbackDetails = await loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit);
     // Rankings are aggregated once a day (~02:30 KST) for the top 10,000, so today or yesterday is enough.
-    const overallRankingResult = await resolveLatestOverallRankingByOcid(ocid, { days: 2 });
+    const [historyAvailable, fallbackDetails, overallRankingResult, officialCombatPower] = await Promise.all([
+      hasExpHistory(ocid),
+      loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit),
+      resolveLatestOverallRankingByOcid(ocid, { days: 2 }),
+      resolveOfficialCombatPowerByOcid(ocid, { days: 2 })
+    ]);
 
     const pageData = buildPageData({
       characterName,
@@ -3260,7 +2346,8 @@ async function getCharacterPageData(req, res) {
       ocid,
       details,
       fallbackDetails,
-      overallRankingResult
+      overallRankingResult,
+      officialCombatPower
     });
 
     pageData.meta.historyAvailable = historyAvailable;

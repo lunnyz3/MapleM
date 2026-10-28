@@ -1,0 +1,929 @@
+{
+ "name": "stat-conversion.json",
+ "description": "스탯 환산(전투력 기준)·방무·보스 적용률",
+ "collected": "2026-10-28",
+ "docs": [
+  "maplemtool.md",
+  "maplemworlds.md",
+  "diff-vs-ours.md"
+ ],
+ "sites": {
+  "maplemtool": {
+   "sourceFiles": [
+    "app.3b4c69e71622b30c.js",
+    "tables.d39c9358b9414219.json",
+    "bootstrap.2c5a0a3e9efe5ca4.js"
+   ],
+   "collected": "2026-10-28",
+   "note": "tables.*.json 은 schemaVersion 1, 테이블 38개. 항목마다 붙은 source/patch/confidence 메타데이터는 그 사이트가 단 것이다(예: patch \"2026-09\").",
+   "entries": [
+    {
+     "id": "power-stats",
+     "value": [
+      {
+       "key": "atk",
+       "name": "공격력",
+       "step": 100
+      },
+      {
+       "key": "atkPct",
+       "name": "공격력%",
+       "step": 1
+      },
+      {
+       "key": "boss",
+       "name": "보스 공격력",
+       "step": 1
+      },
+      {
+       "key": "dmg",
+       "name": "대미지",
+       "step": 1
+      },
+      {
+       "key": "crit",
+       "name": "치명타 피해",
+       "step": 1
+      },
+      {
+       "key": "final",
+       "name": "최종 대미지",
+       "step": 1
+      },
+      {
+       "key": "max",
+       "name": "최대 대미지",
+       "step": 10000000
+      }
+     ],
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "var Q1=[{key:\"atk\"",
+     "prettyLine": 3472
+    },
+    {
+     "id": "equivalent",
+     "rule": "전투력 배수 l을 만드는 각 스탯 양(g=l−1): 깡공 A·g, 공격력% 100·base·g, 보스 100·base·g/0.3, 대미지 100·(1+D)·g, 치피 100·(1.2+C)·g, 최종 100·(1+F)·g, 최대 대미지 M·(l^5−1). base = P + 0.3(1+B)",
+     "finalDamage1pct": {
+      "atkPct": "(P+30+0.3B)/(100+F)",
+      "boss": "(P+30+0.3B)/(0.3·(100+F))",
+      "dmg": "(100+D)/(100+F)",
+      "crit": "(120+C)/(100+F)",
+      "atk": "A/(100+F)",
+      "max": "M·((1+1/(100+F))^5−1)"
+     },
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function K1(a,o,i,l){",
+     "prettyLine": 3547
+    },
+    {
+     "id": "efficiency",
+     "rule": "여러 줄을 함께 넣었을 때 전체 상승, 줄별 단독 상승, 다른 줄과 함께일 때의 몫을 계산",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function od(a,o,i,l=null){",
+     "prettyLine": 3564
+    },
+    {
+     "id": "ignore-combine",
+     "rule": "방무 a%에 o%를 더하면 1−(1−a)(1−o); 빼면 (1−a)/(1−o); 교체(from→to)는 (1−to)/(1−from)를 곱한다",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function od(a,o,i,l=null){",
+     "prettyLine": 3564
+    },
+    {
+     "id": "boss-damage-rate",
+     "rule": "적용률 = max(0, 1 − 방어율 × floor(1000·G·max(0, 1 − I − 스킬방무)·k)/1000) × (1 − 포스 페널티). G = (1−총방무)/(1−I), I = '쥬얼세트·HEXA 스탯·축복' 그룹 방무, k = 방어구 부수기면 0.75. 스킬방무: 일반 15, 오리진(HEXA 스킬 코어 레벨 ≥30: 50, ≥10: 20). 최대 대미지에 포스 보너스를 더한다",
+     "constants": {
+      "generalSkillIgnore": 15,
+      "originSkillIgnore": {
+       ">=30": 50,
+       ">=10": 20,
+       "else": 0
+      },
+      "armorBreakIgnore": 25
+     },
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "function Er(a,o={}){",
+     "prettyLine": 6444
+    },
+    {
+     "id": "ignore-consts",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "B2=15,P1=a=>a>=30?50:a>=10?20:0,Qc=25",
+     "prettyLine": 6382
+    },
+    {
+     "id": "expected-damage",
+     "rule": "예상딜(실전딜)은 서버 계산. 클라이언트는 스탯(깡공에 +200), 방무 그룹, 보스·포스, HEXA·V 특수 코어, 버프 7종, 피버를 보낸다",
+     "fever": {
+      "normal": {
+       "atkPct": 25,
+       "critDmg": 25
+      },
+      "max": {
+       "atkPct": 50,
+       "critDmg": 50
+      }
+     },
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "rs=200,Na=600",
+     "prettyLine": 7257
+    },
+    {
+     "id": "fever",
+     "site": "maplemtool",
+     "file": "app.3b4c69e71622b30c.js",
+     "anchor": "max:{label:\"맥스 피버\",atkPct:50,critDmg:50}",
+     "prettyLine": 7091
+    },
+    {
+     "id": "practice-buffs",
+     "value": [
+      {
+       "id": "AttackPermill_Large",
+       "name": "생과일 요거트",
+       "tag": 10062,
+       "effects": [
+        {
+         "stat": "AttackPermill",
+         "label": "물리 공격력",
+         "value": 50
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": false
+       }
+      },
+      {
+       "id": "AttackPermill_Regular",
+       "name": "메밀묵",
+       "tag": 10062,
+       "effects": [
+        {
+         "stat": "AttackPermill",
+         "label": "물리 공격력",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": true,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "MagicAttackPermill_Large",
+       "name": "포도 주스",
+       "tag": 10063,
+       "effects": [
+        {
+         "stat": "MagicAttackPermill",
+         "label": "마법 공격력",
+         "value": 50
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": true
+       }
+      },
+      {
+       "id": "MagicAttackPermill_Regular",
+       "name": "버터구이 오징어",
+       "tag": 10063,
+       "effects": [
+        {
+         "stat": "MagicAttackPermill",
+         "label": "마법 공격력",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": true
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "BossAttackPermill_Large",
+       "name": "새우튀김",
+       "tag": 10058,
+       "effects": [
+        {
+         "stat": "BossAttackPermill",
+         "label": "보스 공격력",
+         "value": 50
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "BossAttackPermill_Regular",
+       "name": "병아리 쿠키",
+       "tag": 10058,
+       "effects": [
+        {
+         "stat": "BossAttackPermill",
+         "label": "보스 공격력",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": true,
+        "magic": true
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "DamageIncreasePermill_Regular",
+       "name": "사탕 바구니",
+       "tag": 10066,
+       "effects": [
+        {
+         "stat": "DamageIncreasePermill",
+         "label": "물리 대미지",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": true,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": false
+       }
+      },
+      {
+       "id": "DamageIncreasePermill_Small",
+       "name": "호박조각",
+       "tag": 10066,
+       "effects": [
+        {
+         "stat": "DamageIncreasePermill",
+         "label": "물리 대미지",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "MagicDamageIncreasePermill_Regular",
+       "name": "막대사탕",
+       "tag": 10067,
+       "effects": [
+        {
+         "stat": "MagicDamageIncreasePermill",
+         "label": "마법 대미지",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": true
+       },
+       "max": {
+        "phys": false,
+        "magic": true
+       }
+      },
+      {
+       "id": "MagicDamageIncreasePermill_Small",
+       "name": "맑은 물",
+       "tag": 10067,
+       "effects": [
+        {
+         "stat": "MagicDamageIncreasePermill",
+         "label": "마법 대미지",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "CriticalDamageIncreasePermill_Regular",
+       "name": "밤",
+       "tag": 10072,
+       "effects": [
+        {
+         "stat": "CriticalDamageIncreasePermill",
+         "label": "치명타 피해",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": true,
+        "magic": true
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "CriticalDamageIncreasePermill_Small",
+       "name": "떡국",
+       "tag": 10072,
+       "effects": [
+        {
+         "stat": "CriticalDamageIncreasePermill",
+         "label": "치명타 피해",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "CriticalIncreaseProbability_Regular",
+       "name": "당근주스",
+       "tag": 10070,
+       "effects": [
+        {
+         "stat": "CriticalIncreaseProbability",
+         "label": "치명타 확률",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": true,
+        "magic": true
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "CriticalIncreaseProbability_Small",
+       "name": "팥빙수",
+       "tag": 10070,
+       "effects": [
+        {
+         "stat": "CriticalIncreaseProbability",
+         "label": "치명타 확률",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "AccuracyProbability_Regular",
+       "name": "후르츠 캔디",
+       "tag": 10054,
+       "effects": [
+        {
+         "stat": "AccuracyProbability",
+         "label": "명중률",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "AccuracyProbability_Small",
+       "name": "오렌지 주스",
+       "tag": 10054,
+       "effects": [
+        {
+         "stat": "AccuracyProbability",
+         "label": "명중률",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "Tangyoon_Jellyfish_3",
+       "name": "해파리 냉채 (Lv.3)",
+       "tag": 10146,
+       "effects": [
+        {
+         "stat": "BossAttackPermill",
+         "label": "보스 공격력",
+         "value": 20
+        },
+        {
+         "stat": "BossDefensePermill",
+         "label": "보스 방어력",
+         "value": 20
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "Tangyoon_Mushroom_3",
+       "name": "버섯 칼국수 (Lv.3)",
+       "tag": 10149,
+       "effects": [
+        {
+         "stat": "AccuracyProbability",
+         "label": "명중률",
+         "value": 20
+        },
+        {
+         "stat": "CriticalIncreaseProbability",
+         "label": "치명타 확률",
+         "value": 20
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "Tangyoon_Pig_3",
+       "name": "돼지고기 볶음 (Lv.3)",
+       "tag": 10145,
+       "effects": [
+        {
+         "stat": "DefensePermill",
+         "label": "물리 방어력",
+         "value": 20
+        },
+        {
+         "stat": "DamageIncreasePermill",
+         "label": "물리 대미지",
+         "value": 20
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": false
+       }
+      },
+      {
+       "id": "Tangyoon_Snail_3",
+       "name": "달팽이 요리 (Lv.3)",
+       "tag": 10148,
+       "effects": [
+        {
+         "stat": "MagicDefensePermill",
+         "label": "마법 방어력",
+         "value": 20
+        },
+        {
+         "stat": "MagicDamageIncreasePermill",
+         "label": "마법 대미지",
+         "value": 20
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": true
+       }
+      },
+      {
+       "id": "Mvp_Potion",
+       "name": "MVP 슈퍼파워",
+       "tag": 10374,
+       "effects": [
+        {
+         "stat": "AttackPermill",
+         "label": "물리 공격력",
+         "value": 30
+        },
+        {
+         "stat": "MagicAttackPermill",
+         "label": "마법 공격력",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "Union_Store_01",
+       "name": "유니온의 빛나는 힘",
+       "tag": 10402,
+       "effects": [
+        {
+         "stat": "AttackPermill",
+         "label": "물리 공격력",
+         "value": 30
+        },
+        {
+         "stat": "MagicAttackPermill",
+         "label": "마법 공격력",
+         "value": 30
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "Boss_Killer_Elixir",
+       "name": "보스 킬러의 비약",
+       "tag": 10088,
+       "effects": [
+        {
+         "stat": "BossAttackPermill",
+         "label": "보스 공격력",
+         "value": 50
+        },
+        {
+         "stat": "BossDefensePermill",
+         "label": "보스 방어력",
+         "value": 50
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": true,
+        "magic": true
+       }
+      },
+      {
+       "id": "Advanced_Boss_Killer_Elixir",
+       "name": "고급 보스 킬러의 비약",
+       "tag": 10089,
+       "effects": [
+        {
+         "stat": "BossAttackPermill",
+         "label": "보스 공격력",
+         "value": 100
+        },
+        {
+         "stat": "BossDefensePermill",
+         "label": "보스 방어력",
+         "value": 100
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      },
+      {
+       "id": "Guild_DamageIncreasePermill10",
+       "name": "길드 버프 Lv.10",
+       "tag": 166,
+       "effects": [
+        {
+         "stat": "DamageIncreasePermill",
+         "label": "물리 대미지",
+         "value": 10
+        },
+        {
+         "stat": "MagicDamageIncreasePermill",
+         "label": "마법 대미지",
+         "value": 10
+        }
+       ],
+       "default": {
+        "phys": false,
+        "magic": false
+       },
+       "max": {
+        "phys": false,
+        "magic": false
+       }
+      }
+     ],
+     "rule": "보스 연습모드 버프 판(그 사이트 표기: 클라이언트 표 ThemaDungeon/PracticeModeBuffSet, 2026-09-10 설치본). 효과 값은 permill(÷1000 = %), 치명타 확률·명중률은 ÷10. 같은 tag는 하나만 고를 수 있다. default/max = 게임 기본·최대 선택(물리/마법)",
+     "site": "maplemtool",
+     "file": "tables.d39c9358b9414219.json → msm-practice-buffs.json",
+     "anchor": "msm-practice-buffs.json"
+    }
+   ]
+  },
+  "maplemworlds": {
+   "sourceFiles": [
+    "index-5Pk4vujo.js",
+    "HexaSimulatorPage-BUSm0qBa.js"
+   ],
+   "collected": "2026-10-28",
+   "bundleBuildTime": "2026-10-28T01:55:44.618Z (footer build stamp in index-5Pk4vujo.js)",
+   "description": "스탯 효율(전투력/대미지 모드)과 템환산 가중치",
+   "entries": [
+    {
+     "id": "efficiency:combat-power-mode",
+     "rule": "전투력 공식(ac) 그대로. 선택 스탯을 증가량만큼 올렸을 때의 상승분과 같아지는 다른 스탯 양 = 기준 증가량 × (선택 상승분 / 그 스탯 기준 증가량의 상승분). 최대 대미지만 정확식: M × ((1+g)^5 − 1)",
+     "steps": [
+      {
+       "key": "finalDmg",
+       "label": "최종 대미지",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "critDmg",
+       "label": "치명타 피해",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "attPct",
+       "label": "마법 공격력%",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "dmgPct",
+       "label": "마법 대미지",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "rawAtt",
+       "label": "마법 공격력",
+       "unit": "",
+       "step": 100
+      },
+      {
+       "key": "bossAttPct",
+       "label": "보스 공격력",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "iedPct",
+       "label": "방어율 무시",
+       "unit": "%",
+       "step": 1
+      },
+      {
+       "key": "maxDamage",
+       "label": "최대 대미지",
+       "unit": "",
+       "step": 10000000
+      }
+     ],
+     "note": "방어율 무시는 이 모드에서 선택 불가(공식에 없음)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "U6=[{key:\"fina",
+     "prettyLine": 41602
+    },
+    {
+     "id": "efficiency:damage-mode",
+     "formula": "DMG = A × (P/100 + 4×(1+B/100)) × (1+D/100) × (1.2+C/100) × (1+F/100) × (1 − 보스방어율/100 × (1 − IED))",
+     "constants": {
+      "skillPercentS6": 400
+     },
+     "iedAdd": "IED' = 1 − (1−IED)(1−t/100)",
+     "steps": "깡공 300, 나머지 1%p(최대 대미지 제외)",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "S6=400,B6={raw",
+     "prettyLine": 41590
+    },
+    {
+     "id": "efficiency:defaults",
+     "value": {
+      "rawAtt": 120000,
+      "attPct": 500,
+      "dmgPct": 760,
+      "bossAttPct": 430,
+      "critDmg": 415,
+      "finalDmg": 297,
+      "iedPct": 82,
+      "bossDefPct": 77.89,
+      "maxDamage": 100000000
+     },
+     "note": "캐릭터 상세에서 열면 캐릭터 합산값을 쓰고 보스 방어율만 77.89 기본",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "B6={rawAtt:12e",
+     "prettyLine": 41591
+    },
+    {
+     "id": "efficiency:doping",
+     "value": [
+      {
+       "key": "five",
+       "name": "5종",
+       "attPct": 30,
+       "bossAttPct": 30,
+       "dmgPct": 30,
+       "critDmg": 30
+      },
+      {
+       "key": "maxFever",
+       "name": "맥피",
+       "attPct": 50,
+       "critDmg": 50
+      },
+      {
+       "key": "fever",
+       "name": "일피",
+       "attPct": 25,
+       "critDmg": 25
+      },
+      {
+       "key": "tangtang",
+       "name": "탕탕",
+       "bossAttPct": 20,
+       "dmgPct": 20
+      },
+      {
+       "key": "bossKiller",
+       "name": "보킬",
+       "bossAttPct": 50
+      },
+      {
+       "key": "advancedBossKiller",
+       "name": "고보킬",
+       "bossAttPct": 100
+      },
+      {
+       "key": "mvp",
+       "name": "MVP",
+       "attPct": 30
+      },
+      {
+       "key": "guildSkill",
+       "name": "길스",
+       "dmgPct": 10
+      },
+      {
+       "key": "union",
+       "name": "유니온",
+       "attPct": 30
+      },
+      {
+       "key": "cooking",
+       "name": "요리",
+       "critDmg": 5,
+       "bossAttPct": 10
+      }
+     ],
+     "defaultChecked": [
+      "five",
+      "maxFever"
+     ],
+     "unit": "%p",
+     "note": "대미지 효율 모드에서만 합산",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "u0=[{key:\"five",
+     "prettyLine": 41644
+    },
+    {
+     "id": "item-score:reference",
+     "reference": {
+      "rawAttack": 1500000,
+      "attackPercent": 400,
+      "damagePercent": 550,
+      "bossAttackPercent": 450,
+      "criticalDamagePercent": 450,
+      "finalDamagePercent": 300,
+      "maxDamage": 2500000000,
+      "skillDamagePercent": 400
+     },
+     "normalizer": {
+      "rawAttack": 82865,
+      "finalDamagePercent": 46.4,
+      "damagePercent": 108.6
+     },
+     "target": 500,
+     "rawAttackPerFinalPercent": 300,
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "Sf=Object.free",
+     "prettyLine": 33957
+    },
+    {
+     "id": "item-score:weights",
+     "rawWeights": {
+      "rawAttack": 0.0033333333333333335,
+      "attackPercent": 0.8,
+      "damagePercent": 0.26666666666666666,
+      "bossAttackPercent": 0.26666666666666666,
+      "criticalDamagePercent": 0.7017543859649122,
+      "finalDamagePercent": 1,
+      "ignoreDefensePercent": 1,
+      "maxDamage": 3e-7
+     },
+     "normalization": 1.4221649142434558,
+     "finalWeights": {
+      "rawAttack": 0.004740549714144853,
+      "attackPercent": 1.1377319313947647,
+      "damagePercent": 0.3792439771315882,
+      "bossAttackPercent": 0.3792439771315882,
+      "criticalDamagePercent": 0.9980104661357584,
+      "finalDamagePercent": 1.4221649142434558,
+      "ignoreDefensePercent": 1.4221649142434558,
+      "maxDamage": 4.266494742730367e-7
+     },
+     "rule": "템환산 = Σ(아이템 옵션 값 × finalWeights). 물리·마법 각각 계산 후 큰 값. 기본 옵션은 모두, 추가 옵션은 같은 키가 기본 옵션에 없을 때만, 잠재·에디는 모두, 소울·문장 문구 포함(문장 제외 버전 따로), 제네시스·해방 무기는 최종 +10",
+     "site": "maplemworlds",
+     "file": "index-5Pk4vujo.js",
+     "anchor": "return{rawAttack:1/eg,attackPercent:e/t",
+     "prettyLine": 33981
+    }
+   ]
+  }
+ }
+}

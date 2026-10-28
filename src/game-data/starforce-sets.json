@@ -1,0 +1,503 @@
+{
+  "_meta": {
+    "description": "스타포스 세트 옵션. 세트 장비 스타포스 합(한벌옷 2배, 럭키·빌림 포함)이 구간 시작(min) 이상인 가장 큰 행을 쓴다. 합은 cap에서 자른다.",
+    "sources": [
+      "maplemworlds.kr index-5Pk4vujo.js 앵커 s8={아케인:{55: — 아케인·앱솔 표(캐릭터 합산용)",
+      "maplemtool.com tables.d39c9358b9414219.json msm-starforce-sets.json — 아케인·앱솔(같은 값), 루타비스(레전더리·유니크), 160제(레전더리·유니크), 도전자의 장비"
+    ],
+    "extractedAt": "2026-10-28",
+    "notes": [
+      "아케인셰이드 최대 대미지는 두 사이트 모두 이전 우리 표(src/config/starforce-set-options.js)의 정확히 1.5배다.",
+      "앱솔랩스 70구간 최대 대미지는 maplemworlds 5,000,000, maplemtool·우리 이전 표 5,500,000이다. 공식 스크린샷과 맞는 5,500,000을 쓴다(docs/game-data-audit.md G05).",
+      "루타비스·160제·도전자 표는 maplemtool에만 있다(maplemworlds는 세트 계산기에만 두고 캐릭터 합산에는 넣지 않음). provenance 표기는 그 사이트가 단 것이다.",
+      "160제 세트는 직업과 무관하게 이름이 '펜살리르'로 시작하는 장비를 등급별로 센다(maplemtool alias 규칙)."
+    ]
+  },
+  "cap": 280,
+  "sets": [
+    {
+      "id": "arcane",
+      "label": "아케인",
+      "match": {
+        "nameIncludes": [
+          "아케인셰이드"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 55,
+          "stats": {
+            "maxDamage": 75000000,
+            "finalDamage": 9,
+            "bossDamage": 16,
+            "magicalDamagePercent": 17,
+            "physicalDamagePercent": 17,
+            "magicalAttackPercent": 17,
+            "physicalAttackPercent": 17,
+            "ignoreDefense": 7
+          }
+        },
+        {
+          "min": 80,
+          "stats": {
+            "maxDamage": 90000000,
+            "finalDamage": 11,
+            "bossDamage": 19,
+            "magicalDamagePercent": 19.5,
+            "physicalDamagePercent": 19.5,
+            "magicalAttackPercent": 19.5,
+            "physicalAttackPercent": 19.5,
+            "ignoreDefense": 8
+          }
+        },
+        {
+          "min": 105,
+          "stats": {
+            "maxDamage": 105000000,
+            "finalDamage": 13,
+            "bossDamage": 22,
+            "magicalDamagePercent": 22,
+            "physicalDamagePercent": 22,
+            "magicalAttackPercent": 22,
+            "physicalAttackPercent": 22,
+            "ignoreDefense": 9
+          }
+        },
+        {
+          "min": 130,
+          "stats": {
+            "maxDamage": 120000000,
+            "finalDamage": 15,
+            "bossDamage": 25,
+            "magicalDamagePercent": 24.5,
+            "physicalDamagePercent": 24.5,
+            "magicalAttackPercent": 24.5,
+            "physicalAttackPercent": 24.5,
+            "ignoreDefense": 10
+          }
+        },
+        {
+          "min": 155,
+          "stats": {
+            "maxDamage": 135000000,
+            "finalDamage": 17,
+            "bossDamage": 28,
+            "magicalDamagePercent": 27,
+            "physicalDamagePercent": 27,
+            "magicalAttackPercent": 27,
+            "physicalAttackPercent": 27,
+            "ignoreDefense": 11
+          }
+        },
+        {
+          "min": 180,
+          "stats": {
+            "maxDamage": 150000000,
+            "finalDamage": 19,
+            "bossDamage": 31,
+            "magicalDamagePercent": 29.5,
+            "physicalDamagePercent": 29.5,
+            "magicalAttackPercent": 29.5,
+            "physicalAttackPercent": 29.5,
+            "ignoreDefense": 12
+          }
+        },
+        {
+          "min": 205,
+          "stats": {
+            "maxDamage": 195000000,
+            "finalDamage": 21,
+            "bossDamage": 34,
+            "magicalDamagePercent": 32,
+            "physicalDamagePercent": 32,
+            "magicalAttackPercent": 32,
+            "physicalAttackPercent": 32,
+            "ignoreDefense": 13
+          }
+        },
+        {
+          "min": 230,
+          "stats": {
+            "maxDamage": 300000000,
+            "finalDamage": 23,
+            "bossDamage": 37,
+            "magicalDamagePercent": 34.5,
+            "physicalDamagePercent": 34.5,
+            "magicalAttackPercent": 34.5,
+            "physicalAttackPercent": 34.5,
+            "ignoreDefense": 14
+          }
+        },
+        {
+          "min": 255,
+          "stats": {
+            "maxDamage": 465000000,
+            "finalDamage": 25,
+            "bossDamage": 40,
+            "magicalDamagePercent": 37,
+            "physicalDamagePercent": 37,
+            "magicalAttackPercent": 37,
+            "physicalAttackPercent": 37,
+            "ignoreDefense": 15
+          }
+        },
+        {
+          "min": 280,
+          "stats": {
+            "maxDamage": 660000000,
+            "finalDamage": 27,
+            "bossDamage": 43,
+            "magicalDamagePercent": 39.5,
+            "physicalDamagePercent": 39.5,
+            "magicalAttackPercent": 39.5,
+            "physicalAttackPercent": 39.5,
+            "ignoreDefense": 16
+          }
+        }
+      ],
+      "from": "maplemworlds s8"
+    },
+    {
+      "id": "absolab",
+      "label": "앱솔",
+      "match": {
+        "nameIncludes": [
+          "앱솔랩스"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 70,
+          "stats": {
+            "maxDamage": 5500000,
+            "bossDamage": 10,
+            "physicalDamagePercent": 14,
+            "magicalDamagePercent": 14,
+            "physicalAttackPercent": 12,
+            "magicalAttackPercent": 12,
+            "ignoreDefense": 3
+          }
+        },
+        {
+          "min": 140,
+          "stats": {
+            "maxDamage": 11000000,
+            "bossDamage": 13,
+            "physicalDamagePercent": 16.5,
+            "magicalDamagePercent": 16.5,
+            "physicalAttackPercent": 14.5,
+            "magicalAttackPercent": 14.5,
+            "ignoreDefense": 5
+          }
+        },
+        {
+          "min": 210,
+          "stats": {
+            "maxDamage": 18500000,
+            "finalDamage": 5,
+            "bossDamage": 16,
+            "physicalDamagePercent": 19,
+            "magicalDamagePercent": 19,
+            "physicalAttackPercent": 17,
+            "magicalAttackPercent": 17,
+            "ignoreDefense": 7
+          }
+        },
+        {
+          "min": 245,
+          "stats": {
+            "maxDamage": 29000000,
+            "finalDamage": 10,
+            "bossDamage": 19,
+            "physicalDamagePercent": 21.5,
+            "magicalDamagePercent": 21.5,
+            "physicalAttackPercent": 19.5,
+            "magicalAttackPercent": 19.5,
+            "ignoreDefense": 9
+          }
+        },
+        {
+          "min": 280,
+          "stats": {
+            "maxDamage": 42500000,
+            "finalDamage": 15,
+            "bossDamage": 22,
+            "physicalDamagePercent": 24,
+            "magicalDamagePercent": 24,
+            "physicalAttackPercent": 22,
+            "magicalAttackPercent": 22,
+            "ignoreDefense": 11
+          }
+        }
+      ],
+      "from": "maplemworlds s8 (70구간 최대 대미지만 maplemtool·공식 값)"
+    },
+    {
+      "id": "lutabis-legendary",
+      "label": "루타비스(레전더리)",
+      "match": {
+        "nameIncludes": [
+          "하이네스",
+          "이글아이",
+          "트릭스터",
+          "파프니르"
+        ],
+        "grade": "레전더리"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 30,
+          "stats": {
+            "maxDamage": 2100000,
+            "physicalAttackPercent": 9,
+            "physicalDamagePercent": 10,
+            "magicalAttackPercent": 9,
+            "magicalDamagePercent": 10,
+            "bossDamage": 7.5
+          }
+        },
+        {
+          "min": 60,
+          "stats": {
+            "maxDamage": 4100000,
+            "physicalAttackPercent": 10.5,
+            "physicalDamagePercent": 11.5,
+            "magicalAttackPercent": 10.5,
+            "magicalDamagePercent": 11.5,
+            "bossDamage": 10
+          }
+        },
+        {
+          "min": 90,
+          "stats": {
+            "finalDamage": 4,
+            "maxDamage": 6100000,
+            "physicalAttackPercent": 12,
+            "physicalDamagePercent": 13,
+            "magicalAttackPercent": 12,
+            "magicalDamagePercent": 13,
+            "bossDamage": 12.5,
+            "ignoreDefense": 2
+          }
+        },
+        {
+          "min": 120,
+          "stats": {
+            "finalDamage": 9,
+            "maxDamage": 11600000,
+            "physicalAttackPercent": 13.5,
+            "physicalDamagePercent": 14.5,
+            "magicalAttackPercent": 13.5,
+            "magicalDamagePercent": 14.5,
+            "bossDamage": 15,
+            "ignoreDefense": 7
+          }
+        }
+      ],
+      "from": "maplemtool msm-starforce-sets.json"
+    },
+    {
+      "id": "lutabis-unique",
+      "label": "루타비스(유니크)",
+      "match": {
+        "nameIncludes": [
+          "하이네스",
+          "이글아이",
+          "트릭스터",
+          "파프니르"
+        ],
+        "grade": "유니크"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 30,
+          "stats": {
+            "physicalAttackPercent": 8,
+            "physicalDamagePercent": 9,
+            "magicalAttackPercent": 8,
+            "magicalDamagePercent": 9,
+            "bossDamage": 5
+          }
+        },
+        {
+          "min": 60,
+          "stats": {
+            "physicalAttackPercent": 9.5,
+            "physicalDamagePercent": 10.5,
+            "magicalAttackPercent": 9.5,
+            "magicalDamagePercent": 10.5,
+            "bossDamage": 7.5
+          }
+        },
+        {
+          "min": 90,
+          "stats": {
+            "maxDamage": 1000000,
+            "physicalAttackPercent": 11,
+            "physicalDamagePercent": 12,
+            "magicalAttackPercent": 11,
+            "magicalDamagePercent": 12,
+            "bossDamage": 10
+          }
+        },
+        {
+          "min": 120,
+          "stats": {
+            "finalDamage": 5,
+            "maxDamage": 2400000,
+            "physicalAttackPercent": 12.5,
+            "physicalDamagePercent": 13.5,
+            "magicalAttackPercent": 12.5,
+            "magicalDamagePercent": 13.5,
+            "bossDamage": 12.5,
+            "ignoreDefense": 5
+          }
+        }
+      ],
+      "from": "maplemtool msm-starforce-sets.json"
+    },
+    {
+      "id": "level160-legendary",
+      "label": "160레벨(레전더리)",
+      "match": {
+        "namePrefixes": [
+          "펜살리르"
+        ],
+        "grade": "레전더리"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 30,
+          "stats": {
+            "physicalAttackPercent": 4,
+            "physicalDamagePercent": 4,
+            "magicalAttackPercent": 4,
+            "magicalDamagePercent": 4
+          }
+        },
+        {
+          "min": 60,
+          "stats": {
+            "physicalAttackPercent": 8,
+            "physicalDamagePercent": 8,
+            "magicalAttackPercent": 8,
+            "magicalDamagePercent": 8
+          }
+        },
+        {
+          "min": 90,
+          "stats": {
+            "physicalAttackPercent": 12,
+            "physicalDamagePercent": 12,
+            "magicalAttackPercent": 12,
+            "magicalDamagePercent": 12
+          }
+        }
+      ],
+      "from": "maplemtool msm-starforce-sets.json"
+    },
+    {
+      "id": "level160-unique",
+      "label": "160레벨(유니크)",
+      "match": {
+        "namePrefixes": [
+          "펜살리르"
+        ],
+        "nameIncludes": [
+          "우트가르드"
+        ],
+        "grade": "유니크"
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 30,
+          "stats": {
+            "physicalAttackPercent": 3,
+            "physicalDamagePercent": 3,
+            "magicalAttackPercent": 3,
+            "magicalDamagePercent": 3
+          }
+        },
+        {
+          "min": 60,
+          "stats": {
+            "physicalAttackPercent": 6,
+            "physicalDamagePercent": 6,
+            "magicalAttackPercent": 6,
+            "magicalDamagePercent": 6
+          }
+        },
+        {
+          "min": 90,
+          "stats": {
+            "physicalAttackPercent": 9,
+            "physicalDamagePercent": 9,
+            "magicalAttackPercent": 9,
+            "magicalDamagePercent": 9
+          }
+        }
+      ],
+      "from": "maplemtool msm-starforce-sets.json"
+    },
+    {
+      "id": "challenger",
+      "label": "도전자",
+      "match": {
+        "namePrefixes": [
+          "도전자의"
+        ]
+      },
+      "weaponSlot": true,
+      "tiers": [
+        {
+          "min": 160,
+          "stats": {
+            "maxDamage": 10000000,
+            "physicalAttackPercent": 14.5,
+            "physicalDamagePercent": 16.5,
+            "criticalDamage": 7.5,
+            "magicalAttackPercent": 14.5,
+            "magicalDamagePercent": 16.5,
+            "bossDamage": 13,
+            "ignoreDefense": 10
+          }
+        },
+        {
+          "min": 170,
+          "stats": {
+            "maxDamage": 15000000,
+            "finalDamage": 5,
+            "physicalAttackPercent": 17,
+            "physicalDamagePercent": 19,
+            "criticalDamage": 15,
+            "magicalAttackPercent": 17,
+            "magicalDamagePercent": 19,
+            "bossDamage": 16,
+            "ignoreDefense": 15
+          }
+        },
+        {
+          "min": 200,
+          "stats": {
+            "maxDamage": 35000000,
+            "finalDamage": 10,
+            "physicalAttackPercent": 19.5,
+            "physicalDamagePercent": 21.5,
+            "criticalDamage": 30.5,
+            "magicalAttackPercent": 19.5,
+            "magicalDamagePercent": 21.5,
+            "bossDamage": 19,
+            "ignoreDefense": 20
+          }
+        }
+      ],
+      "from": "maplemtool msm-starforce-sets.json (measured · 2026-09 · 0.98)"
+    }
+  ]
+}

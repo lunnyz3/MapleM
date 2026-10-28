@@ -1429,9 +1429,120 @@ function parseSetCountMeta(setCount) {
     ratio: Math.max(0, Math.min(1, current / total))
   };
 }
+const MAJOR_STAT_FLAT_KEYS = new Set(["physicalAttack", "magicalAttack", "maxDamage"]);
+const MAJOR_STAT_CATEGORY_ORDER = ["equipment", "skill", "growth", "content"];
+const MAJOR_STAT_CATEGORY_LABELS = { equipment: "장비", skill: "스킬", growth: "성장", content: "콘텐츠" };
+
+// "+86,925" / "+12.5%" / "+56.12%" — sums of breakdown rows, same style as the server's displayValue.
+function formatMajorStatDelta(key, value) {
+  if (!Number.isFinite(value)) return "-";
+  const digits = MAJOR_STAT_FLAT_KEYS.has(key) ? 0 : key === "ignoreDefense" ? 3 : 2;
+  const text = Math.abs(value).toLocaleString("ko-KR", { maximumFractionDigits: digits });
+  return `${value < 0 ? "-" : "+"}${text}${MAJOR_STAT_FLAT_KEYS.has(key) ? "" : "%"}`;
+}
+
+// Breakdown rows → [{ category, label, value, groups: [{ label, value, items }] }]
+function groupMajorStatBreakdown(breakdown) {
+  const categories = new Map();
+  toArray(breakdown).forEach((entry) => {
+    const categoryKey = entry?.category || "etc";
+    if (!categories.has(categoryKey)) {
+      categories.set(categoryKey, {
+        key: categoryKey,
+        label: entry?.categoryLabel || MAJOR_STAT_CATEGORY_LABELS[categoryKey] || "기타",
+        value: 0,
+        groups: new Map(),
+      });
+    }
+    const category = categories.get(categoryKey);
+    const groupKey = entry?.group || entry?.groupLabel || "etc";
+    if (!category.groups.has(groupKey)) {
+      category.groups.set(groupKey, { label: entry?.groupLabel || "기타", value: 0, items: [] });
+    }
+    const group = category.groups.get(groupKey);
+    const value = Number(entry?.value) || 0;
+    category.value += value;
+    group.value += value;
+    group.items.push(entry);
+  });
+  const orderOf = (key) => {
+    const index = MAJOR_STAT_CATEGORY_ORDER.indexOf(key);
+    return index === -1 ? MAJOR_STAT_CATEGORY_ORDER.length : index;
+  };
+  return [...categories.values()]
+    .sort((left, right) => orderOf(left.key) - orderOf(right.key))
+    .map((category) => ({ ...category, groups: [...category.groups.values()] }));
+}
+
+function renderMajorStatBreakdown(key, stat) {
+  const categories = groupMajorStatBreakdown(stat?.breakdown);
+  if (!categories.length) return '<p class="major-row__empty">기여 항목이 없습니다.</p>';
+  const note =
+    key === "ignoreDefense"
+      ? '<p class="major-row__note">방어율 무시는 옵션 줄마다 곱해서 합칩니다. 아래 값을 그대로 더한 값과 다릅니다.</p>'
+      : "";
+  const body = categories
+    .map((category) => {
+      const groups = category.groups
+        .map((group) => {
+          const items = group.items
+            .map(
+              (item) =>
+                `<li title="${escapeHtml(item?.rawText || "")}"><span>${escapeHtml(item?.source || "-")}</span><strong>${escapeHtml(
+                  item?.displayValue || "-",
+                )}</strong></li>`,
+            )
+            .join("");
+          return `<div class="stat-group"><p class="stat-group__head"><span>${escapeHtml(group.label)}</span><strong>${escapeHtml(
+            formatMajorStatDelta(key, group.value),
+          )}</strong></p><ul class="stat-group__items">${items}</ul></div>`;
+        })
+        .join("");
+      return `<section class="stat-cat"><p class="stat-cat__head"><span>${escapeHtml(category.label)}</span><strong>${escapeHtml(
+        formatMajorStatDelta(key, category.value),
+      )}</strong></p>${groups}</section>`;
+    })
+    .join("");
+  return `${note}${body}`;
+}
+
+function renderStatSettingBar(profile, mode) {
+  const setting = profile?.statSetting;
+  if (!setting || !profile?.majorStatsCurrent) return "";
+  const isBoss = mode !== "current";
+  const selectionKey = isBoss ? "boss" : "current";
+  const presetText = toArray(setting.dimensions)
+    .filter((dimension) => toArray(dimension?.available).length > 1 || dimension?.[selectionKey] !== null)
+    .map((dimension) => {
+      const no = dimension?.[selectionKey];
+      const differs = isBoss && dimension?.boss !== dimension?.current;
+      const label = `${dimension?.label || "-"} ${no ?? "-"}`;
+      const title = differs ? `현재 착용은 ${dimension?.current ?? "-"}번` : "";
+      return `<span class="stat-mode__preset${differs ? " is-different" : ""}"${title ? ` title="${escapeHtml(title)}"` : ""}>${escapeHtml(label)}</span>`;
+    })
+    .join("");
+  const power = isBoss ? setting?.combatPower?.boss : setting?.combatPower?.current;
+  const powerText = Number.isFinite(Number(power)) ? formatKoreanLargeNumber(power) : "-";
+  const note = isBoss
+    ? setting.sameAsCurrent
+      ? "현재 착용과 같은 조합"
+      : `프리셋 조합 ${formatNumber(setting.combinationCount || 0)}개 중 계산 전투력 최고`
+    : "넥슨 API의 현재 착용 프리셋";
+  const button = (value, label) =>
+    `<button type="button" class="stat-mode__btn${mode === value ? " is-selected" : ""}" data-stat-mode="${value}" aria-pressed="${
+      mode === value ? "true" : "false"
+    }">${label}</button>`;
+  return `<div class="stat-mode"><div class="stat-mode__switch" role="group" aria-label="스탯 기준">${button(
+    "boss",
+    "보스 세팅",
+  )}${button("current", "현재 착용")}</div><div class="stat-mode__presets">${presetText}</div><p class="stat-mode__power" title="${escapeHtml(
+    setting.combatPowerNote || "",
+  )}"><span>계산 전투력(추정)</span><strong>${escapeHtml(powerText)}</strong><em>${escapeHtml(note)}</em></p></div>`;
+}
+
 function renderMajorStats(profile, options = {}) {
-  const majorStats = profile?.majorStats || {};
-  const mode = resolveJobMode(profile);
+  const mode = options?.mode === "current" && profile?.majorStatsCurrent ? "current" : "boss";
+  const majorStats = (mode === "current" ? profile?.majorStatsCurrent : profile?.majorStats) || {};
   const collapseLimitRaw = Number(options?.collapseLimit || 0);
   const collapseLimit =
     Number.isFinite(collapseLimitRaw) && collapseLimitRaw > 0
@@ -1454,15 +1565,12 @@ function renderMajorStats(profile, options = {}) {
     .map((key) => {
       const stat = majorStats[key];
       if (!stat) return "";
-      const list = toArray(stat.breakdown).length
-        ? stat.breakdown
-            .map(
-              (e) =>
-                `<li><span>${escapeHtml(e.source || "-")}</span><strong>${escapeHtml(e.displayValue || "-")}</strong></li>`,
-            )
-            .join("")
-        : '<li class="empty">기여 항목이 없습니다.</li>';
-      return `<details class="major-row"><summary class="major-row__summary"><span class="major-row__label">${escapeHtml(stat.label || key)}</span><strong class="major-row__value">${escapeHtml(stat.displayValue || "-")}</strong></summary><ul class="major-row__list">${list}</ul></details>`;
+      return `<details class="major-row"><summary class="major-row__summary"><span class="major-row__label">${escapeHtml(
+        stat.label || key,
+      )}</span><strong class="major-row__value">${escapeHtml(stat.displayValue || "-")}</strong></summary><div class="major-row__detail">${renderMajorStatBreakdown(
+        key,
+        stat,
+      )}</div></details>`;
     })
     .filter(Boolean)
   if (!rowList.length) return "";
@@ -1484,8 +1592,41 @@ function renderMajorStats(profile, options = {}) {
       ? `<button type="button" class="section-more-btn" data-expand-target="#${escapeHtml(listId)}" data-expand-label-close="더보기" data-expand-label-open="접기">더보기</button>`
       : "";
 
-  return `<section class="major-stats major-stats--compact"><div ${listAttrs}>${rows}</div>${moreButton}</section>`;
+  return `<section class="major-stats major-stats--compact">${renderStatSettingBar(profile, mode)}<div ${listAttrs}>${rows}</div>${moreButton}</section>`;
 }
+// 1,153,901,361 → "11억 5,390만" (만 미만은 버림)
+function formatKoreanLargeNumber(value) {
+  const number = Math.floor(Number(value));
+  if (!Number.isFinite(number)) return "-";
+  const eok = Math.floor(number / 100000000);
+  const man = Math.floor((number % 100000000) / 10000);
+  if (eok > 0) return man > 0 ? `${eok}억 ${formatNumber(man)}만` : `${eok}억`;
+  if (man > 0) return `${formatNumber(man)}만`;
+  return formatNumber(number);
+}
+
+// Official value from the daily combat-power ranking (top 10,000); otherwise the stat
+// endpoint value, which follows whatever the character is wearing at the moment.
+function resolveCombatPowerDisplay(combatPower) {
+  const official = combatPower?.official;
+  const officialValue = parseNumericValue(official?.value);
+  if (officialValue !== null) {
+    const rankText = parseNumericValue(official?.ranking) ? ` · ${formatNumber(official.ranking)}위` : "";
+    return {
+      text: `전투력 ${formatKoreanLargeNumber(officialValue)}`,
+      title: `공식 전투력 랭킹 ${official.date} 기준${rankText} (${formatNumber(officialValue)})`,
+    };
+  }
+  const currentValue = parseNumericValue(combatPower?.current);
+  if (currentValue !== null) {
+    return {
+      text: `현재 전투력 ${formatKoreanLargeNumber(currentValue)}`,
+      title: `넥슨 API 현재 착용 상태 기준 (${formatNumber(currentValue)}). 공식 전투력 랭킹(1만 위) 밖이라 공식 값이 없습니다.`,
+    };
+  }
+  return null;
+}
+
 function resolveProfileHeroMeta(profile, query) {
   const profileImage = String(profile?.imageUrl || "").trim() || rankingThumbDefaultSrc;
   const profileName = String(profile?.name || "-");
@@ -1506,6 +1647,7 @@ function resolveProfileHeroMeta(profile, query) {
     overallRankingValue !== null && overallRankingValue > 0
       ? `전체랭킹 ${formatNumber(overallRankingValue)}위`
       : "전체랭킹 -";
+  const combatPower = resolveCombatPowerDisplay(profile?.combatPower);
   const expRateText = formatExpRateText(profile?.expRate ?? profile?.expText);
   const levelText = `Lv.${String(profile?.level || "-")}`;
   const percentText = expRateText === "-" ? "" : expRateText;
@@ -1523,6 +1665,7 @@ function resolveProfileHeroMeta(profile, query) {
     guildMark,
     guildName,
     overallRankingText,
+    combatPower,
     expRateText,
     levelText,
     percentText,
@@ -1586,7 +1729,7 @@ function renderProfile(profile, query) {
       )}</span><b>›</b></span>`;
   const profileShareActions = `<span class="char-hero__share-actions"><button type="button" class="equip-share-btn equip-share-btn--brag" data-profile-share-action="brag" data-loading-label="Preparing Kakao share..." data-idle-label="Share character on KakaoTalk" aria-label="Share character on KakaoTalk" title="Share character on KakaoTalk"><img src="/assets/icon-kakaotalk.png" alt="" loading="lazy" decoding="async" /></button><button type="button" class="equip-share-btn equip-share-btn--save" data-profile-share-action="save" data-loading-label="Preparing download..." data-idle-label="Save character image" aria-label="Save character image" title="Save character image"><img src="/assets/icon-download.png" alt="" loading="lazy" decoding="async" /></button></span>`;
 
-  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(meta.profileImage)}" alt="${escapeHtml(meta.profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(meta.profileName)}</h1><span class="char-hero-world">${meta.worldIcon ? `<img src="${escapeHtml(meta.worldIcon)}" alt="${escapeHtml(meta.worldName)}" />` : ""}${escapeHtml(meta.worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(meta.levelText)}</span>${meta.percentText ? `<span class="char-hero__level-rate">${escapeHtml(meta.percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${meta.expRateText}`)}"><span style="width:${escapeHtml(meta.progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span><a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(meta.overallRankingText)}</span><b>›</b></a>${guildChip}${profileShareActions}</div></div></div></article></section>`;
+  return `<section class="char-hero"><article class="char-hero__card"><div class="char-hero__main"><div class="char-hero__avatar-wrap"><img class="profile-avatar" src="${escapeHtml(meta.profileImage)}" alt="${escapeHtml(meta.profileName)} 이미지" loading="lazy" /></div><div class="char-hero__body"><div class="char-hero__head"><h1>${escapeHtml(meta.profileName)}</h1><span class="char-hero-world">${meta.worldIcon ? `<img src="${escapeHtml(meta.worldIcon)}" alt="${escapeHtml(meta.worldName)}" />` : ""}${escapeHtml(meta.worldName)}</span></div><p class="char-hero__level"><span class="char-hero__level-main">${escapeHtml(meta.levelText)}</span>${meta.percentText ? `<span class="char-hero__level-rate">${escapeHtml(meta.percentText)}</span>` : ""}</p><div class="char-hero__progress" role="img" aria-label="${escapeHtml(`경험치 ${meta.expRateText}`)}"><span style="width:${escapeHtml(meta.progressValue.toFixed(2))}%"></span></div><div class="char-hero__chips"><span class="char-hero__chip">${escapeHtml(profile.className || "-")}</span>${meta.combatPower ? `<span class="char-hero__chip char-hero__chip--power" title="${escapeHtml(meta.combatPower.title)}">${escapeHtml(meta.combatPower.text)}</span>` : ""}<a class="char-hero__chip char-hero__chip--rank" href="${escapeHtml(rankingHref)}"><span>${escapeHtml(meta.overallRankingText)}</span><b>›</b></a>${guildChip}${profileShareActions}</div></div></div></article></section>`;
 }
 function resolveSelectedPresetNo(tabKey, tabData, state) {
   const selected = parseNumericValue(state.selectedPresetByTab[tabKey]);
@@ -1734,7 +1877,7 @@ function renderEquipmentTab(tabData, profile, state) {
     state.pageData?.tabs?.android || {},
     state,
   );
-  const statsPanel = renderMajorStats(profile);
+  const statsPanel = renderMajorStats(profile, { mode: state.statMode });
   const equipmentPresetSwitch = renderJewelPresetSwitch(
     "equipment",
     tabData,
@@ -2266,9 +2409,10 @@ function buildSymbolDisplayItems(items, options = {}) {
       return left._sourceIndex - right._sourceIndex;
     });
 
-  return sortedItems.slice(0, 6).map((symbol, index) => {
+  const maxLevel = Number.isFinite(options.maxLevel) ? options.maxLevel : 20;
+  return sortedItems.map((symbol, index) => {
     const level = parseNumericValue(symbol?.symbolLevel);
-    const isMax = level !== null && level >= 20;
+    const isMax = level !== null && level >= maxLevel;
     const metrics = resolveSymbolMetrics(symbol, forcePatterns);
     return {
       ...symbol,
@@ -2339,6 +2483,7 @@ function renderArcaneSymbolBoard(arcaneSymbols) {
     prefixPattern: /^아케인\s*심볼\s*[:：]?\s*|^아케인심볼\s*[:：]?\s*/i,
     orderedNames: arcaneOrderNames,
     forcePatterns: "아케인\\s*포스|아케인포스",
+    maxLevel: 20,
   });
   return renderSymbolBoard(displayItems, {
     boardClass: "symbol-board--arcane",
@@ -2360,12 +2505,13 @@ function renderAuthenticSymbolBoard(authenticSymbols) {
     "오디움",
     "도원경",
     "아르테리아",
-    "카르시온",
   ];
   const displayItems = buildSymbolDisplayItems(items, {
     prefixPattern: /^어센틱\s*심볼\s*[:：]?\s*|^어센틱심볼\s*[:：]?\s*/i,
     orderedNames: authenticOrderNames,
     forcePatterns: "어센틱\\s*포스|어센틱포스|authentic\\s*force",
+    // 2026-10 API: every top-ranked character stops at Lv.11 (also Lv.11 in the 2026-03 sample).
+    maxLevel: 11,
   });
   return renderSymbolBoard(displayItems, {
     boardClass: "symbol-board--authentic",
@@ -3947,6 +4093,8 @@ async function initCharacterPage() {
     },
     shareClientConfig: { ...SHARE_DEFAULT_CONFIG },
     currentEquipmentItems: [],
+    // Major stats open on the boss setting; "current" shows the presets in use (toggle).
+    statMode: "boss",
     selectedPresetByTab: {
       equipment: null,
       union: null,
@@ -4499,6 +4647,17 @@ async function initCharacterPage() {
       const detailsEl = summaryEl.parentElement;
       if (detailsEl && detailsEl.tagName === "DETAILS") {
         detailsEl.open = !detailsEl.open;
+      }
+      return;
+    }
+
+    const statModeBtn = e.target.closest("[data-stat-mode]");
+    if (statModeBtn && tabContentEl.contains(statModeBtn)) {
+      const nextMode = statModeBtn.dataset.statMode === "current" ? "current" : "boss";
+      if (state.statMode !== nextMode) {
+        state.statMode = nextMode;
+        hideEquipHoverOverlay();
+        render();
       }
       return;
     }

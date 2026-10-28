@@ -5832,3 +5832,159 @@ font-size: 12px;
   font-weight: 600;
   text-align: right;
 }
+
+/* 주요 스탯: 보스 세팅 / 현재 착용 토글과 분류 → 그룹 → 항목 내역 (2026-10-28) */
+.stat-mode {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-mode__switch {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel-soft);
+}
+
+.stat-mode__btn {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--ui-muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stat-mode__btn.is-selected {
+  background: color-mix(in srgb, var(--ui-primary) 16%, var(--ui-panel));
+  color: color-mix(in srgb, var(--ui-primary) 75%, var(--ui-text));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-primary) 45%, var(--ui-line));
+}
+
+.stat-mode__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.stat-mode__preset {
+  border: 1px solid var(--ui-line);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  background: var(--ui-panel);
+}
+
+.stat-mode__preset.is-different {
+  border-color: color-mix(in srgb, var(--ui-primary) 50%, var(--ui-line));
+  color: color-mix(in srgb, var(--ui-primary) 75%, var(--ui-text));
+}
+
+.stat-mode__power {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: 13px;
+  color: var(--ui-muted);
+}
+
+.stat-mode__power strong {
+  color: var(--ui-text);
+  font-size: 16px;
+}
+
+.stat-mode__power em {
+  font-style: normal;
+  font-size: 12px;
+}
+
+.major-row__detail {
+  max-height: 360px;
+  overflow: auto;
+  border-top: 1px dashed var(--ui-line);
+  padding: 8px 10px 10px;
+  background: var(--ui-panel);
+  display: grid;
+  gap: 8px;
+}
+
+.major-row__note,
+.major-row__empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
+.stat-cat {
+  display: grid;
+  gap: 4px;
+}
+
+.stat-cat__head,
+.stat-group__head {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-cat__head {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ui-text);
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.stat-group {
+  padding-left: 8px;
+}
+
+.stat-group__head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ui-muted);
+}
+
+.stat-cat__head strong,
+.stat-group__head strong {
+  white-space: nowrap;
+}
+
+.stat-group__items {
+  list-style: none;
+  margin: 2px 0 4px;
+  padding: 0 0 0 8px;
+  display: grid;
+  gap: 2px;
+}
+
+.stat-group__items li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.stat-group__items span {
+  color: var(--ui-text);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.stat-group__items strong {
+  color: color-mix(in srgb, var(--ui-primary) 70%, var(--ui-text));
+  white-space: nowrap;
+}

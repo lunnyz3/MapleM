@@ -10,7 +10,7 @@ const PAGE_MODULE_BY_TYPE = {
   guild: "./pages/guild.js",
   character: "./pages/character.js",
 };
-const ASSET_VERSION = "20261028a";
+const ASSET_VERSION = "20261028b";
 
 function renderBootstrapError(error) {
   const reason = String(error?.message || error || "unknown");

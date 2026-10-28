@@ -1,8 +1,10 @@
 {
   "_meta": {
-    "source": "장갑에디.html",
-    "generated_at": "2026-03-05T11:19:40",
-    "note": "에디셔널 잠재능력(큐브) - 장갑. second/third distributions are identical in the source table."
+    "source": "https://m.nexon.com/probability/6262?language=ko",
+    "source_title": "큐브 (에디셔널 잠재능력) - 장갑",
+    "generated_at": "2026-10-28T16:38:22+09:00",
+    "generator": "scripts/data/sync-probability.js",
+    "note": "first = 공식 '첫번째 옵션', second·third = 공식 '두번째 / 세번째 옵션'(같은 분포). option·value·p 는 공식 표기 그대로."
   },
   "장갑 180": {
     "레어": {

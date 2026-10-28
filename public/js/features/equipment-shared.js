@@ -486,14 +486,6 @@ function classifyEquipmentSlot(item) {
   return { key: "" };
 }
 
-const hoverSoulSlotKeys = new Set([
-  "weapon",
-  "subWeapon",
-  "emblem",
-  "shoulder",
-  "cape",
-  "belt",
-]);
 const hoverAccessoryOptionalOptionSlotKeys = new Set([
   "necklace1",
   "necklace2",
@@ -626,7 +618,8 @@ function renderEquipmentHoverCard(item) {
     ? `<div class="equip-hover__option-block equip-hover__option-block--emblem"><h5>문장 옵션</h5>${emblemMetaRow}${emblemOptionRows ? `<ul>${emblemOptionRows}</ul>` : ""}</div>`
     : "";
   const soulBlock =
-    hoverSoulSlotKeys.has(slot.key) && soulOption
+    // Souls were extended to 10 slots on 2026-07-30; show whatever the API reports.
+    soulOption
       ? `<div class="equip-hover__option-block equip-hover__option-block--soul"><h5>소울</h5><p>${escapeHtml(soulOption)}</p></div>`
       : "";
 
