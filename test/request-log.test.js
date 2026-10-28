@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const mongoose = require("mongoose");
 const { RequestLog } = require("../src/models/request-log.model");
-const { saveRequestLog } = require("../src/services/maplestorym.service");
+const { saveRequestLog, canSaveRequestLogs } = require("../src/services/maplestorym.service");
 
 const sampleEntry = {
   characterName: "테스트",
@@ -22,11 +22,13 @@ function pretendMongoConnected(t) {
 }
 
 test("saveRequestLog skips writes when MongoDB is not connected", async () => {
+  assert.equal(canSaveRequestLogs(), false);
   assert.equal(await saveRequestLog(sampleEntry), null);
 });
 
 test("saveRequestLog swallows non-quota write errors without suspending later writes", async (t) => {
   pretendMongoConnected(t);
+  assert.equal(canSaveRequestLogs(), true);
   t.mock.method(console, "error", () => {});
   const findOne = t.mock.method(RequestLog, "findOne", () => {
     throw new Error("connection reset");
@@ -50,4 +52,5 @@ test("saveRequestLog never throws on Atlas quota errors and pauses further write
   assert.equal(await saveRequestLog(sampleEntry), null);
   assert.equal(await saveRequestLog(sampleEntry), null);
   assert.equal(findOne.mock.callCount(), 1, "writes should be suspended after a quota error");
+  assert.equal(canSaveRequestLogs(), false, "background collection must pause too");
 });

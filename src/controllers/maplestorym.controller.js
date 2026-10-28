@@ -5,6 +5,7 @@ const { RequestLog } = require("../models/request-log.model");
 const { TtlLruCache } = require("../nexon/client");
 const { getActiveVcores } = require("../transform/vmatrix");
 const { buildCharacterStats } = require("../domain/stats");
+const { createGuildCollector } = require("../services/guild-collection.service");
 const {
   getCharacterOcid,
   getCharacterByOcid,
@@ -21,7 +22,8 @@ const {
   getRankingCombatPower,
   getRankingDojang,
   getRankingKerningMTower,
-  saveRequestLog
+  saveRequestLog,
+  canSaveRequestLogs
 } = require("../services/maplestorym.service");
 
 const characterDetailEndpoints = [
@@ -51,6 +53,45 @@ const userDetailEndpoints = [
 ];
 
 const aggregateLogEndpoint = `${env.nexonBaseUrl}/maplestorym/v1/character/all`;
+const guildCollector = createGuildCollector({
+  isAvailable: () => env.guildCollectionEnabled && canSaveRequestLogs(),
+  memberDelayMs: env.guildCollectionMemberDelayMs,
+  listSavedToday: async ({ worldName, names, dateKst }) => {
+    const start = new Date(`${dateKst}T00:00:00+09:00`);
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    const docs = await RequestLog.find({
+      worldName,
+      characterName: { $in: names },
+      endpoint: aggregateLogEndpoint,
+      success: true,
+      "responseBody.mode": { $in: ["all", "page-data"] },
+      $or: [
+        { snapshotDate: dateKst },
+        { snapshotDate: { $exists: false }, updatedAt: { $gte: start, $lt: end } },
+        { snapshotDate: { $exists: false }, updatedAt: null, createdAt: { $gte: start, $lt: end } }
+      ]
+    }).select({ characterName: 1, _id: 0 }).lean();
+    return docs.map((doc) => doc.characterName);
+  },
+  collectMember: async ({ worldName, characterName }) => {
+    const world = normalizeWorldName(worldName);
+    if (!world.ok) return false;
+    const id = await resolveOcid(characterName, world.worldNameCanonical, world.nexonWorldName, { shouldLog: false });
+    const ocid = id?.data?.ocid;
+    if (!ocid) return false;
+    const { details, summary } = await fetchCharacterDetails({ characterName, worldNameCanonical: world.worldNameCanonical, ocid, shouldLog: false });
+    // No enqueue here: collection is bounded to the guild roster that was requested.
+    return saveAggregatedCharacterLog({
+      characterName, worldNameCanonical: world.worldNameCanonical, ocid,
+      statusCode: 200, success: summary.failureCount === 0,
+      responseBody: {
+        mode: "all", collectionSource: "guild",
+        query: buildQueryPayload(characterName, worldName, world.worldNameCanonical),
+        ocid, summary, details
+      }
+    });
+  }
+});
 const presetFallbackLookbackLimit = 30;
 // Nexon ranking data starts on 2025-11-27.
 const rankingDateFloor = "2025-11-27";
@@ -666,7 +707,7 @@ async function saveAggregatedCharacterLog({
       responseBody
     });
 
-    return Boolean(saved);
+    return Boolean(saved) && success;
   } catch (error) {
     return false;
   }
@@ -862,6 +903,64 @@ function readStatValue(statData, statName) {
   return parseNumericValue(entry?.stat_value);
 }
 
+// Read recorded API values, not the stat engine's estimated combat power. Daily
+// aggregate snapshots are replaced, so the window uses their last saved timestamp.
+async function resolveStoredCombatPowerByOcid(ocid, { characterName, worldNameCanonical, now = new Date() } = {}) {
+  const empty = { windowHours: 24, value: null, observedAt: null, status: "unavailable" };
+  if (!ocid || !isMongoConnected()) return empty;
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  try {
+    const docs = await RequestLog.find({
+      ocid,
+      $or: [
+        { updatedAt: { $gte: since, $lte: now } },
+        { updatedAt: null, createdAt: { $gte: since, $lte: now } }
+      ]
+    }).select({
+      _id: 0, createdAt: 1, updatedAt: 1, statusCode: 1, success: 1,
+      "responseBody.details.stat": 1,
+      "responseBody.stat": 1,
+      "responseBody.tabs.exp.stat": 1,
+      "responseBody.profile.combatPower": 1,
+      "responseBody.ranking": 1
+    }).lean();
+
+    let best = null;
+    for (const doc of docs) {
+      const at = new Date(doc.updatedAt || doc.createdAt);
+      if (!Number.isFinite(at.getTime()) || at < since || at > now || doc.statusCode < 200 || doc.statusCode >= 300) continue;
+      const body = doc.responseBody || {};
+      const candidates = [];
+      for (const wrapped of [body.details?.stat, body.tabs?.exp?.stat]) {
+        if (wrapped && wrapped.ok !== false) candidates.push(readStatValue(wrapped.data, "전투력"));
+      }
+      if (doc.success !== false) {
+        candidates.push(readStatValue(body, "전투력"));
+        candidates.push(parseNumericValue(body.profile?.combatPower?.current));
+        candidates.push(parseNumericValue(body.profile?.combatPower?.official?.value));
+        for (const row of toArray(body.ranking)) {
+          // Ranking rows have no OCID; match the name and canonical world (same
+          // Nexon shape used by resolveOfficialCombatPowerByOcid above).
+          const world = normalizeWorldName(row?.world_name);
+          if (row?.character_name === characterName && world.ok && world.worldNameCanonical === worldNameCanonical) {
+            candidates.push(parseNumericValue(row.character_combat_power));
+          }
+        }
+      }
+      for (const value of candidates) {
+        if (value === null || !Number.isFinite(value) || value <= 0) continue;
+        if (!best || value > best.value || (value === best.value && at > new Date(best.observedAt))) {
+          best = { value, observedAt: at.toISOString() };
+        }
+      }
+    }
+    return best ? { ...empty, ...best, status: "ok" } : { ...empty, status: "no_records" };
+  } catch (error) {
+    console.error("[combat-power-history] lookup failed:", error?.message || error);
+    return empty;
+  }
+}
+
 function normalizePresetNo(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -869,6 +968,24 @@ function normalizePresetNo(value) {
 
 function isMongoConnected() {
   return mongoose.connection.readyState === 1;
+}
+
+function enqueueRelatedGuild(details, worldName, triggeredBy, aggregateSaved) {
+  if (!env.guildCollectionEnabled) return { status: "disabled" };
+  if (!aggregateSaved || !canSaveRequestLogs()) return { status: "unavailable" };
+  const guild = details?.guildBasic;
+  if (!guild?.ok || !String(guild.data?.guild_name || "").trim()) return { status: "no_guild" };
+  try {
+    return guildCollector.enqueue({
+      worldName,
+      guildName: String(guild.data.guild_name).trim(),
+      members: toArray(guild.data.guild_member).map((member) => member?.character_name),
+      triggeredBy
+    });
+  } catch (error) {
+    console.error("[guild-collection] enqueue failed:", error?.message || error);
+    return { status: "unavailable" };
+  }
 }
 
 async function loadRecentPageDataDetailsByOcid(ocid, limit = presetFallbackLookbackLimit) {
@@ -881,7 +998,7 @@ async function loadRecentPageDataDetailsByOcid(ocid, limit = presetFallbackLookb
     ocid,
     endpoint: aggregateLogEndpoint,
     success: true,
-    "responseBody.mode": "page-data"
+    "responseBody.mode": { $in: ["all", "page-data"] }
   })
     .sort({ createdAt: -1 })
     .limit(lookback)
@@ -2244,7 +2361,7 @@ async function getAllCharacterDetails(req, res) {
       details
     };
 
-    await saveAggregatedCharacterLog({
+    const aggregateSaved = await saveAggregatedCharacterLog({
       characterName,
       worldNameCanonical,
       ocid,
@@ -2255,6 +2372,38 @@ async function getAllCharacterDetails(req, res) {
         ...responsePayload
       }
     });
+
+    // Iris needs raw details and the website's stat sheets from one Nexon snapshot.
+    // Opt in, and calculate after logging so derived breakdowns do not inflate stored logs.
+    if (String(req.query.include_stats || "") === "1") {
+      const { majorStats, majorStatsCurrent, statSetting, majorStatOrder } = buildCharacterStatsSafely(details);
+      const basic = details?.basic?.data || {};
+      responsePayload.stats = {
+        majorStats,
+        majorStatsCurrent,
+        statSetting,
+        majorStatOrder,
+        attackType: resolveAttackType({
+          statData: details?.stat?.data || {},
+          className: basic.character_class,
+          jobName: basic.character_job_name
+        })
+      };
+    }
+
+    if (String(req.query.include_combat_power || "") === "1") {
+      responsePayload.combatPowerHistory = await resolveStoredCombatPowerByOcid(ocid, {
+        characterName: details?.basic?.data?.character_name || characterName,
+        worldNameCanonical
+      });
+    }
+
+    responsePayload.meta = {
+      mongoConnected: isMongoConnected(),
+      aggregateSaved,
+      dataTimestamp: new Date().toISOString(),
+      guildCollection: enqueueRelatedGuild(details, worldNameCanonical, details?.basic?.data?.character_name || characterName, aggregateSaved)
+    };
 
     return res.json(responsePayload);
   } catch (error) {
@@ -2324,7 +2473,7 @@ async function getCharacterPageData(req, res) {
       });
     }
 
-    const { details } = await fetchCharacterDetails({
+    const { details, summary } = await fetchCharacterDetails({
       characterName,
       worldNameCanonical,
       ocid,
@@ -2358,7 +2507,7 @@ async function getCharacterPageData(req, res) {
       worldNameCanonical,
       ocid,
       statusCode: 200,
-      success: true,
+      success: summary.failureCount === 0,
       responseBody: {
         mode: "page-data",
         query: pageData.query,
@@ -2367,6 +2516,7 @@ async function getCharacterPageData(req, res) {
       }
     });
     pageData.meta.aggregateSaved = aggregateSaved;
+    pageData.meta.guildCollection = enqueueRelatedGuild(details, worldNameCanonical, details?.basic?.data?.character_name || characterName, aggregateSaved);
 
     return res.json(pageData);
   } catch (error) {
@@ -2558,6 +2708,15 @@ async function getCharacterExpHistory(req, res) {
   }
 }
 
+function getGuildCollectionStatus(req, res) {
+  const world = normalizeWorldName(req.query.world_name);
+  const guildName = String(req.query.guild_name || "").trim();
+  if (!world.ok || !guildName) {
+    return res.status(400).json({ ok: false, message: "valid world_name and guild_name are required" });
+  }
+  return res.json({ ok: true, enabled: env.guildCollectionEnabled, collection: guildCollector.getStatus(world.worldNameCanonical, guildName) });
+}
+
 async function getCharacterLogStatus(req, res) {
   const ocid = String(req.query.ocid || "").trim();
 
@@ -2584,13 +2743,14 @@ async function getCharacterLogStatus(req, res) {
   const filter = {
     ocid,
     endpoint: aggregateLogEndpoint,
-    "responseBody.mode": "page-data"
+    success: true,
+    "responseBody.mode": { $in: ["all", "page-data"] }
   };
 
   const [latestLog, aggregateCount] = await Promise.all([
     RequestLog.findOne(filter)
-      .sort({ createdAt: -1 })
-      .select({ createdAt: 1, responseBody: 1, _id: 0 })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .select({ updatedAt: 1, createdAt: 1, responseBody: 1, _id: 0 })
       .lean(),
     RequestLog.countDocuments(filter)
   ]);
@@ -2604,7 +2764,7 @@ async function getCharacterLogStatus(req, res) {
     ok: true,
     ocid,
     mongoConnected: true,
-    latestAggregateLogAt: latestLog?.createdAt ? toIsoString(latestLog.createdAt) : null,
+    latestAggregateLogAt: latestLog?.updatedAt || latestLog?.createdAt ? toIsoString(latestLog.updatedAt || latestLog.createdAt) : null,
     hasUnion,
     hasGuild,
     hasAndroid,
@@ -2936,8 +3096,11 @@ async function getRankingKerningMTowerController(req, res) {
 }
 
 module.exports = {
+  guildCollector,
+  getGuildCollectionStatus,
   buildMajorStats,
   resolveAttackType,
+  resolveStoredCombatPowerByOcid,
   // Shared with the v2 stats controller (same Nexon cache and error shape).
   resolveOcid,
   fetchCharacterDetails,
