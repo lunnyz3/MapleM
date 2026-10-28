@@ -12,6 +12,7 @@ import { WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { combatPowerOf, formatStat, formatStatDelta, groupBreakdown, isFlatStat, statOrder } from "../lib/character.js";
+import { getJson } from "../lib/api.js";
 import { loadCharacterPage, loadManualInputs, postCharacterStats } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, toNumber } from "../lib/format.js";
 import { WORLDS, urls } from "../lib/game.js";
@@ -27,10 +28,37 @@ import { ProfileShareButton } from "./character/Share.jsx";
 /** @typedef {"boss" | "current"} StatMode */
 
 /**
- * 프로필 머리: 오로라 배경 · 캐릭터 그림(틸트) · 이름(글자 등장) · 레벨·경험치 · 전투력 칩 · 갱신 시각.
- * @param {{ data: any, world: string }} props
+ * 수집된 캐릭터 전체 중 이 캐릭터의 템환산·잠재·에디 자리. 조회할 때 저장되므로 화면을 연 뒤에 부른다.
+ * @param {string} world @param {string} name
  */
-function ProfileHeader({ data, world }) {
+function useSpecSummary(world, name) {
+  const [summary, setSummary] = useState(/** @type {any} */ (null));
+  useEffect(() => {
+    if (!world || !name) return undefined;
+    let alive = true;
+    getJson(`/api/v2/spec-summary?${new URLSearchParams({ world_name: world, character_name: name })}`).then(
+      ({ response, body }) => alive && response.ok && body?.ok && body.spec && setSummary(body),
+      () => {}
+    );
+    return () => {
+      alive = false;
+    };
+  }, [world, name]);
+  return summary;
+}
+
+/** "상위 1.2%" */
+function topText(rank) {
+  if (!rank?.total) return "";
+  const percent = (rank.rank / rank.total) * 100;
+  return `상위 ${percent < 1 ? formatDecimal(percent, 2) : formatDecimal(percent, 1)}%`;
+}
+
+/**
+ * 프로필 머리: 오로라 배경 · 캐릭터 그림(틸트) · 이름(글자 등장) · 레벨·경험치 · 전투력 칩 · 갱신 시각.
+ * @param {{ data: any, world: string, onRefresh: () => void, refreshing: boolean, refreshLocked: boolean }} props
+ */
+function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
   const profile = data.profile || {};
   const name = profile.name || data.query?.characterName || "";
   const saved = useSaved();
@@ -39,6 +67,14 @@ function ProfileHeader({ data, world }) {
   const power = combatPowerOf(profile.combatPower);
   const expRate = Math.max(0, Math.min(100, Number(profile.expRate) || 0));
   const overall = Number(profile.overallRanking) || 0;
+  const summary = useSpecSummary(world, name);
+  const specChips = summary
+    ? [
+        { key: "itemScore", label: "템환산", value: formatComma(Math.round(summary.spec.itemScore)) },
+        { key: "potential", label: "잠재", value: `${formatDecimal(summary.spec.potential, 1)}%` },
+        { key: "additionalPotential", label: "에디", value: `${formatDecimal(summary.spec.additionalPotential, 1)}%` }
+      ].filter((chip) => Number(summary.spec[chip.key]) > 0)
+    : [];
 
   return (
     <section class="ch-hero" aria-labelledby="ch-name">
@@ -85,6 +121,15 @@ function ProfileHeader({ data, world }) {
               </strong>
             </li>
           ) : null}
+          {specChips.map((chip) => (
+            <li key={chip.key}>
+              <a class="chip" href={`/preview/ranking?${new URLSearchParams({ view: "spec", metric: chip.key, world_name: world })}`}>
+                <span class="chip__label">{chip.label}</span>
+                <strong class="chip__value num">{chip.value}</strong>
+                {summary.ranks[chip.key] ? <span class="chip__sub num">{topText(summary.ranks[chip.key])}</span> : null}
+              </a>
+            </li>
+          ))}
           {overall ? (
             <li>
               <a class="chip" href={urls.ranking("level", { name, world_name: world })}>
@@ -125,7 +170,13 @@ function ProfileHeader({ data, world }) {
             <Icon name="external" size={16} />
           </a>
         </div>
-        <Freshness at={data.meta?.dataTimestamp} />
+        <div class="ch-hero__fresh">
+          <Freshness at={data.meta?.dataTimestamp} />
+          <button type="button" class="btn btn--ghost btn--sm ch-refresh" onClick={onRefresh} disabled={refreshing || refreshLocked} aria-busy={refreshing}>
+            <Icon name="refresh" size={16} class={refreshing ? "is-spinning" : ""} />
+            {refreshing ? "갱신 중" : refreshLocked ? "1분 뒤 다시" : "갱신"}
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -370,6 +421,24 @@ export function Character({ world, name }) {
     };
   }, [world, name, attempt, validWorld]);
 
+  // 갱신: 지금 화면을 그대로 둔 채 새로 받아 바꾼다. 1분 동안은 다시 누를 수 없다.
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshLocked, setRefreshLocked] = useState(false);
+  const refresh = async () => {
+    if (refreshing || refreshLocked) return;
+    setRefreshing(true);
+    try {
+      const data = await loadCharacterPage(world, name, { refresh: true });
+      setState({ status: "ready", data });
+      setRefreshLocked(true);
+      window.setTimeout(() => setRefreshLocked(false), 60 * 1000);
+    } catch {
+      // 실패하면 지금 화면을 그대로 둔다.
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     let alive = true;
     loadManualInputs().then((result) => alive && setManualDefs(result));
@@ -458,7 +527,7 @@ export function Character({ world, name }) {
 
   return (
     <div class="ch">
-      <ProfileHeader data={data} world={world} />
+      <ProfileHeader data={data} world={world} onRefresh={refresh} refreshing={refreshing} refreshLocked={refreshLocked} />
 
       <div class="ch-stats-row">
         <Reveal class="ch-stats-row__main">

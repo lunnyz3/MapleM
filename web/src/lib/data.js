@@ -110,8 +110,10 @@ export async function findCharacterRank({ typeId, date, name, world }) {
  * 캐릭터 상세 데이터(기존 page-data). 없는 캐릭터면 status 404 ApiError.
  * @param {string} world @param {string} name
  */
-export async function loadCharacterPage(world, name) {
+export async function loadCharacterPage(world, name, { refresh = false } = {}) {
   const query = new URLSearchParams({ world_name: world, character_name: name });
+  // 갱신: 넥슨 응답 캐시를 거치지 않는다(서버가 캐릭터마다 1분에 한 번만 허용).
+  if (refresh) query.set("refresh", "1");
   const { response, body } = await getJson(`/api/maplestorym/character/page-data?${query}`);
   if (response.ok && body?.ok) return body;
   const code = String(body?.error?.error?.name || body?.error?.name || "");

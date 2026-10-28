@@ -486,14 +486,14 @@ async function resolveOcid(characterName, worldNameCanonical, nexonWorldName, op
   throw lastError;
 }
 
-async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, shouldLog = true }) {
+async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, shouldLog = true, useCache = true }) {
   const settledDetails = [];
   const ocidDetailEndpoints = [...characterDetailEndpoints, ...userDetailEndpoints];
 
   const initialResults = await Promise.all(
     ocidDetailEndpoints.map(async ({ key, path }) => {
       try {
-        const result = await getCharacterByOcid(path, ocid);
+        const result = await getCharacterByOcid(path, ocid, { useCache });
 
         if (shouldLog) {
           await saveRequestLog({
@@ -2511,6 +2511,17 @@ async function getAllCharacterDetails(req, res) {
   }
 }
 
+// "갱신" (refresh=1) skips the Nexon response cache, at most once a minute per character.
+const pageRefreshCooldownMs = 60 * 1000;
+const pageRefreshAt = new TtlLruCache({ maxEntries: 20000, maxBytes: 2 * 1024 * 1024 });
+
+function allowPageRefresh(worldNameCanonical, characterName) {
+  const key = `${worldNameCanonical}\u0000${characterName}`;
+  if (pageRefreshAt.get(key)) return false;
+  pageRefreshAt.set(key, true, pageRefreshCooldownMs, 64);
+  return true;
+}
+
 async function getCharacterPageData(req, res) {
   if (!env.nexonApiKey) {
     return res.status(500).json(buildApiKeyError());
@@ -2522,6 +2533,7 @@ async function getCharacterPageData(req, res) {
   }
 
   const { characterName, worldNameInput, worldNameCanonical, nexonWorldName } = parsed;
+  const refreshed = String(req.query.refresh || "") === "1" && allowPageRefresh(worldNameCanonical, characterName);
   const mongoConnected = isMongoConnected();
 
   try {
@@ -2556,7 +2568,8 @@ async function getCharacterPageData(req, res) {
       characterName,
       worldNameCanonical,
       ocid,
-      shouldLog: false
+      shouldLog: false,
+      useCache: !refreshed
     });
 
     // Rankings are aggregated once a day (~02:30 KST) for the top 10,000, so today or yesterday is enough.
@@ -2587,6 +2600,7 @@ async function getCharacterPageData(req, res) {
     });
 
     pageData.meta.historyAvailable = historyAvailable;
+    pageData.meta.refreshed = refreshed;
     pageData.meta.mongoConnected = mongoConnected;
 
     const aggregateSaved = await saveAggregatedCharacterLog({

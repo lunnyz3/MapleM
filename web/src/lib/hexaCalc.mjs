@@ -107,3 +107,31 @@ export function symbolCost(table, level, target, growth = 0) {
   }
   return { symbols: Math.max(0, symbols - (Number(growth) || 0)), meso };
 }
+
+/**
+ * HEXA 스킬 → 비용표 종류. 스킬 코어 중 2번째 칸부터는 어센트 코어 비용을 쓴다.
+ * @param {{ skillType?: string, slotNo?: number | string }} skill @param {Record<string, string>} coreTypes
+ */
+export function hexaCoreType(skill, coreTypes) {
+  const type = String(skill?.skillType || "");
+  if (type === "스킬 코어") return Number(skill?.slotNo) >= 2 ? "어센트 코어" : "오리진 코어";
+  return coreTypes[type] || "";
+}
+
+/**
+ * 코어들이 지금까지 쓴 재화와 최대 레벨까지 남은 재화.
+ * @param {Array<{ type: string, level: number }>} cores
+ * @param {Record<string, { energy: number[], fragments: number[] }>} costs @param {number} maxLevel
+ */
+export function hexaSpend(cores, costs, maxLevel) {
+  const total = { usedEnergy: 0, usedFragments: 0, leftEnergy: 0, leftFragments: 0 };
+  for (const core of cores) {
+    const table = costs[core.type];
+    if (!table) continue;
+    total.usedEnergy += sumRange(table.energy, 0, core.level);
+    total.usedFragments += sumRange(table.fragments, 0, core.level);
+    total.leftEnergy += sumRange(table.energy, core.level, maxLevel);
+    total.leftFragments += sumRange(table.fragments, core.level, maxLevel);
+  }
+  return total;
+}

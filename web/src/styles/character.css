@@ -2875,3 +2875,89 @@ button.eq-slot:hover .eq-slot__img {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ================= 남은 재화 요약(심볼·HEXA) ================= */
+.left-sum {
+  display: grid;
+  gap: 10px;
+  margin-bottom: var(--sp-3);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.left-sum__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+}
+
+.left-sum__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #5fe3b5);
+  transition: width 700ms var(--ease);
+}
+
+.left-sum__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 0;
+}
+
+.left-sum__list > div {
+  display: grid;
+  gap: 0;
+}
+
+.left-sum__list dt {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.left-sum__list dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+  font-weight: 800;
+}
+
+.symbol__left {
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.exp-summary__note {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+/* 갱신 시각 + 갱신 버튼 */
+.ch-hero__fresh {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ch-refresh .is-spinning {
+  animation: ch-spin 900ms linear infinite;
+}
+
+@keyframes ch-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-refresh .is-spinning {
+    animation: none;
+  }
+}

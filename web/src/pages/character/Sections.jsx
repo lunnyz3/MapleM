@@ -10,6 +10,9 @@ import { presetByNo, shortSymbolName } from "../../lib/character.js";
 import { loadExpHistory } from "../../lib/data.js";
 import { formatComma, formatDateDot, formatDecimal, formatKoreanUnits, formatMonthDay } from "../../lib/format.js";
 import { urls } from "../../lib/game.js";
+import { hexaCoreType, hexaSpend, symbolCost } from "../../lib/hexaCalc.mjs";
+import hexaRules from "../../../../src/game-data/hexa.json";
+import symbolCosts from "../../../../src/game-data/symbol-costs.json";
 
 /** @param {{ children?: any, count?: number, note?: any }} props */
 function SubTitle({ children, count, note }) {
@@ -110,21 +113,61 @@ export function StatsTab({ data, presets}) {
 const SYMBOL_FALLBACK = ["/assets/simbol-1.png", "/assets/simbol-2.png", "/assets/simbol-3.png", "/assets/simbol-4.png", "/assets/simbol-5.png", "/assets/simbol-6.png"];
 
 /** @param {{ title: string, list: any[], tone: string }} props */
-function SymbolGroup({ title, list, tone }) {
+/**
+ * 남은 재화 한 줄: "남은 심볼 1,322개 · 메소 21억".
+ * @param {{ items: Array<{ label: string, value: string }>, progress?: number }} props
+ */
+function LeftSummary({ items, progress }) {
+  return (
+    <div class="left-sum">
+      {Number.isFinite(progress) ? (
+        <span class="left-sum__bar" aria-hidden="true">
+          <span style={{ width: `${Math.round(/** @type {number} */ (progress) * 100)}%` }} />
+        </span>
+      ) : null}
+      <dl class="left-sum__list">
+        {items.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd class="num">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** @param {{ title: string, list: any[], tone: string, kind: "arcane" | "authentic" }} props */
+function SymbolGroup({ title, list, tone, kind }) {
   if (!list.length) return null;
+  const table = symbolCosts[kind];
+  const costs = list.map((symbol) => symbolCost(table, Number(symbol.symbolLevel) || 1, table.maxLevel, symbol.symbolGrowthValue));
+  const leftSymbols = costs.reduce((sum, cost) => sum + cost.symbols, 0);
+  const leftMeso = costs.reduce((sum, cost) => sum + cost.meso, 0);
+  const levels = list.reduce((sum, symbol) => sum + (Number(symbol.symbolLevel) || 0), 0);
   return (
     <section class="sect">
       <SubTitle count={list.length}>{title}</SubTitle>
+      {leftSymbols || leftMeso ? (
+        <LeftSummary
+          progress={levels / (list.length * table.maxLevel)}
+          items={[
+            { label: "남은 심볼", value: `${formatComma(leftSymbols)}개` },
+            { label: "남은 메소", value: formatKoreanUnits(leftMeso, { maxGroups: 2 }) }
+          ]}
+        />
+      ) : null}
       <ul class={`symbol-grid tone-${tone}`}>
         {list.map((symbol, index) => (
           <Reveal as="li" key={index} delay={index * 40} class="symbol spotlight" {...spotlightHandlers()}>
             <span class="symbol__orb">
               <GameIcon src={symbol.symbolIcon || SYMBOL_FALLBACK[index % SYMBOL_FALLBACK.length]} size={44} />
-              {Number(symbol.symbolLevel) >= 20 ? <span class="symbol__max">MAX</span> : null}
+              {Number(symbol.symbolLevel) >= table.maxLevel ? <span class="symbol__max">MAX</span> : null}
             </span>
             <span class="symbol__name">{shortSymbolName(symbol.symbolName)}</span>
             <strong class="symbol__level display num">Lv.{symbol.symbolLevel}</strong>
             <span class="symbol__opt">{symbol.symbolOption || "-"}</span>
+            {costs[index].symbols ? <span class="symbol__left num">남은 {formatComma(costs[index].symbols)}개</span> : null}
           </Reveal>
         ))}
       </ul>
@@ -148,8 +191,8 @@ export function SymbolTab({ data, presets}) {
 
   return (
     <div class="sect-stack">
-      <SymbolGroup title="아케인 심볼" list={arcane} tone="lavender" />
-      <SymbolGroup title="어센틱 심볼" list={authentic} tone="sky" />
+      <SymbolGroup title="아케인 심볼" list={arcane} tone="lavender" kind="arcane" />
+      <SymbolGroup title="어센틱 심볼" list={authentic} tone="sky" kind="authentic" />
       {jewels.length ? (
         <section class="sect">
           <SubTitle count={jewels.length} note={<PresetNote no={jewelPreset?.presetNo} active={tab?.activePresetNo} />}>
@@ -202,6 +245,16 @@ export function HexaTab({ data}) {
     return [...map.entries()];
   }, [vcores]);
 
+  const spend = useMemo(
+    () =>
+      hexaSpend(
+        skills.map((skill) => ({ type: hexaCoreType(skill, hexaRules.coreTypes), level: Number(skill.slotLevel ?? skill.skillLevel) || 0 })),
+        hexaRules.cores,
+        hexaRules.maxLevel
+      ),
+    [skills]
+  );
+
   if (!skills.length && !cores.length && !vcores.length) {
     return <EmptyState title="HEXA·V 매트릭스 정보가 없어요" />;
   }
@@ -214,6 +267,15 @@ export function HexaTab({ data}) {
             <img class="sub-title__art" src="/assets/sole_erda.png" alt="" width={22} height={22} />
             HEXA 스킬
           </SubTitle>
+          <LeftSummary
+            progress={spend.usedFragments / Math.max(1, spend.usedFragments + spend.leftFragments)}
+            items={[
+              { label: "쓴 솔 에르다", value: formatComma(spend.usedEnergy) },
+              { label: "쓴 조각", value: formatComma(spend.usedFragments) },
+              { label: "남은 솔 에르다", value: formatComma(spend.leftEnergy) },
+              { label: "남은 조각", value: formatComma(spend.leftFragments) }
+            ]}
+          />
           <ul class="hexa-grid">
             {skills.map((skill, index) => (
               <Reveal as="li" key={index} delay={index * 40} class="hexa-node">
@@ -814,6 +876,27 @@ function ExpEmpty() {
 /**
  * @param {{ data: any }} props
  */
+/**
+ * 다음 레벨 예상일: 최근 7일 안, 지금 레벨에서 오른 경험치 %의 하루 평균으로 남은 %를 나눈다.
+ * 하루 기록이 2개 미만이거나 오르지 않았으면 null.
+ * @param {any[]} daily @param {number} level @param {number} rate
+ * @returns {{ days: number, date: string, perDay: number } | null}
+ */
+function levelUpForecast(daily, level, rate) {
+  if (!Number.isFinite(rate) || !level) return null;
+  const today = daily[daily.length - 1]?.dateKst;
+  if (!today) return null;
+  const since = new Date(`${today}T00:00:00Z`).getTime() - 7 * 86400000;
+  const base = daily.find((row) => Number(row.level) === level && new Date(`${row.dateKst}T00:00:00Z`).getTime() >= since);
+  if (!base) return null;
+  const span = (new Date(`${today}T00:00:00Z`).getTime() - new Date(`${base.dateKst}T00:00:00Z`).getTime()) / 86400000;
+  const perDay = span > 0 ? (rate - Number(base.expRate)) / span : 0;
+  if (!(perDay > 0)) return null;
+  const days = Math.max(1, Math.ceil((100 - rate) / perDay));
+  const date = new Date(Date.now() + 9 * 3600000 + days * 86400000).toISOString().slice(0, 10);
+  return { days, date, perDay };
+}
+
 export function ExpTab({ data }) {
   const ocid = data.ocid;
   const [state, setState] = useState(/** @type {{ status: "loading" } | { status: "ready", daily: any[] } | { status: "error", error: any }} */ ({ status: "loading" }));
@@ -841,6 +924,7 @@ export function ExpTab({ data }) {
   const last = daily[daily.length - 1];
   const gained = first && last ? (Number(last.level) || 0) + (Number(last.expRate) || 0) / 100 - ((Number(first.level) || 0) + (Number(first.expRate) || 0) / 100) : 0;
   const rate = Number(exp.currentExpRate ?? data.profile?.expRate);
+  const forecast = levelUpForecast(daily, Number(exp.currentLevel ?? data.profile?.level) || 0, rate);
 
   return (
     <div class="sect-stack">
@@ -867,6 +951,15 @@ export function ExpTab({ data }) {
             <strong class="display num exp-summary__gain">
               +<CountUp value={gained * 100} format={(n) => `${formatDecimal(n, 1)}%`} />
             </strong>
+          </div>
+        ) : null}
+        {forecast ? (
+          <div class="exp-summary__item spotlight" {...spotlightHandlers()}>
+            <span class="exp-summary__label">다음 레벨 예상</span>
+            <strong class="display num">{formatMonthDay(forecast.date)}</strong>
+            <span class="exp-summary__note num">
+              {formatComma(forecast.days)}일 · 하루 {formatDecimal(forecast.perDay, 2)}%
+            </span>
           </div>
         ) : null}
       </div>

@@ -4,6 +4,7 @@
 //   GET /api/v2/item-ranking?slot=&family=&world_name=&sort=&page=
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
 //   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
+//   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
 const { normalizeWorldName } = require("../config/worlds");
 const {
   rankCharacterItems,
@@ -11,6 +12,7 @@ const {
   listItemRanking,
   listSpecRanking,
   findSpecs,
+  rankSpec,
   SPEC_METRICS
 } = require("../services/item-ranking.service");
 
@@ -128,4 +130,19 @@ async function postSpecs(req, res) {
   }
 }
 
-module.exports = { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs };
+async function getSpecSummary(req, res) {
+  const world = normalizeWorldName(text(req.query.world_name));
+  const name = text(req.query.character_name, 24);
+  if (!world.ok || !name) {
+    return res.status(400).json({ ok: false, message: "world_name and character_name are required" });
+  }
+  try {
+    const result = await rankSpec(world.worldNameCanonical, name);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, spec: result?.spec || null, ranks: result?.ranks || {} });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+module.exports = { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs, getSpecSummary };

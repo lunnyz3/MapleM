@@ -11,7 +11,7 @@ import { Segmented } from "../components/Tabs.jsx";
 import { loadCharacterPage } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, kstToday, shiftDate } from "../lib/format.js";
 import { DEFAULT_WORLD, WORLDS } from "../lib/game.js";
-import { daysFor, hexaStatExpectation, sumRange, symbolCost } from "../lib/hexaCalc.mjs";
+import { daysFor, hexaCoreType, hexaStatExpectation, sumRange, symbolCost } from "../lib/hexaCalc.mjs";
 import { liberationPlan } from "../lib/liberation.mjs";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
@@ -45,12 +45,7 @@ function defaultSymbols() {
   ];
 }
 
-/** HEXA 스킬 → 비용표 종류(스킬 코어 중 2번째 칸부터는 어센트 코어). */
-function coreTypeOf(skill) {
-  const type = String(skill?.skillType || "");
-  if (type === "스킬 코어") return Number(skill?.slotNo) >= 2 ? "어센트 코어" : "오리진 코어";
-  return hexa.coreTypes[type] || "";
-}
+const coreTypeOf = (/** @type {any} */ skill) => hexaCoreType(skill, hexa.coreTypes);
 
 const clampLevel = (/** @type {unknown} */ value, /** @type {number} */ min, /** @type {number} */ max) => {
   const number = Math.floor(Number(value));

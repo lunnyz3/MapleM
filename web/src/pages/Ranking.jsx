@@ -402,8 +402,7 @@ function readCollectedQuery() {
     family: String(params.get("family") || "").slice(0, 60),
     world: WORLDS.includes(worldParam) ? worldParam : "",
     page: Math.max(1, Math.min(500, Math.floor(Number(params.get("page")) || 1))),
-    // 기본은 문장 제외(문장 점수가 잠재·추옵보다 커서 옵션 비교가 흐려진다).
-    noEmblem: params.get("emblem") !== "with",
+    noEmblem: params.get("emblem") === "without",
     metric: SPEC_METRICS.some((entry) => entry.id === metric) ? metric : SPEC_METRICS[0].id
   };
 }
@@ -414,7 +413,7 @@ function collectedUrl(view, query) {
   if (view === "item") {
     params.set("slot", query.slot);
     if (query.family) params.set("family", query.family);
-    if (!query.noEmblem) params.set("emblem", "with");
+    if (query.noEmblem) params.set("emblem", "without");
   } else {
     params.set("metric", query.metric);
   }

@@ -210,8 +210,8 @@ export function ItemRanking({ query, onQuery }) {
             value={query.noEmblem ? "without" : "with"}
             onChange={(value) => onQuery({ noEmblem: value === "without", page: 1 })}
             options={[
-              { value: "without", label: "문장 제외" },
-              { value: "with", label: "문장 포함" }
+              { value: "with", label: "문장 포함" },
+              { value: "without", label: "문장 제외" }
             ]}
           />
         </div>

@@ -253,7 +253,39 @@ async function findSpecs(worldName, names) {
     .lean();
 }
 
+const SUMMARY_METRICS = ["itemScore", "potential", "additionalPotential", "combatPower"];
+const specTotalCache = new TtlLruCache({ maxEntries: 50, maxBytes: 64 * 1024 });
+
+/**
+ * One character's stored spec with its place among every collected character:
+ * { spec, ranks: { itemScore: { rank, total }, … } } or null.
+ */
+async function rankSpec(worldName, characterName) {
+  if (!isMongoConnected()) return null;
+  const spec = await CharacterSpec.findOne({ worldName, characterName, scoreVersion: SCORE_VERSION })
+    .select({ _id: 0, ocid: 0, source: 0 })
+    .maxTimeMS(DB_TIMEOUT_MS)
+    .lean();
+  if (!spec) return null;
+  const ranks = {};
+  await Promise.all(
+    SUMMARY_METRICS.map(async (field) => {
+      const value = Number(spec[field]);
+      if (!(value > 0)) return;
+      let total = specTotalCache.get(field);
+      if (total === undefined) {
+        total = await CharacterSpec.countDocuments({ [field]: { $gt: 0 }, scoreVersion: SCORE_VERSION }).maxTimeMS(DB_TIMEOUT_MS);
+        specTotalCache.set(field, total, GROUP_TOTAL_TTL_MS, 32);
+      }
+      const above = await CharacterSpec.countDocuments({ [field]: { $gt: value }, scoreVersion: SCORE_VERSION }).maxTimeMS(DB_TIMEOUT_MS);
+      ranks[field] = { rank: above + 1, total: Math.max(total, above + 1) };
+    })
+  );
+  return { spec, ranks };
+}
+
 module.exports = {
+  rankSpec,
   findSpecs,
   recordCharacterItems,
   rankCharacterItems,
