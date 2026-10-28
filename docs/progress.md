@@ -97,6 +97,16 @@
 - 넥슨 랭킹은 상위 1만 명뿐(레벨 랭킹은 283레벨에서 끝, 월드 필터도 같은 1만 명 안). 그래서 `scripts/data/sweep-characters.js`: 캐릭터 랭킹 5종(2만 4천 명) + 그 길드·길드 랭킹 길드 3,531개를 모두 열어 길드원까지 → 149,570명. 레벨 제한 없음(운영자: "길드 전부 다 훑어서 사람 다 db에").
 - DB 크기 관리: 대량 수집(매일 수집·훑기)은 순위 계열 장비만 저장(`rankedOnly`), 사이트 조회는 모든 장비 저장(비교 화면용).
 
+### 13. 템환산 v4·길드원 전투력 순위·해방 계산기 — `70df2e3` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 운영자 요청: 149,570명 장비 전부 저장, 04시 수집은 전투력 1만 명 유지, 앱솔랩스는 아이템 랭킹에서 제외, 보공 3줄이 2줄보다 낮은 이유, 마스터리 규칙(잠재 1개 = +2%, 방무 제외 / 추옵 방무 영원한 +1.6·강환 +1.2), 해방 날짜 계산기, 길드원 전투력 순위.
+- 보공 3줄 < 2줄 원인: 방어구는 기본 옵션이 방어력뿐이라 0점이고, 문장(Lv.10 약 67점)이 잠재(보공 3줄 약 25점)보다 크다. → 랭킹 기본을 "문장 제외"로, 행마다 항목별 점수(기본·추옵·잠재·에디·소울·문장) 표시.
+- 템환산 v4: v3 가중치 그대로, 마스터리 상승분을 빼고 센다. 마스터리 정보가 없는 장비(착용하지 않은 프리셋)는 확률표에 없는 값이 상승량 1~2개를 빼면 맞을 때 마스터리로 추정(`public/js/features/item-share.js` inferBonusSplit, 화면 "+4%" 표시도 같이). 여러 개가 맞으면 적게 뺀다(어깨 16.40% → 14.40%도 표에 있어 +2로 봄).
+- 순위 계열: 제네시스·아케인셰이드.
+- 저장: 대량 수집도 모든 장비 저장. 백업(`/home/jhc/maplem-mongo/mongo-local.js`, 저장소 `scripts/ops/mongo-local.js`)에서 equipment_items·character_specs 제외(다시 모으면 되는 데이터). 이전 백업 스크립트는 `mongo-local.js.bak-2026-10-29`.
+- 길드: "전투력 순위" 탭(`POST /api/v2/specs`), 훑기에서 전투력 랭킹 밖 캐릭터는 stat 조회로 전투력을 채운다.
+- 계산기 "해방": `src/game-data/liberation.json`, `web/src/lib/liberation.mjs`(테스트 `test/liberation.test.js`, 조사 예시 215/주·350/월 → 2027-09-02, 309일과 일치). 캐릭터를 불러와 제네시스 무기면 "해방 완료".
+- 훑기 재실행(--force) 진행: 149,570명, 넥슨 약 40만 건 예상.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
