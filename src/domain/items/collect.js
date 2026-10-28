@@ -7,7 +7,6 @@ const crypto = require("crypto");
 const { fillPresetMasteryInfo } = require("../../transform/equipment-mastery");
 const { parseOption } = require("../stats/text");
 const { scoreItem, itemGroup, attackTypeOfItems } = require("./score");
-const { masteryBonusLines, withoutMastery } = require("./mastery");
 
 function toArray(value) {
   return Array.isArray(value) ? value : [];
@@ -43,12 +42,12 @@ function hasName(item) {
   return Boolean(String(item?.item_name || "").trim());
 }
 
-// Potential sum = 보스 공격력 + the attack type's 대미지 % (rolled values, mastery bonuses taken off).
+// Potential sum = 보스 공격력 + the attack type's 대미지 %.
 function potentialSum(entries, field, attackType) {
   const damageKey = attackType === "magical" ? "magicalDamagePercent" : "physicalDamagePercent";
   let sum = 0;
   entries.forEach((entry) => {
-    toArray(entry.rolled?.[field]).forEach((option) => {
+    toArray(entry.item?.[field]).forEach((option) => {
       parseOption(option).forEach((entry) => {
         if (entry.key === "bossDamage" || entry.key === damageKey) sum += entry.value;
       });
@@ -63,7 +62,7 @@ function potentialSum(entries, field, attackType) {
  *   items: [{ fingerprint, item, slot, family, label, score, scoreWithoutEmblem, worn }]
  *   best: preset with the highest score sum (ties → lower preset number), with sums for ranking
  */
-async function collectCharacterItems(itemData) {
+function collectCharacterItems(itemData) {
   const data = fillPresetMasteryInfo(itemData || {}) || {};
   const worn = toArray(data.item_equipment).filter(hasName);
   const presets = toArray(data.equipment_preset)
@@ -83,21 +82,8 @@ async function collectCharacterItems(itemData) {
   worn.forEach((item) => add(item, true));
   const presetSets = presets.map((preset) => ({ no: preset.no, items: preset.items, fingerprints: preset.items.map((item) => add(item, false)) }));
   for (const entry of byFingerprint.values()) {
-    let masteryLines = null;
-    try {
-      masteryLines = await masteryBonusLines(entry.item, { attackType, className: data.character_class });
-    } catch {
-      // Unknown split: score the displayed values.
-      masteryLines = null;
-    }
     const group = itemGroup(entry.item);
-    Object.assign(entry, {
-      slot: group.slot,
-      family: group.family,
-      label: group.label,
-      rolled: withoutMastery(entry.item, masteryLines),
-      ...scoreItem(entry.item, attackType, masteryLines)
-    });
+    Object.assign(entry, { slot: group.slot, family: group.family, label: group.label, ...scoreItem(entry.item) });
   }
   if (!presetSets.length && worn.length) {
     presetSets.push({ no: Number(data.use_preset_no) || 1, items: worn, fingerprints: worn.map(itemFingerprint) });
@@ -118,7 +104,7 @@ async function collectCharacterItems(itemData) {
     }
   });
 
-  return { attackType, items: [...byFingerprint.values()].map(({ rolled, ...entry }) => entry), best };
+  return { attackType, items: [...byFingerprint.values()], best };
 }
 
 module.exports = { collectCharacterItems, itemFingerprint };

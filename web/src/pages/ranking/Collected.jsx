@@ -1,4 +1,4 @@
-// 자체 수집 랭킹: 아이템(아케인셰이드·앱솔랩스, 무기 종류·방어구 부위별 템환산 순위)과
+// 자체 수집 랭킹: 아이템(제네시스·아케인셰이드·앱솔랩스, 무기 종류·방어구 부위별 템환산 순위)과
 // 스펙(템환산·잠재·에디·최대 대미지·전투력).
 // 사이트에서 조회된 캐릭터 + 매일 모으는 전투력 랭킹 1만 명이 대상이다.
 import "../../styles/collected.css";
@@ -19,7 +19,7 @@ import { EquipDetail } from "../character/Equipment.jsx";
 
 /** 부위 순서(장비창 순). 서버에 있는 부위만 보여 준다. */
 /** 순위를 매기는 계열과 방어구 부위(무기는 무기 종류별). 서버 item-score.json 과 같다. */
-const FAMILIES = ["아케인셰이드", "앱솔랩스"];
+const FAMILIES = ["제네시스", "아케인셰이드", "앱솔랩스"];
 const ARMOR_SLOTS = ["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토"];
 const WEAPON_TAB = "무기";
 
@@ -152,16 +152,21 @@ export function ItemRanking({ query, onQuery }) {
   // "무기"만 고른 상태면 가장 많은 무기 종류부터 보여 준다.
   const slot = query.slot === WEAPON_TAB ? weaponTypes[0]?.slot || "" : query.slot;
   const isWeapon = slot ? !ARMOR_SLOTS.includes(slot) : query.slot === WEAPON_TAB;
-  const family = FAMILIES.includes(query.family) ? query.family : FAMILIES[0];
-
   const familyUrl = slot ? `/api/v2/item-ranking/groups?${new URLSearchParams({ slot, world_name: query.world })}` : "";
   const familyState = useJson(familyUrl, familyUrl);
   const familyCounts = new Map((familyState.data?.families || []).map((entry) => [entry.family, entry.count]));
+  // 제네시스는 무기뿐이다. 고르지 않았거나 이 부위에 없는 계열이면 장비가 있는 첫 계열.
+  const familyOptions = FAMILIES.filter((name) => isWeapon || name !== "제네시스");
+  const family =
+    familyOptions.includes(query.family) && (familyCounts.get(query.family) || !familyState.data)
+      ? query.family
+      : familyOptions.find((name) => familyCounts.get(name)) || familyOptions.find((name) => name === "아케인셰이드") || familyOptions[0];
 
   const listParams = new URLSearchParams({ slot, family, page: String(query.page) });
   if (query.world) listParams.set("world_name", query.world);
   if (query.noEmblem) listParams.set("sort", "scoreWithoutEmblem");
-  const listUrl = slot ? `/api/v2/item-ranking?${listParams}` : "";
+  // 계열 개수를 받은 뒤에 목록을 불러온다(없는 계열을 먼저 부르지 않게).
+  const listUrl = slot && familyState.status !== "loading" ? `/api/v2/item-ranking?${listParams}` : "";
   const list = useJson(listUrl, listUrl);
 
   const topItems = [WEAPON_TAB, ...ARMOR_SLOTS.filter((name) => allSlots.some((entry) => entry.slot === name))].map((name) => ({ id: name, label: name }));
@@ -187,7 +192,7 @@ export function ItemRanking({ query, onQuery }) {
             legend="계열"
             value={family}
             onChange={(value) => onQuery({ family: value, page: 1 })}
-            options={FAMILIES.map((name) => ({ value: name, label: familyCounts.has(name) ? `${name} ${formatComma(familyCounts.get(name))}` : name }))}
+            options={familyOptions.map((name) => ({ value: name, label: familyCounts.has(name) ? `${name} ${formatComma(familyCounts.get(name))}` : name }))}
           />
           <Segmented
             name="crk-emblem"

@@ -10,7 +10,8 @@ const { createItemCollector } = require("../services/item-collection.service");
 
 const itemEquipmentPath = "/maplestorym/v1/character/item-equipment";
 
-const itemCollector = createItemCollector({
+/** Nexon/MongoDB dependencies shared by the daily job and one-off sweeps (scripts/data). */
+const collectorDeps = {
   isAvailable: () => env.itemCollectionEnabled && mongoose.connection.readyState === 1,
   fetchRankingPage: async (date, page) => {
     const result = await getRankingCombatPower({ date, page });
@@ -32,10 +33,14 @@ const itemCollector = createItemCollector({
       combatPower: row.character_combat_power,
       source: "ranking"
     });
-    await observeCombatPower(ocid, [
-      { value: row.character_combat_power, observedAt: rankingObservedAt(row.date), source: "ranking" }
-    ]);
+    if (row.character_combat_power && row.date) {
+      await observeCombatPower(ocid, [
+        { value: row.character_combat_power, observedAt: rankingObservedAt(row.date), source: "ranking" }
+      ]);
+    }
   }
-});
+};
 
-module.exports = { itemCollector };
+const itemCollector = createItemCollector(collectorDeps);
+
+module.exports = { itemCollector, collectorDeps };

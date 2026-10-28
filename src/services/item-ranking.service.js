@@ -15,7 +15,7 @@ const MAX_PAGE = 500;
 const groupTotalCache = new TtlLruCache({ maxEntries: 2000, maxBytes: 1024 * 1024 });
 const GROUP_TOTAL_TTL_MS = 10 * 60 * 1000;
 
-// Armor slots of the ranked families; every other ranked slot is a weapon type.
+// Armor slots of the ranked families (제네시스 is weapons only); every other ranked slot is a weapon type.
 const ARMOR_SLOTS = new Set(["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토"]);
 
 const SPEC_METRICS = Object.freeze({
@@ -56,7 +56,7 @@ async function recordCharacterItems({
 }) {
   const key = String(ocid || "").trim();
   if (!key || !itemData || !isMongoConnected()) return null;
-  const collected = await collectCharacterItems(itemData);
+  const collected = collectCharacterItems(itemData);
   if (!collected.items.length) return null;
 
   const owner = {

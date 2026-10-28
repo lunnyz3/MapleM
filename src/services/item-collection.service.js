@@ -15,6 +15,8 @@ function shiftDate(dateText, days) {
 
 function createItemCollector({
   fetchRankingPage,
+  // Optional: (today) => { date, rows } replacing the combat-power ranking as the list to collect.
+  loadRows = null,
   resolveOcid,
   fetchItems,
   record,
@@ -72,7 +74,7 @@ function createItemCollector({
     status = { state: "running", date: today, rankingDate: null, total: 0, saved: 0, skipped: 0, failed: 0, startedAt: new Date(now()).toISOString(), finishedAt: null, error: null };
     try {
       if (!isAvailable()) throw new Error("storage unavailable");
-      const { date, rows } = await loadRanking(today);
+      const { date, rows } = loadRows ? await loadRows(today) : await loadRanking(today);
       status.rankingDate = date;
       status.total = rows.length;
       const startOfDay = new Date(Date.parse(`${today}T00:00:00+09:00`));
