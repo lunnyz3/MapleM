@@ -65,6 +65,15 @@
 - 운영 점검: 두 API 정상, 미리보기 3화면·기존 캐릭터 화면 콘솔 오류 0·가로 넘침 0.
 - 다음 후보: 랭킹 순위 변동(일일 랭킹 저장 필요), 캐릭터 페이지 og 메타, 새 화면에 캐시 장비·안드로이드, 새 화면을 기본 경로로 전환(운영자 확인), 스탯 환산·캐릭터 비교·보스 입장 전투력·HEXA 계산기.
 
+### 9. 아이템·스펙 랭킹 운영 반영 — `33bdf42`(main, push 안 함) + 미리보기 빌드 복사 + `pm2 restart maplem` (2026-10-28, 운영자 승인)
+- 장비 점수(템환산): 장비 한 개의 옵션을 기준 캐릭터에 더했을 때 계산 전투력이 오르는 비율, 1점 = +0.1%. 기준 캐릭터 = 조회된 843명의 보스 세팅 합계 중앙값(`src/game-data/item-score.json`, version 1). 소울 제외, 문장은 "문장 포함" 점수에만.
+- 순위 묶음: 부위(슬롯 번호 제외) + 계열(제네시스·아케인셰이드·앱솔랩스·루타비스·펜살리르·무스펠·도전자, 없으면 아이템 이름). 툴팁에 "템환산 943 · 아케인셰이드 무기 240개 중 74등 상위 31%", 카톡 공유 문구 앞에도 같은 순위.
+- 잠재·에디·추옵 배지 문구는 "상위 X%" → "확률 X%"(운영자 지적: 등수가 아니라 확률). 진짜 "상위 %"는 위 순위.
+- 저장: `equipment_items`(캐릭터별 보유 장비, 착용+프리셋 중복 제거) · `character_specs`(템환산 합·잠재·에디·최대 대미지·전투력). 둘 다 30일 TTL. 조회(page-data·character/all·길드원 수집)마다 기록.
+- 매일 수집: 전투력 랭킹 1만 명의 item-equipment(넥슨 /id + item-equipment = 2건/명, 하루 약 2만 건, 키는 live_ 서비스 단계). 04:00 KST, 재시작 시 그날 미완료면 5분 뒤. 상태 `GET /api/v2/item-collection`. `ITEM_COLLECTION_ENABLED=false`로 끔(로컬 실행기는 기본 끔).
+- API: `/api/v2/item-ranks?ocid=`, `/api/v2/item-ranking(/groups)`, `/api/v2/spec-ranking`. 화면: 랭킹 → 공식 랭킹/아이템/스펙 전환.
+- 초기 데이터: `node scripts/data/seed-item-ranking.js --target production`(최근 30일 조회 387명).
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
