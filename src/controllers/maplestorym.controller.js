@@ -2391,10 +2391,18 @@ async function getAllCharacterDetails(req, res) {
     }
 
     if (String(req.query.include_combat_power || "") === "1") {
-      responsePayload.combatPowerHistory = await resolveStoredCombatPowerByOcid(ocid, {
-        characterName: details?.basic?.data?.character_name || characterName,
-        worldNameCanonical
-      });
+      // Use the same observation store and ranking source as the character page.
+      // RequestLog alone can contain only the character's low farming-preset value.
+      const ranking = await resolveRankingCombatPowerByOcid(ocid, { days: 2 });
+      const power = await observeCombatPower(ocid, [
+        { value: readStatValue(details?.stat?.data, "전투력"), source: "stat" },
+        ranking && { value: ranking.value, observedAt: rankingObservedAt(ranking.date), source: "ranking" }
+      ]);
+      responsePayload.combatPowerHistory = {
+        windowHours: 24,
+        ...power,
+        status: power.value !== null ? "ok" : isMongoConnected() ? "no_records" : "unavailable"
+      };
     }
 
     responsePayload.meta = {

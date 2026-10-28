@@ -7,6 +7,7 @@ const path = require("node:path");
 // or database writes. Each test file runs in its own process.
 const service = require("../src/services/maplestorym.service");
 const statsModule = require("../src/domain/stats");
+const powerService = require("../src/services/combat-power.service");
 const { env } = require("../src/config/env");
 const mongoose = require("mongoose");
 const { RequestLog } = require("../src/models/request-log.model");
@@ -15,6 +16,13 @@ env.guildCollectionEnabled = false;
 let fixture;
 let engineFailure = false;
 let saveSucceeds = false;
+let storedPower = null;
+let observations = [];
+powerService.observeCombatPower = async (ocid, values) => {
+  observations = values;
+  const value = storedPower ?? Math.max(...values.filter(Boolean).map((entry) => Number(entry.value) || 0));
+  return { value, observedAt: new Date().toISOString() };
+};
 const buildStats = statsModule.buildCharacterStats;
 statsModule.buildCharacterStats = (...args) => {
   if (engineFailure) throw new Error("fixture engine failure");
@@ -31,6 +39,7 @@ service.getCharacterByOcid = async (endpoint) => {
 };
 service.getGuildId = async () => result(fixture.details.guildId.data);
 service.getGuildBasic = async () => result(fixture.details.guildBasic.data);
+service.getRankingCombatPower = async () => result({ ranking: [{ character_combat_power: 192215561, ranking: 1886 }] });
 service.saveRequestLog = async () => saveSucceeds ? { _id: "fixture-snapshot" } : null;
 const { getAllCharacterDetails, guildCollector, getGuildCollectionStatus } = require("../src/controllers/maplestorym.controller");
 
@@ -139,6 +148,17 @@ test("/all returns the saved 24-hour maximum when only combat power is requested
   assert.equal(body.stats, undefined);
   assert.equal(body.combatPowerHistory.value, 192215561);
   assert.equal(body.combatPowerHistory.status, "ok");
+  assert.ok(observations.some((entry) => entry?.source === "ranking" && entry.value === 192215561));
+});
+
+test("bot combat power uses the homepage observation store instead of only low farming snapshots", async (t) => {
+  fixture = loadFixture("유니온-피카츄.json");
+  storedPower = 310793738;
+  t.after(() => { storedPower = null; });
+  const body = await request(undefined, "1");
+  assert.equal(body.combatPowerHistory.value, 310793738);
+  assert.equal(body.combatPowerHistory.windowHours, 24);
+  assert.ok(observations.some((entry) => entry?.source === "stat"));
 });
 
 test("a stat-engine error preserves raw details and reports no fabricated stats", async (t) => {
