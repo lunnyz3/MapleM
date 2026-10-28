@@ -6,6 +6,7 @@ const {
   getCharacterPageData,
   getCharacterExpHistory,
   getCharacterLogStatus,
+  getGuildCollectionStatus,
   getCharacterBasic,
   getCharacterStat,
   getCharacterHyperStat,
@@ -54,6 +55,7 @@ router.get("/user/union", getUserUnionController);
 router.get("/user/union-raider", getUserUnionRaiderController);
 router.get("/guild/id", getGuildIdController);
 router.get("/guild/basic", getGuildBasicController);
+router.get("/guild/collection-status", getGuildCollectionStatus);
 router.get("/character/item-equipment", getCharacterItemEquipment);
 router.get("/character/cashitem-equipment", getCharacterCashItemEquipment);
 router.get("/character/symbol", getCharacterSymbol);

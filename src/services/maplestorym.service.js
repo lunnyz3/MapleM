@@ -118,8 +118,12 @@ function isStorageQuotaError(error) {
 
 // Request logs are best-effort: a failed write (e.g. Atlas blocking writes once the
 // storage quota is full) must never turn a successful Nexon response into a 500.
+function canSaveRequestLogs() {
+  return mongoose.connection.readyState === 1 && Date.now() >= requestLogWritesSuspendedUntil;
+}
+
 async function saveRequestLog(entry) {
-  if (mongoose.connection.readyState !== 1 || Date.now() < requestLogWritesSuspendedUntil) {
+  if (!canSaveRequestLogs()) {
     return null;
   }
 
@@ -153,7 +157,9 @@ async function writeRequestLog({
   const logMode = responseBody?.mode ? String(responseBody.mode) : "";
   const throttleMs = Number.isFinite(env.mongoLogThrottleMs) ? Math.max(0, env.mongoLogThrottleMs) : 120000;
 
-  if (["all", "page-data"].includes(logMode) && normalizedCharacterName && normalizedWorldName) {
+  // Failed or partial lookups must not replace the last good daily snapshot.
+  // They follow the throttled error-log path below instead.
+  if (["all", "page-data"].includes(logMode) && normalizedCharacterName && normalizedWorldName && success && statusCode >= 200 && statusCode < 300) {
     const now = new Date();
     const kstDate = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Seoul",
@@ -250,6 +256,7 @@ function getNexonClientStats() {
 }
 
 module.exports = {
+  canSaveRequestLogs,
   getNexonClientStats,
   getCharacterOcid,
   getCharacterByOcid,
