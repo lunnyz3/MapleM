@@ -88,6 +88,10 @@ function defaultTtlMs(path, params, now) {
   if (path.endsWith("/id") || path.endsWith("/guild/id")) {
     return 6 * 60 * 60 * 1000;
   }
+  // Notices change a few times a day.
+  if (path.includes("/notice")) {
+    return 10 * 60 * 1000;
+  }
   if (path.includes("/ranking/")) {
     const date = String(params?.date || "");
     const isPastDate = date && date < toKstDateText(now);

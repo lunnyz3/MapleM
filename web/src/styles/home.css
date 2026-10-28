@@ -566,3 +566,73 @@
   padding: 0 5px;
   font-size: 10.5px;
 }
+
+/* ================= 소식(넥슨 공지·패치 노트·이벤트) ================= */
+.home-data > .news-card {
+  grid-column: 1 / -1;
+}
+
+.news-card__panel {
+  margin-top: var(--sp-3);
+}
+
+.news-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--sp-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.news-list > li {
+  border-bottom: 1px solid var(--border);
+}
+
+.news-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.news-row__date {
+  min-width: 3.2em;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.news-row__title {
+  overflow: hidden;
+  font-size: var(--fs-14);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.news-row__go {
+  color: var(--text-subtle);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--dur-hover) var(--ease), transform var(--dur-hover) var(--ease);
+}
+
+.news-row:hover .news-row__title {
+  color: var(--primary);
+}
+
+.news-row:hover .news-row__go,
+.news-row:focus-visible .news-row__go {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 719px) {
+  .news-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

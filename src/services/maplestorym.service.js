@@ -56,6 +56,11 @@ async function getCharacterByOcid(endpointPath, ocid, options) {
   return requestNexon(endpointPath, { ocid }, options);
 }
 
+// Nexon notice lists: "notice" (공지), "notice-patch" (패치 노트), "notice-event" (이벤트).
+async function getNoticeList(kind) {
+  return requestNexon(`/maplestorym/v1/${kind}`, {});
+}
+
 async function getUserUnion(ocid) {
   return requestNexon(unionEndpointPath, { ocid });
 }
@@ -257,6 +262,7 @@ function getNexonClientStats() {
 }
 
 module.exports = {
+  getNoticeList,
   canSaveRequestLogs,
   getNexonClientStats,
   getCharacterOcid,

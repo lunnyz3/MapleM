@@ -1,4 +1,4 @@
-// 새 메인: 검색 · 내 캐릭터(즐겨찾기·최근 검색) · 랭킹 미리보기 · 랭킹 바로가기.
+// 새 메인: 검색 · 내 캐릭터(즐겨찾기·최근 검색) · 랭킹 미리보기 · 랭킹 바로가기 · 소식(넥슨 공지·패치 노트·이벤트).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
 import { Card } from "../components/Card.jsx";
@@ -13,7 +13,7 @@ import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { TabPanel, Tabs } from "../components/Tabs.jsx";
-import { loadRanking, peekRanking } from "../lib/api.js";
+import { getJson, loadRanking, peekRanking } from "../lib/api.js";
 import { formatComma, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
 import { RANKING_TYPES, detailUrl, getRankingType, urls } from "../lib/game.js";
 import { addRecent, clearRecent, entryKey, getSaved, removeRecent, toggleFavorite, useSaved } from "../lib/storage.js";
@@ -322,6 +322,58 @@ function RankingPreview() {
   );
 }
 
+const NEWS_TABS = [
+  { id: "patch", label: "패치 노트" },
+  { id: "event", label: "이벤트" },
+  { id: "notice", label: "공지" }
+];
+
+/** "2026-10-28T10:00+09:00" → "10.28" */
+const monthDay = (/** @type {string} */ date) => (/^\d{4}-(\d{2})-(\d{2})/.exec(date) || []).slice(1).join(".");
+
+/** 넥슨 공지·패치 노트·이벤트 최신 목록(제목을 누르면 넥슨 공식 페이지). */
+function NewsCard() {
+  const [tab, setTab] = useState("patch");
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", data?: any }} */ ({ status: "loading" }));
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setState({ status: "loading" });
+    getJson("/api/v2/notices").then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", data: body } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [attempt]);
+  const rows = state.status === "ready" ? state.data[tab] || [] : [];
+
+  return (
+    <Card class="news-card" title="소식" icon="info" tone="mint">
+      <Tabs idBase="news" label="소식 종류" value={tab} onChange={setTab} items={NEWS_TABS} />
+      <TabPanel idBase="news" value={tab} busy={state.status === "loading"} class="news-card__panel">
+        {state.status === "loading" ? <SkeletonList rows={4} /> : null}
+        {state.status === "error" ? <ErrorState compact title="소식을 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} /> : null}
+        {state.status === "ready" && !rows.length ? <EmptyState compact title="새 소식이 없어요" /> : null}
+        {rows.length ? (
+          <ul class="news-list stagger-in">
+            {rows.map((row, index) => (
+              <li key={row.url} style={{ "--stagger": index }}>
+                <a class="news-row" href={row.url} target="_blank" rel="noopener noreferrer">
+                  <span class="news-row__date num">{monthDay(row.date)}</span>
+                  <span class="news-row__title">{row.title}</span>
+                  <Icon name="external" size={16} class="news-row__go" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </TabPanel>
+    </Card>
+  );
+}
+
 export function Home() {
   return (
     <div class="home">
@@ -332,6 +384,7 @@ export function Home() {
       <div class="home-data">
         <RankingPreview />
         <RankingShortcuts />
+        <NewsCard />
       </div>
     </div>
   );
