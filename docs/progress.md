@@ -66,7 +66,7 @@
 - 다음 후보: 랭킹 순위 변동(일일 랭킹 저장 필요), 캐릭터 페이지 og 메타, 새 화면에 캐시 장비·안드로이드, 새 화면을 기본 경로로 전환(운영자 확인), 스탯 환산·캐릭터 비교·보스 입장 전투력·HEXA 계산기.
 
 ### 9. 아이템·스펙 랭킹 운영 반영 — `33bdf42`(main, push 안 함) + 미리보기 빌드 복사 + `pm2 restart maplem` (2026-10-28, 운영자 승인)
-- 장비 점수(템환산): 장비 한 개의 옵션을 기준 캐릭터에 더했을 때 계산 전투력이 오르는 비율, 1점 = +0.1%. 기준 캐릭터 = 조회된 843명의 보스 세팅 합계 중앙값(`src/game-data/item-score.json`, version 1). 소울 제외, 문장은 "문장 포함" 점수에만.
+- 장비 점수(템환산, v1 — 11번에서 옵션만 세도록 바뀜): 장비 한 개의 옵션을 기준 캐릭터에 더했을 때 계산 전투력이 오르는 비율, 1점 = +0.1%. 기준 캐릭터 = 조회된 843명의 보스 세팅 합계 중앙값(`src/game-data/item-score.json`, version 1). 소울 제외, 문장은 "문장 포함" 점수에만.
 - 순위 묶음: 부위(슬롯 번호 제외) + 계열(제네시스·아케인셰이드·앱솔랩스·루타비스·펜살리르·무스펠·도전자, 없으면 아이템 이름). 툴팁에 "템환산 943 · 아케인셰이드 무기 240개 중 74등 상위 31%", 카톡 공유 문구 앞에도 같은 순위.
 - 잠재·에디·추옵 배지 문구는 "상위 X%" → "확률 X%"(운영자 지적: 등수가 아니라 확률). 진짜 "상위 %"는 위 순위.
 - 저장: `equipment_items`(캐릭터별 보유 장비, 착용+프리셋 중복 제거) · `character_specs`(템환산 합·잠재·에디·최대 대미지·전투력). 둘 다 30일 TTL. 조회(page-data·character/all·길드원 수집)마다 기록.
@@ -82,6 +82,13 @@
 - 캐릭터 비교 `/preview/compare?a=월드/이름&b=월드/이름`: 보스 세팅 주요 스탯, 부위별 보스 프리셋 장비와 템환산. 상단 메뉴 "비교", 캐릭터 화면 "비교" 버튼.
 - 계산기 `/preview/calc`: HEXA 강화 기간(코어별 현재→목표, 기운·조각 수급, 병목), HEXA 스탯 기대값(20회 판 단위, 목표에 닿을 수 없으면 초기화로 보는 동적 계획법, 이벤트 ×1.2), 심볼 비용(성장치 제외). 캐릭터 불러오기로 지금 레벨 채움. 수치는 `src/game-data/hexa.json`·`symbol-costs.json`, 계산은 `web/src/lib/hexaCalc.mjs`(테스트 `test/hexa-calc.test.js`).
 - 홈 소식: `GET /api/v2/notices`(넥슨 공지·패치 노트·이벤트 최신 6개, 10분 캐시).
+
+### 11. 템환산 v2·아이템 랭킹 범위 변경 — `fe4a3f1` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 운영자 지적: "무기 964·갑옷 16은 물공·마공 때문 아니냐, 잠재·추옵 같은 옵션이 높아야 한다", "아이템 랭킹은 아케인셰이드·앱솔랩스만, 무기 종류마다, 월드 유지".
+- 점수(item-score.json version 2): 추가 옵션·잠재·에디셔널·문장만 센다. 기본 옵션(아이템 기본 공격력·스타포스·무기 마스터리)은 뺀다. 장비 마스터리로 오른 값은 빼고 센다 — 줄별 분배는 확률 계산 모듈(`public/js/features/item-share.js`)을 서버에서 그대로 불러 쓴다(`src/domain/items/mastery.js`).
+- 순위: 아케인셰이드·앱솔랩스만. 무기는 무기 종류(page name)별, 방어구는 부위별. 그 밖의 장비는 family "" 로 저장만(스펙 템환산 합에는 들어감).
+- 넥슨은 착용 중인 장비에만 mastery_info 를 주므로, 착용하지 않은 프리셋 장비는 마스터리를 알 수 없어 표시된 값으로 센다.
+- 읽기는 scoreVersion 이 현재 값인 행만. 배포 후 `seed-item-ranking.js --target production` + `scripts/data/collect-items-now.js --force`(1만 명 다시 수집)로 채움.
 
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
