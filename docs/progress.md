@@ -74,6 +74,15 @@
 - API: `/api/v2/item-ranks?ocid=`, `/api/v2/item-ranking(/groups)`, `/api/v2/spec-ranking`. 화면: 랭킹 → 공식 랭킹/아이템/스펙 전환.
 - 초기 데이터: `node scripts/data/seed-item-ranking.js --target production`(최근 30일 조회 387명).
 
+- 첫 매일 수집(2026-10-29 00:01 KST, 10-28 랭킹 기준): 1만 명 중 9,973명 저장, 실패 10, 21분.
+
+### 10. 캐릭터 도구 묶음 운영 반영 — `5a3b3a4`(main, push 안 함) + 미리보기 빌드 복사 + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 스탯 효율 탭: 서버와 같은 전투력 공식(`src/game-data/combat-power.json`)으로 "기준 스탯 +N → 전투력 +X(%)", 같은 효과를 내는 다른 스탯의 양, 하나씩 올릴 때 효율 순위. 보스 세팅/현재 착용·직접 입력 반영값 기준.
+- 보스 탭: `src/game-data/boss-entry.json`(28개, 카링 포함). 입장 = 레벨 ≥ 입장 레벨 그리고 전투력(최근 24시간 최고) ≥ 입장 전투력. 권장 전투력 충족 따로 표시.
+- 캐릭터 비교 `/preview/compare?a=월드/이름&b=월드/이름`: 보스 세팅 주요 스탯, 부위별 보스 프리셋 장비와 템환산. 상단 메뉴 "비교", 캐릭터 화면 "비교" 버튼.
+- 계산기 `/preview/calc`: HEXA 강화 기간(코어별 현재→목표, 기운·조각 수급, 병목), HEXA 스탯 기대값(20회 판 단위, 목표에 닿을 수 없으면 초기화로 보는 동적 계획법, 이벤트 ×1.2), 심볼 비용(성장치 제외). 캐릭터 불러오기로 지금 레벨 채움. 수치는 `src/game-data/hexa.json`·`symbol-costs.json`, 계산은 `web/src/lib/hexaCalc.mjs`(테스트 `test/hexa-calc.test.js`).
+- 홈 소식: `GET /api/v2/notices`(넥슨 공지·패치 노트·이벤트 최신 6개, 10분 캐시).
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
