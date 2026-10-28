@@ -1,0 +1,457 @@
+{
+  "_meta": {
+    "description": "보스 입장 조건(입장 레벨·입장 전투력)과 방어율·권장 전투력. 입장 가능 = 캐릭터 레벨 ≥ 입장 레벨 그리고 전투력 ≥ 입장 전투력.",
+    "updatedAt": "2026-10-29",
+    "verification": "게임 클라이언트 데이터 기준(2026-10-15 패치 이후 카링 포함). 패치로 보스가 추가·조정되면 갱신한다."
+  },
+  "bosses": [
+    {
+      "name": "아칸",
+      "difficulty": "노말",
+      "level": 200,
+      "power": 454000,
+      "defense": 0,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 953000,
+        "force": {
+          "type": "아케인",
+          "value": 30
+        }
+      }
+    },
+    {
+      "name": "스우",
+      "difficulty": "노말",
+      "level": 203,
+      "power": 556000,
+      "defense": 0,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 1148000,
+        "force": {
+          "type": "아케인",
+          "value": 80
+        }
+      }
+    },
+    {
+      "name": "데미안",
+      "difficulty": "노말",
+      "level": 205,
+      "power": 749000,
+      "defense": 0,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 1446000,
+        "force": {
+          "type": "아케인",
+          "value": 110
+        }
+      }
+    },
+    {
+      "name": "루시드",
+      "difficulty": "노말",
+      "level": 210,
+      "power": 1147000,
+      "defense": 0,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 2062000,
+        "force": {
+          "type": "아케인",
+          "value": 160
+        }
+      }
+    },
+    {
+      "name": "스우",
+      "difficulty": "하드",
+      "level": 213,
+      "power": 1408000,
+      "defense": 30,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 2468000,
+        "force": {
+          "type": "아케인",
+          "value": 240
+        }
+      }
+    },
+    {
+      "name": "데미안",
+      "difficulty": "하드",
+      "level": 215,
+      "power": 1723000,
+      "defense": 30,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 2948000,
+        "force": {
+          "type": "아케인",
+          "value": 270
+        }
+      }
+    },
+    {
+      "name": "더스크",
+      "difficulty": "노말",
+      "level": 220,
+      "power": 2190000,
+      "defense": 30,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 3650000,
+        "force": {
+          "type": "아케인",
+          "value": 320
+        }
+      }
+    },
+    {
+      "name": "윌",
+      "difficulty": "노말",
+      "level": 225,
+      "power": 3171000,
+      "defense": 40,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 5052000,
+        "force": {
+          "type": "아케인",
+          "value": 400
+        }
+      }
+    },
+    {
+      "name": "루시드",
+      "difficulty": "하드",
+      "level": 225,
+      "power": 4557000,
+      "defense": 40,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 7005000,
+        "force": {
+          "type": "아케인",
+          "value": 400
+        }
+      }
+    },
+    {
+      "name": "더스크",
+      "difficulty": "하드",
+      "level": 230,
+      "power": 5309000,
+      "defense": 40,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 8185000,
+        "force": {
+          "type": "아케인",
+          "value": 480
+        }
+      }
+    },
+    {
+      "name": "아칸",
+      "difficulty": "하드",
+      "level": 230,
+      "power": 6756000,
+      "defense": 50,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 10279000,
+        "force": {
+          "type": "아케인",
+          "value": 660
+        }
+      }
+    },
+    {
+      "name": "윌",
+      "difficulty": "하드",
+      "level": 235,
+      "power": 10918000,
+      "defense": 60,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 16006000,
+        "force": {
+          "type": "아케인",
+          "value": 700
+        }
+      }
+    },
+    {
+      "name": "진 힐라",
+      "difficulty": "노말",
+      "level": 240,
+      "power": 15895000,
+      "defense": 60,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 22907000,
+        "force": {
+          "type": "아케인",
+          "value": 720
+        }
+      }
+    },
+    {
+      "name": "아자젤",
+      "difficulty": "노말",
+      "level": 240,
+      "power": 21422000,
+      "defense": 60,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 30423000,
+        "force": {
+          "type": "아케인",
+          "value": 720
+        }
+      }
+    },
+    {
+      "name": "진 힐라",
+      "difficulty": "하드",
+      "level": 245,
+      "power": 28807000,
+      "defense": 70,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 40483000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "루시드",
+      "difficulty": "카오스",
+      "level": 245,
+      "power": 38333000,
+      "defense": 70,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 55339000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "듄켈",
+      "difficulty": "노말",
+      "level": 245,
+      "power": 51906000,
+      "defense": 70,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 73767000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "윌",
+      "difficulty": "카오스",
+      "level": 245,
+      "power": 73016000,
+      "defense": 70,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 110248000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "아자젤",
+      "difficulty": "하드",
+      "level": 245,
+      "power": 91154000,
+      "defense": 70,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 136504000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "듄켈",
+      "difficulty": "하드",
+      "level": 245,
+      "power": 112308000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 174017000,
+        "force": {
+          "type": "아케인",
+          "value": 880
+        }
+      }
+    },
+    {
+      "name": "선택받은 세렌",
+      "difficulty": "노말",
+      "level": 250,
+      "power": 117654000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 181747000,
+        "force": {
+          "type": "어센틱",
+          "value": 60
+        }
+      }
+    },
+    {
+      "name": "검은 마법사",
+      "difficulty": "노말",
+      "level": 250,
+      "power": 144063000,
+      "defense": 80,
+      "cycle": "월간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 229344000,
+        "force": {
+          "type": "아케인",
+          "value": 1320
+        }
+      }
+    },
+    {
+      "name": "감시자 칼로스",
+      "difficulty": "노말",
+      "level": 255,
+      "power": 173500000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 272194000,
+        "force": {
+          "type": "어센틱",
+          "value": 120
+        }
+      }
+    },
+    {
+      "name": "선택받은 세렌",
+      "difficulty": "하드",
+      "level": 260,
+      "power": 228522000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 353722000,
+        "force": {
+          "type": "어센틱",
+          "value": 170
+        }
+      }
+    },
+    {
+      "name": "검은 마법사",
+      "difficulty": "하드",
+      "level": 265,
+      "power": 306773000,
+      "defense": 80,
+      "cycle": "월간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 461681000,
+        "force": {
+          "type": "아케인",
+          "value": 1320
+        }
+      }
+    },
+    {
+      "name": "감시자 칼로스",
+      "difficulty": "하드",
+      "level": 268,
+      "power": 351328000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 525081000,
+        "force": {
+          "type": "어센틱",
+          "value": 330
+        }
+      }
+    },
+    {
+      "name": "카링",
+      "difficulty": "노말",
+      "level": 280,
+      "power": 423330000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 633373000,
+        "force": {
+          "type": "어센틱",
+          "value": 440
+        }
+      }
+    },
+    {
+      "name": "카링",
+      "difficulty": "하드",
+      "level": 280,
+      "power": 764379000,
+      "defense": 80,
+      "cycle": "주간",
+      "party": "1~6명",
+      "recommend": {
+        "power": 1104117000,
+        "force": {
+          "type": "어센틱",
+          "value": 550
+        }
+      }
+    }
+  ]
+}

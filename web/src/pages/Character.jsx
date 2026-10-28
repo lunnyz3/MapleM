@@ -19,6 +19,7 @@ import { readManual, writeManual } from "../lib/manual.js";
 import { addRecent, entryKey, isFavorite, toggleFavorite, useSaved } from "../lib/storage.js";
 import { Equipment } from "./character/Equipment.jsx";
 import { EfficiencyTab } from "./character/Efficiency.jsx";
+import { BossTab } from "./character/Bosses.jsx";
 import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
 import { ProfileShareButton } from "./character/Share.jsx";
@@ -300,6 +301,7 @@ const TAB_ITEMS = [
   { id: "equipment", label: "장비", icon: "medal" },
   { id: "stats", label: "스탯", icon: "sparkle" },
   { id: "efficiency", label: "스탯 효율", icon: "bolt" },
+  { id: "boss", label: "보스", icon: "swords" },
   { id: "symbol", label: "심볼", icon: "leaf" },
   { id: "hexa", label: "HEXA/V", icon: "bolt" },
   { id: "union", label: "유니온", icon: "union" },
@@ -486,6 +488,7 @@ export function Character({ world, name }) {
               modeLabel={mode === "current" && stats.majorStatsCurrent ? "현재 착용" : "보스 세팅"}
             />
           ) : null}
+          {tab === "boss" ? <BossTab data={data} /> : null}
           {tab === "symbol" ? <SymbolTab data={data} presets={bossPresets} /> : null}
           {tab === "hexa" ? <HexaTab data={data} /> : null}
           {tab === "union" ? <UnionTab data={data} /> : null}
