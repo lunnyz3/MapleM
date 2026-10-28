@@ -965,10 +965,12 @@ function flameOptionKey(name) {
   return normalizeForMatch(String(name || "").replace(/데미지/g, "대미지")).replace(/증가$/, "");
 }
 
+// Mastery points of a section, or null when the API gave no mastery info (Nexon only reports it for
+// worn items; preset copies of unworn items come without it).
 function readMasteryPoints(item, section) {
   const info = item?.masteryInfo || item?.mastery_info;
   if (!info || typeof info !== "object") {
-    return 0;
+    return null;
   }
   for (const key of SECTION_SOURCE[section].pointKeys) {
     const value = Number(info[key]);
@@ -1007,11 +1009,32 @@ function enumerateBonusSplits(lineCount, points, maxPerLine) {
   return splits;
 }
 
+// Without mastery info: a line whose value is not in the table but is once 1 or 2 bonuses are taken
+// off (e.g. +2% / +4% on a legendary potential) carries that many bonuses.
+function inferBonusSplit(lines, maxPerLine) {
+  const split = lines.map((line) => {
+    if (!Number.isFinite(line.increment) || line.fits(line.value) !== false) {
+      return 0;
+    }
+    for (let count = 1; count <= maxPerLine; count += 1) {
+      if (line.fits(roundValue(line.value - count * line.increment)) === true) {
+        return count;
+      }
+    }
+    return 0;
+  });
+  return { split, status: split.some((count) => count > 0) ? "inferred" : "none" };
+}
+
 // Picks the line split. `lines[i]` = { increment: number | null, fits(value) → boolean | null }.
 // fits() returns null when the table cannot tell (unknown option), which never rules a split out.
 // score(split) → probability (higher = less rare); the most conservative surviving split wins.
+// `points` null = mastery info unknown, so the split is inferred line by line.
 function chooseBonusSplit(lines, points, maxPerLine, score) {
   const empty = lines.map(() => 0);
+  if (points === null) {
+    return inferBonusSplit(lines, maxPerLine);
+  }
   if (!points) {
     return { split: empty, status: "none" };
   }

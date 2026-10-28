@@ -1,8 +1,9 @@
-// 계산기(/preview/calc?view=hexa|stat|symbol&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 · 심볼 비용.
-// 캐릭터를 불러오면 지금 레벨을 채운다(HEXA 코어·심볼).
+// 계산기(/preview/calc?view=hexa|stat|symbol|liberation&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 ·
+// 심볼 비용 · 해방 날짜. 캐릭터를 불러오면 지금 레벨을 채운다(HEXA 코어·심볼, 제네시스 무기면 해방 완료).
 import "../styles/calc.css";
 import hexa from "../../../src/game-data/hexa.json";
 import symbolCosts from "../../../src/game-data/symbol-costs.json";
+import liberationRules from "../../../src/game-data/liberation.json";
 import { useMemo, useState } from "preact/hooks";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, SplitText } from "../components/Motion.jsx";
@@ -11,6 +12,7 @@ import { loadCharacterPage } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, kstToday, shiftDate } from "../lib/format.js";
 import { DEFAULT_WORLD, WORLDS } from "../lib/game.js";
 import { daysFor, hexaStatExpectation, sumRange, symbolCost } from "../lib/hexaCalc.mjs";
+import { liberationPlan } from "../lib/liberation.mjs";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
 const ARCANE = ["소멸의 여로", "츄츄 아일랜드", "레헬른", "아르카나", "모라스", "에스페라"];
@@ -349,10 +351,133 @@ function Symbols({ rows, setRows }) {
   );
 }
 
+/** "2027-09-02" → "27.9.2" */
+const shortDate = (/** @type {string | null} */ date) => (date ? date.slice(2).replace(/-0?/g, ".") : "-");
+
+/** 보스별 기본: 가장 높은 난이도 */
+function defaultBossPicks() {
+  const pick = (/** @type {{ boss: string, points: Record<string, number> }} */ entry) => [entry.boss, Object.keys(entry.points).at(-1) || ""];
+  return Object.fromEntries([...liberationRules.weekly, ...liberationRules.monthly].map(pick));
+}
+
+/** @param {{ liberated: boolean }} props */
+function Liberation({ liberated }) {
+  const [chapter, setChapter] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [picks, setPicks] = useState(defaultBossPicks);
+  const [weeklyDone, setWeeklyDone] = useState(false);
+  const [monthlyDone, setMonthlyDone] = useState(false);
+  const sumOf = (/** @type {Array<{ boss: string, points: Record<string, number> }>} */ list) => list.reduce((sum, entry) => sum + (entry.points[picks[entry.boss]] || 0), 0);
+  const weekly = sumOf(liberationRules.weekly);
+  const monthly = sumOf(liberationRules.monthly);
+  const today = kstToday();
+  const plan = liberationPlan(liberationRules, { today, chapter, points, weekly, monthly, weeklyDone, monthlyDone });
+  const chapterMax = liberationRules.chapters[chapter]?.points || 0;
+
+  if (liberated) {
+    return (
+      <section class="card calc-card">
+        <p class="calc-big display">
+          해방 완료
+          <span class="calc-big__note">제네시스 무기를 끼고 있어요</span>
+        </p>
+      </section>
+    );
+  }
+
+  const bossRow = (/** @type {{ boss: string, points: Record<string, number> }} */ entry) => (
+    <div class="calc-row calc-row--boss" key={entry.boss}>
+      <span class="calc-row__label">{entry.boss}</span>
+      <span class="select select--sm">
+        <select aria-label={`${entry.boss} 난이도`} value={picks[entry.boss] || ""} onChange={(event) => setPicks({ ...picks, [entry.boss]: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}>
+          <option value="">안 함</option>
+          {Object.keys(entry.points).map((difficulty) => (
+            <option key={difficulty} value={difficulty}>
+              {difficulty} · {entry.points[difficulty]}
+            </option>
+          ))}
+        </select>
+        <Icon name="chevronDown" size={16} class="select__icon" />
+      </span>
+    </div>
+  );
+
+  return (
+    <div class="calc-grid">
+      <section class="card calc-card">
+        <h2 class="calc-card__title">지금 진행</h2>
+        <div class="calc-income">
+          <div class="field">
+            <label class="field__label" for="lib-chapter">
+              지금 장
+            </label>
+            <span class="select">
+              <select id="lib-chapter" value={chapter} onChange={(event) => setChapter(Number(/** @type {HTMLSelectElement} */ (event.currentTarget).value))}>
+                {liberationRules.chapters.map((entry, index) => (
+                  <option key={entry.name} value={index}>
+                    {index + 1}장 {entry.name}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={18} class="select__icon" />
+            </span>
+          </div>
+          <NumberField id="lib-points" label={`모은 포인트 (/${formatComma(chapterMax)})`} value={points} onChange={(value) => setPoints(Math.min(chapterMax, value))} />
+        </div>
+        <h2 class="calc-card__title">
+          매주 잡는 보스 <span class="calc-card__sub num">{formatComma(weekly)}</span>
+        </h2>
+        <div class="calc-rows calc-rows--boss">{liberationRules.weekly.map(bossRow)}</div>
+        <h2 class="calc-card__title">
+          매달 <span class="calc-card__sub num">{formatComma(monthly)}</span>
+        </h2>
+        <div class="calc-rows calc-rows--boss">{liberationRules.monthly.map(bossRow)}</div>
+        <label class="calc-check">
+          <input type="checkbox" checked={weeklyDone} onChange={(e) => setWeeklyDone(/** @type {HTMLInputElement} */ (e.currentTarget).checked)} />
+          <span>이번 주 보스는 이미 잡음</span>
+        </label>
+        <label class="calc-check">
+          <input type="checkbox" checked={monthlyDone} onChange={(e) => setMonthlyDone(/** @type {HTMLInputElement} */ (e.currentTarget).checked)} />
+          <span>이번 달 검은 마법사는 이미 잡음</span>
+        </label>
+      </section>
+
+      <section class="card calc-card calc-result">
+        <h2 class="calc-card__title">해방 예정</h2>
+        <p class="calc-big display num">
+          {plan.finishDate ? shortDate(plan.finishDate) : "-"}
+          <span class="calc-big__note">{plan.days !== null ? `${formatComma(plan.days)}일 뒤 · ${formatComma(plan.current)} / ${formatComma(plan.total)}` : "포인트를 얻는 보스를 골라 주세요"}</span>
+        </p>
+        <ol class="calc-timeline">
+          {plan.chapters.map((entry, index) => {
+            const milestone = plan.milestones.find((item) => item.at === entry.start && item.at > 0);
+            return (
+              <li key={entry.name} class={index < chapter || (index === chapter && points >= (liberationRules.chapters[index]?.points || 0)) ? "is-done" : index === chapter ? "is-now" : ""}>
+                <span class="calc-timeline__name">
+                  {index + 1}장 {entry.name}
+                  {milestone ? <span class="calc-timeline__tag">{milestone.name}</span> : null}
+                </span>
+                <span class="calc-timeline__date num">{index <= chapter ? "" : shortDate(entry.startDate)}</span>
+              </li>
+            );
+          })}
+          <li class="is-goal">
+            <span class="calc-timeline__name">
+              해방 완료 <span class="calc-timeline__tag">2차 해방</span>
+            </span>
+            <span class="calc-timeline__date num">{shortDate(plan.finishDate)}</span>
+          </li>
+        </ol>
+      </section>
+    </div>
+  );
+}
+
 const VIEWS = [
   { value: "hexa", label: "HEXA 강화" },
   { value: "stat", label: "HEXA 스탯" },
-  { value: "symbol", label: "심볼" }
+  { value: "symbol", label: "심볼" },
+  { value: "liberation", label: "해방" }
 ];
 
 function readView() {
@@ -370,6 +495,7 @@ export function Calc() {
   const [who, setWho] = useState(readWho);
   const [cores, setCores] = useState(defaultCores);
   const [symbols, setSymbols] = useState(defaultSymbols);
+  const [liberated, setLiberated] = useState(false);
   const [load, setLoad] = useState(/** @type {{ status: "idle" | "loading" | "done" | "error", text?: string }} */ ({ status: "idle" }));
 
   const onView = (/** @type {string} */ next) => {
@@ -403,6 +529,8 @@ export function Calc() {
         ...(symbolTab.arcaneSymbols || []).map((symbol) => toRow(symbol, "arcane")),
         ...(symbolTab.authenticSymbols || []).map((symbol) => toRow(symbol, "authentic"))
       ];
+      const presets = Array.isArray(data.tabs?.equipment?.presets) ? data.tabs.equipment.presets : [];
+      setLiberated(presets.some((preset) => (preset?.data?.itemEquipment || []).some((item) => /제네시스/.test(String(item?.itemName || "")))));
       if (nextCores.length) setCores(nextCores);
       if (nextSymbols.length) setSymbols(nextSymbols);
       setLoad({ status: "done", text: `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.` });
@@ -462,6 +590,7 @@ export function Calc() {
       {view === "hexa" ? <HexaCores rows={cores} setRows={setCores} /> : null}
       {view === "stat" ? <HexaStat /> : null}
       {view === "symbol" ? <Symbols rows={symbols} setRows={setSymbols} /> : null}
+      {view === "liberation" ? <Liberation liberated={liberated} /> : null}
     </div>
   );
 }

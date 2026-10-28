@@ -15,13 +15,15 @@ const equipmentItemSchema = new mongoose.Schema(
     characterLevel: { type: Number, default: 0 },
     attackType: { type: String, default: "physical" },
     slot: { type: String, required: true },
-    // "" = not ranked (only 아케인셰이드·앱솔랩스 are).
+    // "" = not ranked (only 제네시스·아케인셰이드 are).
     family: { type: String, default: "" },
     label: { type: String, default: "" },
     itemName: { type: String, default: "" },
     starforce: { type: Number, default: 0 },
     score: { type: Number, required: true },
     scoreWithoutEmblem: { type: Number, required: true },
+    // Points per part: basic, additional, potential, additionalPotential, soul, emblem.
+    parts: { type: mongoose.Schema.Types.Mixed, default: null },
     scoreVersion: { type: Number, required: true },
     // Raw Nexon item, for the tooltip in the item ranking.
     item: { type: mongoose.Schema.Types.Mixed, required: true },

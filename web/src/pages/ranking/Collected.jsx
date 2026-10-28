@@ -1,4 +1,4 @@
-// 자체 수집 랭킹: 아이템(제네시스·아케인셰이드·앱솔랩스, 무기 종류·방어구 부위별 템환산 순위)과
+// 자체 수집 랭킹: 아이템(제네시스·아케인셰이드, 무기 종류·방어구 부위별 템환산 순위)과
 // 스펙(템환산·잠재·에디·최대 대미지·전투력).
 // 사이트에서 조회된 캐릭터 + 매일 모으는 전투력 랭킹 1만 명이 대상이다.
 import "../../styles/collected.css";
@@ -19,7 +19,17 @@ import { EquipDetail } from "../character/Equipment.jsx";
 
 /** 부위 순서(장비창 순). 서버에 있는 부위만 보여 준다. */
 /** 순위를 매기는 계열과 방어구 부위(무기는 무기 종류별). 서버 item-score.json 과 같다. */
-const FAMILIES = ["제네시스", "아케인셰이드", "앱솔랩스"];
+const FAMILIES = ["제네시스", "아케인셰이드"];
+
+/** 템환산 항목(서버 parts 키) */
+const PART_LABELS = [
+  ["basic", "기본"],
+  ["additional", "추옵"],
+  ["potential", "잠재"],
+  ["additionalPotential", "에디"],
+  ["soul", "소울"],
+  ["emblem", "문장"]
+];
 const ARMOR_SLOTS = ["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토"];
 const WEAPON_TAB = "무기";
 
@@ -200,8 +210,8 @@ export function ItemRanking({ query, onQuery }) {
             value={query.noEmblem ? "without" : "with"}
             onChange={(value) => onQuery({ noEmblem: value === "without", page: 1 })}
             options={[
-              { value: "with", label: "문장 포함" },
-              { value: "without", label: "문장 제외" }
+              { value: "without", label: "문장 제외" },
+              { value: "with", label: "문장 포함" }
             ]}
           />
         </div>
@@ -250,6 +260,15 @@ export function ItemRanking({ query, onQuery }) {
                         <Owner row={row} />
                         <span class="crk-row__time">{formatRelativeTime(Date.parse(row.checkedAt))}</span>
                       </span>
+                      {row.parts ? (
+                        <span class="crk-parts num">
+                          {PART_LABELS.filter(([key]) => row.parts[key] && !(key === "emblem" && query.noEmblem)).map(([key, label]) => (
+                            <span key={key} class={`crk-part is-${key}`}>
+                              {label} {formatComma(Math.round(row.parts[key]))}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
                     </span>
                     <span class="crk-score num">
                       {formatComma(Math.round(row[scoreField]))}

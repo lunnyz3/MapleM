@@ -24,8 +24,10 @@ const {
   getRankingSharenianWaterway,
   getRankingSharenianBattlefield,
   getGuildId,
-  getGuildBasic
+  getGuildBasic,
+  getCharacterByOcid
 } = require("../../src/services/maplestorym.service");
+const { observeCombatPower } = require("../../src/services/combat-power.service");
 
 const args = process.argv.slice(2);
 const minLevelIndex = args.indexOf("--min-level");
@@ -71,6 +73,23 @@ async function fetchRanking(type, page) {
   }
 }
 
+// Characters outside the combat-power ranking have no 전투력 in their row: read it from the stat
+// endpoint (the value for the gear worn now, kept as the best of the last 24 hours like lookups).
+async function recordWithCombatPower({ row, ocid, itemData }) {
+  let combatPower = Number(row.character_combat_power) || null;
+  if (!combatPower) {
+    try {
+      const stat = (await getCharacterByOcid("/maplestorym/v1/character/stat", ocid, { useCache: false }))?.data;
+      const entry = (Array.isArray(stat?.stat) ? stat.stat : []).find((item) => String(item?.stat_name || "").trim() === "전투력");
+      const value = Number(String(entry?.stat_value ?? "").replace(/[^0-9.]/g, ""));
+      if (value > 0) combatPower = (await observeCombatPower(ocid, [{ value, source: "stat" }])).value;
+    } catch {
+      combatPower = null;
+    }
+  }
+  return collectorDeps.record({ row: { ...row, character_combat_power: combatPower }, ocid, itemData });
+}
+
 async function fetchGuildMembers(worldName, guildName) {
   const id = (await getGuildId(guildName, worldName))?.data?.oguild_id;
   if (!id) return [];
@@ -85,7 +104,7 @@ async function fetchGuildMembers(worldName, guildName) {
     console.log(`candidates Lv.${minLevel}+: ${rows.length} (${JSON.stringify(stats)})`);
     return { date: null, rows: dryRun ? [] : rows };
   };
-  const collector = createItemCollector({ ...collectorDeps, loadRows, workers: 6, delayMs: 0 });
+  const collector = createItemCollector({ ...collectorDeps, record: recordWithCombatPower, loadRows, workers: 6, delayMs: 0 });
   const timer = setInterval(() => {
     const status = collector.getStatus();
     if (status.total) console.log(`${status.state} ${status.saved + status.skipped + status.failed}/${status.total} (saved ${status.saved}, skipped ${status.skipped}, failed ${status.failed})`);

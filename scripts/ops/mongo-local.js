@@ -20,6 +20,8 @@ const IMAGE = "mongo:7.0";
 const DB_NAME = "maplem";
 // 27017은 이 서버의 Rocket.Chat(snap) MongoDB가 쓰고 있어 다른 포트를 쓴다.
 const HOST_PORT = Number(process.env.MAPLEM_MONGO_PORT || 27027);
+// 다시 모으면 되는 수집 데이터(아이템·스펙 랭킹)는 백업하지 않는다. 수십만~수백만 건이라 매일 백업 14개가 디스크를 채운다.
+const BACKUP_EXCLUDE = ["equipment_items", "character_specs"];
 const BACKUP_KEEP_DAYS = Number(process.env.MAPLEM_MONGO_BACKUP_KEEP_DAYS || 14);
 const dirs = {
   data: path.join(HOME, "data"),
@@ -232,7 +234,7 @@ function backup() {
   try {
     run("docker", [
       "exec", "-e", "MONGO_ROOT_USER", "-e", "MONGO_ROOT_PASSWORD", CONTAINER,
-      "sh", "-c", `mongodump ${rootAuthArgs} --db=${DB_NAME} --archive --gzip --quiet`
+      "sh", "-c", `mongodump ${rootAuthArgs} --db=${DB_NAME} ${BACKUP_EXCLUDE.map((name) => `--excludeCollection=${name}`).join(" ")} --archive --gzip --quiet`
     ], { env: { MONGO_ROOT_USER: secrets.MONGO_ROOT_USER, MONGO_ROOT_PASSWORD: secrets.MONGO_ROOT_PASSWORD }, stdout: fd });
   } finally {
     fs.closeSync(fd);

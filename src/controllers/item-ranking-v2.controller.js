@@ -3,15 +3,20 @@
 //   GET /api/v2/item-ranking/groups?slot=&world_name=    → { ok, slots: [{ slot, count }], families: [{ family, count }] }
 //   GET /api/v2/item-ranking?slot=&family=&world_name=&sort=&page=
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
+//   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
 const { normalizeWorldName } = require("../config/worlds");
 const {
   rankCharacterItems,
   listItemGroups,
   listItemRanking,
   listSpecRanking,
+  findSpecs,
   SPEC_METRICS
 } = require("../services/item-ranking.service");
+
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
+
+const MAX_SPEC_NAMES = 300;
 
 function text(value, max = 40) {
   return String(value ?? "").trim().slice(0, max);
@@ -105,4 +110,22 @@ async function getSpecRanking(req, res) {
   }
 }
 
-module.exports = { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking };
+async function postSpecs(req, res) {
+  const world = normalizeWorldName(text(req.body?.world_name));
+  if (!world.ok) {
+    return res.status(400).json({ ok: false, message: "world_name must be one of the supported worlds." });
+  }
+  const names = Array.isArray(req.body?.names) ? [...new Set(req.body.names.map((name) => text(name, 24)).filter(Boolean))] : [];
+  if (!names.length || names.length > MAX_SPEC_NAMES) {
+    return res.status(400).json({ ok: false, message: `names must have 1 to ${MAX_SPEC_NAMES} entries` });
+  }
+  try {
+    const specs = await findSpecs(world.worldNameCanonical, names);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, specs });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+module.exports = { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs };

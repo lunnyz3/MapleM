@@ -8,11 +8,12 @@ import { WorldIcon } from "../components/GameIcons.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, CountUp, Particles, Reveal, SplitText, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { SearchBox } from "../components/SearchBox.jsx";
-import { Skeleton } from "../components/Skeleton.jsx";
+import { RankBadge } from "../components/RankBadge.jsx";
+import { Skeleton, SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { toast } from "../components/Toast.jsx";
-import { loadCharacterImage, peekCharacterClass } from "../lib/api.js";
+import { getJson, loadCharacterImage, peekCharacterClass } from "../lib/api.js";
 import { loadGuild } from "../lib/data.js";
 import { formatComma, formatDateDot, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
 import { WORLDS, urls } from "../lib/game.js";
@@ -31,6 +32,7 @@ const BUILDINGS = [
 
 const TAB_ITEMS = [
   { id: "members", label: "길드원", icon: "user" },
+  { id: "power", label: "전투력 순위", icon: "bolt" },
   { id: "skills", label: "길드 스킬", icon: "sparkle" },
   { id: "buildings", label: "건물", icon: "home" },
   { id: "abilities", label: "어빌리티", icon: "medal" }
@@ -333,6 +335,70 @@ function MembersPanel({ guild }) {
   );
 }
 
+/**
+ * 길드원 전투력 순위: 사이트가 모은 길드원 스펙(전투력·템환산). 아직 모으지 못한 길드원은 맨 아래.
+ * @param {{ guild: GuildView }} props
+ */
+function PowerPanel({ guild }) {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", specs?: any[] }} */ ({ status: "loading" }));
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setState({ status: "loading" });
+    const names = guild.members.map((member) => member.name).filter((name) => name && name !== "-");
+    getJson("/api/v2/specs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ world_name: guild.world, names })
+    }).then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", specs: body.specs } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [guild, attempt]);
+
+  const rows = useMemo(() => {
+    const byName = new Map((state.specs || []).map((spec) => [spec.characterName, spec]));
+    return guild.members
+      .map((member) => ({ member, spec: byName.get(member.name) || null }))
+      .sort((a, b) => (b.spec?.combatPower || 0) - (a.spec?.combatPower || 0) || (b.member.level ?? 0) - (a.member.level ?? 0));
+  }, [guild, state.specs]);
+
+  if (state.status === "loading") return <SkeletonList rows={6} />;
+  if (state.status === "error") return <ErrorState compact title="전투력 순위를 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} />;
+  let rank = 0;
+  return (
+    <ol class="gd-power stagger-in" aria-label="길드원 전투력 순위">
+      {rows.map(({ member, spec }, index) => {
+        const power = Number(spec?.combatPower) || 0;
+        if (power) rank += 1;
+        return (
+          <li key={member.name} style={{ "--stagger": Math.min(index, 12) }}>
+            <a class="gd-power__row" href={urls.character(guild.world, member.name)}>
+              {power ? <RankBadge rank={rank} size={32} /> : <span class="gd-power__none" aria-hidden="true">-</span>}
+              <Avatar world={guild.world} name={member.name} size={40} lazy />
+              <span class="gd-power__text">
+                <span class="gd-power__name">
+                  {member.name}
+                  {member.master ? <Icon name="crown" size={14} class="gd-power__crown" /> : null}
+                </span>
+                <span class="gd-power__meta">
+                  <span class="num">Lv.{spec?.characterLevel || member.level || "-"}</span>
+                  {spec?.characterClass || member.job ? <span>{spec?.characterClass || member.job}</span> : null}
+                  {spec?.itemScore ? <span class="num">템환산 {formatComma(Math.round(spec.itemScore))}</span> : null}
+                </span>
+              </span>
+              <span class="gd-power__value num">{power ? formatKoreanUnits(power, { maxGroups: 2 }) : "기록 없음"}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /** @param {{ guild: GuildView }} props */
 function SkillsPanel({ guild }) {
   if (!guild.skills.length) return <EmptyState title="길드 스킬 정보가 없어요" />;
@@ -541,7 +607,7 @@ export function Guild({ world = "", name = "" }) {
   }
 
   const guild = state.guild;
-  const counts = { members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
+  const counts = { power: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
 
   return (
     <div class="gd">
@@ -560,6 +626,7 @@ export function Guild({ world = "", name = "" }) {
         />
         <TabPanel idBase="gd" value={tab} class="gd-tabs__panel card">
           {tab === "members" ? <MembersPanel guild={guild} /> : null}
+          {tab === "power" ? <PowerPanel guild={guild} /> : null}
           {tab === "skills" ? <SkillsPanel guild={guild} /> : null}
           {tab === "buildings" ? <BuildingsPanel guild={guild} /> : null}
           {tab === "abilities" ? <AbilitiesPanel guild={guild} /> : null}

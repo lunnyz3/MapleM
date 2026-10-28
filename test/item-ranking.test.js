@@ -58,28 +58,56 @@ test("템환산: 물리·마법 중 큰 쪽, 제네시스는 최종 대미지 +1
   assert.ok(result.score > result.scoreWithoutEmblem);
 });
 
-test("순위 묶음: 제네시스·아케인셰이드·앱솔랩스만, 무기는 무기 종류별·방어구는 부위별", () => {
+test("템환산: 항목별 점수(기본·추옵·잠재·에디·소울·문장)의 합이 전체 점수", () => {
+  const data = fixture("유니온-피카츄");
+  const shoulder = data.item_equipment.find((item) => item.item_name === "아케인셰이드 메이지숄더");
+  const result = scoreItem(shoulder);
+  const sum = Object.values(result.parts).reduce((total, value) => total + value, 0);
+  assert.ok(Math.abs(sum - result.score) < 0.35, `${sum} vs ${result.score}`); // 항목마다 반올림
+  close(result.score - result.parts.emblem, result.scoreWithoutEmblem);
+  assert.equal(result.parts.basic, 0); // 어깨 기본 옵션은 방어력뿐
+});
+
+test("템환산: 장비 마스터리로 오른 값은 빼고 센다(정보가 없어도 확률표로 추정)", async () => {
+  const { masteryBonusLines } = require("../src/domain/items/mastery");
+  const data = fixture("유니온-피카츄");
+  const shoulder = data.item_equipment.find((item) => item.item_name === "아케인셰이드 메이지숄더");
+  const known = await masteryBonusLines(shoulder, { attackType: "magical", className: data.character_class });
+  assert.deepEqual(known.item_additional_potential_option, [4, 4, 4]);
+  // 정보가 없으면 표에 없는 값만, 표에 들어갈 만큼만 뺀다(장갑 22.70/19.76/22.70 → 18.70/15.76/18.70).
+  const gloves = data.item_equipment.find((item) => item.item_name === "아케인셰이드 메이지글러브");
+  const inferred = await masteryBonusLines({ ...gloves, mastery_info: null }, { attackType: "magical", className: data.character_class });
+  assert.deepEqual(inferred.item_potential_option, [4, 4, 4]);
+  // 마법 대미지 12% 만큼(3줄 × 4%) 낮아진다.
+  close(scoreItem(shoulder).score - scoreItem(shoulder, known).score, 12 * weights.damagePercent);
+  // 마스터리가 없는 장비 종류는 아무것도 불러오지 않는다.
+  assert.equal(await masteryBonusLines(ring({}), {}), null);
+});
+
+test("순위 묶음: 제네시스·아케인셰이드만, 무기는 무기 종류별·방어구는 부위별", () => {
   assert.deepEqual(itemGroup({ item_name: "아케인셰이드 완드", item_equipment_page_name: "완드", item_equipment_slot_name: "무기" }), {
     slot: "완드",
     family: "아케인셰이드",
     label: "아케인셰이드 완드",
     weapon: true
   });
-  assert.deepEqual(itemGroup({ item_name: "앱솔랩스 시프숄더", item_equipment_page_name: "어깨", item_equipment_slot_name: "어깨" }), {
+  assert.deepEqual(itemGroup({ item_name: "아케인셰이드 시프숄더", item_equipment_page_name: "어깨", item_equipment_slot_name: "어깨" }), {
     slot: "어깨",
-    family: "앱솔랩스",
-    label: "앱솔랩스 어깨",
+    family: "아케인셰이드",
+    label: "아케인셰이드 어깨",
     weapon: false
   });
+  // 앱솔랩스는 순위에서 뺐다.
+  assert.equal(itemGroup({ item_name: "앱솔랩스 시프숄더", item_equipment_slot_name: "어깨" }).family, "");
   assert.equal(itemGroup({ item_name: "제네시스 완드", item_equipment_page_name: "완드", item_equipment_slot_name: "무기" }).label, "제네시스 완드");
   // 장신구는 순위 대상이 아니다.
   assert.equal(itemGroup({ item_name: "거대한 공포", item_equipment_slot_name: "반지 (3번째 슬롯)" }).family, "");
   assert.equal(itemGroup({ item_name: "거대한 공포", item_equipment_slot_name: "반지 (3번째 슬롯)" }).slot, "반지");
 });
 
-test("장비 모으기: 착용·프리셋 장비를 한 번씩만 담고, 템환산 합이 가장 큰 프리셋을 고른다", () => {
+test("장비 모으기: 착용·프리셋 장비를 한 번씩만 담고, 템환산 합이 가장 큰 프리셋을 고른다", async () => {
   const data = fixture("스카니아-디올");
-  const result = collectCharacterItems(data);
+  const result = await collectCharacterItems(data);
   const fingerprints = result.items.map((entry) => entry.fingerprint);
   assert.equal(new Set(fingerprints).size, fingerprints.length);
   // Every worn item is in the list as the worn copy.

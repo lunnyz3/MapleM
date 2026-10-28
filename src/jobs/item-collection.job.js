@@ -31,8 +31,7 @@ const collectorDeps = {
       characterLevel: row.character_level,
       itemData,
       combatPower: row.character_combat_power,
-      source: "ranking",
-      rankedOnly: true
+      source: "ranking"
     });
     if (row.character_combat_power && row.date) {
       await observeCombatPower(ocid, [

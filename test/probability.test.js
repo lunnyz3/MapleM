@@ -392,14 +392,14 @@ const lineTexts = (section) => section.lines.map((line) => line.text);
 
 test("마스터리 표: 공식 출처·확인일·줄당 최대 2개, 근거 없는 항목은 비워 둔다", () => {
   const table = readTable("equipment_mastery.json");
-  assert.equal(table._meta.checked_at, "2026-10-28");
+  assert.equal(table._meta.checked_at, "2026-10-29");
   const urls = table._meta.sources.map((source) => source.url);
   assert.ok(urls.includes("https://maplestorym.nexon.com/1198/board/1215/view/3511972"));
   assert.ok(urls.includes("https://m.nexon.com/probability/5795?language=ko"));
   for (const url of urls) assert.match(url, /^https:\/\/(?:maplestorym\.nexon\.com|m\.nexon\.com|openapi\.nexon\.com)\//, url);
   assert.equal(table.max_bonus_per_line, 2);
   assert.deepEqual(table.cube, { 레전더리: { percent: 2 }, 유니크: { percent: 1.5 } });
-  assert.deepEqual(table.flame["강력한 환생의 불꽃"], { 치명타확률: 1.5, "최대 HP": 450 });
+  assert.deepEqual(table.flame["강력한 환생의 불꽃"], { 치명타확률: 1.5, "최대 HP": 450, "방어율 무시": 1.2 });
   assert.deepEqual(Object.keys(table.flame_grade), ["2", "3"]);
   for (const flame of Object.keys(table.flame)) {
     for (const option of Object.keys(table.flame[flame])) {
@@ -432,9 +432,22 @@ test("마스터리: 장갑 잠재 보너스 6 → 줄마다 +4%p 를 빼고(22.7
   near(withMastery.potentialProbability, 0.0348167 * (8 * 0.0087042) * 0.0087042, "잠재 값");
   near(withMastery.additionalProbability, rolled.additionalProbability, "에디셔널(보너스 없음)");
 
-  // 마스터리를 빼지 않으면 22.70% 가 표 최대값(18.70%)보다 커서 첫째·셋째 줄이 최고 수치로 잡힌다.
-  const raw = await resolveTopPercentBreakdown({ ...gloves, masteryInfo: null }, MAGICAL);
-  assert.ok(withMastery.potentialProbability > raw.potentialProbability * 5);
+});
+
+test("마스터리 정보가 없어도(착용하지 않은 프리셋 장비) 표에 없는 값은 +2%씩 빼서 맞으면 마스터리로 본다", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  const gloves = pikachuItem("장갑");
+  const known = await resolveTopPercentBreakdown(gloves, MAGICAL);
+  const inferred = await resolveTopPercentBreakdown({ ...gloves, masteryInfo: null }, MAGICAL);
+  assert.deepEqual(lineTexts(inferred.mastery.potential), ["+4%", "+4%", "+4%"]);
+  assert.equal(inferred.mastery.potential.status, "inferred");
+  near(inferred.potentialProbability, known.potentialProbability, "잠재");
+  // 표에 있는 값은 건드리지 않는다.
+  const plain = await resolveTopPercentBreakdown(
+    { ...gloves, masteryInfo: null, potentialOption: [{ name: "보스 공격력", value: "18.70%" }, { name: "보스 공격력", value: "15.76%" }, { name: "보스 공격력", value: "18.70%" }] },
+    MAGICAL,
+  );
+  assert.deepEqual(lineTexts(plain.mastery.potential), ["", "", ""]);
 });
 
 test("마스터리: 어깨 에디셔널 보너스 6 → 16.40/10.30/16.40 을 12.40/6.30/12.40 으로 찾는다", async () => {
@@ -462,18 +475,14 @@ test("마스터리: 보너스가 줄 수보다 적으면 공식 표에 맞는 �
   near(result.additionalOptionPercent, result.additionalOptionProbability * 100, "추가 옵션 %");
 });
 
-test("마스터리가 없는 장비는 결과가 그대로다", async () => {
+test("마스터리 포인트가 0이면(정보가 있고 기본 옵션에만 넣음) 옵션 값을 그대로 쓴다", async () => {
   const { resolveTopPercentBreakdown } = await importItemShare();
   for (const slot of ["장갑", "어깨", "신발", "무기", "한벌옷"]) {
     const item = pikachuItem(slot);
-    const none = await resolveTopPercentBreakdown({ ...item, masteryInfo: null }, MAGICAL);
     const zero = await resolveTopPercentBreakdown(
       { ...item, masteryInfo: { level: 6, basicPoint: 6, potentialPoint: 0, additionalPoint: 0, additionalPotentialPoint: 0 } },
       MAGICAL,
     );
-    for (const key of ["totalPercent", "potentialProbability", "additionalProbability", "additionalOptionProbability"]) {
-      assert.equal(zero[key], none[key], `${slot} ${key}`);
-    }
     for (const section of ["potential", "additionalPotential", "additional"]) {
       assert.ok(zero.mastery[section].lines.every((line) => line.text === ""), `${slot} ${section}`);
     }

@@ -59,7 +59,7 @@ async function recordCharacterItems({
 }) {
   const key = String(ocid || "").trim();
   if (!key || !itemData || !isMongoConnected()) return null;
-  const collected = collectCharacterItems(itemData);
+  const collected = await collectCharacterItems(itemData);
   if (!collected.items.length) return null;
 
   const owner = {
@@ -85,6 +85,7 @@ async function recordCharacterItems({
               starforce: Number(entry.item?.starforce_upgrade) || 0,
               score: entry.score,
               scoreWithoutEmblem: entry.scoreWithoutEmblem,
+              parts: entry.parts,
               scoreVersion: SCORE_VERSION,
               item: entry.item,
               source,
@@ -135,7 +136,7 @@ async function rankCharacterItems(ocid) {
   const key = String(ocid || "").trim();
   if (!key || !isMongoConnected()) return {};
   const items = await EquipmentItem.find({ ocid: key, family: { $ne: "" }, scoreVersion: SCORE_VERSION })
-    .select({ fingerprint: 1, slot: 1, family: 1, label: 1, score: 1, scoreWithoutEmblem: 1, _id: 0 })
+    .select({ fingerprint: 1, slot: 1, family: 1, label: 1, score: 1, scoreWithoutEmblem: 1, parts: 1, _id: 0 })
     .maxTimeMS(DB_TIMEOUT_MS)
     .lean();
   const entries = await Promise.all(
@@ -151,7 +152,8 @@ async function rankCharacterItems(ocid) {
           total: Math.max(total, above + 1),
           label: item.label,
           score: item.score,
-          scoreWithoutEmblem: item.scoreWithoutEmblem
+          scoreWithoutEmblem: item.scoreWithoutEmblem,
+          parts: item.parts || null
         }
       ];
     })
@@ -239,7 +241,20 @@ async function listSpecRanking({ metric = "itemScore", worldName, characterClass
   };
 }
 
+/**
+ * Stored specs of the given characters of one world (guild member ranking). Characters never
+ * collected are left out.
+ */
+async function findSpecs(worldName, names) {
+  if (!isMongoConnected() || !worldName || !names.length) return [];
+  return CharacterSpec.find({ worldName, characterName: { $in: names } })
+    .select({ _id: 0, ocid: 0, source: 0 })
+    .maxTimeMS(DB_TIMEOUT_MS)
+    .lean();
+}
+
 module.exports = {
+  findSpecs,
   recordCharacterItems,
   rankCharacterItems,
   listItemGroups,

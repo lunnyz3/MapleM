@@ -730,3 +730,82 @@
     animation: none;
   }
 }
+
+/* ================= 길드원 전투력 순위 ================= */
+.gd-power {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gd-power > li + li {
+  border-top: 1px solid var(--border);
+}
+
+.gd-power__row {
+  display: grid;
+  grid-template-columns: 34px auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-hover) var(--ease);
+}
+
+.gd-power__row:hover {
+  background: var(--surface-soft);
+}
+
+.gd-power__none {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: center;
+}
+
+.gd-power__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gd-power__name {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gd-power__crown {
+  color: #e2a300;
+}
+
+.gd-power__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.gd-power__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .gd-power__row {
+    gap: 8px;
+    padding: 10px 2px;
+  }
+
+  .gd-power__value {
+    font-size: var(--fs-14);
+  }
+}

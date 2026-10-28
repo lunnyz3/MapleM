@@ -2,11 +2,13 @@
 
 // Item score (템환산): a weighted sum of an item's option values (weights per stat, scaled so a
 // reference item is 500 points). Physical and magical are scored separately and the larger one
-// is kept. Rules and weights live in src/game-data/item-score.json.
+// is kept. Equipment mastery bonuses are taken off first (masteryLines from mastery.js), so the
+// score ranks what was rolled. Rules and weights live in src/game-data/item-score.json.
 
 const scoreRules = require("../../game-data/item-score.json");
 const { parseOption, parseStatText } = require("../stats/text");
 const { isMagicJob } = require("../stats/sources/character");
+const { withoutMastery } = require("./mastery");
 
 const WEIGHTS = scoreRules.weights;
 
@@ -31,28 +33,27 @@ function parseLines(list) {
 }
 
 /**
- * Parsed option lines that count: base options (they already include the additional option of
- * the same stat), additional options of stats the base options do not have, potentials, soul and
- * (optionally) the emblem. Liberation weapons add 최종 대미지 +10.
+ * Parsed option lines per part: base options (they already include the additional option of the
+ * same stat; liberation weapons add 최종 대미지 +10 here), additional options of stats the base
+ * options do not have, potentials, soul and emblem.
  */
-function scoredLines(item, { withEmblem }) {
+function scoredParts(item) {
   const basic = parseLines(item?.item_basic_option);
   const basicKeys = new Set(basic.map((entry) => entry.key));
-  const lines = [
-    ...basic,
-    ...parseLines(item?.item_additional_option).filter((entry) => !basicKeys.has(entry.key)),
-    ...parseLines(item?.item_potential_option),
-    ...parseLines(item?.item_additional_potential_option)
-  ];
-  const soul = item?.soul_info?.soul_option;
-  if (soul) lines.push(...parseStatText(soul));
-  const emblem = item?.emblem_info?.emblem_option;
-  if (withEmblem && emblem) lines.push(...parseStatText(emblem));
   const name = String(item?.item_name || "");
   if (scoreRules.liberation.nameIncludes.some((keyword) => name.includes(keyword))) {
-    lines.push({ key: "finalDamage", value: scoreRules.liberation.finalDamage });
+    basic.push({ key: "finalDamage", value: scoreRules.liberation.finalDamage });
   }
-  return lines;
+  const soul = item?.soul_info?.soul_option;
+  const emblem = item?.emblem_info?.emblem_option;
+  return {
+    basic,
+    additional: parseLines(item?.item_additional_option).filter((entry) => !basicKeys.has(entry.key)),
+    potential: parseLines(item?.item_potential_option),
+    additionalPotential: parseLines(item?.item_additional_potential_option),
+    soul: soul ? parseStatText(soul) : [],
+    emblem: emblem ? parseStatText(emblem) : []
+  };
 }
 
 function sideScore(lines, side) {
@@ -70,15 +71,23 @@ function round1(value) {
 }
 
 /**
- * Score of one item, with and without the emblem (the larger of the physical and magical sums).
- * @returns {{ score: number, scoreWithoutEmblem: number, hasEmblem: boolean }}
+ * Score of one item, with and without the emblem, plus each part's points. The side (physical
+ * or magical) with the larger total is used for every part.
+ * @returns {{ score: number, scoreWithoutEmblem: number, hasEmblem: boolean,
+ *   parts: { basic: number, additional: number, potential: number, additionalPotential: number, soul: number, emblem: number } }}
  */
-function scoreItem(item) {
-  const score = (withEmblem) => {
-    const lines = scoredLines(item, { withEmblem });
-    return round1(Math.max(sideScore(lines, "physical"), sideScore(lines, "magical")));
+function scoreItem(item, masteryLines = null) {
+  const parts = scoredParts(withoutMastery(item, masteryLines));
+  const all = Object.values(parts).flat();
+  const side = sideScore(all, "magical") > sideScore(all, "physical") ? "magical" : "physical";
+  const points = Object.fromEntries(Object.entries(parts).map(([key, lines]) => [key, round1(sideScore(lines, side))]));
+  const total = Object.values(parts).reduce((sum, lines) => sum + sideScore(lines, side), 0);
+  return {
+    score: round1(total),
+    scoreWithoutEmblem: round1(total - sideScore(parts.emblem, side)),
+    hasEmblem: parts.emblem.length > 0,
+    parts: points
   };
-  return { score: score(true), scoreWithoutEmblem: score(false), hasEmblem: Boolean(item?.emblem_info?.emblem_option) };
 }
 
 /** Attack type from the larger flat attack over the items' base options; ties go by job. */
@@ -96,7 +105,7 @@ function attackTypeOfItems(items, className) {
 }
 
 /**
- * Ranking group. Only the families in item-score.json (제네시스, 아케인셰이드, 앱솔랩스) are
+ * Ranking group. Only the families in item-score.json (제네시스, 아케인셰이드) are
  * ranked: weapons per weapon type (the page name, e.g. "완드"), armor per slot. Other items get
  * family "" and no rank.
  */
