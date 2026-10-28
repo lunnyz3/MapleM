@@ -1,6 +1,7 @@
 const { createApp } = require("./src/app");
 const { connectMongo } = require("./src/config/mongo");
 const { env } = require("./src/config/env");
+const { itemCollector } = require("./src/jobs/item-collection.job");
 
 const app = createApp();
 
@@ -12,4 +13,7 @@ app.listen(env.port, (error) => {
 
   console.log(`Server running at http://localhost:${env.port}`);
   connectMongo();
+  if (env.itemCollectionEnabled && env.nexonApiKey) {
+    itemCollector.start();
+  }
 });

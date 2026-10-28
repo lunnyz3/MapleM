@@ -38,6 +38,8 @@ if (staging) {
 }
 
 process.env.PORT = process.env.PORT || (staging ? "3300" : "3200");
+// 하루 한 번 랭킹 1만 명 장비 수집(넥슨 호출 약 2만 건)은 운영 서버에서만 돈다.
+process.env.ITEM_COLLECTION_ENABLED = process.env.ITEM_COLLECTION_ENABLED || "false";
 process.env.MONGODB_URI = mongoUri;
 process.env.CHATBOT_ENABLED = "false";
 process.env.NEXON_STATS_LOG_INTERVAL_MS = process.env.NEXON_STATS_LOG_INTERVAL_MS || "5000";

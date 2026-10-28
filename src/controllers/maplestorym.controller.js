@@ -27,6 +27,8 @@ const {
   canSaveRequestLogs
 } = require("../services/maplestorym.service");
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
+const { recordCharacterItems } = require("../services/item-ranking.service");
+const { itemFingerprint } = require("../domain/items/collect");
 
 const characterDetailEndpoints = [
   { key: "basic", path: "/maplestorym/v1/character/basic" },
@@ -696,10 +698,12 @@ async function saveAggregatedCharacterLog({
   ocid,
   statusCode,
   success,
-  responseBody
+  responseBody,
+  spec = null
 }) {
+  let saved = false;
   try {
-    const saved = await saveRequestLog({
+    saved = await saveRequestLog({
       characterName,
       worldName: worldNameCanonical,
       ocid,
@@ -708,10 +712,41 @@ async function saveAggregatedCharacterLog({
       success,
       responseBody
     });
-
-    return Boolean(saved) && success;
   } catch (error) {
-    return false;
+    saved = false;
+  }
+  if (ocid && responseBody?.details?.itemEquipment?.data) {
+    await recordLookupItems({ ocid, characterName, worldNameCanonical, details: responseBody.details, spec });
+  }
+  return Boolean(saved) && success;
+}
+
+// Item and spec rankings keep what every successful lookup saw. Best-effort: a failure is
+// logged and never affects the response. `spec` carries values the caller already computed.
+async function recordLookupItems({ ocid, characterName, worldNameCanonical, details, spec }) {
+  try {
+    const basic = details?.basic?.data || {};
+    let combatPower = spec?.combatPower ?? null;
+    let maxDamage = spec?.maxDamage ?? null;
+    if (combatPower === null) {
+      combatPower = (await observeCombatPower(ocid, [{ value: readStatValue(details?.stat?.data, "전투력"), source: "stat" }])).value;
+    }
+    if (maxDamage === null && details?.stat?.data) {
+      maxDamage = buildCharacterStatsSafely(details).majorStats?.maxDamage?.value ?? null;
+    }
+    await recordCharacterItems({
+      ocid,
+      characterName: basic.character_name || characterName,
+      worldName: worldNameCanonical,
+      characterClass: basic.character_class,
+      characterLevel: basic.character_level,
+      itemData: details.itemEquipment.data,
+      combatPower,
+      maxDamage,
+      source: "lookup"
+    });
+  } catch (error) {
+    console.error("[item-ranking] record failed:", error?.message || error);
   }
 }
 
@@ -1293,6 +1328,8 @@ function mapEquipmentItemForView(item) {
   );
 
   return {
+    // Matches /api/v2/item-ranks keys (same item across presets → same fingerprint).
+    fingerprint: item?.item_name ? itemFingerprint(item) : "",
     itemName: item?.item_name || "-",
     slotName: item?.item_equipment_slot_name || "-",
     pageName: item?.item_equipment_page_name || "",
@@ -2563,7 +2600,8 @@ async function getCharacterPageData(req, res) {
         query: pageData.query,
         ocid,
         details
-      }
+      },
+      spec: { combatPower: combatPower?.value ?? null, maxDamage: pageData.profile?.majorStats?.maxDamage?.value ?? null }
     });
     pageData.meta.aggregateSaved = aggregateSaved;
     pageData.meta.guildCollection = enqueueRelatedGuild(details, worldNameCanonical, details?.basic?.data?.character_name || characterName, aggregateSaved);
@@ -3152,8 +3190,9 @@ module.exports = {
   resolveAttackType,
   readStatValue,
   resolveStoredCombatPowerByOcid,
-  // Shared with the v2 stats controller (same Nexon cache and error shape).
+  // Shared with the v2 controllers (same Nexon cache and error shape).
   resolveOcid,
+  mapEquipmentItemForView,
   fetchCharacterDetails,
   getErrorInfo,
   getCharacterImage,

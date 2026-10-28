@@ -40,8 +40,8 @@ if (statsLogIntervalMs > 0) {
   }, statsLogIntervalMs).unref();
 }
 
-function requestNexon(endpointPath, params) {
-  return nexonClient.request(endpointPath, params);
+function requestNexon(endpointPath, params, options) {
+  return nexonClient.request(endpointPath, params, options);
 }
 
 async function getCharacterOcid(characterName, worldName) {
@@ -51,8 +51,9 @@ async function getCharacterOcid(characterName, worldName) {
   });
 }
 
-async function getCharacterByOcid(endpointPath, ocid) {
-  return requestNexon(endpointPath, { ocid });
+// options.useCache = false for bulk collection, so it does not push user lookups out of the cache.
+async function getCharacterByOcid(endpointPath, ocid, options) {
+  return requestNexon(endpointPath, { ocid }, options);
 }
 
 async function getUserUnion(ocid) {
