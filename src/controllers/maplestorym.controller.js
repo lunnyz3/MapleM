@@ -868,15 +868,27 @@ function getVmatrixAttackPercentBonusByLevel(level) {
   return Math.max(0, Math.min(25, rawBonus));
 }
 
-// The V-matrix stat rules (attack % per core level, capped at 25%, plus four base effects)
-// are not confirmed against the current game yet; enable with VMATRIX_STAT_RULES=on once
-// verified (docs/competitor-feature-inventory.md §3).
-function isVmatrixStatRulesEnabled() {
-  return String(process.env.VMATRIX_STAT_RULES || "").trim().toLowerCase() === "on";
+function readSwitch(name) {
+  return String(process.env[name] || "").trim().toLowerCase();
+}
+
+// Attack % per core level (7.6 at Lv.1, +0.6 per level, 25 at the Lv.30 cap) matches the
+// official max level, the operator's in-game knowledge and maplemtool.com's observed values
+// (docs/competitor-feature-inventory.md §3), so it is on unless VMATRIX_STAT_RULES=off.
+function isVmatrixAttackRuleEnabled() {
+  return readSwitch("VMATRIX_STAT_RULES") !== "off";
+}
+
+// The four fixed base effects (+9 / +12 / +12 / +12) have no confirmed source and
+// maplemtool.com does not add them, so they stay off unless VMATRIX_BASE_EFFECTS=on.
+function isVmatrixBaseEffectsEnabled() {
+  return readSwitch("VMATRIX_BASE_EFFECTS") === "on";
 }
 
 function collectVmatrixContributions(trackers, details) {
-  if (!isVmatrixStatRulesEnabled()) {
+  const attackRuleEnabled = isVmatrixAttackRuleEnabled();
+  const baseEffectsEnabled = isVmatrixBaseEffectsEnabled();
+  if (!attackRuleEnabled && !baseEffectsEnabled) {
     return;
   }
 
@@ -887,7 +899,7 @@ function collectVmatrixContributions(trackers, details) {
     const normalizedName = normalizeForMatch(name);
     const effectiveLevel = core.level + core.legacySlotLevel;
 
-    if (vmatrixAttackScaleSkillNames.has(normalizedName)) {
+    if (attackRuleEnabled && vmatrixAttackScaleSkillNames.has(normalizedName)) {
       const bonus = getVmatrixAttackPercentBonusByLevel(effectiveLevel);
       if (bonus > 0) {
         const levelText = core.legacySlotLevel
@@ -910,7 +922,7 @@ function collectVmatrixContributions(trackers, details) {
       }
     }
 
-    if (appliedBaseSkillEffects.has(normalizedName)) {
+    if (!baseEffectsEnabled || appliedBaseSkillEffects.has(normalizedName)) {
       return;
     }
 
