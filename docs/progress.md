@@ -107,6 +107,11 @@
 - 계산기 "해방": `src/game-data/liberation.json`, `web/src/lib/liberation.mjs`(테스트 `test/liberation.test.js`, 조사 예시 215/주·350/월 → 2027-09-02, 309일과 일치). 캐릭터를 불러와 제네시스 무기면 "해방 완료".
 - 훑기 재실행(--force) 진행: 149,570명, 넥슨 약 40만 건 예상.
 
+### 14. 새 화면을 본 주소로 · 카톡 봇 안내 · 아이템 랭킹 속도 — `c699c2b` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 새 화면(Vite 빌드 `dist/web`, 스크립트 `/app/...`)이 `/`, `/ranking`, `/character/<월드>/<이름>`, `/guild`, `/compare`, `/calc`, `/bot` 을 맡는다. `/preview/...`·`/character.html?world_name=&character_name=`·`/ranking.html`·`/ranking/<종류>` 는 301로 새 주소, 기존 첫 화면은 `/legacy`. 배포 때 복사하는 폴더가 `dist/preview` → `dist/web` 로 바뀌었다.
+- 카톡 봇: 상단 메뉴 "카톡 봇(무료)", 홈 검색창 위 반짝이는 "내 단톡방에 메엠 봇 넣기 · 무료", `/bot` 안내(오픈채팅 https://open.kakao.com/o/sQP47JFi 에 단톡방 링크·비밀번호 → 주인장이 확인할 때마다 입장, 대화는 보지 않음, 활동 없는 방은 정기 정리, 명령어는 `/home/jhc/ipy2/irispy.py` 도움말 기준).
+- 아이템 랭킹 전체 월드가 안 뜨던 문제: 수집이 수십만 건으로 늘어 부위별 개수 집계가 7초(제한 3초)였다. scoreVersion 을 넣은 색인으로 바꾸고(`scripts/data/sync-ranking-indexes.js`, 옛 색인 삭제) 개수는 5분 기억.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
