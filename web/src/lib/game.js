@@ -218,6 +218,7 @@ export const urls = {
   /** @param {string} type */
   legacyRanking: (type) => `/ranking.html?type=${encodeURIComponent(type)}`,
   guildSearch: "/preview/guild",
+  calc: "/preview/calc",
   /** @param {string} [world] @param {string} [name] 왼쪽에 넣어 둘 캐릭터 */
   compare: (world = "", name = "") => (world && name ? `/preview/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/preview/compare"),
   legacyHome: "/",

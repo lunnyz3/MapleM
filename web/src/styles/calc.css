@@ -1,0 +1,274 @@
+/* 계산기 */
+.calc {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.calc-switch {
+  display: flex;
+  justify-content: center;
+}
+
+.calc-who {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr) auto;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.calc-who__msg {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.calc-who__msg.is-error {
+  color: #e0663f;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.calc-card {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.calc-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+}
+
+.calc-result {
+  position: sticky;
+  top: 84px;
+}
+
+.calc-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.calc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.2em 4.2em 9.5em;
+  gap: 8px;
+  align-items: center;
+}
+
+.calc-row--head {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.calc-row__name {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.calc-row__name .select {
+  flex: none;
+  width: 6.6em;
+}
+
+.calc-row__label {
+  overflow: hidden;
+  font-size: var(--fs-14);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.calc-row__cost {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.calc-row__remove {
+  width: 28px;
+  height: 28px;
+}
+
+.calc-level {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.calc-kind {
+  flex: none;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.calc-kind.is-arcane {
+  background: rgba(124, 92, 255, 0.14);
+  color: #6a4fe0;
+}
+
+.calc-kind.is-authentic {
+  background: rgba(245, 165, 36, 0.16);
+  color: #b77300;
+}
+
+.calc-income {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.calc-sum {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.calc-sum > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.calc-sum dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.calc-sum dd {
+  display: grid;
+  margin: 0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.calc-sum dd span {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.calc-big {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, var(--primary-soft), var(--surface-soft));
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 900;
+}
+
+.calc-big__note {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.calc-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.calc-warn {
+  margin: 0;
+  color: #e0663f;
+  font-weight: 700;
+}
+
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-14);
+}
+
+.calc-table th,
+.calc-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.calc-table th {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.calc-table tr.is-now td {
+  background: var(--primary-soft);
+  font-weight: 800;
+}
+
+@media (max-width: 860px) {
+  .calc-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calc-result {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .calc-who {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calc-row {
+    grid-template-columns: minmax(0, 1fr) 3.4em 3.4em;
+  }
+
+  .calc-row--head > span:last-child {
+    display: none;
+  }
+
+  .calc-row__cost {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .calc-row__name .select {
+    width: 5.6em;
+  }
+}
+
+/* 줄 안의 작은 입력 */
+.calc-row .input,
+.calc-row select {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 8px;
+  font-size: var(--fs-14);
+}
+
+.calc-row .select {
+  min-height: 38px;
+}
+
+.calc-row .select__icon {
+  right: 6px;
+}

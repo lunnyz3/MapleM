@@ -102,52 +102,6 @@
   font-weight: 700;
 }
 
-/* 머리: 랭킹 아이콘 + 글자 단위로 튀어 오르는 제목 */
-.page-head--rank {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  padding-block: var(--sp-6);
-}
-
-.page-head__icon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: var(--surface);
-  color: var(--tone-fg);
-  box-shadow: var(--shadow-2);
-  animation: icon-pop 640ms var(--ease-spring) both;
-}
-
-@keyframes icon-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.4) rotate(-30deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-head__icon {
-    animation: none;
-  }
-}
-
-@media (max-width: 719px) {
-  .page-head__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-  }
-}
-
 /* ---------- 상위 3 ---------- */
 .rk-podium {
   display: grid;

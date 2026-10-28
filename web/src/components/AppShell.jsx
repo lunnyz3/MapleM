@@ -14,14 +14,16 @@ const NAV = [
   { key: "home", label: "홈", href: urls.home },
   { key: "ranking", label: "랭킹", href: urls.ranking("level") },
   { key: "guild", label: "길드", href: urls.guildSearch },
-  { key: "compare", label: "비교", href: urls.compare() }
+  { key: "compare", label: "비교", href: urls.compare() },
+  { key: "calc", label: "계산기", href: urls.calc }
 ];
 
-/** 모바일 하단 탭바. 계산기 탭은 계산기 화면이 생기면 추가한다. */
+/** 모바일 하단 탭바 */
 const TABS = [
   { key: "home", label: "홈", icon: "home", href: urls.home },
   { key: "ranking", label: "랭킹", icon: "trophy", href: urls.ranking("level") },
   { key: "guild", label: "길드", icon: "flag", href: urls.guildSearch },
+  { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc },
   { key: "my", label: "내 캐릭터", icon: "heart", href: `${urls.home}#my` }
 ];
 
