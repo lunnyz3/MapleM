@@ -2059,34 +2059,6 @@ button.eq-slot:hover .eq-slot__img {
   }
 }
 
-.eq-sets {
-  display: grid;
-  gap: 8px;
-}
-
-.eq-sets__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 6px 16px;
-}
-
-.eq-sets__list li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  align-content: flex-start;
-  gap: 4px 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: var(--fs-14);
-}
-
-.eq-sets__opt {
-  flex-basis: 100%;
-  color: var(--text-subtle);
-  font-size: var(--fs-12);
-}
-
 /* ---------- 툴팁(마우스) ---------- */
 .eq-tip {
   position: fixed;

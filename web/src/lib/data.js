@@ -1,5 +1,5 @@
 // 랭킹 화면·캐릭터 상세 화면용 API 호출. 같은 요청은 화면을 보는 동안 한 번만 보낸다.
-import { ApiError, getJson, isNotReady, toApiError } from "./api.js";
+import { ApiError, fetchRankingV2, getJson, isNotReady, toApiError } from "./api.js";
 import { kstToday, shiftDate } from "./format.js";
 import { RANKING_DATE_FLOOR, getRankingType } from "./game.js";
 
@@ -9,11 +9,12 @@ import { RANKING_DATE_FLOOR, getRankingType } from "./game.js";
 export const RANKING_PAGE_SIZE = 50;
 const API_PAGE_SIZE = 200;
 
-/** @type {Map<string, Promise<{ status: "ok", rows: any[] } | { status: "not-ready" }>>} */
+/** @type {Map<string, Promise<{ status: "ok", rows: any[], date?: string } | { status: "not-ready" }>>} */
 const apiPageCache = new Map();
 
 /**
- * 넥슨 랭킹 API 한 쪽(200개).
+ * 넥슨 랭킹 API 한 쪽(200개). 순위 변동 API(/api/v2/ranking)가 있으면 그걸 쓰고(행에 rankChange·isNew),
+ * 없으면 기존 API. 순위 변동 API는 빈 날짜면 서버가 이전 집계일로 옮기므로 실제 집계일(date)을 함께 돌려준다.
  * @param {string} typeId @param {string} date @param {number} apiPage @param {string} world
  */
 function fetchApiPage(typeId, date, apiPage, world) {
@@ -21,6 +22,8 @@ function fetchApiPage(typeId, date, apiPage, world) {
   let pending = apiPageCache.get(key);
   if (!pending) {
     pending = (async () => {
+      const withChange = await fetchRankingV2(typeId, { date, page: apiPage, world });
+      if (withChange) return { status: /** @type {const} */ ("ok"), rows: withChange.rows, date: withChange.date };
       const query = new URLSearchParams({ date, page: String(apiPage) });
       if (world) query.set("world_name", world);
       const { response, body } = await getJson(`/api/maplestorym/ranking/${encodeURIComponent(typeId)}?${query}`);
@@ -63,8 +66,10 @@ export async function loadRankingPage({ typeId, date, page, world }) {
     if (result.status === "ok" && (result.rows.length || page > 1)) {
       const rows = result.rows.slice(offset, offset + RANKING_PAGE_SIZE);
       const hasMore = offset + RANKING_PAGE_SIZE < result.rows.length || result.rows.length === API_PAGE_SIZE;
-      return { rows, date: current, requestedDate: date, hasMore: rows.length === RANKING_PAGE_SIZE && hasMore, page };
+      return { rows, date: result.date || current, requestedDate: date, hasMore: rows.length === RANKING_PAGE_SIZE && hasMore, page };
     }
+    // 서버가 이미 더 이전 날짜까지 찾아봤으면 그 앞날부터 이어 간다.
+    if (result.status === "ok" && result.date && result.date < current) current = result.date;
     current = shiftDate(current, -1);
   }
   return { rows: [], date: null, requestedDate: date, hasMore: false, page };
@@ -125,6 +130,33 @@ export async function loadExpHistory(ocid) {
   const { response, body } = await getJson(`/api/maplestorym/character/exp-history?${new URLSearchParams({ ocid })}`);
   if (!response.ok || !body?.ok) throw toApiError(response, body, "성장 기록을 불러오지 못했어요.");
   return { points: Array.isArray(body.points) ? body.points : [], daily: Array.isArray(body.dailySnapshots) ? body.dailySnapshots : [] };
+}
+
+// ======================= 길드 =======================
+
+/**
+ * 길드 상세: 이름 → oguild_id → 기본 정보(길드원·스킬·건물·어빌리티). 없는 길드면 status 404 ApiError.
+ * @param {string} world @param {string} name
+ * @returns {Promise<Record<string, any>>} 넥슨 guild/basic 의 data
+ */
+export async function loadGuild(world, name) {
+  const idQuery = new URLSearchParams({ world_name: world, guild_name: name });
+  const idResult = await getJson(`/api/maplestorym/guild/id?${idQuery}`);
+  const notFound = (/** @type {any} */ body, /** @type {Response} */ response) => {
+    const code = String(body?.error?.error?.name || body?.error?.name || "");
+    return response.status === 400 || response.status === 404 || code === "OPENAPI00004";
+  };
+  if (!idResult.response.ok || !idResult.body?.ok) {
+    if (notFound(idResult.body, idResult.response)) throw new ApiError("길드를 찾지 못했어요.", { status: 404 });
+    throw toApiError(idResult.response, idResult.body, "길드 정보를 불러오지 못했어요.");
+  }
+  const oguildId = String(idResult.body?.data?.oguild_id || "").trim();
+  if (!oguildId) throw new ApiError("길드를 찾지 못했어요.", { status: 404 });
+
+  const { response, body } = await getJson(`/api/maplestorym/guild/basic?${new URLSearchParams({ oguild_id: oguildId })}`);
+  if (response.ok && body?.ok && body.data) return body.data;
+  if (notFound(body, response)) throw new ApiError("길드를 찾지 못했어요.", { status: 404 });
+  throw toApiError(response, body, "길드 정보를 불러오지 못했어요.");
 }
 
 // ======================= 직접 입력(빈칸 채우기) =======================

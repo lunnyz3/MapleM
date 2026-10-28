@@ -69,8 +69,43 @@ export function toApiError(response, body, fallback = "랭킹 정보를 불러�
  * @property {string} type
  * @property {string | null} date        실제로 보여주는 집계일(없으면 null)
  * @property {string} requestedDate      처음 요청한 날짜(오늘)
- * @property {Record<string, any>[]} rows 상위 5개
+ * @property {Record<string, any>[]} rows 상위 5개(순위 변동 API가 있으면 rankChange·isNew 포함)
  */
+
+// ---------- 순위 변동(▲▼) API: /api/v2/ranking/:type ----------
+
+/** "unknown" → 아직 모름, "ok" → 있음, "missing" → 서버에 아직 없음(기존 API로 동작) */
+let rankingV2State = /** @type {"unknown" | "ok" | "missing"} */ ("unknown");
+
+/**
+ * 순위 변동이 붙은 랭킹 한 쪽(넥슨 한 쪽 = 200개). 서버가 빈 날짜면 알아서 이전 집계일로 옮긴다.
+ * 서버에 API가 없거나(404) 잠깐 실패하면 null → 기존 /api/maplestorym/ranking 으로 동작한다.
+ * @param {string} typeId
+ * @param {{ date: string, page: number, world?: string }} params
+ * @returns {Promise<{ date: string, previousDate: string | null, rows: Record<string, any>[] } | null>}
+ */
+export async function fetchRankingV2(typeId, { date, page, world = "" }) {
+  if (rankingV2State === "missing") return null;
+  const query = new URLSearchParams({ date, page: String(page) });
+  if (world) query.set("world_name", world);
+  let result;
+  try {
+    result = await getJson(`/api/v2/ranking/${encodeURIComponent(typeId)}?${query}`);
+  } catch {
+    return null;
+  }
+  const { response, body } = result;
+  if (response.ok && body?.ok && Array.isArray(body.rows)) {
+    rankingV2State = "ok";
+    return { date: String(body.date || date), previousDate: body.previousDate ? String(body.previousDate) : null, rows: body.rows };
+  }
+  if (response.status === 404 && rankingV2State !== "ok" && /route not found/i.test(String(body?.message || ""))) {
+    rankingV2State = "missing";
+    return null;
+  }
+  if (response.status === 429) throw toApiError(response, body);
+  return null;
+}
 
 const TOP_COUNT = 5;
 /** @type {Map<string, Promise<RankingResult>>} */
@@ -87,6 +122,11 @@ const settledRankings = new Map();
 async function fetchTopRanking(typeId) {
   const type = getRankingType(typeId);
   const today = kstToday();
+  const withChange = await fetchRankingV2(type.id, { date: today, page: 1 });
+  if (withChange) {
+    const rows = withChange.rows.slice(0, TOP_COUNT);
+    return { type: type.id, date: rows.length ? withChange.date : null, requestedDate: today, rows };
+  }
   const maxBack = type.subject === "guild" ? 14 : 3;
   let date = today;
 
@@ -139,6 +179,16 @@ export function peekRanking(typeId) {
 
 /** @type {Map<string, Promise<string>>} */
 const imageCache = new Map();
+/** 이미지 응답에 직업이 함께 오면 담아 둔다(길드원 목록). @type {Map<string, string>} */
+const classCache = new Map();
+
+/**
+ * 썸네일을 받으면서 함께 온 직업 이름(없으면 "").
+ * @param {string} world @param {string} name
+ */
+export function peekCharacterClass(world, name) {
+  return classCache.get(`${world}|${name}`) || "";
+}
 /** @type {Array<() => void>} */
 const imageQueue = [];
 let imageActive = 0;
@@ -166,6 +216,8 @@ export function loadCharacterImage(world, name) {
         try {
           const query = new URLSearchParams({ world_name: world, character_name: name });
           const { response, body } = await getJson(`/api/maplestorym/character/image?${query}`);
+          const job = String(body?.characterClass || body?.character_class || body?.className || "").trim();
+          if (job) classCache.set(key, job);
           resolve(response.ok && body?.ok ? String(body.imageUrl || "") : "");
         } catch {
           resolve("");

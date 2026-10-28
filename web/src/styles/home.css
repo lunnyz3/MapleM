@@ -552,3 +552,17 @@
     word-break: keep-all;
   }
 }
+
+/* 순위 + 순위 변동(▲▼·—·NEW)을 한 칸에 세로로 */
+.rank-row__rank {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.rank-row__rank .rank-change {
+  min-width: 0;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10.5px;
+}

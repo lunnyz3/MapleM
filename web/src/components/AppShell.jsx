@@ -3,6 +3,7 @@ import { useTheme } from "../lib/theme.js";
 import { BrandMark } from "./Decor.jsx";
 import { Icon } from "./Icon.jsx";
 import { requestSearchFocus } from "./SearchBox.jsx";
+import { ToastHost } from "./Toast.jsx";
 
 /**
  * @typedef {"home" | "ranking" | "guild" | "my" | ""} NavKey
@@ -108,6 +109,8 @@ export function AppShell({ current = "", children }) {
       </main>
 
       <SiteFooter />
+
+      <ToastHost />
 
       <nav class="tabbar" aria-label="하단 메뉴">
         {TABS.map((tab) => (

@@ -20,6 +20,7 @@ import { addRecent, entryKey, isFavorite, toggleFavorite, useSaved } from "../li
 import { Equipment } from "./character/Equipment.jsx";
 import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
+import { ProfileShareButton } from "./character/Share.jsx";
 
 /** @typedef {"boss" | "current"} StatMode */
 
@@ -103,6 +104,7 @@ function ProfileHeader({ data, world }) {
         </ul>
 
         <div class="ch-hero__actions">
+          <ProfileShareButton data={data} world={world} />
           <button
             type="button"
             class={`btn btn--secondary btn--sm fav-btn${favorite ? " is-on" : ""}`}
@@ -469,7 +471,7 @@ export function Character({ world, name }) {
       <section class="ch-tabs" aria-label="상세 정보">
         <Tabs idBase="ch" label="상세 정보" scrollable value={tab} onChange={setTab} items={TAB_ITEMS} />
         <TabPanel idBase="ch" value={tab} class="ch-tabs__panel">
-          {tab === "equipment" ? <Equipment data={data} mode={mode} presetNo={bossPresets.equipment} /> : null}
+          {tab === "equipment" ? <Equipment data={data} world={world} mode={mode} presetNo={bossPresets.equipment} /> : null}
           {tab === "stats" ? <StatsTab data={data} presets={bossPresets} /> : null}
           {tab === "symbol" ? <SymbolTab data={data} presets={bossPresets} /> : null}
           {tab === "hexa" ? <HexaTab data={data} /> : null}

@@ -1,0 +1,732 @@
+/* 길드 화면(/preview/guild, /preview/guild/<월드>/<이름>) */
+
+.gd {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.gd--empty {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.gd-search {
+  overflow: visible;
+}
+
+/* ================= 머리 ================= */
+.gd-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--sp-8);
+  align-items: center;
+  padding: var(--sp-8);
+  overflow: hidden;
+  border: 1px solid var(--hero-border);
+  border-radius: var(--radius-hero);
+  background: linear-gradient(135deg, #d3f3e6 0%, #e8f3ff 50%, #fff4e4 100%);
+  box-shadow: var(--shadow-2);
+}
+
+:root[data-theme="dark"] .gd-hero {
+  background: linear-gradient(135deg, #17363a 0%, #1d2547 55%, #2a2340 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gd-hero {
+    background: linear-gradient(135deg, #17363a 0%, #1d2547 55%, #2a2340 100%);
+  }
+}
+
+.gd-hero--loading {
+  grid-template-columns: 140px minmax(0, 1fr);
+}
+
+.gd-hero--loading .gd-hero__info {
+  display: grid;
+  gap: 12px;
+}
+
+.gd-hero__art {
+  justify-self: center;
+}
+
+.gd-hero__stage {
+  display: grid;
+  place-items: center;
+  width: 160px;
+  aspect-ratio: 1;
+  border-radius: 36px;
+  background:
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.4) 70%, transparent),
+    linear-gradient(160deg, var(--mint-100), var(--sky-100));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 18px 40px rgba(24, 128, 95, 0.2);
+  color: var(--mint-700);
+}
+
+.gd-hero__stage img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transform: translateZ(30px);
+}
+
+.gd-hero__info {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.gd-hero__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.gd-hero__world {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 999px;
+  background: var(--surface-glass);
+  box-shadow: var(--shadow-1);
+  font-size: var(--fs-14);
+}
+
+.gd-hero__keyword {
+  color: var(--mint-fg);
+  font-size: var(--fs-14);
+}
+
+.gd-hero__name {
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.gd-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gd-chip--level {
+  --spot-color: rgba(47, 185, 143, 0.26);
+  --spot-ring: rgba(47, 185, 143, 0.95);
+}
+
+.gd-chip--level > .icon {
+  color: var(--mint-fg);
+}
+
+.gd-chip--level .chip__value {
+  font-size: var(--fs-18);
+}
+
+.gd-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gd .fav-btn.is-on {
+  color: var(--peach-fg);
+}
+
+.gd-copy .icon {
+  transition: transform 320ms var(--ease-spring);
+}
+
+.gd-copy:hover .icon {
+  transform: rotate(-20deg) scale(1.1);
+}
+
+@media (max-width: 719px) {
+  .gd-hero {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
+    padding: var(--sp-6) var(--sp-5);
+    text-align: center;
+  }
+
+  .gd-hero__stage {
+    width: 120px;
+    border-radius: 28px;
+  }
+
+  .gd-hero__stage img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .gd-hero__eyebrow,
+  .gd-hero__chips,
+  .gd-hero__actions {
+    justify-content: center;
+  }
+
+  .gd-hero--loading {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+/* ================= 요약 숫자 ================= */
+.gd-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.gd-stat {
+  --spot-color: color-mix(in srgb, var(--tone-fg) 20%, transparent);
+  --spot-ring: color-mix(in srgb, var(--tone-fg) 80%, transparent);
+  display: grid;
+  gap: 8px;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition: transform 260ms var(--ease-spring), box-shadow var(--dur-hover) var(--ease);
+}
+
+.gd-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-2);
+}
+
+.gd-stat__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.gd-stat__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+}
+
+.gd-stat__value {
+  font-size: var(--fs-28);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.gd-stat__affix {
+  margin-inline: 2px;
+  color: var(--text-subtle);
+  font-size: var(--fs-16);
+}
+
+@media (max-width: 719px) {
+  .gd-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gd-stat {
+    padding: var(--sp-3) var(--sp-4);
+  }
+
+  .gd-stat__value {
+    font-size: var(--fs-22);
+  }
+}
+
+/* ================= 탭 ================= */
+.gd-tabs {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.gd-tabs__panel {
+  min-width: 0;
+}
+
+/* ---------- 길드원 ---------- */
+.gd-members {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.gd-members__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.gd-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: var(--touch);
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-subtle);
+}
+
+.gd-filter:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.gd-filter__input {
+  width: 160px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.gd-member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-3);
+}
+
+.gd-member__link {
+  --spot-color: rgba(76, 141, 246, 0.16);
+  --spot-ring: rgba(76, 141, 246, 0.85);
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    transform 260ms var(--ease-spring),
+    box-shadow var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease);
+}
+
+.gd-member__link:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-3px);
+}
+
+.gd-member__link.is-master {
+  --spot-color: rgba(242, 178, 31, 0.2);
+  --spot-ring: rgba(242, 178, 31, 0.95);
+  background:
+    radial-gradient(120% 90% at 0% 0%, var(--gold-bg), transparent 60%),
+    var(--surface);
+}
+
+.gd-member__avatar {
+  position: relative;
+}
+
+.gd-member__avatar .avatar {
+  border-radius: 16px;
+  transition: transform 320ms var(--ease-spring);
+}
+
+.gd-member__link:hover .gd-member__avatar .avatar {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.gd-member__crown {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--gold-300), var(--gold-500));
+  color: var(--gold-900);
+}
+
+.gd-member__text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gd-member__name {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gd-member__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.gd-member__act {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gd-member__bar {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.gd-member__bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-500), var(--peach-500));
+  transform-origin: left center;
+  animation: gd-bar-grow 900ms var(--ease-spring) 200ms backwards;
+}
+
+@keyframes gd-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.gd-member__act-value {
+  flex: none;
+  color: var(--peach-fg);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.gd-member__go {
+  color: var(--text-subtle);
+  transition: transform 220ms var(--ease-spring), color var(--dur-hover) var(--ease);
+}
+
+.gd-member__link:hover .gd-member__go {
+  color: var(--primary-strong);
+  transform: translateX(3px);
+}
+
+/* ---------- 길드 스킬 ---------- */
+.gd-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--icon-size) + 12px);
+  height: calc(var(--icon-size) + 12px);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #2a3058, #1b1f3a);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.gd-icon img {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  object-fit: contain;
+}
+
+.gd-skills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sp-3);
+}
+
+.gd-skill {
+  --spot-color: rgba(47, 185, 143, 0.16);
+  --spot-ring: rgba(47, 185, 143, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  transition: transform 260ms var(--ease-spring);
+}
+
+.gd-skill:hover {
+  transform: translateY(-3px);
+}
+
+.gd-skill:hover .gd-icon {
+  animation: gd-icon-wiggle 520ms var(--ease-spring);
+}
+
+@keyframes gd-icon-wiggle {
+  30% {
+    transform: rotate(-8deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(5deg) scale(1.05);
+  }
+}
+
+.gd-skill__text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gd-skill__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gd-skill__opt {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  white-space: pre-line;
+}
+
+/* ---------- 건물 ---------- */
+.gd-buildings {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.gd-building {
+  --spot-color: rgba(242, 178, 31, 0.2);
+  --spot-ring: rgba(242, 178, 31, 0.9);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: var(--sp-4) var(--sp-3) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background:
+    radial-gradient(90% 60% at 50% 20%, var(--gold-bg), transparent 70%),
+    var(--surface);
+  text-align: center;
+}
+
+.gd-building.is-empty {
+  opacity: 0.6;
+}
+
+.gd-building__art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 120px;
+}
+
+.gd-building__art img {
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  transition: transform 420ms var(--ease-spring);
+}
+
+.gd-building:hover .gd-building__art img {
+  transform: translateY(-6px) scale(1.06);
+}
+
+.gd-building__name {
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.gd-building__lv {
+  color: var(--gold-fg);
+  font-size: var(--fs-22);
+  font-weight: 800;
+}
+
+@media (max-width: 1079px) {
+  .gd-buildings {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 719px) {
+  .gd-buildings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gd-building__art {
+    height: 96px;
+  }
+
+  .gd-building__art img {
+    max-height: 96px;
+  }
+}
+
+/* ---------- 어빌리티 ---------- */
+.gd-abilities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-3);
+}
+
+.gd-ability {
+  --spot-color: rgba(141, 116, 240, 0.16);
+  --spot-ring: rgba(141, 116, 240, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  transition: transform 260ms var(--ease-spring);
+}
+
+.gd-ability:hover {
+  transform: translateY(-3px);
+}
+
+.gd-ability__frame {
+  position: relative;
+  flex: none;
+}
+
+.gd-ability__lv {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--lavender-700);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.gd-ability__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gd-ability__text strong {
+  font-size: var(--fs-14);
+}
+
+.gd-ability__text span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+/* ================= 검색 화면 ================= */
+.gd-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-block: var(--sp-6);
+}
+
+.gd-head__icon {
+  color: var(--mint-fg);
+}
+
+.gd-saved {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-2);
+}
+
+.gd-saved__link {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.gd-saved__link:hover {
+  background: var(--surface-soft);
+}
+
+.gd-saved__text {
+  display: grid;
+  min-width: 0;
+}
+
+.gd-saved__name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gd-saved__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.gd-saved__meta .icon {
+  color: var(--peach-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gd-member__link,
+  .gd-stat,
+  .gd-skill,
+  .gd-ability,
+  .gd-building__art img,
+  .gd-member__avatar .avatar,
+  .gd-member__go,
+  .gd-copy .icon {
+    transition: none;
+  }
+
+  .gd-member__link:hover,
+  .gd-stat:hover,
+  .gd-skill:hover,
+  .gd-ability:hover,
+  .gd-building:hover .gd-building__art img,
+  .gd-member__link:hover .gd-member__avatar .avatar,
+  .gd-member__link:hover .gd-member__go {
+    transform: none;
+  }
+
+  .gd-skill:hover .gd-icon,
+  .gd-member__bar span {
+    animation: none;
+  }
+}

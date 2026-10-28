@@ -6,6 +6,7 @@ import { Avatar } from "../components/Avatar.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, CountUp, Particles, Reveal, SplitText, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
+import { RankChange } from "../components/RankChange.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
 import { Freshness } from "../components/Freshness.jsx";
 import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
@@ -91,16 +92,20 @@ function extraColumns(typeId) {
 }
 
 /**
- * @param {{ row: any, world: string }} props
+ * 순위 칸: 순위 배지 + 순위 변동(▲▼·—·NEW, 순위 변동 API가 줄 때만) + (월드 필터면) 전체 순위.
+ * @param {{ row: any, world: string, type: import("../lib/game.js").RankingType }} props
  */
-function RankCell({ row, world }) {
+function RankCell({ row, world, type }) {
   const overall = Number(row.ranking) || 0;
   const worldRank = Number(row.world_ranking) || 0;
   const main = world && worldRank ? worldRank : overall;
   return (
     <span class="rk-rank">
       <RankBadge rank={main} size={34} />
-      {world && worldRank ? <span class="rk-rank__sub num">전체 {formatComma(overall)}위</span> : null}
+      <span class="rk-rank__side">
+        {type.noRankChange ? null : <RankChange row={row} />}
+        {world && worldRank ? <span class="rk-rank__sub num">전체 {formatComma(overall)}위</span> : null}
+      </span>
     </span>
   );
 }
@@ -160,7 +165,7 @@ function RankingTable({ type, rows, world, highlight }) {
             return (
               <tr key={`${row.ranking}-${name}`} class={hit ? "is-hit" : undefined} data-rank-name={name}>
                 <td class="rk-col-rank">
-                  <RankCell row={row} world={world} />
+                  <RankCell row={row} world={world} type={type} />
                 </td>
                 <th scope="row" class="rk-col-who">
                   <WhoCell type={type} row={row} />
@@ -194,7 +199,7 @@ function RankingCards({ type, rows, world, highlight }) {
         return (
           <li key={`${row.ranking}-${name}`} class={`rk-card${hit ? " is-hit" : ""}`} data-rank-name={name}>
             <div class="rk-card__main">
-              <RankCell row={row} world={world} />
+              <RankCell row={row} world={world} type={type} />
               <WhoCell type={type} row={row} />
               <MetricValue type={type} row={row} />
             </div>
@@ -259,6 +264,7 @@ function Podium({ type, rows, world }) {
                 <span class="rk-podium__badge">
                   <RankBadge rank={rank} size={44} />
                 </span>
+                {type.noRankChange ? null : <RankChange row={row} class="rk-podium__change" />}
                 <Avatar kind={type.subject} world={rowWorld} name={name} src={guild ? row.guild_mark_icon || "" : ""} size={72} />
                 <span class="rk-podium__name">{name}</span>
                 <RowMeta type={type} row={row} max={1} class="rk-podium__meta" />

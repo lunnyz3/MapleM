@@ -1,4 +1,4 @@
-// 장비 탭: 프리셋 전환 · 장비창 배치 그리드 · 툴팁(마우스) · 자세히 보기(하단 시트) · 세트 효과.
+// 장비 탭: 프리셋 전환 · 장비창 배치 그리드 · 툴팁(마우스, 공유 버튼) · 자세히 보기(하단 시트, 공유).
 import { createPortal } from "preact/compat";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
@@ -8,6 +8,10 @@ import { EmptyState } from "../../components/States.jsx";
 import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNumbers, slotKey, starRows, starforce } from "../../lib/character.js";
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
+import { ItemShare } from "./Share.jsx";
+
+/** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
+const TIP_HIDE_DELAY = 220;
 
 /** 공격력을 보여 주는 부위 */
 const ATTACK_SLOTS = new Set(["weapon", "subWeapon", "emblem"]);
@@ -168,9 +172,9 @@ export function EquipDetail({ item, compact = false }) {
 }
 
 /**
- * @param {{ data: any, mode: "boss" | "current", presetNo?: number | null }} props
+ * @param {{ data: any, world: string, mode: "boss" | "current", presetNo?: number | null }} props
  */
-export function Equipment({ data, mode, presetNo }) {
+export function Equipment({ data, world, mode, presetNo }) {
   const tab = data.tabs?.equipment;
   const numbers = presetNumbers(tab);
   const [chosen, setChosen] = useState(/** @type {number | null} */ (null));
@@ -178,6 +182,15 @@ export function Equipment({ data, mode, presetNo }) {
   const [tip, setTip] = useState(/** @type {{ item: any, rect: DOMRect } | null} */ (null));
   const tipRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [tipPos, setTipPos] = useState({ x: -9999, y: 0, side: "right" });
+  const hideTimer = useRef(/** @type {number | undefined} */ (undefined));
+  const profile = data.profile || {};
+  const keepTip = () => window.clearTimeout(hideTimer.current);
+  // 툴팁 안의 공유 버튼을 누를 수 있게, 장비에서 벗어나도 잠깐 기다렸다가 닫는다.
+  const hideTipSoon = () => {
+    keepTip();
+    hideTimer.current = window.setTimeout(() => setTip(null), TIP_HIDE_DELAY);
+  };
+  useEffect(() => keepTip, []);
 
   // 보스 세팅/현재 착용을 바꾸면 그 기준의 프리셋으로 돌아간다.
   useEffect(() => setChosen(null), [mode]);
@@ -248,17 +261,20 @@ export function Equipment({ data, mode, presetNo }) {
         class={`eq-slot spotlight${grade ? ` is-${grade.key}` : ""}${open ? " is-open" : ""}${emblem?.levelGif ? " has-emblem" : ""}`}
         aria-label={`${aria}. 자세히 보기`}
         onClick={() => {
+          keepTip();
           setTip(null);
           setSheetItem(item);
         }}
         onPointerEnter={(event) => {
+          keepTip();
           if (event.pointerType === "mouse" && hasFinePointer()) setTip({ item, rect: /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect() });
         }}
-        onPointerLeave={() => setTip(null)}
+        onPointerLeave={hideTipSoon}
         onFocus={(event) => {
+          keepTip();
           if (hasFinePointer()) setTip({ item, rect: /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect() });
         }}
-        onBlur={() => setTip(null)}
+        onBlur={hideTipSoon}
         {...spotlightHandlers()}
       >
         {emblem?.levelGif ? <img class="eq-slot__emblem-bg" src={emblem.levelGif} alt="" decoding="async" /> : null}
@@ -269,7 +285,6 @@ export function Equipment({ data, mode, presetNo }) {
     );
   };
 
-  const setEffects = Array.isArray(tab.setEffects) ? tab.setEffects : [];
   const figure = data.profile?.imageUrl;
 
   return (
@@ -328,27 +343,6 @@ export function Equipment({ data, mode, presetNo }) {
         ) : null}
       </Reveal>
 
-      {setEffects.length || preset?.data?.soulSetOption ? (
-        <div class="eq-sets">
-          <h3 class="sub-title">세트 효과</h3>
-          <ul class="eq-sets__list">
-            {setEffects.map((set, index) => (
-              <li key={index}>
-                <strong>{set.setName}</strong>
-                <span class="badge num">{set.setCount}세트</span>
-                <span class="eq-sets__opt">{set.setOption}</span>
-              </li>
-            ))}
-            {preset?.data?.soulSetOption ? (
-              <li>
-                <strong>소울 세트</strong>
-                <span class="eq-sets__opt">{preset.data.soulSetOption}</span>
-              </li>
-            ) : null}
-          </ul>
-        </div>
-      ) : null}
-
       {/* 툴팁은 body 에 그린다: 위쪽 요소의 transform 애니메이션이 fixed 위치 기준을 바꾸지 않게 */}
       {tip
         ? createPortal(
@@ -357,8 +351,12 @@ export function Equipment({ data, mode, presetNo }) {
           class={`eq-tip eq-tip--${tipPos.side}`}
           role="tooltip"
           style={{ transform: `translate(${tipPos.x}px, ${tipPos.y}px)` }}
+          onPointerEnter={keepTip}
+          onPointerLeave={hideTipSoon}
         >
           <div class="eq-tip__inner" key={tip.item.itemName}>
+            {/* 툴팁 위 공유 알약: 툴팁 본문은 마우스가 지나가게 두고, 장비 바로 옆 이 줄만 누를 수 있다 */}
+            <ItemShare item={tip.item} profile={profile} world={world} compact />
             <EquipDetail item={tip.item} compact />
           </div>
         </div>,
@@ -367,7 +365,12 @@ export function Equipment({ data, mode, presetNo }) {
         : null}
 
       <Sheet open={Boolean(sheetItem)} title={sheetItem ? sheetItem.itemName || "장비" : "장비"} onClose={() => setSheetItem(null)}>
-        {sheetItem ? <EquipDetail item={sheetItem} /> : null}
+        {sheetItem ? (
+          <div class="eq-sheet">
+            <EquipDetail item={sheetItem} />
+            <ItemShare item={sheetItem} profile={profile} world={world} />
+          </div>
+        ) : null}
       </Sheet>
     </div>
   );

@@ -70,6 +70,8 @@ function createApp() {
   app.post("/api/share/item-image", rateLimiters.shareUploads);
   // Recomputes a character from Nexon data, so it shares the character-page budget.
   app.post("/api/v2/character-stats", rateLimiters.characterPages);
+  // One ranking page with ▲▼ costs up to ~5 Nexon calls (most are cached for hours).
+  app.use("/api/v2/ranking", rateLimiters.nexonData);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

@@ -2280,29 +2280,39 @@ async function getCharacterImage(req, res) {
 
   const { characterName, worldNameCanonical, nexonWorldName } = parsed;
   const cacheKey = `${worldNameCanonical}::${characterName}`;
-  let imageUrl = characterImageCache.get(cacheKey);
+  // Cached as { imageUrl, characterClass, characterLevel } so guild member lists can show jobs too.
+  let summary = characterImageCache.get(cacheKey);
 
-  if (imageUrl === undefined) {
+  if (summary === undefined) {
     try {
       const ocidResult = await resolveOcid(characterName, worldNameCanonical, nexonWorldName, { shouldLog: false });
       const ocid = String(ocidResult?.data?.ocid || "").trim();
       const basic = ocid ? await getCharacterByOcid("/maplestorym/v1/character/basic", ocid) : null;
-      imageUrl = String(basic?.data?.character_image || basic?.data?.character_icon || "").trim();
-      characterImageCache.set(cacheKey, imageUrl, imageUrl ? characterImageTtlMs : characterImageMissTtlMs, imageUrl.length);
+      summary = {
+        imageUrl: String(basic?.data?.character_image || basic?.data?.character_icon || "").trim(),
+        characterClass: String(basic?.data?.character_class || "").trim(),
+        characterLevel: parseNumericValue(basic?.data?.character_level)
+      };
+      characterImageCache.set(
+        cacheKey,
+        summary,
+        summary.imageUrl ? characterImageTtlMs : characterImageMissTtlMs,
+        summary.imageUrl.length + summary.characterClass.length + 16
+      );
     } catch (error) {
       const statusCode = error.response?.status;
       if (statusCode >= 400 && statusCode < 500 && statusCode !== 429) {
-        characterImageCache.set(cacheKey, "", characterImageMissTtlMs, 0);
+        characterImageCache.set(cacheKey, { imageUrl: "", characterClass: "", characterLevel: null }, characterImageMissTtlMs, 0);
       }
       return res.status(statusCode === 400 ? 404 : 502).json({ ok: false, imageUrl: "" });
     }
   }
 
-  if (!imageUrl) {
+  if (!summary.imageUrl) {
     return res.status(404).json({ ok: false, imageUrl: "" });
   }
   res.set("Cache-Control", "public, max-age=3600");
-  return res.json({ ok: true, imageUrl });
+  return res.json({ ok: true, ...summary });
 }
 
 async function getAllCharacterDetails(req, res) {

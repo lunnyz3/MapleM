@@ -32,6 +32,7 @@ export const RANKING_DATE_FLOOR = "2025-11-27";
  * @property {(row: Record<string, any>) => { src: string, label: string }} [grade]  등급 아이콘
  * @property {string} field     핵심 값 필드(카운트업용)
  * @property {boolean} [big]    큰 수(한국식 단위)
+ * @property {boolean} [noRankChange] 순위 변동(▲▼)을 보이지 않음(4주 시즌인 샤레니안의 전장)
  */
 
 /** 월드 → 아이콘(public/assets) */
@@ -188,7 +189,8 @@ export const RANKING_TYPES = [
     meta: (row) => compact(row.guild_master_name),
     grade: (row) => ({ src: row.grade_icon || "", label: "" }),
     field: "season_score",
-    big: true
+    big: true,
+    noRankChange: true
   }
 ];
 
@@ -197,14 +199,16 @@ export function getRankingType(id) {
   return RANKING_TYPES.find((type) => type.id === id) || RANKING_TYPES[0];
 }
 
-/** 화면 주소. 캐릭터·랭킹은 새 화면(/preview/…), 길드는 아직 기존 화면. */
+/** 화면 주소. 캐릭터·랭킹·길드는 새 화면(/preview/…). */
 export const urls = {
   /** @param {string} world @param {string} name */
   character: (world, name) => `/preview/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} world @param {string} name */
   legacyCharacter: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} world @param {string} name */
-  guild: (world, name) => `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  guild: (world, name) => `/preview/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  /** @param {string} world @param {string} name */
+  legacyGuild: (world, name) => `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} type @param {Record<string, string | number>} [params] */
   ranking: (type, params = {}) => {
     const query = new URLSearchParams({ type });
@@ -213,7 +217,7 @@ export const urls = {
   },
   /** @param {string} type */
   legacyRanking: (type) => `/ranking.html?type=${encodeURIComponent(type)}`,
-  guildSearch: "/guild",
+  guildSearch: "/preview/guild",
   legacyHome: "/",
   home: "/preview/",
   design: "/preview/design",

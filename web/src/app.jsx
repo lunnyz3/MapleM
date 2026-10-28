@@ -52,6 +52,7 @@ function lazyPage(loader, exportName) {
 
 const Ranking = lazyPage(() => import("./pages/Ranking.jsx"), "Ranking");
 const Character = lazyPage(() => import("./pages/Character.jsx"), "Character");
+const Guild = lazyPage(() => import("./pages/Guild.jsx"), "Guild");
 const Licenses = lazyPage(() => import("./pages/Licenses.jsx"), "Licenses");
 const DesignSystem = lazyPage(() => import("./pages/DesignSystem.jsx"), "DesignSystem");
 
@@ -66,6 +67,19 @@ function resolveRoute() {
   if (rest === "") return { title: "메이플M 플러스 · 새 메인 미리보기", nav: "home", Page: Home };
   if (rest === "/design") return { title: "디자인 시스템 · 메이플M 플러스", nav: "", Page: DesignSystem };
   if (rest === "/ranking") return { title: "랭킹 · 메이플M 플러스", nav: "ranking", Page: Ranking };
+  if (rest === "/guild") return { title: "길드 · 메이플M 플러스", nav: "guild", Page: Guild };
+  const guild = rest.match(/^\/guild\/([^/]+)\/([^/]+)$/);
+  if (guild) {
+    let world = "";
+    let name = "";
+    try {
+      world = decodeURIComponent(guild[1]);
+      name = decodeURIComponent(guild[2]).trim();
+    } catch {
+      // 잘못된 주소: 아래 화면이 안내한다.
+    }
+    return { title: `${name || "길드"} · 메이플M 플러스`, nav: "guild", Page: Guild, props: { world, name } };
+  }
   if (rest === "/licenses") return { title: "라이선스 · 메이플M 플러스", nav: "", Page: Licenses };
   const character = rest.match(/^\/character\/([^/]+)\/([^/]+)$/);
   if (character) {

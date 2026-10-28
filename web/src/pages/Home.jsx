@@ -8,6 +8,7 @@ import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, CountUp, Particles, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
+import { RankChange } from "../components/RankChange.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
@@ -201,7 +202,10 @@ function RankRow({ type, row, index }) {
   return (
     <li class="rank-list__item" style={{ "--stagger": index }}>
       <a class={`rank-row spotlight${rank === 1 ? " rank-row--first" : ""}`} href={detailUrl(type.subject, world, name)} {...spotlightHandlers()}>
-        <RankBadge rank={rank} />
+        <span class="rank-row__rank">
+          <RankBadge rank={rank} />
+          {type.noRankChange ? null : <RankChange row={row} />}
+        </span>
         <Avatar kind={type.subject} world={world} name={name} src={isGuild ? row.guild_mark_icon || "" : ""} size={44} />
         <span class="rank-row__who">
           <span class="rank-row__name">{name}</span>

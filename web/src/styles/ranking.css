@@ -545,3 +545,26 @@
     animation: none;
   }
 }
+
+/* 순위 변동(▲▼·—·NEW)과 전체 순위는 배지 옆에 세로로 */
+.rk-rank__side {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+
+.rk-rank__side:empty {
+  display: none;
+}
+
+.rk-podium__change {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+@media (max-width: 719px) {
+  .rk-card__main .rk-rank__side {
+    justify-items: center;
+  }
+}
