@@ -15,6 +15,8 @@ const rankingSharenianBattlefieldEndpointPath = "/maplestorym/v1/ranking/shareni
 const rankingSharenianWaterwayEndpointPath = "/maplestorym/v1/ranking/sharenian-waterway";
 const rankingRootOfTimeEndpointPath = "/maplestorym/v1/ranking/root-of-time";
 const maxRetryCount = 2;
+const quotaErrorWriteSuspendMs = 10 * 60 * 1000;
+let requestLogWritesSuspendedUntil = 0;
 
 async function requestNexon(endpoint, params) {
   for (let attempt = 1; attempt <= maxRetryCount + 1; attempt += 1) {
@@ -111,7 +113,33 @@ async function getRankingRootOfTime(params) {
   return requestNexon(endpoint, params);
 }
 
-async function saveRequestLog({
+function isStorageQuotaError(error) {
+  return /space quota/i.test(String(error?.message || ""));
+}
+
+// Request logs are best-effort: a failed write (e.g. Atlas blocking writes once the
+// storage quota is full) must never turn a successful Nexon response into a 500.
+async function saveRequestLog(entry) {
+  if (mongoose.connection.readyState !== 1 || Date.now() < requestLogWritesSuspendedUntil) {
+    return null;
+  }
+
+  try {
+    return await writeRequestLog(entry);
+  } catch (error) {
+    if (isStorageQuotaError(error)) {
+      requestLogWritesSuspendedUntil = Date.now() + quotaErrorWriteSuspendMs;
+      console.error(
+        `[RequestLog] MongoDB storage quota exceeded; skipping log writes for ${quotaErrorWriteSuspendMs / 60000} minutes.`
+      );
+    } else {
+      console.error("[RequestLog] Failed to save request log:", error.message);
+    }
+    return null;
+  }
+}
+
+async function writeRequestLog({
   characterName,
   worldName,
   ocid,
@@ -120,10 +148,6 @@ async function saveRequestLog({
   success,
   responseBody
 }) {
-  if (mongoose.connection.readyState !== 1) {
-    return null;
-  }
-
   const normalizedCharacterName = characterName || "";
   const normalizedWorldName = worldName || "";
   const normalizedOcid = ocid || "";
