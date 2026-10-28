@@ -46,7 +46,7 @@ function useMedia(query) {
 
 /**
  * 통합 검색: 캐릭터/길드 + 월드 + 이름. 입력창에 포커스하면 즐겨찾기·최근 검색을 펼친다(콤보박스).
- * 검색하면 최근 검색에 저장하고 새 상세 화면(/preview/character/<월드>/<이름>, /preview/guild/<월드>/<이름>)으로 간다.
+ * 검색하면 최근 검색에 저장하고 새 상세 화면(/character/<월드>/<이름>, /guild/<월드>/<이름>)으로 간다.
  * @param {{ id?: string, size?: "lg" | "md", showKindSwitch?: boolean, defaultKind?: SearchKind }} props
  */
 export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, defaultKind = "character" }) {

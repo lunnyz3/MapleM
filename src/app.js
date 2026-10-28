@@ -16,31 +16,40 @@ const rateLimiters = {
 };
 
 const publicDir = path.join(__dirname, "..", "public");
-// 개편 미리보기(web/ 의 Vite 빌드 결과). `npm run build:web` 으로 만든다.
-const previewDir = path.join(__dirname, "..", "dist", "preview");
-const previewAssetsDir = path.join(previewDir, "assets") + path.sep;
+// 사이트 화면(web/ 의 Vite 빌드 결과). `npm run build:web` 으로 만든다. 스크립트·스타일은 app/ 아래.
+const webDir = path.join(__dirname, "..", "dist", "web");
+const webAssetsDir = path.join(webDir, "app") + path.sep;
+
 
 function sendPublicPage(fileName) {
   // root 옵션을 써야 체크아웃 경로에 점(.)으로 시작하는 폴더가 있어도 send 가 거부하지 않는다.
   return (req, res) => res.sendFile(fileName, { root: publicDir });
 }
 
-function setPreviewCacheHeaders(res, filePath) {
-  // 파일명에 해시가 붙는 assets/ 만 오래 캐시하고, 나머지는 매번 확인한다.
-  res.setHeader("Cache-Control", filePath.startsWith(previewAssetsDir) ? "public, max-age=31536000, immutable" : "no-cache");
+function setWebCacheHeaders(res, filePath) {
+  // 파일명에 해시가 붙는 app/ 만 오래 캐시하고, 나머지는 매번 확인한다.
+  res.setHeader("Cache-Control", filePath.startsWith(webAssetsDir) ? "public, max-age=31536000, immutable" : "no-cache");
 }
 
-function sendPreviewPage(req, res) {
+function sendWebPage(req, res) {
   // 확장자가 있는 요청이 여기까지 오면 없는 파일이다. HTML로 대체하지 않는다.
   if (path.extname(req.path)) {
     return res.status(404).type("text/plain").send("Not found");
   }
   res.set("Cache-Control", "no-cache");
-  return res.sendFile("index.html", { root: previewDir }, (error) => {
+  return res.sendFile("index.html", { root: webDir }, (error) => {
     if (error && !res.headersSent) {
-      res.status(404).type("text/plain").send("Preview is not built. Run `npm run build:web`.");
+      res.status(404).type("text/plain").send("Web is not built. Run `npm run build:web`.");
     }
   });
+}
+
+// 예전 미리보기 주소(/preview/...)와 기존 화면 파일 주소는 새 주소로 옮긴다(공유된 링크 유지).
+function redirectTo(target) {
+  return (req, res) => {
+    const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+    res.redirect(301, `${target(req)}${query}`);
+  };
 }
 
 function createApp() {
@@ -49,7 +58,20 @@ function createApp() {
   app.disable("x-powered-by");
   app.use(securityHeaders);
   app.use(express.json());
-  app.use(express.static(publicDir));
+  // 기존 화면 파일 주소는 정적 파일보다 먼저 새 주소로 옮긴다.
+  app.get("/index.html", redirectTo(() => "/"));
+  app.get("/ranking.html", redirectTo(() => "/ranking"));
+  // 기존 화면의 상세 주소(?world_name=&character_name=)는 새 상세 주소로.
+  app.get(["/character.html", "/guild.html"], (req, res) => {
+    const world = String(req.query.world_name || "").trim();
+    const name = String(req.query.character_name || req.query.guild_name || "").trim();
+    const kind = req.path === "/character.html" ? "character" : "guild";
+    res.redirect(301, world && name ? `/${kind}/${encodeURIComponent(world)}/${encodeURIComponent(name)}` : kind === "guild" ? "/guild" : "/");
+  });
+
+  // 새 화면 빌드(index.html 은 아래 라우트가 보낸다)와 기존 화면의 정적 파일(이미지·확률표·스크립트).
+  app.use(express.static(webDir, { index: false, setHeaders: setWebCacheHeaders }));
+  app.use(express.static(publicDir, { index: false }));
   app.use(
     "/vendor/html2canvas",
     express.static(path.join(__dirname, "..", "node_modules", "html2canvas", "dist")),
@@ -84,22 +106,17 @@ function createApp() {
     });
   });
 
-  app.get("/character/:worldName/:characterName", sendPublicPage("character.html"));
-  app.get(/^\/character\/[^/]+\/.+$/, sendPublicPage("character.html"));
-  app.get("/ranking", sendPublicPage("ranking.html"));
-  app.get("/ranking/:rankingType", sendPublicPage("ranking.html"));
-  app.get("/guild", sendPublicPage("guild.html"));
-  app.get("/guild/:worldName/:guildName", sendPublicPage("guild.html"));
-  app.get(/^\/guild\/[^/]+\/.+$/, sendPublicPage("guild.html"));
+  // 기존 첫 화면은 /legacy 에 남긴다(거기서 여는 상세 화면은 새 화면으로 간다).
+  app.get(["/legacy", "/legacy/"], sendPublicPage("index.html"));
   app.get("/go/maplem", (req, res) => {
     res.redirect(302, "https://maplem.co.kr");
   });
 
-  // 개편 미리보기: dist/preview 정적 파일, 그 밖의 /preview 하위 경로는 미리보기 index.html 로 대체.
-  app.use("/preview", express.static(previewDir, { index: false, setHeaders: setPreviewCacheHeaders }));
-  app.get(/^\/preview(?:\/.*)?$/, sendPreviewPage);
+  app.get(/^\/preview(?:\/.*)?$/, redirectTo((req) => req.path.replace(/^\/preview/, "") || "/"));
+  app.get("/ranking/:rankingType", (req, res) => res.redirect(301, `/ranking?type=${encodeURIComponent(req.params.rankingType)}`));
 
-  app.get(/.*/, sendPublicPage("index.html"));
+  // 나머지 주소는 새 화면이 맡는다(없는 화면은 새 화면이 "준비 중"으로 안내).
+  app.get(/.*/, sendWebPage);
 
   return app;
 }

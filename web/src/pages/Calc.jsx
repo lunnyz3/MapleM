@@ -1,4 +1,4 @@
-// 계산기(/preview/calc?view=hexa|stat|symbol|liberation&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 ·
+// 계산기(/calc?view=hexa|stat|symbol|liberation&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 ·
 // 심볼 비용 · 해방 날짜. 캐릭터를 불러오면 지금 레벨을 채운다(HEXA 코어·심볼, 제네시스 무기면 해방 완료).
 import "../styles/calc.css";
 import hexa from "../../../src/game-data/hexa.json";
@@ -497,7 +497,7 @@ export function Calc() {
     setView(next);
     const params = new URLSearchParams(window.location.search);
     params.set("view", next);
-    window.history.replaceState(null, "", `/preview/calc?${params}`);
+    window.history.replaceState(null, "", `/calc?${params}`);
   };
 
   const onLoad = async (event) => {
@@ -531,7 +531,7 @@ export function Calc() {
       setLoad({ status: "done", text: `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.` });
       const params = new URLSearchParams(window.location.search);
       params.set("a", `${who.world}/${name}`);
-      window.history.replaceState(null, "", `/preview/calc?${params}`);
+      window.history.replaceState(null, "", `/calc?${params}`);
     } catch (error) {
       setLoad({ status: "error", text: /** @type {any} */ (error)?.message || "캐릭터를 불러오지 못했어요." });
     }

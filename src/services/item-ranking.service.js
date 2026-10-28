@@ -175,20 +175,36 @@ function pageOf(value) {
   return Math.min(MAX_PAGE, Math.max(1, page));
 }
 
-/** Slots with item counts, then the families of `slot` with counts (most owned first). */
+const GROUPS_TTL_MS = 5 * 60 * 1000;
+const GROUPS_TIMEOUT_MS = 30000;
+const groupsCache = new TtlLruCache({ maxEntries: 500, maxBytes: 4 * 1024 * 1024 });
+
+/**
+ * Slots with item counts, then the families of `slot` with counts (most owned first). Counting
+ * a few million rows takes seconds, so results are kept for five minutes.
+ */
 async function listItemGroups({ slot, worldName } = {}) {
   if (!isMongoConnected()) return { slots: [], families: [] };
+  const cacheKey = `${slot || ""}\u0000${worldName || ""}`;
+  const cached = groupsCache.get(cacheKey);
+  if (cached) return cached;
+  const result = await countItemGroups({ slot, worldName });
+  groupsCache.set(cacheKey, result, GROUPS_TTL_MS, 4096);
+  return result;
+}
+
+async function countItemGroups({ slot, worldName }) {
   // Rows scored by an older rule are left out until they are collected again.
   const match = { family: { $ne: "" }, scoreVersion: SCORE_VERSION };
   if (worldName) match.worldName = worldName;
   const [slots, families] = await Promise.all([
-    EquipmentItem.aggregate([{ $match: match }, { $group: { _id: "$slot", count: { $sum: 1 } } }, { $sort: { count: -1 } }]).option({ maxTimeMS: DB_TIMEOUT_MS }),
+    EquipmentItem.aggregate([{ $match: match }, { $group: { _id: "$slot", count: { $sum: 1 } } }, { $sort: { count: -1 } }]).option({ maxTimeMS: GROUPS_TIMEOUT_MS }),
     slot
       ? EquipmentItem.aggregate([
           { $match: { ...match, slot } },
           { $group: { _id: "$family", count: { $sum: 1 } } },
           { $sort: { count: -1 } }
-        ]).option({ maxTimeMS: DB_TIMEOUT_MS })
+        ]).option({ maxTimeMS: GROUPS_TIMEOUT_MS })
       : []
   ]);
   return {

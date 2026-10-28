@@ -146,7 +146,7 @@
     inset: auto 0 0;
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
     background: var(--surface-glass);
@@ -1263,4 +1263,21 @@ a.stat-tile:hover .stat-tile__go {
   .toast {
     animation: none;
   }
+}
+
+/* 상단 메뉴의 카톡 봇: 무료 배지 */
+.topnav__link--bot {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.topnav__free {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: #ff5b5b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 16px;
 }

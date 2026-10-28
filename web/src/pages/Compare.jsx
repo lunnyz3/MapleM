@@ -1,4 +1,4 @@
-// 캐릭터 비교(/preview/compare?a=월드/이름&b=월드/이름): 두 캐릭터의 보스 세팅 주요 스탯·전투력과
+// 캐릭터 비교(/compare?a=월드/이름&b=월드/이름): 두 캐릭터의 보스 세팅 주요 스탯·전투력과
 // 보스 세팅 장비를 부위별 템환산 점수로 나란히 놓는다. 주소만으로 같은 비교를 다시 볼 수 있다.
 import "../styles/compare.css";
 import { useEffect, useMemo, useState } from "preact/hooks";
@@ -33,7 +33,7 @@ function compareUrl(a, b) {
   const params = new URLSearchParams();
   if (a.name) params.set("a", `${a.world}/${a.name}`);
   if (b.name) params.set("b", `${b.world}/${b.name}`);
-  return `/preview/compare?${params}`;
+  return `/compare?${params}`;
 }
 
 /** 비교할 주요 스탯(공격 타입별로 자기 쪽 값). */

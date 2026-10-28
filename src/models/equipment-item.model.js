@@ -34,10 +34,13 @@ const equipmentItemSchema = new mongoose.Schema(
 );
 
 equipmentItemSchema.index({ ocid: 1, fingerprint: 1 }, { unique: true });
-equipmentItemSchema.index({ slot: 1, family: 1, score: -1 });
-equipmentItemSchema.index({ slot: 1, family: 1, scoreWithoutEmblem: -1 });
-equipmentItemSchema.index({ slot: 1, score: -1 });
-equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, score: -1 });
+// Every ranking read filters on the current scoreVersion, so it leads or follows the group keys.
+equipmentItemSchema.index({ slot: 1, family: 1, scoreVersion: 1, score: -1 });
+equipmentItemSchema.index({ slot: 1, family: 1, scoreVersion: 1, scoreWithoutEmblem: -1 });
+equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, scoreVersion: 1, score: -1 });
+equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, scoreVersion: 1, scoreWithoutEmblem: -1 });
+// Slot and family counts (item ranking chips) read only this index.
+equipmentItemSchema.index({ scoreVersion: 1, family: 1, slot: 1, worldName: 1 });
 equipmentItemSchema.index({ checkedAt: 1 }, { name: "checkedAt_ttl", expireAfterSeconds: ITEM_TTL_SECONDS });
 
 const EquipmentItem = mongoose.model("EquipmentItem", equipmentItemSchema);

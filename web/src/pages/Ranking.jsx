@@ -1,4 +1,4 @@
-// 랭킹 화면(/preview/ranking): 공식 랭킹 7종 · 월드 · 날짜 · 쪽 · 이름 찾기, 그리고 자체 수집 랭킹(아이템·스펙).
+// 랭킹 화면(/ranking): 공식 랭킹 7종 · 월드 · 날짜 · 쪽 · 이름 찾기, 그리고 자체 수집 랭킹(아이템·스펙).
 // 주소의 ?view=&type=&date=&world_name=&page=&name= 과 화면 상태를 맞춘다(뒤로 가기 지원).
 import "../styles/ranking.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -419,7 +419,7 @@ function collectedUrl(view, query) {
   }
   if (query.world) params.set("world_name", query.world);
   if (query.page > 1) params.set("page", String(query.page));
-  return `/preview/ranking?${params}`;
+  return `/ranking?${params}`;
 }
 
 /** @param {{ view: "item" | "spec", onView: (view: View) => void }} props */
@@ -467,7 +467,7 @@ export function Ranking() {
   }, []);
   const onView = (/** @type {View} */ next) => {
     if (next === view) return;
-    const url = next === "official" ? "/preview/ranking" : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
+    const url = next === "official" ? "/ranking" : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
     window.history.pushState(null, "", url);
     setView(next);
   };

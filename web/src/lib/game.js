@@ -199,32 +199,27 @@ export function getRankingType(id) {
   return RANKING_TYPES.find((type) => type.id === id) || RANKING_TYPES[0];
 }
 
-/** 화면 주소. 캐릭터·랭킹·길드는 새 화면(/preview/…). */
+/** 화면 주소. 기존 화면은 /legacy 첫 화면만 남아 있다. */
 export const urls = {
   /** @param {string} world @param {string} name */
-  character: (world, name) => `/preview/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  character: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} world @param {string} name */
-  legacyCharacter: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
-  /** @param {string} world @param {string} name */
-  guild: (world, name) => `/preview/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
-  /** @param {string} world @param {string} name */
-  legacyGuild: (world, name) => `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  guild: (world, name) => `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} type @param {Record<string, string | number>} [params] */
   ranking: (type, params = {}) => {
     const query = new URLSearchParams({ type });
     for (const [key, value] of Object.entries(params)) if (value !== "" && value !== undefined) query.set(key, String(value));
-    return `/preview/ranking?${query}`;
+    return `/ranking?${query}`;
   },
-  /** @param {string} type */
-  legacyRanking: (type) => `/ranking.html?type=${encodeURIComponent(type)}`,
-  guildSearch: "/preview/guild",
-  calc: "/preview/calc",
+  guildSearch: "/guild",
+  calc: "/calc",
   /** @param {string} [world] @param {string} [name] 왼쪽에 넣어 둘 캐릭터 */
-  compare: (world = "", name = "") => (world && name ? `/preview/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/preview/compare"),
-  legacyHome: "/",
-  home: "/preview/",
-  design: "/preview/design",
-  licenses: "/preview/licenses"
+  compare: (world = "", name = "") => (world && name ? `/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/compare"),
+  legacyHome: "/legacy",
+  bot: "/bot",
+  home: "/",
+  design: "/design",
+  licenses: "/licenses"
 };
 
 /**

@@ -53,22 +53,24 @@ function lazyPage(loader, exportName) {
 const Ranking = lazyPage(() => import("./pages/Ranking.jsx"), "Ranking");
 const Character = lazyPage(() => import("./pages/Character.jsx"), "Character");
 const Guild = lazyPage(() => import("./pages/Guild.jsx"), "Guild");
+const Bot = lazyPage(() => import("./pages/Bot.jsx"), "Bot");
 const Calc = lazyPage(() => import("./pages/Calc.jsx"), "Calc");
 const Compare = lazyPage(() => import("./pages/Compare.jsx"), "Compare");
 const Licenses = lazyPage(() => import("./pages/Licenses.jsx"), "Licenses");
 const DesignSystem = lazyPage(() => import("./pages/DesignSystem.jsx"), "DesignSystem");
 
 /**
- * /preview/ 아래 경로 → 화면.
+ * 사이트 경로 → 화면.
  * @returns {{ title: string, nav: any, Page: any, props?: any }}
  */
 function resolveRoute() {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const path = window.location.pathname.replace(/\/+$/, "");
   const rest = path.startsWith(base) ? path.slice(base.length) : path;
-  if (rest === "") return { title: "메이플M 플러스 · 새 메인 미리보기", nav: "home", Page: Home };
+  if (rest === "") return { title: "메이플M 플러스", nav: "home", Page: Home };
   if (rest === "/design") return { title: "디자인 시스템 · 메이플M 플러스", nav: "", Page: DesignSystem };
   if (rest === "/ranking") return { title: "랭킹 · 메이플M 플러스", nav: "ranking", Page: Ranking };
+  if (rest === "/bot") return { title: "메엠 봇 · 메이플M 플러스", nav: "bot", Page: Bot };
   if (rest === "/calc") return { title: "계산기 · 메이플M 플러스", nav: "calc", Page: Calc };
   if (rest === "/compare") return { title: "캐릭터 비교 · 메이플M 플러스", nav: "compare", Page: Compare };
   if (rest === "/guild") return { title: "길드 · 메이플M 플러스", nav: "guild", Page: Guild };

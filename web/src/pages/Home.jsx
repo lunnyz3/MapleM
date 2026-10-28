@@ -39,6 +39,19 @@ function Hero() {
         <Sparkle class="hero__sparkle hero__sparkle--3" size={12} />
       </div>
       <div class="hero__content">
+        <a class="bot-cta" href={urls.bot}>
+          <span class="bot-cta__shine" aria-hidden="true" />
+          <Sparkle class="bot-cta__spark bot-cta__spark--1" size={14} />
+          <Sparkle class="bot-cta__spark bot-cta__spark--2" size={10} />
+          <span class="bot-cta__icon" aria-hidden="true">
+            <Icon name="chat" size={18} />
+          </span>
+          <span class="bot-cta__text">
+            내 단톡방에 <strong>메엠 봇</strong> 넣기
+          </span>
+          <span class="bot-cta__free">무료</span>
+          <Icon name="arrowRight" size={16} class="bot-cta__go" />
+        </a>
         <SearchBox id="hero-search" size="lg" />
       </div>
     </section>

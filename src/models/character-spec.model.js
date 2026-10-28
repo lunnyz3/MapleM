@@ -32,8 +32,8 @@ const characterSpecSchema = new mongoose.Schema(
 
 characterSpecSchema.index({ worldName: 1, characterName: 1 });
 ["itemScore", "itemScoreWithoutEmblem", "potential", "additionalPotential", "maxDamage", "combatPower", "characterLevel"].forEach((field) => {
-  characterSpecSchema.index({ [field]: -1 });
-  characterSpecSchema.index({ worldName: 1, [field]: -1 });
+  characterSpecSchema.index({ scoreVersion: 1, [field]: -1 });
+  characterSpecSchema.index({ scoreVersion: 1, worldName: 1, [field]: -1 });
 });
 characterSpecSchema.index({ checkedAt: 1 }, { name: "checkedAt_ttl", expireAfterSeconds: SPEC_TTL_SECONDS });
 

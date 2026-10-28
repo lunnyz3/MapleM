@@ -177,10 +177,6 @@ function GuildHero({ guild }) {
             <Icon name="link" size={18} />
             링크 복사
           </button>
-          <a class="btn btn--ghost btn--sm" href={urls.legacyGuild(guild.world, guild.name)}>
-            기존 화면에서 보기
-            <Icon name="external" size={16} />
-          </a>
         </div>
       </div>
     </section>
@@ -483,7 +479,7 @@ function GuildSkeleton() {
   );
 }
 
-/** 길드 검색 화면(/preview/guild): 검색창 + 즐겨찾기·최근 본 길드. */
+/** 길드 검색 화면(/guild): 검색창 + 즐겨찾기·최근 본 길드. */
 function GuildSearch() {
   const saved = useSaved();
   const seen = new Set();

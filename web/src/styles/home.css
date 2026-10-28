@@ -636,3 +636,149 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ================= 카톡 봇 안내(히어로 검색창 위) ================= */
+.bot-cta {
+  position: relative;
+  display: inline-flex;
+  align-self: center;
+  gap: 10px;
+  align-items: center;
+  overflow: hidden;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid rgba(255, 213, 72, 0.7);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(120deg, #fff8d6, #ffffff 45%, #fff3c4);
+  color: #3a2a00;
+  font-size: var(--fs-14);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(245, 165, 36, 0.28), 0 0 0 4px rgba(255, 215, 72, 0.18);
+  animation: bot-cta-glow 2.4s ease-in-out infinite;
+  transition: transform var(--dur-hover) var(--ease);
+}
+
+.bot-cta:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.bot-cta:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.bot-cta__shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.85) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: bot-cta-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bot-cta__spark {
+  position: absolute;
+  color: #f5a524;
+  animation: bot-cta-twinkle 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.bot-cta__spark--1 {
+  top: 3px;
+  right: 46px;
+}
+
+.bot-cta__spark--2 {
+  bottom: 4px;
+  left: 44px;
+  animation-delay: 0.9s;
+}
+
+.bot-cta__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fee500;
+  color: #191600;
+}
+
+.bot-cta__text strong {
+  font-weight: 900;
+}
+
+.bot-cta__free {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: #ff5b5b;
+  color: #fff;
+  font-size: var(--fs-12);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.bot-cta__go {
+  color: #8a5a00;
+}
+
+@keyframes bot-cta-glow {
+  50% {
+    box-shadow: 0 12px 32px rgba(245, 165, 36, 0.4), 0 0 0 7px rgba(255, 215, 72, 0.22);
+  }
+}
+
+@keyframes bot-cta-shine {
+  0%,
+  45% {
+    transform: translateX(-120%);
+  }
+  75%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes bot-cta-twinkle {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6) rotate(25deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bot-cta,
+  .bot-cta__shine,
+  .bot-cta__spark {
+    animation: none;
+  }
+}
+
+/* 어두운 테마: 노란 배경을 어둡게 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bot-hero,
+  :root:not([data-theme="light"]) .bot-cta {
+    border-color: rgba(255, 213, 72, 0.35);
+    background: linear-gradient(130deg, #2d2610, var(--surface) 55%, #2f2711);
+    color: var(--text);
+  }
+
+  :root:not([data-theme="light"]) .bot-hero__title,
+  :root:not([data-theme="light"]) .bot-hero__lead,
+  :root:not([data-theme="light"]) .bot-cta__go {
+    color: var(--text);
+  }
+}
+
+:root[data-theme="dark"] .bot-hero,
+:root[data-theme="dark"] .bot-cta {
+  border-color: rgba(255, 213, 72, 0.35);
+  background: linear-gradient(130deg, #2d2610, var(--surface) 55%, #2f2711);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .bot-hero__title,
+:root[data-theme="dark"] .bot-hero__lead,
+:root[data-theme="dark"] .bot-cta__go {
+  color: var(--text);
+}

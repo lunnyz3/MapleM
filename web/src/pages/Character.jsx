@@ -123,7 +123,7 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
           ) : null}
           {specChips.map((chip) => (
             <li key={chip.key}>
-              <a class="chip" href={`/preview/ranking?${new URLSearchParams({ view: "spec", metric: chip.key, world_name: world })}`}>
+              <a class="chip" href={`/ranking?${new URLSearchParams({ view: "spec", metric: chip.key, world_name: world })}`}>
                 <span class="chip__label">{chip.label}</span>
                 <strong class="chip__value num">{chip.value}</strong>
                 {summary.ranks[chip.key] ? <span class="chip__sub num">{topText(summary.ranks[chip.key])}</span> : null}
@@ -165,10 +165,6 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
             <Icon name="heart" size={18} filled={favorite} />
             {favorite ? "즐겨찾기됨" : "즐겨찾기"}
           </button>
-          <a class="btn btn--ghost btn--sm" href={urls.legacyCharacter(world, name)}>
-            기존 화면에서 보기
-            <Icon name="external" size={16} />
-          </a>
         </div>
         <div class="ch-hero__fresh">
           <Freshness at={data.meta?.dataTimestamp} />
