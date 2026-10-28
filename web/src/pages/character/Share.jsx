@@ -1,4 +1,4 @@
-// 캐릭터 화면 공유: 프로필 카드(이미지 저장·카카오톡·공유창·링크 복사) · 장비 카드(잠재 상위 % 자랑 문구).
+// 캐릭터 화면 공유: 프로필 카드(이미지 저장·카카오톡·공유창·링크 복사) · 장비 카드(잠재 확률 자랑 문구).
 import "../../styles/share.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { BrandMark } from "../../components/Decor.jsx";
@@ -346,7 +346,7 @@ export function ProfileShareButton({ data, world }) {
 }
 
 /**
- * 장비 공유: 잠재 상위 % 문구(계산되면) + 문구 넣기 토글 + 공유 버튼. 툴팁에서는 아이콘만.
+ * 장비 공유: 잠재 확률 문구(계산되면) + 문구 넣기 토글 + 공유 버튼. 툴팁에서는 아이콘만.
  * 시트에서는 [자랑 문구] → children(장비 상세) → [아래에 붙는 공유 버튼 줄] 순서로 그린다.
  * @param {{ item: any, profile: any, world: string, compact?: boolean, children?: any }} props
  */

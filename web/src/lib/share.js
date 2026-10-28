@@ -490,7 +490,7 @@ export async function copyText(text) {
   return ok;
 }
 
-// ---------------- 잠재 상위 % 자랑 문구 ----------------
+// ---------------- 잠재 확률 자랑 문구 ----------------
 
 /** @type {WeakMap<object, Promise<any>>} 장비별 계산 결과(문구·장비 상세가 같이 쓴다) */
 const breakdowns = new WeakMap();
@@ -519,9 +519,9 @@ function toPercentText(module, probability) {
 }
 
 /**
- * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 추가 옵션 상위 %("3.2%"). 없으면 null.
+ * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 잠재·에디·추가 옵션이 그대로 나올 확률("3.2%", 마스터리 적용 전 값 기준). 없으면 null.
  * @param {any} item @param {any} profile
- * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionTop: string, potentialTop: string, additionalPotentialTop: string } | null>}
+ * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionChance: string, potentialChance: string, additionalPotentialChance: string } | null>}
  */
 export async function itemInsight(item, profile) {
   const result = await itemBreakdown(item, profile);
@@ -534,17 +534,17 @@ export async function itemInsight(item, profile) {
       additionalPotential: texts(breakdown.mastery?.additionalPotential),
       additional: texts(breakdown.mastery?.additional)
     },
-    additionalOptionTop: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent),
+    additionalOptionChance: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent),
     // Potential odds are computed from pre-mastery values, same as the share caption.
-    potentialTop: toPercentText(result.module, breakdown.potentialProbability),
-    additionalPotentialTop: toPercentText(result.module, breakdown.additionalProbability)
+    potentialChance: toPercentText(result.module, breakdown.potentialProbability),
+    additionalPotentialChance: toPercentText(result.module, breakdown.additionalProbability)
   };
 }
 
 /**
- * 기존 화면과 같은 문구("상위 0.012345%, 블랙큐브 N개, 에디셔널 큐브 M개 짜리 아이템입니다!").
- * 추가 옵션 상위 % 를 계산할 수 있으면 "…, 추가 옵션 상위 3.2% 짜리 아이템입니다!"처럼 붙인다. 계산할 수 없으면 "".
- * 기존 화면은 소수 6자리로 잘라 아주 귀한 아이템이 "상위 0.000000%"로 나왔으므로, 그보다 작으면 유효숫자 2자리까지 늘린다.
+ * 공유 문구("확률 0.012345% (블랙큐브 N개, 에디셔널 큐브 M개) 짜리 아이템입니다!"). 확률은 마스터리 적용 전 값 기준.
+ * 추가 옵션 확률을 계산할 수 있으면 "…, 추가 옵션 확률 3.2% 짜리 아이템입니다!"처럼 붙인다. 계산할 수 없으면 "".
+ * 소수 6자리로 자르면 아주 귀한 아이템이 "0.000000%"로 나오므로, 그보다 작으면 유효숫자 2자리까지 늘린다.
  * @param {any} item @param {any} profile
  * @returns {Promise<string>}
  */
@@ -554,7 +554,7 @@ export async function topPercentCaption(item, profile) {
     const breakdown = result?.breakdown;
     if (!breakdown) return "";
     const flame = result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent);
-    const flameLabel = flame ? `추가 옵션 상위 ${flame}` : "";
+    const flameLabel = flame ? `추가 옵션 확률 ${flame}` : "";
     const percent = Number(breakdown.totalPercent);
     if (breakdown.totalPercent === null || !Number.isFinite(percent) || percent <= 0) {
       return flameLabel ? `${flameLabel} 짜리 아이템입니다!` : "";
@@ -565,7 +565,7 @@ export async function topPercentCaption(item, profile) {
       const value = Number(probability);
       return Number.isFinite(value) && value > 0 ? `${Math.ceil(1 / value).toLocaleString("ko-KR")}개` : "-";
     };
-    return `상위 ${bounded.toFixed(digits)}%, 블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)}${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
+    return `확률 ${bounded.toFixed(digits)}% (블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)})${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
   } catch {
     return "";
   }

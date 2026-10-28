@@ -211,7 +211,7 @@ test("레벨 표 선택: 예외 장비는 공식 레벨 표, 나머지는 가장
   assert.equal(await tableKeyFor({ itemName: "미트라의 분노 : 전사", slotName: "엠블렘", equipmentLevel: 200 }), "엠블렘 200");
 });
 
-test("상위 % 계산이 새 파일명·엠블렘 표·레벨 예외로 동작한다", async () => {
+test("확률 계산이 새 파일명·엠블렘 표·레벨 예외로 동작한다", async () => {
   const { resolveTopPercentBreakdown } = await importItemShare();
   const physical = { attackType: "physical" };
 
@@ -356,7 +356,7 @@ test("동기화 스크립트가 추가 옵션 블록(옵션·확률·증가값·
 });
 
 // ---------------------------------------------------------------------------
-// 장비 마스터리: 상위 % 는 마스터리 보너스를 뺀 원래 값으로 찾는다(public/probability/equipment_mastery.json).
+// 장비 마스터리: 확률은 마스터리 보너스를 뺀 원래 값으로 찾는다(public/probability/equipment_mastery.json).
 
 // 넥슨 API 응답(test/fixtures/characters/유니온-피카츄.json)의 장비를 화면용 필드로 옮긴다.
 const PIKACHU = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "characters", "유니온-피카츄.json"), "utf8"));
@@ -498,7 +498,7 @@ test("근거 없는 상승량은 빼지 않는다: 잠재 최대 HP 줄, 골드�
   assert.equal(rare.additionalOptionProbability, null);
 });
 
-test("추가 옵션 상위 %: 둘째 줄은 2개 등장 확률을 곱하고, 직업에 맞는 옵션만 센다", async () => {
+test("추가 옵션 확률: 둘째 줄은 2개 등장 확률을 곱하고, 직업에 맞는 옵션만 센다", async () => {
   const { resolveTopPercentBreakdown, formatAdditionalOptionPercent, buildTopPercentCaption } = await importItemShare();
   // 제네시스 그람(영원한, 보너스 4): 물리 공격력 3,107·2,875 → 1,907·1,675 (보너스 1개당 600)
   const gram = {
@@ -537,7 +537,7 @@ test("추가 옵션 상위 %: 둘째 줄은 2개 등장 확률을 곱하고, 직
   assert.equal(formatAdditionalOptionPercent(0.08196), "0.082%");
   assert.equal(formatAdditionalOptionPercent(null), "");
   const caption = await buildTopPercentCaption(pikachuItem("신발"), MAGICAL);
-  assert.match(caption, /^상위 [\d.]+%, 블랙큐브 [\d,]+개, 에디셔널 큐브 [\d,]+개, 추가 옵션 상위 4\.3% 짜리 아이템입니다!$/);
+  assert.match(caption, /^확률 [\d.]+% \(블랙큐브 [\d,]+개, 에디셔널 큐브 [\d,]+개\), 추가 옵션 확률 4\.3% 짜리 아이템입니다!$/);
 });
 
 test("줄 나누기: 보너스 수를 줄마다 최대 2개로 나누는 모든 경우", async () => {

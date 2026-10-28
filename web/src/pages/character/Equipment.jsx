@@ -18,7 +18,7 @@ const TIP_HIDE_DELAY = 220;
 const ATTACK_SLOTS = new Set(["weapon", "subWeapon", "emblem"]);
 
 /**
- * 장비 한 개의 계산 결과(줄별 마스터리 상승분 · 추가 옵션 상위 %). 계산 중이거나 못 하면 null.
+ * 장비 한 개의 계산 결과(줄별 마스터리 상승분 · 잠재·에디·추가 옵션 확률). 계산 중이거나 못 하면 null.
  * @param {any} item @param {any} profile
  */
 function useItemInsight(item, profile) {
@@ -154,9 +154,9 @@ export function EquipDetail({ item, profile = null, compact = false }) {
 
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
-        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} />
-        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialTop ? `상위 ${insight.potentialTop}` : ""} />
-        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialTop ? `상위 ${insight.additionalPotentialTop}` : ""} />
+        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionChance ? `확률 ${insight.additionalOptionChance}` : ""} />
+        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialChance ? `확률 ${insight.potentialChance}` : ""} />
+        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialChance ? `확률 ${insight.additionalPotentialChance}` : ""} />
         {emblem ? (
           <section class="eq-opts eq-opts--emblem">
             <h4 class="eq-opts__head">

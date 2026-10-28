@@ -279,7 +279,7 @@ async function buildTopPercentCaption(item, profileContext = null) {
   const topPercent = normalizeTopPercentValue(breakdown?.totalPercent);
   const additionalOption = formatAdditionalOptionPercent(breakdown?.additionalOptionPercent);
   const additionalOptionLabel = additionalOption
-    ? `\uCD94\uAC00 \uC635\uC158 \uC0C1\uC704 ${additionalOption}`
+    ? `\uCD94\uAC00 \uC635\uC158 \uD655\uB960 ${additionalOption}`
     : "";
   if (topPercent === null) {
     return additionalOptionLabel
@@ -294,7 +294,7 @@ async function buildTopPercentCaption(item, profileContext = null) {
     resolveExpectedCubeCount(breakdown?.additionalProbability),
   );
   const additionalOptionPart = additionalOptionLabel ? `, ${additionalOptionLabel}` : "";
-  return `\uC0C1\uC704 ${formatTopPercentValue(topPercent)}%, \uBE14\uB799\uD050\uBE0C ${blackCubeLabel}, \uC5D0\uB514\uC154\uB110 \uD050\uBE0C ${additionalCubeLabel}${additionalOptionPart} \uC9DC\uB9AC \uC544\uC774\uD15C\uC785\uB2C8\uB2E4!`;
+  return `\uD655\uB960 ${formatTopPercentValue(topPercent)}% (\uBE14\uB799\uD050\uBE0C ${blackCubeLabel}, \uC5D0\uB514\uC154\uB110 \uD050\uBE0C ${additionalCubeLabel})${additionalOptionPart} \uC9DC\uB9AC \uC544\uC774\uD15C\uC785\uB2C8\uB2E4!`;
 }
 
 function resolveOptionKind(optionName) {
