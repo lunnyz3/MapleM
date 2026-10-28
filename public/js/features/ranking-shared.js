@@ -59,11 +59,6 @@ function getRankingWorldOrderIndex(worldName) {
     return 6;
   if (normalized === normalizeForMatch("아케인") || normalized === "arcane")
     return 7;
-  if (
-    normalized === normalizeForMatch("챌린저스") ||
-    normalized === "challengers"
-  )
-    return 8;
   return 99;
 }
 

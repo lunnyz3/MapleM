@@ -5,8 +5,8 @@
   { canonical: "엘리시움", nexon: "Elysium", aliases: ["엘리시움", "elysium"] },
   { canonical: "유니온", nexon: "Union", aliases: ["유니온", "union"] },
   { canonical: "제니스", nexon: "Zenith", aliases: ["제니스", "zenith"] },
-  { canonical: "아케인", nexon: "Arcane", aliases: ["아케인", "arcane"] },
-  { canonical: "챌린저스", nexon: "Challengers", aliases: ["챌린저스", "challengers"] }
+  { canonical: "아케인", nexon: "Arcane", aliases: ["아케인", "arcane"] }
+  // 챌린저스(2026-07-30~09-30 한정 운영, 종료 후 캐릭터 삭제)는 2026-10-28 제거.
 ]);
 
 const worldNameAliases = new Map();
@@ -16,7 +16,7 @@ for (const world of worldDefinitions) {
   }
 }
 
-const allowedWorldNames = Object.freeze(["스카니아", "크로아", "루나", "엘리시움", "유니온", "제니스", "아케인", "챌린저스"]);
+const allowedWorldNames = Object.freeze(["스카니아", "크로아", "루나", "엘리시움", "유니온", "제니스", "아케인"]);
 
 function normalizeWorldName(input) {
   const raw = String(input || "").trim();
