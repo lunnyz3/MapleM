@@ -3003,3 +3003,64 @@ button.eq-slot:hover .eq-slot__img {
   text-decoration: line-through;
   text-decoration-color: var(--border);
 }
+
+/* 공유 이미지 자랑 문구 스위치(장비창 오른쪽 위) */
+.eq-caption-switch {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.eq-caption-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.eq-caption-switch__track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  transition: background-color var(--dur-hover) var(--ease);
+}
+
+.eq-caption-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform var(--dur-hover) var(--ease-spring, var(--ease));
+}
+
+.eq-caption-switch input:checked + .eq-caption-switch__track {
+  background: var(--primary);
+}
+
+.eq-caption-switch input:checked + .eq-caption-switch__track .eq-caption-switch__thumb {
+  transform: translateX(16px);
+}
+
+.eq-caption-switch input:checked ~ .eq-caption-switch__text {
+  color: var(--text);
+}
+
+.eq-caption-switch input:focus-visible + .eq-caption-switch__track {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

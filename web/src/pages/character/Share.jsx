@@ -23,6 +23,7 @@ import {
   topPercentCaption,
   webShare
 } from "../../lib/share.js";
+import { useShareCaption } from "../../lib/shareSettings.js";
 import { EquipDetail } from "./Equipment.jsx";
 
 /** 카드 안 다른 출처 이미지(넥슨)는 CORS 로 받아야 캡처에 찍힌다. */
@@ -107,13 +108,14 @@ export function ProfileShareCard({ profile, world }) {
 }
 
 /**
- * 장비 공유 카드: 게임 툴팁 판 + (선택) 자랑 문구 말풍선 + 주인.
+ * 장비 공유 카드: 게임 툴팁 판 + (선택) 자랑 문구 말풍선 + 주인. 옵션은 두 줄로 나란히 놓아 정사각형에
+ * 가깝게 만든다(카카오톡 말풍선은 세로로 긴 이미지의 가운데만 잘라 보여 준다).
  * @param {{ item: any, caption?: string, profile: any, world: string }} props
  */
 export function ItemShareCard({ item, caption = "", profile, world }) {
   const worldIcon = worldIconSrc(world);
   return (
-    <article class="sc sc-item">
+    <article class="sc sc-item sc-item--wide">
       <span class="sc-glow" aria-hidden="true" />
       <header class="sc-item__owner">
         {profile?.imageUrl ? <img class="sc-item__avatar" src={profile.imageUrl} alt="" width={40} height={40} crossOrigin={CORS} /> : null}
@@ -352,7 +354,7 @@ export function ProfileShareButton({ data, world }) {
  */
 export function ItemShare({ item, profile, world, compact = false, children }) {
   const [caption, setCaption] = useState(/** @type {string | null} */ (null));
-  const [withCaption, setWithCaption] = useState(true);
+  const [withCaption, setWithCaption] = useShareCaption();
   const cache = useRef(/** @type {Map<string, Promise<Blob>>} */ (new Map()));
   const name = profile?.name || "";
 

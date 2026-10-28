@@ -1,8 +1,7 @@
-// 카톡 봇(/bot): 단톡방에 메엠 봇을 넣는 방법과 명령어. 봇 명령은 iris 봇(ipy2/irispy.py)과 같다.
+// 카톡 봇(/bot): 단톡방에 봇을 넣는 방법과 명령어. 봇 명령은 iris 봇(ipy2/irispy.py)과 같다.
 import "../styles/bot.css";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, Particles, Reveal, SplitText } from "../components/Motion.jsx";
-import { Sparkle } from "../components/Decor.jsx";
+import { Reveal } from "../components/Motion.jsx";
 
 const OPEN_CHAT_URL = "https://open.kakao.com/o/sQP47JFi";
 
@@ -56,46 +55,45 @@ const COMMANDS = [
   }
 ];
 
-const SAMPLE_REPLY = [
-  "🍁 [유니온] 데나",
-  "Lv.289 카데나",
-  "경험치: 52.15%",
-  "길드: 별하",
-  "",
-  "- 전투력: 310,793,738",
-  "- 잠재합: 267.94% / 에디합: 244.6%",
-  "- 아드: 102.1% / 메획: 46.3%"
-];
+/** 미리보기 말풍선(실제 캐릭터가 아닌 예시 형식). */
+const SAMPLE_REPLY = ["🍁 [스카니아] 닉네임", "Lv.285 직업", "경험치 · 길드 · 최근 로그인", "", "- 전투력", "- 잠재합 / 에디합", "- 헥사 스킬 · 헥사 스탯"];
 
 export function Bot() {
   return (
     <div class="bot">
       <header class="bot-hero">
-        <Aurora tone="dusk" />
-        <Particles count={18} />
-        <Sparkle class="bot-hero__spark bot-hero__spark--1" size={22} />
-        <Sparkle class="bot-hero__spark bot-hero__spark--2" size={14} />
-        <span class="bot-hero__icon" aria-hidden="true">
-          <Icon name="chat" size={30} />
-        </span>
-        <div class="bot-hero__text">
-          <p class="bot-hero__free">완전 무료</p>
+        <div class="bot-hero__copy">
+          <p class="bot-hero__over">메이플M 플러스</p>
           <h1 class="bot-hero__title display">
-            <SplitText text="메엠 봇을 단톡방에" />
+            카카오톡 봇
+            <span class="bot-free">무료</span>
           </h1>
-          <p class="bot-hero__lead">
-            단톡방에서 <code>.정보 유니온 데나</code> 처럼 치면 캐릭터 정보를 바로 알려 줘요.
-          </p>
+          <ul class="bot-hero__points">
+            <li>캐릭터 정보 · 스탯 · 장비 · 경험치 · HEXA</li>
+            <li>명령어 하나로 단톡방에서 바로</li>
+          </ul>
+          <a class="bot-kakao" href={OPEN_CHAT_URL} target="_blank" rel="noopener noreferrer">
+            <Icon name="chat" size={18} />
+            오픈채팅으로 신청하기
+          </a>
         </div>
-        <a class="btn btn--primary bot-hero__go" href={OPEN_CHAT_URL} target="_blank" rel="noopener noreferrer">
-          <Icon name="chat" size={18} />
-          오픈채팅으로 신청하기
-          <Icon name="external" size={16} />
-        </a>
+        <div class="bot-phone" aria-hidden="true">
+          <div class="bot-phone__room">
+            <p class="bot-bubble bot-bubble--me">.정보 스카니아 닉네임</p>
+            <div class="bot-bubble bot-bubble--bot">
+              {SAMPLE_REPLY.map((line, index) => (
+                <span key={index} class="bot-bubble__line">
+                  {line || " "}
+                </span>
+              ))}
+            </div>
+            <p class="bot-bubble bot-bubble--me">.스탯 스카니아 닉네임</p>
+          </div>
+        </div>
       </header>
 
       <Reveal class="card bot-steps">
-        <h2 class="bot-section__title">넣는 방법</h2>
+        <h2 class="bot-section__title">신청 방법</h2>
         <ol class="bot-steps__list">
           <li>
             <span class="bot-steps__no num">1</span>
@@ -120,7 +118,7 @@ export function Bot() {
         <ul class="bot-notes">
           <li>
             <Icon name="heart" size={16} />
-            돈은 받지 않아요. 완전 무료예요.
+            비용은 받지 않아요.
           </li>
           <li>
             <Icon name="info" size={16} />
@@ -133,12 +131,11 @@ export function Bot() {
         </ul>
       </Reveal>
 
-      <div class="bot-grid">
-        <Reveal class="card bot-commands">
-          <h2 class="bot-section__title">명령어</h2>
-          <p class="bot-commands__form">
-            <code>.명령 월드 닉네임</code>
-          </p>
+      <Reveal class="card bot-commands">
+        <h2 class="bot-section__title">
+          명령어 <code class="bot-commands__form">.명령 월드 닉네임</code>
+        </h2>
+        <div class="bot-groups">
           {COMMANDS.map((group) => (
             <section key={group.title} class="bot-group">
               <h3 class="bot-group__title">{group.title}</h3>
@@ -152,31 +149,8 @@ export function Bot() {
               </ul>
             </section>
           ))}
-        </Reveal>
-
-        <Reveal class="card bot-chat" delay={80}>
-          <h2 class="bot-section__title">이렇게 답해요</h2>
-          <div class="bot-chat__room">
-            <p class="bot-bubble bot-bubble--me">.정보 유니온 데나</p>
-            <div class="bot-bubble bot-bubble--bot">
-              <span class="bot-bubble__name">메엠 봇</span>
-              {SAMPLE_REPLY.map((line, index) => (
-                <span key={index} class="bot-bubble__line">
-                  {line || " "}
-                </span>
-              ))}
-            </div>
-            <p class="bot-bubble bot-bubble--me">.스탯 유니온 데나</p>
-            <div class="bot-bubble bot-bubble--bot">
-              <span class="bot-bubble__name">메엠 봇</span>
-              <span class="bot-bubble__line">📊 [유니온] 데나 · 보스 세팅</span>
-              <span class="bot-bubble__line">- 보스 공격력: 465.58%</span>
-              <span class="bot-bubble__line">- 최종 대미지: 248.7%</span>
-              <span class="bot-bubble__line">- 방어율 무시: 81.593%</span>
-            </div>
-          </div>
-        </Reveal>
-      </div>
+        </div>
+      </Reveal>
     </div>
   );
 }

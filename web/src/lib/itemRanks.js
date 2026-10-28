@@ -1,5 +1,5 @@
 // 장비 순위: 같은 계열·부위 장비 중 몇 등인지(사이트에서 조회된 캐릭터 + 매일 모으는 전투력 랭킹 1만 명 기준).
-// 캐릭터마다 한 번 불러와 장비 fingerprint(서버가 장비마다 붙여 줌)로 찾는다. 툴팁과 공유 문구가 함께 쓴다.
+// 캐릭터마다 한 번 불러와 장비 fingerprint(서버가 장비마다 붙여 줌)로 찾는다. 툴팁이 쓴다.
 import { useEffect, useState } from "preact/hooks";
 import { getJson } from "./api.js";
 
@@ -56,27 +56,6 @@ export function useItemRank(fingerprint) {
     };
   }, []);
   return (fingerprint && byFingerprint.get(fingerprint)) || null;
-}
-
-/**
- * 공유 문구용: 불러오는 중이면 기다린다.
- * @param {string} ocid @param {string | undefined} fingerprint
- * @returns {Promise<ItemRank | null>}
- */
-export async function itemRankFor(ocid, fingerprint) {
-  if (!fingerprint) return null;
-  if (!byFingerprint.has(fingerprint) && ocid) await loadItemRanks(ocid);
-  return byFingerprint.get(fingerprint) || null;
-}
-
-/**
- * "상위 31%" · 1% 아래는 소수 한 자리("상위 0.4%"), 1등은 그대로 1등.
- * @param {ItemRank} rank
- */
-export function topPercentText(rank) {
-  const percent = (rank.rank / Math.max(1, rank.total)) * 100;
-  const text = percent < 1 ? percent.toFixed(1) : String(Math.round(percent));
-  return `상위 ${text}%`;
 }
 
 /**

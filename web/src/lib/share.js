@@ -1,7 +1,6 @@
 // 공유: 카드 캡처(html2canvas) · 이미지 저장(모바일은 서버 업로드 후 내려받기) · 카카오톡 공유 · 웹 공유 · 링크 복사.
 // 서버 API는 기존 화면과 같다: GET /api/share/config, POST /api/share/item-image, GET /api/share/item-image-download/:fileName
 import { render } from "preact";
-import { itemRankFor, rankText, topPercentText } from "./itemRanks.js";
 
 export const SHARE_ATTRIBUTION = "Data based on NEXON Open API";
 const DEFAULT_BASE_URL = "https://maplem.co.kr";
@@ -520,9 +519,9 @@ function toPercentText(module, probability) {
 }
 
 /**
- * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 잠재·에디·추가 옵션이 그대로 나올 확률("3.2%", 마스터리 적용 전 값 기준). 없으면 null.
+ * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 잠재·에디·추가 옵션의 상위 %("3.2%", 이 장비 이상 나올 확률, 마스터리 적용 전 값 기준). 없으면 null.
  * @param {any} item @param {any} profile
- * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionChance: string, potentialChance: string, additionalPotentialChance: string } | null>}
+ * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionTop: string, potentialTop: string, additionalPotentialTop: string } | null>}
  */
 export async function itemInsight(item, profile) {
   const result = await itemBreakdown(item, profile);
@@ -535,43 +534,26 @@ export async function itemInsight(item, profile) {
       additionalPotential: texts(breakdown.mastery?.additionalPotential),
       additional: texts(breakdown.mastery?.additional)
     },
-    additionalOptionChance: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent),
-    // Potential odds are computed from pre-mastery values, same as the share caption.
-    potentialChance: toPercentText(result.module, breakdown.potentialProbability),
-    additionalPotentialChance: toPercentText(result.module, breakdown.additionalProbability)
+    // 이 장비 이상 나올 확률(상위 %), 마스터리 적용 전 값 기준 — 공유 문구와 같다.
+    additionalOptionTop: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent),
+    potentialTop: toPercentText(result.module, breakdown.potentialProbability),
+    additionalPotentialTop: toPercentText(result.module, breakdown.additionalProbability)
   };
 }
 
 /**
- * 공유 문구("아케인셰이드 무기 234개 중 73등(상위 31%), 확률 0.012345% (블랙큐브 N개, 에디셔널 큐브 M개) 짜리 아이템입니다!").
- * 순위는 profile.ocid 로 불러온 장비 순위(lib/itemRanks.js), 확률은 마스터리 적용 전 값 기준.
- * 추가 옵션 확률을 계산할 수 있으면 "…, 추가 옵션 확률 3.2% 짜리 아이템입니다!"처럼 붙인다. 계산할 수 없으면 "".
- * 소수 6자리로 자르면 아주 귀한 아이템이 "0.000000%"로 나오므로, 그보다 작으면 유효숫자 2자리까지 늘린다.
+ * 공유 문구("상위 0.057%, 블랙큐브 1,766개, 에디셔널 큐브 3,548개 짜리 아이템입니다!"). 상위 % 는 이 장비 이상
+ * 좋은 잠재·에디가 나올 확률(마스터리 적용 전 값 기준), 계산은 item-share.js captionFromBreakdown. 없으면 "".
  * @param {any} item @param {any} profile
  * @returns {Promise<string>}
  */
 export async function topPercentCaption(item, profile) {
-  const rank = await itemRankFor(profile?.ocid, item?.fingerprint).catch(() => null);
-  const rankLabel = rankText(rank) ? `${rankText(rank)}(${topPercentText(/** @type {any} */ (rank))})` : "";
   try {
     const result = await itemBreakdown(item, profile);
-    const breakdown = result?.breakdown;
-    if (!breakdown) return rankLabel ? `${rankLabel} 아이템입니다!` : "";
-    const flame = result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent);
-    const flameLabel = flame ? `추가 옵션 확률 ${flame}` : "";
-    const percent = Number(breakdown.totalPercent);
-    if (breakdown.totalPercent === null || !Number.isFinite(percent) || percent <= 0) {
-      const parts = [rankLabel, flameLabel].filter(Boolean);
-      return parts.length ? `${parts.join(", ")} 짜리 아이템입니다!` : "";
-    }
-    const bounded = Math.min(100, percent);
-    const digits = bounded >= 0.000001 ? 6 : Math.min(20, -Math.floor(Math.log10(bounded)) + 1);
-    const cubes = (/** @type {unknown} */ probability) => {
-      const value = Number(probability);
-      return Number.isFinite(value) && value > 0 ? `${Math.ceil(1 / value).toLocaleString("ko-KR")}개` : "-";
-    };
-    return `${rankLabel ? `${rankLabel}, ` : ""}확률 ${bounded.toFixed(digits)}% (블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)})${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
+    if (!result?.breakdown) return "";
+    const caption = result.module.captionFromBreakdown(result.breakdown);
+    return caption === "-" ? "" : caption;
   } catch {
-    return rankLabel ? `${rankLabel} 아이템입니다!` : "";
+    return "";
   }
 }

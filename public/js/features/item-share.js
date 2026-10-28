@@ -7,7 +7,6 @@ import {
 } from "../core/common.js";
 
 const DEFAULT_TOP_PERCENT_CAPTION = "-";
-const TOP_PERCENT_DECIMAL_PLACES = 6;
 const LINE_BUCKET_KEYS = Object.freeze(["first", "second", "third"]);
 
 const OPTION_KIND = Object.freeze({
@@ -230,24 +229,6 @@ function buildItemShareFileName(itemName, mode = "share") {
   return `maplem-${safeMode}-${suffix}-${stamp}.png`;
 }
 
-function normalizeTopPercentValue(value) {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return null;
-  }
-
-  const bounded = Math.max(0, Math.min(100, numeric));
-  return Number(bounded.toFixed(TOP_PERCENT_DECIMAL_PLACES));
-}
-
-function formatTopPercentValue(value) {
-  return Number(value).toFixed(TOP_PERCENT_DECIMAL_PLACES);
-}
-
 function resolveExpectedCubeCount(probabilityFraction) {
   const numeric = Number(probabilityFraction);
   if (!Number.isFinite(numeric) || numeric <= 0) {
@@ -274,27 +255,24 @@ function formatAdditionalOptionPercent(value) {
   return `${Number(bounded.toFixed(digits))}%`;
 }
 
-async function buildTopPercentCaption(item, profileContext = null) {
-  const breakdown = await resolveTopPercentBreakdown(item, profileContext);
-  const topPercent = normalizeTopPercentValue(breakdown?.totalPercent);
-  const additionalOption = formatAdditionalOptionPercent(breakdown?.additionalOptionPercent);
-  const additionalOptionLabel = additionalOption
-    ? `\uCD94\uAC00 \uC635\uC158 \uD655\uB960 ${additionalOption}`
-    : "";
-  if (topPercent === null) {
-    return additionalOptionLabel
-      ? `${additionalOptionLabel} \uC9DC\uB9AC \uC544\uC774\uD15C\uC785\uB2C8\uB2E4!`
-      : DEFAULT_TOP_PERCENT_CAPTION;
+// 공유 문구: "상위 0.057%, 블랙큐브 1,766개, 에디셔널 큐브 3,548개 짜리 아이템입니다!"
+// 상위 % = 잠재 상위 × 에디셔널 상위(둘 다 이 장비 이상 나올 확률), 큐브 개수 = 1 / 그 부분의 확률(기댓값).
+// 계산할 수 없는 부분은 뺀다. 둘 다 없으면 DEFAULT_TOP_PERCENT_CAPTION.
+function captionFromBreakdown(breakdown) {
+  const top = formatAdditionalOptionPercent(breakdown?.totalPercent);
+  if (!top) {
+    return DEFAULT_TOP_PERCENT_CAPTION;
   }
+  const parts = [`\uC0C1\uC704 ${top}`];
+  const blackCube = resolveExpectedCubeCount(breakdown?.potentialProbability);
+  if (blackCube) parts.push(`\uBE14\uB799\uD050\uBE0C ${formatCubeCountLabel(blackCube)}`);
+  const additionalCube = resolveExpectedCubeCount(breakdown?.additionalProbability);
+  if (additionalCube) parts.push(`\uC5D0\uB514\uC154\uB110 \uD050\uBE0C ${formatCubeCountLabel(additionalCube)}`);
+  return `${parts.join(", ")} \uC9DC\uB9AC \uC544\uC774\uD15C\uC785\uB2C8\uB2E4!`;
+}
 
-  const blackCubeLabel = formatCubeCountLabel(
-    resolveExpectedCubeCount(breakdown?.potentialProbability),
-  );
-  const additionalCubeLabel = formatCubeCountLabel(
-    resolveExpectedCubeCount(breakdown?.additionalProbability),
-  );
-  const additionalOptionPart = additionalOptionLabel ? `, ${additionalOptionLabel}` : "";
-  return `\uD655\uB960 ${formatTopPercentValue(topPercent)}% (\uBE14\uB799\uD050\uBE0C ${blackCubeLabel}, \uC5D0\uB514\uC154\uB110 \uD050\uBE0C ${additionalCubeLabel})${additionalOptionPart} \uC9DC\uB9AC \uC544\uC774\uD15C\uC785\uB2C8\uB2E4!`;
+async function buildTopPercentCaption(item, profileContext = null) {
+  return captionFromBreakdown(await resolveTopPercentBreakdown(item, profileContext));
 }
 
 function resolveOptionKind(optionName) {
@@ -833,55 +811,6 @@ function parseProbabilityPercent(rawPercent) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function resolveLineProbabilityFraction(lineTableRows, optionRow) {
-  if (!Array.isArray(lineTableRows) || !lineTableRows.length) {
-    return null;
-  }
-
-  const sameKindRows = [];
-  let cumulativePercent = 0;
-  for (const row of lineTableRows) {
-    const rowKind = resolveOptionKind(row?.option);
-    if (rowKind !== optionRow.kind) {
-      continue;
-    }
-    sameKindRows.push(row);
-    const rowValue = parseNumericValue(row?.value);
-    if (!Number.isFinite(rowValue)) {
-      continue;
-    }
-    if (rowValue + 1e-9 >= optionRow.value) {
-      cumulativePercent += parseProbabilityPercent(row?.p);
-    }
-  }
-
-  if (cumulativePercent <= 0 && sameKindRows.length) {
-    // When source value is slightly above table max (rounding/level boundary),
-    // use the best available value's probability instead of dropping to fallback.
-    let bestValue = -Infinity;
-    for (const row of sameKindRows) {
-      const rowValue = parseNumericValue(row?.value);
-      if (Number.isFinite(rowValue)) {
-        bestValue = Math.max(bestValue, rowValue);
-      }
-    }
-    if (Number.isFinite(bestValue)) {
-      for (const row of sameKindRows) {
-        const rowValue = parseNumericValue(row?.value);
-        if (Number.isFinite(rowValue) && Math.abs(rowValue - bestValue) <= 1e-9) {
-          cumulativePercent += parseProbabilityPercent(row?.p);
-        }
-      }
-    }
-  }
-
-  if (cumulativePercent <= 0) {
-    return null;
-  }
-
-  return cumulativePercent / 100;
-}
-
 async function loadProbabilityTable(fileName) {
   if (!fileName) {
     return null;
@@ -1110,22 +1039,48 @@ function lineRowsFor(gradeBucket, index) {
   return gradeBucket?.[lineKey] || gradeBucket?.first || [];
 }
 
-function computeCubeProbability(gradeBucket, optionRows) {
-  if (!optionRows.length) {
+// "상위 %" (잠재·에디셔널): 같은 등급 큐브를 새로 돌렸을 때, 이 부위·직업에 쓸모 있는 옵션(validKinds)의 값을
+// 모두 더한 값이 지금 장비 이상 나올 확률. 줄마다 공식 확률표의 분포를 만들고 줄 수만큼 합친다(합성곱).
+// 쓸모없는 줄은 0으로 세므로 잡옵은 상위 100% 쪽이 되고, 보공 15% 한 줄이 보공 1% 한 줄보다 위다.
+// 값은 0.01 단위 정수로 다룬다(부동소수 오차 방지).
+function computeCubeTopProbability(gradeBucket, lineCount, validKinds, optionRows) {
+  if (!optionRows.length || !lineCount) {
     return null;
   }
-  let probabilityProduct = 1;
-  for (const row of optionRows) {
-    const lineProbabilityFraction = resolveLineProbabilityFraction(
-      lineRowsFor(gradeBucket, row.sourceIndex),
-      row,
-    );
-    if (lineProbabilityFraction === null) {
+  const toUnits = (value) => Math.round(Number(value) * 100);
+  const target = optionRows.reduce((sum, row) => sum + toUnits(row.value), 0);
+  let dist = new Map([[0, 1]]);
+  for (let index = 0; index < lineCount; index += 1) {
+    const line = new Map();
+    let total = 0;
+    for (const row of lineRowsFor(gradeBucket, index)) {
+      const p = parseProbabilityPercent(row?.p);
+      if (!(p > 0)) continue;
+      total += p;
+      const value = parseNumericValue(row?.value);
+      const score = validKinds.has(resolveOptionKind(row?.option)) && Number.isFinite(value) ? toUnits(value) : 0;
+      // 공식 표의 확률을 그대로 쓴다(표기 반올림으로 합이 100%에서 조금 벗어나도 고치지 않는다).
+      line.set(score, (line.get(score) || 0) + p / 100);
+    }
+    if (!(total > 0)) {
       return null;
     }
-    probabilityProduct *= lineProbabilityFraction;
+    const next = new Map();
+    for (const [a, pa] of dist) {
+      for (const [b, pb] of line) {
+        next.set(a + b, (next.get(a + b) || 0) + pa * pb);
+      }
+    }
+    dist = next;
   }
-  return probabilityProduct;
+  let tail = 0;
+  let best = -Infinity;
+  for (const [score, p] of dist) {
+    if (score >= target) tail += p;
+    best = Math.max(best, score);
+  }
+  // 표보다 높은 값(반올림·알 수 없는 상승분): 표에서 가장 좋은 경우로 본다.
+  return tail > 0 ? Math.min(1, tail) : dist.get(best) || null;
 }
 
 function cubeIncrement(masteryTable, gradeKey, valueText) {
@@ -1185,7 +1140,7 @@ async function resolveCubeSource(item, sourceType, config, validKinds, normalize
   const countsForProbability = resolveGradeRank(context.gradeKey) >= 3 && validRows.length > 0;
   const probabilityFor = (split) =>
     countsForProbability
-      ? computeCubeProbability(context.gradeBucket, applySplitToRows(validRows, lineSpecs, split))
+      ? computeCubeTopProbability(context.gradeBucket, lines.length, validKinds, applySplitToRows(validRows, lineSpecs, split))
       : null;
   const choice = chooseBonusSplit(lineSpecs, points, maxPerLine, probabilityFor);
   return {
@@ -1241,26 +1196,6 @@ function parseFlameNumber(text) {
 }
 
 // Share of the uniform MIN..MAX grid (step = official 증가값) that is at least `value`.
-function flameValueFraction(option, levelKey, value) {
-  const range = option?.ranges?.[levelKey];
-  const min = parseFlameNumber(range?.min);
-  const max = parseFlameNumber(range?.max);
-  const step = parseFlameNumber(option?.step);
-  if (min === null || max === null || !step || max < min) {
-    return null;
-  }
-  const total = Math.round((max - min) / step) + 1;
-  if (value <= min + VALUE_EPSILON) {
-    return 1;
-  }
-  if (value > max + VALUE_EPSILON) {
-    // Above the table (rounding or an unknown bonus): count it as the best value, like the cube tables.
-    return 1 / total;
-  }
-  const firstIndex = Math.ceil((value - min) / step - VALUE_EPSILON);
-  return Math.max(1, total - firstIndex) / total;
-}
-
 function flameValidNames(item, profileContext, lines) {
   const damageKind = resolveProfileDamageKind(item, profileContext);
   const physical = damageKind === OPTION_KIND.PHYSICAL_DAMAGE;
@@ -1284,27 +1219,94 @@ function flameValidNames(item, profileContext, lines) {
   return combatCount > farmingCount ? combat : farming;
 }
 
-function computeFlameProbability(context, lines, validNames, split) {
-  let product = 1;
-  let used = 0;
-  for (const line of lines) {
-    if (!validNames.has(flameOptionKey(line.name)) || !line.option) {
+const FLAME_SCORE_EPSILON = 1e-5;
+
+// 추가 옵션 점수 가중치(템환산과 같은 값, src/game-data/item-score.json weights): 공격력 1 = 0.0047405,
+// 대미지 1% = 0.3792440, 최종 대미지·방어율 무시 1% = 1.4221649. 사냥 옵션(드롭·메획·경험치)은 % 그대로 1.
+const FLAME_SCORE_WEIGHTS = Object.freeze({
+  "물리공격력": 0.004740549714144853,
+  "마법공격력": 0.004740549714144853,
+  "물리대미지": 0.3792439771315882,
+  "마법대미지": 0.3792439771315882,
+  "최종대미지": 1.4221649142434558,
+  "방어율무시": 1.4221649142434558,
+  "아이템드롭률": 1,
+  "메소획득량": 1,
+  "경험치획득량": 1,
+});
+
+/**
+ * 한 줄 점수 분포: [{ score, p }] (점수 오름차순). 쓸모없는 옵션은 0점. 공식 표의 확률을 그대로 쓴다.
+ * 수치는 범위 안에서 같은 확률(step 간격)로 나온다고 본다.
+ */
+function flameLineDistribution(block, levelKey, validNames) {
+  const byScore = new Map();
+  let total = 0;
+  for (const option of block.options || []) {
+    const p = parseProbabilityPercent(option?.p);
+    if (!(p > 0)) continue;
+    total += p;
+    const key = flameOptionKey(option.option);
+    const weight = validNames.has(key) ? FLAME_SCORE_WEIGHTS[key] || 0 : 0;
+    const range = option?.ranges?.[levelKey];
+    const min = parseFlameNumber(range?.min);
+    const max = parseFlameNumber(range?.max);
+    const step = parseFlameNumber(option?.step);
+    if (!weight || min === null || max === null || !step || max < min) {
+      byScore.set(0, (byScore.get(0) || 0) + p / 100);
       continue;
     }
-    const count = split[line.index] || 0;
-    const value = Number.isFinite(line.increment)
-      ? roundValue(line.value - count * line.increment)
-      : line.value;
-    const fraction = flameValueFraction(line.option, context.levelKey, value);
-    const optionChance = parseProbabilityPercent(line.option.p) / 100;
-    if (fraction === null || optionChance <= 0) {
-      return null;
+    const count = Math.round((max - min) / step) + 1;
+    for (let i = 0; i < count; i += 1) {
+      const score = (min + i * step) * weight;
+      byScore.set(score, (byScore.get(score) || 0) + p / 100 / count);
     }
-    const lineChance = line.index === 0 ? 1 : context.twoOptionChance;
-    product *= lineChance * optionChance * fraction;
+  }
+  if (!(total > 0)) return null;
+  return [...byScore.entries()].map(([score, p]) => ({ score, p })).sort((a, b) => a.score - b.score);
+}
+
+// "상위 %" (추가 옵션): 같은 불꽃을 새로 썼을 때 점수 합이 지금 이상일 확률. 첫 줄은 항상, 둘째 줄은
+// two_option_chance 로 붙는다(둘째 줄 옵션 중복 제외는 고려하지 않는 근사).
+function computeFlameTopProbability(context, block, lines, validNames, split) {
+  const dist = flameLineDistribution(block, context.levelKey, validNames);
+  if (!dist) return null;
+  let target = 0;
+  let used = 0;
+  for (const line of lines) {
+    const key = flameOptionKey(line.name);
+    if (!validNames.has(key) || !line.option) continue;
+    const count = split[line.index] || 0;
+    const value = Number.isFinite(line.increment) ? roundValue(line.value - count * line.increment) : line.value;
+    target += value * (FLAME_SCORE_WEIGHTS[key] || 0);
     used += 1;
   }
-  return used ? product : null;
+  if (!used) return null;
+  // 서로 다른 점수 차이는 0.0004 이상(대미지 0.001% × 0.379)이라, 같은 점수를 놓치지 않을 만큼만 낮춘다.
+  target -= FLAME_SCORE_EPSILON;
+  // 꼬리 확률 P(S ≥ t): 점수 오름차순 누적합을 뒤에서부터.
+  const suffix = new Array(dist.length + 1).fill(0);
+  for (let i = dist.length - 1; i >= 0; i -= 1) suffix[i] = suffix[i + 1] + dist[i].p;
+  const tailAtLeast = (t) => {
+    let lo = 0;
+    let hi = dist.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (dist[mid].score >= t) hi = mid;
+      else lo = mid + 1;
+    }
+    return suffix[lo];
+  };
+  const two = Math.min(1, Math.max(0, context.twoOptionChance || 0));
+  let both = 0;
+  if (two > 0) {
+    for (const entry of dist) both += entry.p * tailAtLeast(target - entry.score);
+  }
+  const tail = (1 - two) * tailAtLeast(target) + two * both;
+  if (tail > 0) return Math.min(1, tail);
+  // 표보다 높은 값: 가장 좋은 경우의 확률로 본다.
+  const top = dist[dist.length - 1];
+  return two > 0 ? two * top.p * top.p : top.p;
 }
 
 async function resolveFlameSource(item, slotKind, profileContext, masteryTable) {
@@ -1353,7 +1355,7 @@ async function resolveFlameSource(item, slotKind, profileContext, masteryTable) 
   const validNames = flameValidNames(item, profileContext, lines);
   const maxPerLine = Number(masteryTable?.max_bonus_per_line) || DEFAULT_MAX_BONUS_PER_LINE;
   const probabilityFor = (split) =>
-    validNames.size ? computeFlameProbability(context, lineSpecs, validNames, split) : null;
+    validNames.size ? computeFlameTopProbability(context, block, lineSpecs, validNames, split) : null;
   const choice = chooseBonusSplit(lineSpecs, points, maxPerLine, probabilityFor);
   return {
     probability: probabilityFor(choice.split),
@@ -1430,6 +1432,8 @@ async function resolveTopPercent(item, profileContext = null) {
 }
 
 export {
+  captionFromBreakdown,
+  FLAME_SCORE_WEIGHTS,
   FLAME_FILE_BY_SLOT,
   SLOT_PROBABILITY_CONFIG,
   TABLE_LEVEL_EXCEPTIONS,

@@ -825,3 +825,23 @@ html.is-capturing body > div:not(#app):not(.share-capture-host) img {
     transform: none;
   }
 }
+
+/* 장비 공유 카드(두 줄 배치): 정사각형에 가깝게 — 카카오톡 피드가 세로로 긴 이미지를 잘라 보여 주지 않게 */
+.sc-item--wide {
+  width: 860px;
+  padding: 26px 28px;
+}
+
+.sc-item--wide .eq-detail__body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 28px;
+}
+
+.sc-item--wide .eq-detail__foot {
+  grid-column: 1 / -1;
+}
+
+.sc-item--wide .sc-bubble {
+  font-size: 17px;
+  line-height: 25px;
+}

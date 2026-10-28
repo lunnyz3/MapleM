@@ -10,9 +10,10 @@ import { EmptyState } from "../../components/States.jsx";
 import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNumbers, slotKey, starRows, starforce } from "../../lib/character.js";
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
-import { loadItemRanks, rankText, topPercentText, useItemRank } from "../../lib/itemRanks.js";
+import { loadItemRanks, rankText, useItemRank } from "../../lib/itemRanks.js";
 import { itemInsight } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
+import { useShareCaption } from "../../lib/shareSettings.js";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -21,7 +22,7 @@ const TIP_HIDE_DELAY = 220;
 const ATTACK_SLOTS = new Set(["weapon", "subWeapon", "emblem"]);
 
 /**
- * 장비 한 개의 계산 결과(줄별 마스터리 상승분 · 잠재·에디·추가 옵션 확률). 계산 중이거나 못 하면 null.
+ * 장비 한 개의 계산 결과(줄별 마스터리 상승분 · 잠재·에디·추가 옵션 상위 %). 계산 중이거나 못 하면 null.
  * @param {any} item @param {any} profile
  */
 function useItemInsight(item, profile) {
@@ -159,18 +160,16 @@ export function EquipDetail({ item, profile = null, compact = false }) {
         <p class="eq-detail__rank num">
           <span class="eq-detail__score">템환산 {formatComma(Math.round(rank.score))}</span>
           {rankText(rank) ? (
-            <span class="eq-detail__place">
-              {rankText(rank)} <b>{topPercentText(rank)}</b>
-            </span>
+            <span class="eq-detail__place">{rankText(rank)}</span>
           ) : null}
         </p>
       ) : null}
 
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
-        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionChance ? `확률 ${insight.additionalOptionChance}` : ""} />
-        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialChance ? `확률 ${insight.potentialChance}` : ""} />
-        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialChance ? `확률 ${insight.additionalPotentialChance}` : ""} />
+        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} />
+        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialTop ? `상위 ${insight.potentialTop}` : ""} />
+        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialTop ? `상위 ${insight.additionalPotentialTop}` : ""} />
         {emblem ? (
           <section class="eq-opts eq-opts--emblem">
             <h4 class="eq-opts__head">
@@ -224,6 +223,7 @@ export function Equipment({ data, world, mode, presetNo }) {
   const hideTimer = useRef(/** @type {number | undefined} */ (undefined));
   // 공유 문구가 장비 순위를 찾을 수 있게 ocid 를 함께 넘긴다.
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
+  const [captionOn, setCaptionOn] = useShareCaption();
   useEffect(() => {
     loadItemRanks(data.ocid);
   }, [data.ocid]);
@@ -352,6 +352,18 @@ export function Equipment({ data, world, mode, presetNo }) {
             );
           })}
         </div>
+        <label class="eq-caption-switch">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={captionOn}
+            onChange={(event) => setCaptionOn(/** @type {HTMLInputElement} */ (event.currentTarget).checked)}
+          />
+          <span class="eq-caption-switch__track" aria-hidden="true">
+            <span class="eq-caption-switch__thumb" />
+          </span>
+          <span class="eq-caption-switch__text">공유 이미지에 자랑 문구</span>
+        </label>
       </div>
 
       <Reveal class="eq-board" key={preset?.presetNo}>

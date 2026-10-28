@@ -47,7 +47,7 @@ function Hero() {
             <Icon name="chat" size={18} />
           </span>
           <span class="bot-cta__text">
-            내 단톡방에 <strong>메엠 봇</strong> 넣기
+            내 단톡방에 <strong>카톡 봇</strong> 넣기
           </span>
           <span class="bot-cta__free">무료</span>
           <Icon name="arrowRight" size={16} class="bot-cta__go" />

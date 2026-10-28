@@ -70,7 +70,7 @@ function resolveRoute() {
   if (rest === "") return { title: "메이플M 플러스", nav: "home", Page: Home };
   if (rest === "/design") return { title: "디자인 시스템 · 메이플M 플러스", nav: "", Page: DesignSystem };
   if (rest === "/ranking") return { title: "랭킹 · 메이플M 플러스", nav: "ranking", Page: Ranking };
-  if (rest === "/bot") return { title: "메엠 봇 · 메이플M 플러스", nav: "bot", Page: Bot };
+  if (rest === "/bot") return { title: "카카오톡 봇 · 메이플M 플러스", nav: "bot", Page: Bot };
   if (rest === "/calc") return { title: "계산기 · 메이플M 플러스", nav: "calc", Page: Calc };
   if (rest === "/compare") return { title: "캐릭터 비교 · 메이플M 플러스", nav: "compare", Page: Compare };
   if (rest === "/guild") return { title: "길드 · 메이플M 플러스", nav: "guild", Page: Guild };
