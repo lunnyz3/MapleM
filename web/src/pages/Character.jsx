@@ -18,6 +18,7 @@ import { WORLDS, urls } from "../lib/game.js";
 import { readManual, writeManual } from "../lib/manual.js";
 import { addRecent, entryKey, isFavorite, toggleFavorite, useSaved } from "../lib/storage.js";
 import { Equipment } from "./character/Equipment.jsx";
+import { EfficiencyTab } from "./character/Efficiency.jsx";
 import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
 import { ProfileShareButton } from "./character/Share.jsx";
@@ -294,6 +295,7 @@ function StatsPanel({ stats, mode, onMode }) {
 const TAB_ITEMS = [
   { id: "equipment", label: "장비", icon: "medal" },
   { id: "stats", label: "스탯", icon: "sparkle" },
+  { id: "efficiency", label: "스탯 효율", icon: "bolt" },
   { id: "symbol", label: "심볼", icon: "leaf" },
   { id: "hexa", label: "HEXA/V", icon: "bolt" },
   { id: "union", label: "유니온", icon: "union" },
@@ -473,6 +475,13 @@ export function Character({ world, name }) {
         <TabPanel idBase="ch" value={tab} class="ch-tabs__panel">
           {tab === "equipment" ? <Equipment data={data} world={world} mode={mode} presetNo={bossPresets.equipment} /> : null}
           {tab === "stats" ? <StatsTab data={data} presets={bossPresets} /> : null}
+          {tab === "efficiency" ? (
+            <EfficiencyTab
+              majorStats={(mode === "current" && stats.majorStatsCurrent) || stats.majorStats}
+              attackType={stats.profile.attackType}
+              modeLabel={mode === "current" && stats.majorStatsCurrent ? "현재 착용" : "보스 세팅"}
+            />
+          ) : null}
           {tab === "symbol" ? <SymbolTab data={data} presets={bossPresets} /> : null}
           {tab === "hexa" ? <HexaTab data={data} /> : null}
           {tab === "union" ? <UnionTab data={data} /> : null}

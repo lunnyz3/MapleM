@@ -2553,3 +2553,170 @@ button.eq-slot:hover .eq-slot__img {
     padding: 12px 6px 4px;
   }
 }
+
+/* ================= 스탯 효율 ================= */
+.eff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.eff-calc {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.eff-calc__inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--sp-3);
+}
+
+.eff-result {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, var(--primary-soft), var(--surface-soft));
+}
+
+.eff-result__head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.eff-result__mode {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--primary-strong);
+  font-size: var(--fs-12);
+}
+
+.eff-result__gain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+}
+
+.eff-result__ratio {
+  color: #13a37a;
+  font-size: var(--fs-16);
+}
+
+.eff-equiv {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eff-equiv li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: var(--fs-14);
+}
+
+.eff-equiv__label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.eff-rank__title {
+  margin: 0 0 var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+}
+
+.eff-bars {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eff-bar {
+  display: grid;
+  grid-template-columns: 9.5em minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  font-size: var(--fs-14);
+}
+
+.eff-bar__label {
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.eff-bar__label .num {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.eff-bar__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+}
+
+.eff-bar__fill {
+  display: block;
+  width: var(--w);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #5fe3b5);
+  transform-origin: left center;
+  animation: eff-grow 700ms var(--ease) both;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
+}
+
+.eff-bar:first-child .eff-bar__fill {
+  background: linear-gradient(90deg, #f5a524, #ffd748);
+}
+
+.eff-bar__value {
+  min-width: 5.5em;
+  font-weight: 800;
+  text-align: right;
+}
+
+@keyframes eff-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eff-bar__fill {
+    animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .eff {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .eff-bar {
+    grid-template-columns: 8em minmax(0, 1fr) auto;
+  }
+}
