@@ -1,6 +1,7 @@
 // 공유: 카드 캡처(html2canvas) · 이미지 저장(모바일은 서버 업로드 후 내려받기) · 카카오톡 공유 · 웹 공유 · 링크 복사.
 // 서버 API는 기존 화면과 같다: GET /api/share/config, POST /api/share/item-image, GET /api/share/item-image-download/:fileName
 import { render } from "preact";
+import { itemRankFor, rankText, topPercentText } from "./itemRanks.js";
 
 export const SHARE_ATTRIBUTION = "Data based on NEXON Open API";
 const DEFAULT_BASE_URL = "https://maplem.co.kr";
@@ -542,22 +543,26 @@ export async function itemInsight(item, profile) {
 }
 
 /**
- * 공유 문구("확률 0.012345% (블랙큐브 N개, 에디셔널 큐브 M개) 짜리 아이템입니다!"). 확률은 마스터리 적용 전 값 기준.
+ * 공유 문구("아케인셰이드 무기 234개 중 73등(상위 31%), 확률 0.012345% (블랙큐브 N개, 에디셔널 큐브 M개) 짜리 아이템입니다!").
+ * 순위는 profile.ocid 로 불러온 장비 순위(lib/itemRanks.js), 확률은 마스터리 적용 전 값 기준.
  * 추가 옵션 확률을 계산할 수 있으면 "…, 추가 옵션 확률 3.2% 짜리 아이템입니다!"처럼 붙인다. 계산할 수 없으면 "".
  * 소수 6자리로 자르면 아주 귀한 아이템이 "0.000000%"로 나오므로, 그보다 작으면 유효숫자 2자리까지 늘린다.
  * @param {any} item @param {any} profile
  * @returns {Promise<string>}
  */
 export async function topPercentCaption(item, profile) {
+  const rank = await itemRankFor(profile?.ocid, item?.fingerprint).catch(() => null);
+  const rankLabel = rankText(rank) ? `${rankText(rank)}(${topPercentText(/** @type {any} */ (rank))})` : "";
   try {
     const result = await itemBreakdown(item, profile);
     const breakdown = result?.breakdown;
-    if (!breakdown) return "";
+    if (!breakdown) return rankLabel ? `${rankLabel} 아이템입니다!` : "";
     const flame = result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent);
     const flameLabel = flame ? `추가 옵션 확률 ${flame}` : "";
     const percent = Number(breakdown.totalPercent);
     if (breakdown.totalPercent === null || !Number.isFinite(percent) || percent <= 0) {
-      return flameLabel ? `${flameLabel} 짜리 아이템입니다!` : "";
+      const parts = [rankLabel, flameLabel].filter(Boolean);
+      return parts.length ? `${parts.join(", ")} 짜리 아이템입니다!` : "";
     }
     const bounded = Math.min(100, percent);
     const digits = bounded >= 0.000001 ? 6 : Math.min(20, -Math.floor(Math.log10(bounded)) + 1);
@@ -565,8 +570,8 @@ export async function topPercentCaption(item, profile) {
       const value = Number(probability);
       return Number.isFinite(value) && value > 0 ? `${Math.ceil(1 / value).toLocaleString("ko-KR")}개` : "-";
     };
-    return `확률 ${bounded.toFixed(digits)}% (블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)})${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
+    return `${rankLabel ? `${rankLabel}, ` : ""}확률 ${bounded.toFixed(digits)}% (블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)})${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
   } catch {
-    return "";
+    return rankLabel ? `${rankLabel} 아이템입니다!` : "";
   }
 }

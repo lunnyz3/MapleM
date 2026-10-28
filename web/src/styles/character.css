@@ -2300,6 +2300,35 @@ button.eq-slot:hover .eq-slot__img {
   color: #ffd748;
 }
 
+/* 템환산 점수 · 같은 계열 장비 중 순위 */
+.eq-detail__rank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.eq-detail__score {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 215, 72, 0.22), rgba(255, 160, 72, 0.16));
+  color: #ffd748;
+}
+
+.eq-detail__place {
+  color: var(--tip-muted);
+}
+
+.eq-detail__place b {
+  margin-left: 2px;
+  color: #5fe3b5;
+  font-weight: 800;
+}
+
 .eq-detail__body {
   display: grid;
   gap: 0;

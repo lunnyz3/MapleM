@@ -1,6 +1,6 @@
 // 장비 탭: 프리셋 전환 · 장비창 배치 그리드 · 툴팁(마우스, 공유 버튼) · 자세히 보기(하단 시트, 공유).
 import { createPortal } from "preact/compat";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
 import { Reveal, spotlightHandlers } from "../../components/Motion.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
@@ -8,6 +8,7 @@ import { EmptyState } from "../../components/States.jsx";
 import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNumbers, slotKey, starRows, starforce } from "../../lib/character.js";
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
+import { loadItemRanks, rankText, topPercentText, useItemRank } from "../../lib/itemRanks.js";
 import { itemInsight } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
 
@@ -121,6 +122,7 @@ export function EquipDetail({ item, profile = null, compact = false }) {
   const expand = Number(item.remainingStarforceExpansion);
   const insight = useItemInsight(item, profile);
   const bonuses = insight?.bonuses || {};
+  const rank = useItemRank(item.fingerprint);
 
   return (
     <article class={`eq-detail${compact ? " eq-detail--compact" : ""}${grade ? ` is-${grade.key}` : ""}`}>
@@ -151,6 +153,16 @@ export function EquipDetail({ item, profile = null, compact = false }) {
           </p>
         </div>
       </header>
+      {rank ? (
+        <p class="eq-detail__rank num">
+          <span class="eq-detail__score">템환산 {formatComma(Math.round(rank.score))}</span>
+          {rankText(rank) ? (
+            <span class="eq-detail__place">
+              {rankText(rank)} <b>{topPercentText(rank)}</b>
+            </span>
+          ) : null}
+        </p>
+      ) : null}
 
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
@@ -208,7 +220,11 @@ export function Equipment({ data, world, mode, presetNo }) {
   const tipRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [tipPos, setTipPos] = useState({ x: -9999, y: 0, side: "right" });
   const hideTimer = useRef(/** @type {number | undefined} */ (undefined));
-  const profile = data.profile || {};
+  // 공유 문구가 장비 순위를 찾을 수 있게 ocid 를 함께 넘긴다.
+  const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
+  useEffect(() => {
+    loadItemRanks(data.ocid);
+  }, [data.ocid]);
   const keepTip = () => window.clearTimeout(hideTimer.current);
   // 툴팁 안의 공유 버튼을 누를 수 있게, 장비에서 벗어나도 잠깐 기다렸다가 닫는다.
   const hideTipSoon = () => {
