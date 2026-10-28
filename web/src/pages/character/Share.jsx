@@ -28,17 +28,17 @@ import { EquipDetail } from "./Equipment.jsx";
 /** 카드 안 다른 출처 이미지(넥슨)는 CORS 로 받아야 캡처에 찍힌다. */
 const CORS = "anonymous";
 
-/** @param {{ children?: any }} props */
-function CardFoot({ children }) {
+/** 카드 아래: 로고 · 주소 · 출처 한 줄 */
+function CardFoot() {
   return (
     <footer class="sc-foot">
-      <span class="sc-brand">
-        <BrandMark size={22} />
-        <span>
-          메이플M <b>플러스</b>
+      <div class="sc-foot__row">
+        <span class="sc-brand">
+          <BrandMark size={22} />
+          메이플M<b>플러스</b>
         </span>
-      </span>
-      {children}
+        <span class="sc-domain">maplem.co.kr</span>
+      </div>
       <span class="sc-attribution" lang="en">
         {SHARE_ATTRIBUTION}
       </span>
@@ -47,7 +47,8 @@ function CardFoot({ children }) {
 }
 
 /**
- * 프로필 공유 카드(600px 정사각형에 가까운 판). 캡처와 미리보기에 같이 쓴다.
+ * 프로필 공유 카드(600px, 정사각형에 가까운 판). 캡처와 미리보기에 같이 쓴다.
+ * html2canvas 로 찍으므로 share.css 의 캡처 안전 규칙(gap 없음, 줄 높이 고정)을 지킨다.
  * @param {{ profile: any, world: string }} props
  */
 export function ProfileShareCard({ profile, world }) {
@@ -57,6 +58,9 @@ export function ProfileShareCard({ profile, world }) {
   const overall = Number(profile.overallRanking) || 0;
   const guild = profile.guildName && profile.guildName !== "-" ? profile.guildName : "";
   const worldIcon = worldIconSrc(world);
+  // 이름이 길면 글자를 줄여 한 줄에 둔다(영문 12자·한글 8자 안팎까지).
+  const nameWidth = [...name].reduce((sum, char) => sum + (/[\u3131-\uD79D]/.test(char) ? 1 : 0.62), 0);
+  const nameClass = nameWidth > 9 ? " is-longer" : nameWidth > 6.5 ? " is-long" : "";
   return (
     <article class="sc sc-profile">
       <span class="sc-cloud sc-cloud--1" aria-hidden="true" />
@@ -70,11 +74,11 @@ export function ProfileShareCard({ profile, world }) {
         <span class="sc-pill sc-pill--soft">{profile.jobName || profile.className || "-"}</span>
       </header>
       <div class="sc-profile__stage">
-        {profile.imageUrl ? <img src={profile.imageUrl} alt="" width={200} height={200} crossOrigin={CORS} /> : <b>{name.slice(0, 1)}</b>}
+        {profile.imageUrl ? <img src={profile.imageUrl} alt="" width={184} height={184} crossOrigin={CORS} /> : <b>{name.slice(0, 1)}</b>}
       </div>
-      <h2 class="sc-profile__name">{name}</h2>
+      <h2 class={`sc-profile__name${nameClass}`}>{name}</h2>
       <div class="sc-profile__level">
-        <strong>Lv.{profile.level ?? "-"}</strong>
+        <span class="sc-profile__lv">Lv.{profile.level ?? "-"}</span>
         <span class="sc-exp">
           <span style={{ width: `${expRate}%` }} />
         </span>
@@ -82,24 +86,22 @@ export function ProfileShareCard({ profile, world }) {
       </div>
       <ul class="sc-stats">
         <li class="sc-stat sc-stat--power">
-          <span>전투력</span>
-          <strong>{power !== null ? formatKoreanUnits(power) : "-"}</strong>
+          <span class="sc-stat__label">전투력</span>
+          <span class="sc-stat__value">{power !== null ? formatKoreanUnits(power) : "-"}</span>
         </li>
         <li class="sc-stat">
-          <span>종합 랭킹</span>
-          <strong>{overall ? `${formatComma(overall)}위` : "-"}</strong>
+          <span class="sc-stat__label">종합 랭킹</span>
+          <span class="sc-stat__value">{overall ? `${formatComma(overall)}위` : "-"}</span>
         </li>
         <li class="sc-stat">
-          <span>길드</span>
-          <strong class="sc-stat__guild">
+          <span class="sc-stat__label">길드</span>
+          <span class="sc-stat__value">
             {guild && profile.guildMarkIcon ? <img src={profile.guildMarkIcon} alt="" width={20} height={20} crossOrigin={CORS} /> : null}
             {guild || "-"}
-          </strong>
+          </span>
         </li>
       </ul>
-      <CardFoot>
-        <span class="sc-domain">maplem.co.kr</span>
-      </CardFoot>
+      <CardFoot />
     </article>
   );
 }
@@ -143,8 +145,8 @@ export function ItemShareCard({ item, caption = "", profile, world }) {
  * @property {string} buttonTitle              카카오 버튼
  */
 
-/** 카카오톡 공유를 쓸 수 있는지(키가 없으면 버튼을 숨긴다). */
-function useKakaoEnabled() {
+/** 카카오톡 공유를 쓸 수 있는지(GET /api/share/config 에 키가 있으면 true, 없으면 버튼을 숨긴다). */
+export function useKakaoEnabled() {
   const [enabled, setEnabled] = useState(false);
   useEffect(() => {
     let alive = true;
@@ -222,16 +224,16 @@ export function ShareActions({ spec, compact = false, class: className = "" }) {
 
   const onCopy = () => run("copy", copyLink);
 
-  /** @type {Array<{ key: string, label: string, icon: string, onClick: () => void, tone?: string }>} */
+  /** @type {Array<{ key: string, label: string, short: string, icon: string, onClick: () => void, tone?: string }>} */
   const actions = [
-    { key: "save", label: "이미지 저장", icon: "download", onClick: onSave, tone: "primary" },
-    ...(kakao ? [{ key: "kakao", label: "카카오톡", icon: "chat", onClick: onKakao, tone: "kakao" }] : []),
-    ...(native ? [{ key: "native", label: "공유", icon: "share", onClick: onNative }] : []),
-    { key: "copy", label: "링크 복사", icon: "link", onClick: onCopy }
+    ...(kakao ? [{ key: "kakao", label: "카카오톡으로 보내기", short: "카톡", icon: "kakao", onClick: onKakao, tone: "kakao" }] : []),
+    { key: "save", label: "이미지 저장", short: "저장", icon: "download", onClick: onSave, tone: "primary" },
+    ...(native && !compact ? [{ key: "native", label: "다른 앱으로 공유", short: "공유", icon: "share", onClick: onNative }] : []),
+    { key: "copy", label: "링크 복사", short: "링크", icon: "link", onClick: onCopy }
   ];
 
   return (
-    <div class={`share-actions${compact ? " share-actions--compact" : ""} ${className}`} role="group" aria-label="공유">
+    <div class={`share-actions${compact ? " share-actions--compact" : ""}${kakao ? " has-kakao" : ""} ${className}`} role="group" aria-label="공유">
       {actions.map((action) => (
         <button
           key={action.key}
@@ -244,9 +246,15 @@ export function ShareActions({ spec, compact = false, class: className = "" }) {
           onClick={action.onClick}
         >
           <span class="share-btn__icon">
-            {busy === action.key ? <span class="share-btn__spin" aria-hidden="true" /> : <Icon name={action.icon} size={compact ? 18 : 20} />}
+            {busy === action.key ? (
+              <span class="share-btn__spin" aria-hidden="true" />
+            ) : action.icon === "kakao" ? (
+              <img class="share-btn__kakao" src="/assets/icon-kakaotalk.png" alt="" width={24} height={24} />
+            ) : (
+              <Icon name={action.icon} size={compact ? 16 : 20} />
+            )}
           </span>
-          {compact ? null : <span class="share-btn__label">{action.label}</span>}
+          <span class="share-btn__label">{compact ? action.short : action.label}</span>
         </button>
       ))}
     </div>
@@ -339,9 +347,10 @@ export function ProfileShareButton({ data, world }) {
 
 /**
  * 장비 공유: 잠재 상위 % 문구(계산되면) + 문구 넣기 토글 + 공유 버튼. 툴팁에서는 아이콘만.
- * @param {{ item: any, profile: any, world: string, compact?: boolean }} props
+ * 시트에서는 [자랑 문구] → children(장비 상세) → [아래에 붙는 공유 버튼 줄] 순서로 그린다.
+ * @param {{ item: any, profile: any, world: string, compact?: boolean, children?: any }} props
  */
-export function ItemShare({ item, profile, world, compact = false }) {
+export function ItemShare({ item, profile, world, compact = false, children }) {
   const [caption, setCaption] = useState(/** @type {string | null} */ (null));
   const [withCaption, setWithCaption] = useState(true);
   const cache = useRef(/** @type {Map<string, Promise<Blob>>} */ (new Map()));
@@ -384,7 +393,7 @@ export function ItemShare({ item, profile, world, compact = false }) {
   if (compact) return <ShareActions spec={spec} compact class="eq-tip__share" />;
 
   return (
-    <section class="item-share" aria-label="장비 공유">
+    <div class="item-share">
       {caption ? (
         <div class="item-share__brag">
           <p class="item-share__caption">{caption}</p>
@@ -394,7 +403,11 @@ export function ItemShare({ item, profile, world, compact = false }) {
           </label>
         </div>
       ) : null}
-      <ShareActions spec={spec} />
-    </section>
+      {children}
+      {/* 시트 아래에 붙어 있는 공유 줄: 긴 장비 정보를 내리지 않아도 바로 보인다 */}
+      <section class="item-share__bar" aria-label="장비 공유">
+        <ShareActions spec={spec} />
+      </section>
+    </div>
   );
 }

@@ -159,7 +159,36 @@ function inlineSafeColors(root) {
 }
 
 /**
+ * 카드에 쓰인 글꼴(굵기·크기·글자)을 모두 내려받을 때까지 기다린다.
+ * 글꼴은 유니코드 범위별 조각이라 document.fonts.ready 만으로는 아직 요청 전인 조각을 기다리지 못한다.
+ * @param {HTMLElement} root
+ */
+async function loadFonts(root) {
+  if (!document.fonts?.load) return;
+  /** @type {Map<string, string>} */
+  const specs = new Map();
+  for (const element of [root, ...root.querySelectorAll("*")]) {
+    const text = Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent || "")
+      .join("")
+      .trim();
+    if (!text) continue;
+    const style = getComputedStyle(element);
+    const spec = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    specs.set(spec, (specs.get(spec) || "") + text);
+  }
+  await Promise.race([
+    Promise.all([...specs].map(([spec, text]) => document.fonts.load(spec, text).catch(() => []))).then(() => document.fonts.ready),
+    new Promise((resolve) => setTimeout(resolve, 4000))
+  ]);
+}
+
+/**
  * 화면 밖에 카드를 그려 PNG 로 찍는다. 카드 안 이미지는 crossorigin="anonymous" 로 둬야 한다.
+ * 찍는 동안 <html> 에 is-capturing 을 붙인다: html2canvas 는 원래 문서 body 에 인라인 <img> 를 넣어 글자 기준선을 재는데,
+ * 전역 `img { display: block }` 때문에 그 img 가 줄을 바꿔 기준선이 아래로 잡히고 모든 글자가 밑으로 밀려 그려진다(share.css 에서 되돌림).
+ * 배율은 기기와 상관없이 2배로 고정해 어디서 찍어도 같은 그림이 나오게 한다.
  * @param {import("preact").VNode} card
  * @returns {Promise<Blob>}
  */
@@ -169,24 +198,26 @@ export async function captureCard(card) {
   host.className = "share-capture-host";
   host.setAttribute("aria-hidden", "true");
   document.body.appendChild(host);
+  const root = document.documentElement;
   try {
     render(card, host);
     const target = /** @type {HTMLElement | null} */ (host.firstElementChild);
     if (!target) throw new Error("capture");
-    await Promise.race([document.fonts?.ready, new Promise((resolve) => setTimeout(resolve, 1500))]);
-    await waitImages(target);
+    await Promise.all([loadFonts(target), waitImages(target)]);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    root.classList.add("is-capturing");
     const canvas = await html2canvas(target, {
       backgroundColor: null,
       useCORS: true,
       logging: false,
-      scale: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
+      scale: 2,
       onclone: (/** @type {Document} */ _doc, /** @type {Element} */ element) => inlineSafeColors(element)
     });
     return await new Promise((resolve, reject) => {
       canvas.toBlob((blob) => (blob && blob.size ? resolve(blob) : reject(new Error("이미지를 만들지 못했어요."))), "image/png");
     });
   } finally {
+    root.classList.remove("is-capturing");
     render(null, host);
     host.remove();
   }

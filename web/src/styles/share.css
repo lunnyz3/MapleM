@@ -24,7 +24,14 @@
   box-shadow: none;
 }
 
-/* ================= 카드 공통 ================= */
+/* html2canvas 글자 기준선 측정용 인라인 img(원래 문서 body 바로 아래)를 전역 img{display:block} 에서 되돌린다 */
+html.is-capturing body > div:not(#app):not(.share-capture-host) img {
+  display: inline !important;
+  vertical-align: baseline !important;
+}
+
+/* ================= 카드 공통 =================
+ * 캡처 안전 규칙: gap 대신 margin, 글자 줄마다 line-height·높이를 px 로 고정, transform·애니메이션·글자 그라데이션·흐린 그림자 없음. */
 .sc {
   position: relative;
   box-sizing: border-box;
@@ -32,8 +39,16 @@
   border-radius: 28px;
   color: #23243f;
   font-family: var(--font-sans);
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0;
   text-align: left;
+}
+
+.sc *,
+.sc *::before,
+.sc *::after {
+  box-sizing: border-box;
 }
 
 .sc img {
@@ -49,14 +64,13 @@
   margin-left: -260px;
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
-  pointer-events: none;
 }
 
 .sc-cloud {
   position: absolute;
   height: 40px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .sc-cloud::before {
@@ -67,7 +81,7 @@
   width: 46%;
   height: 46px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .sc-cloud--1 {
@@ -80,122 +94,150 @@
   top: 210px;
   right: -40px;
   width: 140px;
-  opacity: 0.8;
-}
-
-.sc-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 14px 0 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(37, 99, 201, 0.14);
-  background: #ffffff;
-  color: #2563c9;
-  font-size: 14px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.sc-pill--soft {
-  padding-left: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  color: #3e4060;
 }
 
 .sc-foot {
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 12px;
   margin-top: 22px;
   padding-top: 16px;
   border-top: 1px solid rgba(35, 36, 63, 0.1);
-  font-size: 12px;
+}
+
+.sc-foot__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
 }
 
 .sc-brand {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  height: 28px;
+  color: #173d7a;
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 800;
-  color: #173d7a;
+  line-height: 28px;
+}
+
+.sc-brand svg {
+  display: block;
+  flex: none;
+  margin-right: 8px;
 }
 
 .sc-brand b {
+  margin-left: 4px;
   color: #3170db;
 }
 
 .sc-domain {
   color: #3e4060;
+  font-size: 13px;
   font-weight: 700;
+  line-height: 28px;
 }
 
 .sc-attribution {
-  flex-basis: 100%;
+  display: block;
+  margin-top: 8px;
   color: #64667f;
   font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  line-height: 16px;
   text-align: center;
 }
 
-/* ================= 프로필 카드 ================= */
+/* ================= 프로필 카드(600px) ================= */
 .sc-profile {
   width: 600px;
-  padding: 28px 32px 22px;
+  padding: 28px 32px 20px;
   background: linear-gradient(160deg, #c9ddff 0%, #e6f0ff 42%, #fff1dd 100%);
   text-align: center;
 }
 
 .sc-profile__top {
   position: relative;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
+  height: 30px;
+  font-size: 0;
+  text-align: center;
+}
+
+.sc-pill {
+  display: inline-block;
+  height: 30px;
+  margin: 0 4px;
+  padding: 0 14px;
+  border: 1px solid rgba(37, 99, 201, 0.14);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #2563c9;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 28px;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.sc-pill img {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin: 0 6px 0 -4px;
+  vertical-align: -4px;
+}
+
+.sc-pill--soft {
+  background: rgba(255, 255, 255, 0.7);
+  color: #3e4060;
 }
 
 .sc-profile__stage {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 236px;
   height: 236px;
-  margin: 18px auto 6px;
-  border: 6px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
+  margin: 18px auto 0;
   overflow: hidden;
+  border: 6px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
   background: radial-gradient(closest-side, #ffffff 0%, #f1f5ff 60%, #dbe6ff 100%);
 }
 
 .sc-profile__stage img {
   width: 184px;
   height: 184px;
+  margin: 20px auto 0;
   object-fit: contain;
 }
 
 .sc-profile__stage b {
+  display: block;
+  color: #2563c9;
   font-family: var(--font-display);
   font-size: 88px;
-  color: #2563c9;
+  line-height: 224px;
 }
 
 .sc-profile__name {
   position: relative;
-  margin: 8px 0 0;
+  height: 60px;
+  margin: 16px 0 0;
+  overflow: hidden;
   color: #173d7a;
   font-family: var(--font-display);
   font-size: 46px;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  word-break: break-all;
+  line-height: 60px;
+  white-space: nowrap;
+}
+
+.sc-profile__name.is-long {
+  font-size: 38px;
+}
+
+.sc-profile__name.is-longer {
+  font-size: 30px;
 }
 
 .sc-profile__level {
@@ -203,20 +245,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  height: 32px;
   margin-top: 10px;
-  font-weight: 700;
 }
 
-.sc-profile__level strong {
+.sc-profile__lv {
+  flex: none;
+  margin-right: 14px;
+  color: #23243f;
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 800;
+  line-height: 32px;
 }
 
 .sc-exp {
   position: relative;
-  width: 210px;
+  flex: none;
+  width: 220px;
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
@@ -233,48 +279,58 @@
 }
 
 .sc-profile__exp {
+  flex: none;
+  margin-left: 14px;
   color: #3e4060;
   font-size: 15px;
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 32px;
 }
 
 .sc-stats {
   position: relative;
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
-  gap: 10px;
+  display: flex;
   margin: 22px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .sc-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  flex: 1 1 0;
   min-width: 0;
-  padding: 14px 8px;
+  height: 84px;
+  margin-left: 10px;
+  padding: 14px 8px 0;
   border: 1px solid rgba(35, 36, 63, 0.08);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.88);
+  text-align: center;
 }
 
-.sc-stat span {
+.sc-stat:first-child {
+  flex-grow: 1.15;
+  margin-left: 0;
+}
+
+.sc-stat__label {
+  display: block;
+  height: 18px;
   color: #64667f;
   font-size: 13px;
   font-weight: 700;
+  line-height: 18px;
 }
 
-.sc-stat strong {
-  max-width: 100%;
-  padding-bottom: 2px;
+.sc-stat__value {
+  display: block;
+  height: 32px;
+  margin-top: 6px;
+  overflow: hidden;
   color: #23243f;
   font-family: var(--font-display);
   font-size: 21px;
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 32px;
   white-space: nowrap;
 }
 
@@ -283,18 +339,20 @@
   background: linear-gradient(160deg, #fff4ef, #ffe0d1);
 }
 
-.sc-stat--power strong {
+.sc-stat--power .sc-stat__value {
   color: #c2532f;
   font-size: 23px;
 }
 
-.sc-stat__guild {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.sc-stat__value img {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  vertical-align: -3px;
 }
 
-/* ================= 장비 카드 ================= */
+/* ================= 장비 카드(440px) ================= */
 .sc-item {
   width: 440px;
   padding: 22px;
@@ -310,38 +368,48 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  height: 44px;
   margin-bottom: 14px;
 }
 
 .sc-item__avatar {
+  flex: none;
   width: 44px;
   height: 44px;
+  margin-right: 10px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.12);
   object-fit: contain;
 }
 
 .sc-item__who {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   min-width: 0;
 }
 
 .sc-item__who b {
+  display: block;
+  height: 24px;
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 800;
+  line-height: 24px;
 }
 
 .sc-item__who span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  display: block;
+  height: 18px;
   color: #c3c8e6;
   font-size: 12.5px;
   font-weight: 600;
+  line-height: 18px;
+}
+
+.sc-item__who span img {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  vertical-align: -2px;
 }
 
 .sc-bubble {
@@ -353,7 +421,7 @@
   color: #573b00;
   font-size: 15px;
   font-weight: 800;
-  line-height: 1.45;
+  line-height: 22px;
 }
 
 .sc-bubble::after {
@@ -361,10 +429,11 @@
   position: absolute;
   bottom: -8px;
   left: 28px;
-  width: 16px;
-  height: 16px;
-  background: #ffcf93;
-  transform: rotate(45deg);
+  width: 0;
+  height: 0;
+  border-top: 8px solid #ffd093;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
 }
 
 .sc-item__detail {
@@ -383,44 +452,63 @@
   color: #9cc3ff;
 }
 
+.sc-item .sc-domain {
+  color: #c3c8e6;
+}
+
 .sc-item .sc-attribution {
   color: #b9bdd8;
 }
 
-/* ================= 공유 버튼 ================= */
+/* ================= 공유 버튼 =================
+ * 카카오톡이 있으면 맨 위 넓은 노란 버튼("카카오톡으로 보내기"), 아래 줄에 이미지 저장 · (다른 앱으로 공유) · 링크 복사. */
 .share-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
+.share-actions > .share-btn {
+  flex: 1 1 140px;
+}
+
+.share-actions > .share-btn--kakao {
+  flex-basis: 100%;
+}
+
+.share-btn__label {
+  white-space: nowrap;
+}
+
 .share-btn {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  min-height: var(--touch);
-  padding: 14px 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
   background: var(--surface);
   color: var(--text);
-  font-size: var(--fs-14);
-  font-weight: 700;
+  font-size: var(--fs-16);
+  font-weight: 800;
   box-shadow: var(--shadow-1);
   transition:
     transform 220ms var(--ease-spring),
     box-shadow var(--dur-hover) var(--ease),
-    border-color var(--dur-hover) var(--ease);
+    border-color var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
 }
 
 .share-btn:hover:not(:disabled) {
   border-color: var(--primary);
   box-shadow: var(--shadow-2);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .share-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  transform: translateY(0) scale(0.98);
 }
 
 .share-btn:disabled {
@@ -431,8 +519,9 @@
 .share-btn__icon {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: var(--surface-soft);
   color: var(--primary-strong);
@@ -440,28 +529,46 @@
 }
 
 .share-btn:hover:not(:disabled) .share-btn__icon {
-  transform: translateY(-2px) rotate(-8deg) scale(1.08);
+  transform: rotate(-10deg) scale(1.1);
+}
+
+.share-btn__kakao {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .share-btn--primary .share-btn__icon {
   background: linear-gradient(160deg, #5b9bff, #2563c9);
   color: #ffffff;
-  box-shadow: 0 6px 14px rgba(37, 99, 201, 0.35);
+}
+
+/* 카카오톡: 카카오 노란색 넓은 버튼 */
+.share-btn--kakao {
+  min-height: 56px;
+  border-color: #f0d700;
+  background: #fee500;
+  color: #191919;
+  font-size: var(--fs-18);
+}
+
+.share-btn--kakao:hover:not(:disabled) {
+  border-color: #d9c300;
+  background: #ffeb33;
+  box-shadow: 0 10px 22px -8px rgba(200, 170, 0, 0.6);
 }
 
 .share-btn--kakao .share-btn__icon {
-  background: #fee500;
-  color: #191919;
-  box-shadow: 0 6px 14px rgba(254, 229, 0, 0.4);
-}
-
-.share-btn--kakao .share-btn__icon .icon {
-  fill: currentColor;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: transparent;
 }
 
 .share-btn__spin {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2.5px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
@@ -474,32 +581,35 @@
   }
 }
 
-/* 툴팁 안: 어두운 판 위 아이콘 버튼 */
+/* 툴팁 위 공유 알약(어두운 판): 작은 글자 버튼 */
 .share-actions--compact {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: 6px;
 }
 
+.share-actions--compact > .share-btn,
+.share-actions--compact > .share-btn--kakao {
+  flex: none;
+}
+
 .share-actions--compact .share-btn {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  min-height: 40px;
-  padding: 0;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px 0 6px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   color: #eef0ff;
+  font-size: 13px;
   box-shadow: none;
 }
 
 .share-actions--compact .share-btn__icon {
-  width: auto;
-  height: auto;
-  background: none;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.12);
   color: inherit;
-  box-shadow: none;
 }
 
 .share-actions--compact .share-btn:hover:not(:disabled) {
@@ -507,30 +617,109 @@
   background: rgba(156, 195, 255, 0.18);
 }
 
-.share-actions--compact .share-btn--primary {
+.share-actions--compact .share-btn--primary .share-btn__icon {
   background: linear-gradient(160deg, #5b9bff, #2563c9);
-  border-color: transparent;
 }
 
 .share-actions--compact .share-btn--kakao {
-  background: #fee500;
   border-color: transparent;
+  background: #fee500;
   color: #191919;
 }
 
+.share-actions--compact .share-btn--kakao .share-btn__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: transparent;
+}
+
+/* 장비 위에 뜨는 공유 알약(가운데 정렬, 위가 모자라면 장비 아래) */
+.eq-tip-share {
+  position: fixed;
+  z-index: 61;
+  transform: translate(-50%, -100%);
+  animation: tip-share-in 260ms var(--ease-spring) backwards;
+}
+
+.eq-tip-share.is-below {
+  transform: translate(-50%, 0);
+}
+
+@keyframes tip-share-in {
+  from {
+    opacity: 0;
+    margin-top: 8px;
+  }
+}
+
 .eq-tip__share {
-  width: max-content;
-  margin-bottom: 8px;
   padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   background: #171b31;
   box-shadow: 0 14px 30px -12px rgba(15, 17, 35, 0.55);
-  pointer-events: auto;
 }
 
-.eq-tip--left .eq-tip__share {
-  margin-left: auto;
+/* 툴팁 아래 안내: 누르면 카카오톡·저장 */
+.eq-tip__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fee500;
+  color: #191919;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 10px 22px -10px rgba(200, 170, 0, 0.7);
+}
+
+.eq-tip__hint--plain {
+  background: #171b31;
+  color: #eef0ff;
+  box-shadow: 0 14px 30px -12px rgba(15, 17, 35, 0.55);
+}
+
+.eq-tip__hint img {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+
+/* 장비 탭 위 안내 칩 */
+.eq-share-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px 0 6px;
+  border: 1px solid #f0d700;
+  border-radius: 999px;
+  background: #fff9c2;
+  color: #3d3500;
+  font-size: var(--fs-14);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.eq-share-hint img {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+.eq-share-hint--plain {
+  border-color: var(--border);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+.eq-share-hint--plain .icon {
+  margin-left: 6px;
+  color: var(--primary-strong);
 }
 
 /* ================= 공유 시트 ================= */
@@ -573,15 +762,21 @@
   }
 }
 
-/* 장비 시트: 상세 + 자랑 문구 + 공유 */
-.eq-sheet {
+/* 장비 시트: 자랑 문구 + 상세 + 아래에 붙는 공유 줄 */
+.item-share {
   display: grid;
   gap: var(--sp-4);
 }
 
-.item-share {
-  display: grid;
-  gap: var(--sp-3);
+.item-share__bar {
+  position: sticky;
+  bottom: calc(-1 * var(--sp-5) - env(safe-area-inset-bottom, 0px));
+  z-index: 2;
+  margin: 0 calc(-1 * var(--sp-5)) calc(-1 * var(--sp-5) - env(safe-area-inset-bottom, 0px));
+  padding: var(--sp-3) var(--sp-5) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 -10px 24px -16px rgba(35, 36, 63, 0.35);
 }
 
 .item-share__brag {
@@ -617,6 +812,7 @@
 @media (prefers-reduced-motion: reduce) {
   .share-btn,
   .share-btn__icon,
+  .eq-tip-share,
   .share-open .icon,
   .share-preview__img {
     animation: none;

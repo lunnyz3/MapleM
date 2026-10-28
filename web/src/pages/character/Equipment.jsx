@@ -8,7 +8,7 @@ import { EmptyState } from "../../components/States.jsx";
 import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNumbers, slotKey, starRows, starforce } from "../../lib/character.js";
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
-import { ItemShare } from "./Share.jsx";
+import { ItemShare, useKakaoEnabled } from "./Share.jsx";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -184,6 +184,7 @@ export function Equipment({ data, world, mode, presetNo }) {
   const [tipPos, setTipPos] = useState({ x: -9999, y: 0, side: "right" });
   const hideTimer = useRef(/** @type {number | undefined} */ (undefined));
   const profile = data.profile || {};
+  const kakao = useKakaoEnabled();
   const keepTip = () => window.clearTimeout(hideTimer.current);
   // 툴팁 안의 공유 버튼을 누를 수 있게, 장비에서 벗어나도 잠깐 기다렸다가 닫는다.
   const hideTipSoon = () => {
@@ -309,6 +310,11 @@ export function Equipment({ data, world, mode, presetNo }) {
             );
           })}
         </div>
+        {/* 기존 화면처럼 장비 공유를 바로 알 수 있게: 장비를 누르면 시트에서 카카오톡·저장·링크 */}
+        <p class={`eq-share-hint${kakao ? "" : " eq-share-hint--plain"}`}>
+          {kakao ? <img src="/assets/icon-kakaotalk.png" alt="" width={24} height={24} /> : <Icon name="download" size={18} />}
+          {kakao ? "장비를 눌러 카카오톡으로 보내기" : "장비를 눌러 이미지 저장"}
+        </p>
       </div>
 
       <Reveal class="eq-board" key={preset?.presetNo}>
@@ -346,30 +352,40 @@ export function Equipment({ data, world, mode, presetNo }) {
       {/* 툴팁은 body 에 그린다: 위쪽 요소의 transform 애니메이션이 fixed 위치 기준을 바꾸지 않게 */}
       {tip
         ? createPortal(
-        <div
-          ref={tipRef}
-          class={`eq-tip eq-tip--${tipPos.side}`}
-          role="tooltip"
-          style={{ transform: `translate(${tipPos.x}px, ${tipPos.y}px)` }}
-          onPointerEnter={keepTip}
-          onPointerLeave={hideTipSoon}
-        >
-          <div class="eq-tip__inner" key={tip.item.itemName}>
-            {/* 툴팁 위 공유 알약: 툴팁 본문은 마우스가 지나가게 두고, 장비 바로 옆 이 줄만 누를 수 있다 */}
-            <ItemShare item={tip.item} profile={profile} world={world} compact />
-            <EquipDetail item={tip.item} compact />
-          </div>
-        </div>,
+            <>
+              <div ref={tipRef} class={`eq-tip eq-tip--${tipPos.side}`} role="tooltip" style={{ transform: `translate(${tipPos.x}px, ${tipPos.y}px)` }}>
+                <div class="eq-tip__inner" key={tip.item.itemName}>
+                  <EquipDetail item={tip.item} compact />
+                  <p class={`eq-tip__hint${kakao ? "" : " eq-tip__hint--plain"}`}>
+                    {kakao ? <img src="/assets/icon-kakaotalk.png" alt="" width={20} height={20} /> : <Icon name="download" size={16} />}
+                    {kakao ? "클릭하면 카카오톡 보내기 · 이미지 저장" : "클릭하면 이미지 저장 · 링크 복사"}
+                  </p>
+                </div>
+              </div>
+              {/* 공유 알약: 마우스를 올린 장비 바로 위에 띄워(위가 모자라면 아래) 툴팁이 위로 밀려도 바로 누를 수 있다.
+                  툴팁 본문은 마우스가 지나가게 두어 옆 장비를 가리지 않는다. */}
+              <div
+                key={`share-${tip.item.itemName}`}
+                class={`eq-tip-share${tip.rect.top < 76 ? " is-below" : ""}`}
+                style={{
+                  left: `${Math.max(8, Math.min(window.innerWidth - 8, tip.rect.left + tip.rect.width / 2))}px`,
+                  top: `${tip.rect.top < 76 ? tip.rect.bottom + 6 : tip.rect.top - 6}px`
+                }}
+                onPointerEnter={keepTip}
+                onPointerLeave={hideTipSoon}
+              >
+                <ItemShare item={tip.item} profile={profile} world={world} compact />
+              </div>
+            </>,
             document.body
           )
         : null}
 
       <Sheet open={Boolean(sheetItem)} title={sheetItem ? sheetItem.itemName || "장비" : "장비"} onClose={() => setSheetItem(null)}>
         {sheetItem ? (
-          <div class="eq-sheet">
+          <ItemShare item={sheetItem} profile={profile} world={world}>
             <EquipDetail item={sheetItem} />
-            <ItemShare item={sheetItem} profile={profile} world={world} />
-          </div>
+          </ItemShare>
         ) : null}
       </Sheet>
     </div>
