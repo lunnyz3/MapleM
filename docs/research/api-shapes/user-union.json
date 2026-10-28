@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/user/union",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "union_level": "number",
+    "union_grade": "string",
+    "union_level_total_option": "string",
+    "union_grade_icon": "string"
+  }
+}

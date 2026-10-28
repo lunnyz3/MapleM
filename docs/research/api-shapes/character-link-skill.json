@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/link-skill",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "use_prest_no": "number",
+    "link_skill": [
+      {
+        "preset_no": "number",
+        "link_skill_info": [
+          {
+            "skill_name": "string",
+            "skill_level": "number",
+            "skill_description": "string",
+            "skill_effect": "string",
+            "skill_effect_next": "string",
+            "skill_icon": "string"
+          }
+        ]
+      }
+    ]
+  }
+}

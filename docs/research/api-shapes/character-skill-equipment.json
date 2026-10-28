@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/skill-equipment",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "skill": {
+      "equipment_skill": [
+        {
+          "skill_mode": "number",
+          "equipment_skill_set": "number",
+          "slot_id": "string",
+          "skill_name": "string",
+          "skill_icon": "string",
+          "skill_type": "null",
+          "skill_grade": "null",
+          "add_feature_flag": "null"
+        }
+      ],
+      "preset": [
+        {
+          "preset_slot_no": "number",
+          "skill_name_1": "null|string",
+          "skill_icon_1": "null|string",
+          "skill_name_2": "null|string",
+          "skill_icon_2": "null|string",
+          "skill_name_3": "null|string",
+          "skill_icon_3": "null|string",
+          "skill_name_4": "null|string",
+          "skill_icon_4": "null|string",
+          "preset_command_flag": "string"
+        }
+      ],
+      "steal_skill": [],
+      "stella_memorize": []
+    }
+  }
+}

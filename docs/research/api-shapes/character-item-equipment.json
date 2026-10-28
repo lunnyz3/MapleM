@@ -1,0 +1,160 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/item-equipment",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "use_preset_no": "number",
+    "item_equipment": [
+      {
+        "item_name": "string",
+        "item_equipment_page_name": "string",
+        "item_equipment_slot_name": "string",
+        "item_grade": "string",
+        "item_combat_power": "null|number",
+        "starforce_upgrade": "null|string",
+        "starforce_remain_count": "number",
+        "equipment_level": "number",
+        "item_gender": "string",
+        "freestyle_coupon_flag": "string",
+        "cuttable_count": "number",
+        "transmission_able": "string",
+        "todd_able": "string",
+        "item_additional_option_grade": "null|string",
+        "item_potential_option_grade": "null|string",
+        "item_additional_potential_option_grade": "null|string",
+        "item_icon": "string",
+        "item_option": "string",
+        "item_basic_option": [
+          {
+            "option_no": "number",
+            "option_name": "string",
+            "option_value": "string"
+          }
+        ],
+        "item_additional_option": [
+          {
+            "option_no": "number",
+            "option_name": "string",
+            "option_value": "string"
+          }
+        ],
+        "item_potential_option": [
+          {
+            "option_no": "number",
+            "option_name": "string",
+            "option_value": "string"
+          }
+        ],
+        "item_additional_potential_option": [
+          {
+            "option_no": "number",
+            "option_name": "string",
+            "option_value": "string"
+          }
+        ],
+        "soul_equipment_flag": "string",
+        "soul_info": {
+          "soul_name": "string",
+          "soul_option": "string",
+          "__also": "null"
+        },
+        "emblem_info": "null",
+        "mastery_info": {
+          "mastery_level": "number",
+          "mastery_exp": "number",
+          "base_option_point": "number",
+          "potential_option_point": "number",
+          "additional_option_point": "number",
+          "additional_potential_option_point": "number",
+          "__also": "null"
+        }
+      }
+    ],
+    "soul_set_option": "string",
+    "equipment_preset": [
+      {
+        "preset_no": "number",
+        "soul_set_option": "string",
+        "item_equipment": [
+          {
+            "item_name": "string",
+            "item_equipment_page_name": "string",
+            "item_equipment_slot_name": "string",
+            "item_grade": "string",
+            "item_combat_power": "null|number",
+            "starforce_upgrade": "null|string",
+            "starforce_remain_count": "number",
+            "equipment_level": "number",
+            "item_gender": "string",
+            "freestyle_coupon_flag": "string",
+            "cuttable_count": "number",
+            "transmission_able": "string",
+            "todd_able": "string",
+            "item_additional_option_grade": "null|string",
+            "item_potential_option_grade": "null|string",
+            "item_additional_potential_option_grade": "null|string",
+            "item_icon": "string",
+            "item_option": "string",
+            "item_basic_option": [
+              {
+                "option_no": "number",
+                "option_name": "string",
+                "option_value": "string"
+              }
+            ],
+            "item_additional_option": [
+              {
+                "option_no": "number",
+                "option_name": "string",
+                "option_value": "string"
+              }
+            ],
+            "item_potential_option": [
+              {
+                "option_no": "number",
+                "option_name": "string",
+                "option_value": "string"
+              }
+            ],
+            "item_additional_potential_option": [
+              {
+                "option_no": "number",
+                "option_name": "string",
+                "option_value": "string"
+              }
+            ],
+            "soul_equipment_flag": "string",
+            "soul_info": {
+              "soul_name": "string",
+              "soul_option": "string",
+              "__also": "null"
+            },
+            "emblem_info": {
+              "emblem_name": "string",
+              "emblem_level": "number",
+              "emblem_option": "string",
+              "__also": "null"
+            },
+            "mastery_info": {
+              "mastery_level": "number",
+              "mastery_exp": "number",
+              "base_option_point": "number",
+              "potential_option_point": "number",
+              "additional_option_point": "number",
+              "additional_potential_option_point": "number",
+              "__also": "null"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

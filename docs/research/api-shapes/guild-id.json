@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/guild/id",
+    "request_params": [
+      "guild_name",
+      "world_name"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "oguild_id": "string"
+  }
+}

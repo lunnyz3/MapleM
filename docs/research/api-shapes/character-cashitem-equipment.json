@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/cashitem-equipment",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "character_gender": "string",
+    "use_preset_no": "number",
+    "use_additional_preset_no": "number",
+    "character_look_mode": "string",
+    "cash_item_equipment": [
+      {
+        "cash_item_equipment_page_name": "string",
+        "cash_item_equipment_slot_name": "string",
+        "cash_item_name": "string",
+        "cash_item_icon": "string",
+        "miracle_anvil_item_name": "null|string",
+        "miracle_anvil_item_icon": "null|string",
+        "cash_item_description": "string",
+        "cash_item_gender": "string",
+        "freestyle_coupon_flag": "string",
+        "cash_item_option": [
+          {
+            "option_name": "string",
+            "option_value": "string"
+          }
+        ],
+        "date_expire": "null",
+        "date_option_expire": "null|string",
+        "cash_item_label": "null|string",
+        "cash_item_coloring_prism": {
+          "color_range": "string",
+          "hue": "number",
+          "saturation": "number",
+          "value": "number",
+          "__also": "null"
+        }
+      }
+    ],
+    "additional_cash_item_equipment": [],
+    "cash_equipment_preset": [
+      {
+        "preset_no": "number",
+        "cash_item_equipment": [
+          {
+            "cash_item_equipment_page_name": "string",
+            "cash_item_equipment_slot_name": "string",
+            "cash_item_name": "string",
+            "cash_item_icon": "string",
+            "miracle_anvil_item_name": "null|string",
+            "miracle_anvil_item_icon": "null|string",
+            "cash_item_description": "string",
+            "cash_item_gender": "string",
+            "freestyle_coupon_flag": "null|string",
+            "cash_item_option": [
+              {
+                "option_name": "string",
+                "option_value": "string"
+              }
+            ],
+            "date_expire": "null",
+            "date_option_expire": "null|string",
+            "cash_item_label": "null|string",
+            "cash_item_coloring_prism": {
+              "color_range": "string",
+              "hue": "number",
+              "saturation": "null|number",
+              "value": "null|number",
+              "__also": "null"
+            }
+          }
+        ]
+      }
+    ],
+    "additional_cash_equipment_preset": [
+      {
+        "preset_no": "number",
+        "additional_cash_item_equipment": []
+      }
+    ]
+  }
+}

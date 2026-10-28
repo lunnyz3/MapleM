@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/pet-equipment",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "pet_1_name": "string",
+    "pet_1_pet_type": "string",
+    "pet_1_date_expire": "string",
+    "pet_1_icon": "string",
+    "pet_2_name": "string",
+    "pet_2_pet_type": "string",
+    "pet_2_date_expire": "string",
+    "pet_2_icon": "string",
+    "pet_3_name": "string",
+    "pet_3_pet_type": "string",
+    "pet_3_date_expire": "string",
+    "pet_3_icon": "string",
+    "pet_set_option": [
+      {
+        "set_name": "string",
+        "set_count": "number",
+        "set_option": "string"
+      }
+    ]
+  }
+}

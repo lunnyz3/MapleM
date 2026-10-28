@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# local tooling caches (headless browser libs)
+.cache/

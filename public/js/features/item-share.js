@@ -256,6 +256,10 @@ function normalizeOptionRows(optionList) {
 }
 
 function resolveProfileJobMode(item, profileContext = null) {
+  const attackType = profileContext?.attackType || item?.attackType;
+  if (attackType === "magical" || attackType === "physical") {
+    return attackType;
+  }
   const profileClassCandidates = [
     profileContext?.className,
     profileContext?.jobName,

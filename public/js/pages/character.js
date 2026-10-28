@@ -59,6 +59,8 @@ const SHARE_ACTION_SAVE = "save";
 const SHARE_TOAST_ELEMENT_ID = "equipShareToast";
 const SHARE_CAPTURE_CLASSNAME = "equip-share-capture-host";
 const DEFAULT_SHARE_WEB_BASE_URL = "https://maplem.co.kr";
+// NEXON Open API 이용약관 제6조 ④에 따라 공유 이미지에도 출처를 넣는다.
+const SHARE_ATTRIBUTION_TEXT = "Data based on NEXON Open API";
 const SHARE_DEFAULT_CONFIG = Object.freeze({
   loaded: false,
   kakaoEnabled: false,
@@ -259,6 +261,11 @@ async function captureEquipmentCardImage({
     captionEl.textContent = captionText;
     wrapEl.appendChild(captionEl);
   }
+
+  const attributionEl = document.createElement("p");
+  attributionEl.className = "share-attribution";
+  attributionEl.textContent = SHARE_ATTRIBUTION_TEXT;
+  wrapEl.appendChild(attributionEl);
 
   hostEl.appendChild(wrapEl);
   document.body.appendChild(hostEl);
@@ -799,6 +806,8 @@ function renderEquipmentShareToggles(state) {
 }
 
 const resolveJobMode = (p) => {
+  // The server decides from the character's own stats (profile.attackType); names are a fallback.
+  if (p?.attackType === "magical" || p?.attackType === "physical") return p.attackType;
   const j = normalizeForMatch(p?.jobName || "");
   const c = normalizeForMatch(p?.className || "");
   if (magicalJobNames.has(j) || magicalJobNames.has(c)) return "magical";
@@ -1536,7 +1545,7 @@ function renderProfileShareCardMarkup({ profile, query }) {
     meta.overallRankingText,
   )}</strong></p><p><span>길드</span><strong>${meta.guildMark ? `<img src="${escapeHtml(
     meta.guildMark,
-  )}" alt="" crossorigin="anonymous" />` : ""}<b>${escapeHtml(guildLabel)}</b></strong></p></div><p class="profile-share-card__cta">maplem.co.kr</p></div></article>`;
+  )}" alt="" crossorigin="anonymous" />` : ""}<b>${escapeHtml(guildLabel)}</b></strong></p></div><p class="profile-share-card__cta">maplem.co.kr</p><p class="share-attribution">${SHARE_ATTRIBUTION_TEXT}</p></div></article>`;
 }
 
 function renderProfile(profile, query) {
@@ -2082,9 +2091,9 @@ function renderUnionStatList(optionRows, emptyText) {
 function renderUnionTab(tabData, state) {
   const selected = resolveSelectedPreset("union", tabData, state);
   const data = selected?.data || {};
-  const occupied = toArray(data.occupiedOptions).length
-    ? toArray(data.occupiedOptions)
-    : toArray(tabData?.activeOccupiedOptions);
+  const unionStats = toArray(data.unionStatOptions).length
+    ? toArray(data.unionStatOptions)
+    : toArray(tabData?.activeUnionStatOptions);
   const raider = toArray(data.raiderOptions).length
     ? toArray(data.raiderOptions)
     : toArray(tabData?.activeRaiderOptions);
@@ -2117,9 +2126,9 @@ function renderUnionTab(tabData, state) {
   )}</strong></section><section class="union-dashboard__right"><article class="union-panel"><h4>레벨 총합 효과 누적</h4>${renderUnionStatList(
     totalEffectRows,
     "레벨 총합 효과 정보가 없습니다.",
-  )}</article><article class="union-panel"><h4>전투 지도 적용 효과</h4><div class="union-panel__group"><h5>점령 효과</h5>${renderUnionStatList(
-    occupied,
-    "적용 점령 효과가 없습니다.",
+  )}</article><article class="union-panel"><h4>유니온 스탯 · 공격대 효과</h4><div class="union-panel__group"><h5>유니온 스탯</h5>${renderUnionStatList(
+    unionStats,
+    "적용 중인 유니온 스탯이 없습니다.",
   )}</div><div class="union-panel__group"><h5>공격대원 효과</h5>${renderUnionStatList(
     raider,
     "적용 공격대 효과가 없습니다.",

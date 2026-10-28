@@ -354,7 +354,8 @@ function normalizeRankingLookupErrorMessage(message) {
   }
   return raw;
 }
-const rankingDateFloor = "2025-12-01";
+// 넥슨 랭킹 API는 2025-11-27 데이터부터 제공한다.
+const rankingDateFloor = "2025-11-27";
 const rankingPageSize = 50;
 const rankingApiPageSize = 200;
 const rankingTypes = Object.freeze({
@@ -365,12 +366,19 @@ const rankingTypes = Object.freeze({
     label: "샤레니안의 전장 랭킹",
     endpoint: "sharenian-battlefield",
   },
-  "root-of-time": { label: "시간의근원 랭킹", endpoint: "root-of-time" },
+  "sharenian-waterway": {
+    label: "샤레니안의 지하수로 랭킹",
+    endpoint: "sharenian-waterway",
+  },
+  "root-of-time": { label: "시간의 근원 랭킹", endpoint: "root-of-time" },
+  "combat-power": { label: "전투력 랭킹", endpoint: "combat-power" },
+  dojang: { label: "무릉도장 랭킹", endpoint: "dojang" },
+  "kerning-m-tower": { label: "커닝M타워 랭킹", endpoint: "kerning-m-tower" },
 });
 const rankingNicknameSearchTypes = Object.freeze(
-  new Set(["level", "union", "achievement", "root-of-time"]),
+  new Set(["level", "union", "achievement", "root-of-time", "combat-power", "dojang", "kerning-m-tower"]),
 );
-const disabledRankingTypes = Object.freeze(new Set(["sharenian-waterway"]));
+const disabledRankingTypes = Object.freeze(new Set());
 const worldIconByName = Object.freeze({
   스카니아: "/assets/scania.png",
   Scania: "/assets/scania.png",
@@ -437,7 +445,6 @@ const physicalJobNames = new Set(
     "섀도어",
     "듀얼블레이드",
     "바이퍼",
-    "캡틴",
     "캐논슈터",
     "소울마스터",
     "윈드브레이커",
@@ -450,7 +457,6 @@ const physicalJobNames = new Set(
     "은월",
     "블래스터",
     "와일드헌터",
-    "메카닉",
     "제논",
     "데몬슬레이어",
     "데몬어벤져",
@@ -480,6 +486,8 @@ const magicalJobNames = new Set(
     "라라",
     "시아",
     "일리움",
+    "캡틴",
+    "메카닉",
   ].map(normalizeForMatch),
 );
 const equipmentOrder = [

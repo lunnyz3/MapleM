@@ -138,32 +138,13 @@ async function resolveRankingCharacterImage(worldName, characterName) {
 
   const pending = (async () => {
     try {
-      const idQuery = new URLSearchParams({
+      const query = new URLSearchParams({
         world_name: world,
         character_name: name,
       });
-      const idRes = await fetch(`/api/maplestorym/id?${idQuery.toString()}`);
-      const idPayload = await parseResponseSafely(idRes);
-      if (!idRes.ok || !idPayload?.ok) {
-        return "";
-      }
-      const ocid = String(idPayload?.data?.ocid || "").trim();
-      if (!ocid) {
-        return "";
-      }
-
-      const basicQuery = new URLSearchParams({ ocid });
-      const basicRes = await fetch(`/api/maplestorym/character/basic?${basicQuery.toString()}`);
-      const basicPayload = await parseResponseSafely(basicRes);
-      if (!basicRes.ok || !basicPayload?.ok) {
-        return "";
-      }
-
-      return String(
-        basicPayload?.data?.character_image ||
-          basicPayload?.data?.character_icon ||
-          "",
-      ).trim();
+      const response = await fetch(`/api/maplestorym/character/image?${query.toString()}`);
+      const payload = await parseResponseSafely(response);
+      return response.ok && payload?.ok ? String(payload.imageUrl || "").trim() : "";
     } catch (_error) {
       return "";
     }
@@ -183,7 +164,7 @@ async function hydrateRankingCharacterThumbs(containerEl) {
   if (!targets.length) return;
 
   let cursor = 0;
-  const workerSize = Math.min(2, targets.length);
+  const workerSize = Math.min(4, targets.length);
   const workers = Array.from({ length: workerSize }, async () => {
     while (cursor < targets.length) {
       const currentIndex = cursor;

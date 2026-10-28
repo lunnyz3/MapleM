@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/symbol",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "arcane_symbol": [
+      {
+        "symbol_name": "string",
+        "symbol_icon": "string",
+        "symbol_level": "number",
+        "symbol_growth_value": "number",
+        "symbol_option": "string"
+      }
+    ],
+    "authentic_symbol": [
+      {
+        "symbol_name": "string",
+        "symbol_icon": "string",
+        "symbol_level": "number",
+        "symbol_growth_value": "number",
+        "symbol_option": "string"
+      }
+    ]
+  }
+}

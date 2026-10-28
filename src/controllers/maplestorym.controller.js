@@ -3,6 +3,8 @@ const { env } = require("../config/env");
 const { starforceSetOptionGroups } = require("../config/starforce-set-options");
 const { normalizeWorldName } = require("../config/worlds");
 const { RequestLog } = require("../models/request-log.model");
+const { TtlLruCache } = require("../nexon/client");
+const { getActiveVcores } = require("../transform/vmatrix");
 const {
   getCharacterOcid,
   getCharacterByOcid,
@@ -16,6 +18,9 @@ const {
   getRankingSharenianBattlefield,
   getRankingSharenianWaterway,
   getRankingRootOfTime,
+  getRankingCombatPower,
+  getRankingDojang,
+  getRankingKerningMTower,
   saveRequestLog
 } = require("../services/maplestorym.service");
 
@@ -41,12 +46,14 @@ const characterDetailEndpoints = [
 
 const userDetailEndpoints = [
   { key: "union", path: "/maplestorym/v1/user/union" },
-  { key: "unionRaider", path: "/maplestorym/v1/user/union-raider" }
+  { key: "unionRaider", path: "/maplestorym/v1/user/union-raider" },
+  { key: "unionStat", path: "/maplestorym/v1/user/union-stat" }
 ];
 
 const aggregateLogEndpoint = `${env.nexonBaseUrl}/maplestorym/v1/character/all`;
 const presetFallbackLookbackLimit = 30;
-const rankingDateFloor = "2025-12-01";
+// Nexon ranking data starts on 2025-11-27.
+const rankingDateFloor = "2025-11-27";
 
 const majorStatKeys = Object.freeze([
   "physicalAttack",
@@ -170,7 +177,6 @@ const physicalJobNames = new Set(
     "섀도어",
     "듀얼블레이드",
     "바이퍼",
-    "캡틴",
     "캐논슈터",
     "소울마스터",
     "윈드브레이커",
@@ -183,7 +189,6 @@ const physicalJobNames = new Set(
     "은월",
     "블래스터",
     "와일드헌터",
-    "메카닉",
     "제논",
     "데몬슬레이어",
     "데몬어벤져",
@@ -213,7 +218,10 @@ const magicalJobNames = new Set(
     "키네시스",
     "라라",
     "시아",
-    "일리움"
+    "일리움",
+    // 2026-10-28 실측: 캡틴·메카닉은 마법 공격력이 물리의 약 2배(공식 능력치 가이드도 마법 직업).
+    "캡틴",
+    "메카닉"
   ].map((name) => normalizeForMatch(name))
 );
 
@@ -803,7 +811,10 @@ function collectUnionContributions(trackers, details) {
   addContributionsFromText(trackers, "유니온 레벨 효과", unionData?.union_level_total_option, {
     allowedKeys: unionGuildContributionKeys
   });
-  addContributionsFromOptionList(trackers, "유니온 점령 효과", unionRaiderData?.use_union_occupied_option, {
+  addContributionsFromOptionList(trackers, "유니온 스탯", mapUnionStatOptions(details?.unionStat?.data?.use_union_stat).map((stat) => ({
+    option_name: stat.name,
+    option_value: stat.value
+  })), {
     allowedKeys: unionGuildContributionKeys
   });
   addContributionsFromOptionList(trackers, "유니온 공격대 효과", unionRaiderData?.use_union_raider_option, {
@@ -857,27 +868,31 @@ function getVmatrixAttackPercentBonusByLevel(level) {
   return Math.max(0, Math.min(25, rawBonus));
 }
 
+// The V-matrix stat rules (attack % per core level, capped at 25%, plus four base effects)
+// are not confirmed against the current game yet; enable with VMATRIX_STAT_RULES=on once
+// verified (docs/competitor-feature-inventory.md §3).
+function isVmatrixStatRulesEnabled() {
+  return String(process.env.VMATRIX_STAT_RULES || "").trim().toLowerCase() === "on";
+}
+
 function collectVmatrixContributions(trackers, details) {
-  const cores = details?.vmatrix?.data?.character_v_core_equipment;
-  if (!Array.isArray(cores)) {
+  if (!isVmatrixStatRulesEnabled()) {
     return;
   }
 
   const appliedBaseSkillEffects = new Set();
 
-  cores.forEach((core) => {
-    const name = String(core?.vcore_name || "");
+  getActiveVcores(details?.vmatrix?.data).forEach((core) => {
+    const { name } = core;
     const normalizedName = normalizeForMatch(name);
-    const vcoreLevelRaw = Number(core?.vcore_level);
-    const slotLevelRaw = Number(core?.slot_level);
-    const vcoreLevel = Number.isFinite(vcoreLevelRaw) ? Math.max(0, vcoreLevelRaw) : 0;
-    const slotLevel = Number.isFinite(slotLevelRaw) ? Math.max(0, slotLevelRaw) : 0;
-    const effectiveLevel = vcoreLevel + slotLevel;
+    const effectiveLevel = core.level + core.legacySlotLevel;
 
     if (vmatrixAttackScaleSkillNames.has(normalizedName)) {
       const bonus = getVmatrixAttackPercentBonusByLevel(effectiveLevel);
       if (bonus > 0) {
-        const levelText = `V코어 레벨 ${vcoreLevel} + 슬롯 레벨 ${slotLevel} = ${effectiveLevel}`;
+        const levelText = core.legacySlotLevel
+          ? `V코어 레벨 ${core.level} + 슬롯 레벨 ${core.legacySlotLevel} = ${effectiveLevel}`
+          : `V코어 레벨 ${core.level}`;
         addMajorStatContribution(
           trackers,
           "physicalAttackPercent",
@@ -1266,6 +1281,11 @@ function parseRankingQuery(req, res) {
     params.ocid = ocid;
   }
 
+  // Nexon filters by world itself (ranking stays overall, world_ranking is in-world).
+  if (worldNameCanonical) {
+    params.world_name = worldNameCanonical;
+  }
+
   return {
     params,
     worldNameCanonical,
@@ -1302,7 +1322,8 @@ function buildQueryPayload(characterName, worldNameInput, worldNameCanonical) {
 
 async function resolveOcid(characterName, worldNameCanonical, nexonWorldName, options = {}) {
   const shouldLog = options.shouldLog ?? true;
-  const worldCandidates = [...new Set([nexonWorldName, worldNameCanonical])];
+  // Nexon /id only accepts Korean world names; the English name always fails with 400 OPENAPI00004.
+  const worldCandidates = [worldNameCanonical];
   let lastError = null;
 
   for (let index = 0; index < worldCandidates.length; index += 1) {
@@ -2260,63 +2281,53 @@ function extractEquipmentPresetResult(details, source, sourceTimestamp) {
   };
 }
 
+// Union presets are union-stat presets: the battle map and occupation effects were removed
+// from the game on 2026-09-17 and from the API on 2026-10-15 (Nexon notices N-3546529,
+// N-3563720). Raider effects still come from union-raider.
+function mapUnionStatOptions(list) {
+  return toArray(list).map((stat) => mapOptionEntry({ option_name: stat?.stat_name, option_value: stat?.stat_value }));
+}
+
 function extractUnionPresetResult(details, source, sourceTimestamp) {
-  const unionRaiderData = details?.unionRaider?.data || {};
-  const activePresetNo = normalizePresetNo(unionRaiderData.use_preset_no);
-  const battleMaps = toArray(unionRaiderData.battle_map);
-  const occupiedOptions = toArray(unionRaiderData.use_union_occupied_option).map(mapOptionEntry);
-  const raiderOptions = toArray(unionRaiderData.use_union_raider_option).map(mapOptionEntry);
+  const unionStatData = details?.unionStat?.data || {};
+  const raiderOptions = toArray(details?.unionRaider?.data?.use_union_raider_option).map(mapOptionEntry);
+  const activePresetNo = normalizePresetNo(unionStatData.use_preset_no);
   const records = [];
 
-  battleMaps.forEach((battleMap) => {
-    const presetNo = normalizePresetNo(battleMap?.preset_no);
+  toArray(unionStatData.union_stat_preset).forEach((preset) => {
+    const presetNo = normalizePresetNo(preset?.preset_no);
     if (presetNo === null) {
       return;
     }
-
     const isActive = activePresetNo !== null && presetNo === activePresetNo;
-    const unionRaiders = toArray(battleMap?.union_raider).map((raider) => ({
-      blockRank: raider?.block_rank || "-",
-      blockType: raider?.block_type || "-",
-      blockPosition: toArray(raider?.block_position).map((position) => ({
-        cellNo: position?.cell_no ?? "-",
-        x: position?.cell_x ?? "-",
-        y: position?.cell_y ?? "-"
-      }))
-    }));
-
+    const unionStatOptions = mapUnionStatOptions(preset?.union_stat);
     records.push({
       presetNo,
       source,
       sourceTimestamp,
       summary: {
-        occupiedCount: isActive ? occupiedOptions.length : 0,
-        raiderOptionCount: isActive ? raiderOptions.length : 0,
-        blockCount: unionRaiders.length
+        unionStatCount: unionStatOptions.length,
+        raiderOptionCount: isActive ? raiderOptions.length : 0
       },
       data: {
-        optionSetting: battleMap?.option_setting || {},
-        unionRaiders,
-        occupiedOptions: isActive ? occupiedOptions : [],
+        unionStatOptions,
         raiderOptions: isActive ? raiderOptions : []
       }
     });
   });
 
-  if (!records.length && (occupiedOptions.length || raiderOptions.length || activePresetNo !== null)) {
+  const activeUnionStatOptions = mapUnionStatOptions(unionStatData.use_union_stat);
+  if (!records.length && (activeUnionStatOptions.length || raiderOptions.length)) {
     records.push({
       presetNo: activePresetNo ?? 1,
       source,
       sourceTimestamp,
       summary: {
-        occupiedCount: occupiedOptions.length,
-        raiderOptionCount: raiderOptions.length,
-        blockCount: 0
+        unionStatCount: activeUnionStatOptions.length,
+        raiderOptionCount: raiderOptions.length
       },
       data: {
-        optionSetting: {},
-        unionRaiders: [],
-        occupiedOptions,
+        unionStatOptions: activeUnionStatOptions,
         raiderOptions
       }
     });
@@ -2575,12 +2586,14 @@ function buildEquipmentTab(details, fallbackDetails) {
   };
 }
 
-function buildUnionTab(details, fallbackDetails) {
+function buildUnionTab(details) {
   const current = extractUnionPresetResult(details, "api", new Date().toISOString());
-  const merged = mergePresetResult(current, fallbackDetails, extractUnionPresetResult);
+  // The API returns every union-stat preset, so old logs are not used to fill presets
+  // (they would bring back the removed battle map as if it were current).
+  const merged = mergePresetResult(current, [], extractUnionPresetResult);
   const unionData = details?.union?.data || {};
   const unionRaiderData = details?.unionRaider?.data || {};
-  const activeOccupiedOptions = toArray(unionRaiderData.use_union_occupied_option).map(mapOptionEntry);
+  const activeUnionStatOptions = mapUnionStatOptions(details?.unionStat?.data?.use_union_stat);
   const activeRaiderOptions = toArray(unionRaiderData.use_union_raider_option).map(mapOptionEntry);
 
   return {
@@ -2592,7 +2605,7 @@ function buildUnionTab(details, fallbackDetails) {
       unionLevelTotalOption: unionData.union_level_total_option || "-",
       unionLevelTotalOptionSegments: splitStatSegments(unionData.union_level_total_option || "")
     },
-    activeOccupiedOptions,
+    activeUnionStatOptions,
     activeRaiderOptions
   };
 }
@@ -2692,13 +2705,12 @@ function buildJewelSymbolVmatrixTab(details, fallbackDetails) {
       ) ?? null,
   }));
 
-  const vCores = toArray(vmatrixData.character_v_core_equipment).map((core) => ({
-    slotId: core?.slot_id ?? "-",
-    slotLevel: core?.slot_level ?? "-",
-    vcoreName: core?.vcore_name || "-",
-    vcoreLevel: core?.vcore_level ?? "-",
-    vcoreType: core?.vcore_type || "-",
-    skills: [core?.vcore_skill_name1, core?.vcore_skill_name2, core?.vcore_skill_name3].filter(Boolean)
+  // Show only the cores that are equipped and active, as in the in-game V matrix.
+  const vCores = getActiveVcores(vmatrixData).map((core) => ({
+    vcoreName: core.name || "-",
+    vcoreLevel: core.level,
+    vcoreType: core.type || "-",
+    skills: core.skills
   }));
 
   return {
@@ -2873,18 +2885,37 @@ function buildGuildTab(details, characterName, worldNameCanonical) {
   };
 }
 
-function resolveMajorStatOrderByClassName(jobNameOrClassName) {
-  const normalizedClassName = normalizeForMatch(jobNameOrClassName);
-
-  if (magicalJobNames.has(normalizedClassName)) {
-    return [...magicalMajorStatOrder];
+// The stat endpoint reports both attack values and the main one is far larger
+// (2026-10-28: 캡틴·메카닉 magic ≈ 2.1× physical, 렌 physical ≈ 2.5× magic), so a
+// character's own stats decide; the job-name lists are only a fallback.
+function resolveAttackTypeFromStat(statData) {
+  const values = {};
+  toArray(statData?.stat).forEach((entry) => {
+    values[String(entry?.stat_name || "").trim()] = parseNumericValue(entry?.stat_value);
+  });
+  const physical = values["물리 공격력"];
+  const magical = values["마법 공격력"];
+  if (!Number.isFinite(physical) || !Number.isFinite(magical) || physical === magical) {
+    return null;
   }
+  return magical > physical ? "magical" : "physical";
+}
 
-  if (physicalJobNames.has(normalizedClassName)) {
-    return [...physicalMajorStatOrder];
+function resolveAttackType({ statData, className, jobName }) {
+  const fromStat = resolveAttackTypeFromStat(statData);
+  if (fromStat) {
+    return fromStat;
   }
-
-  return [...physicalMajorStatOrder];
+  for (const name of [className, jobName]) {
+    const normalized = normalizeForMatch(name);
+    if (magicalJobNames.has(normalized)) {
+      return "magical";
+    }
+    if (physicalJobNames.has(normalized)) {
+      return "physical";
+    }
+  }
+  return "physical";
 }
 
 function buildPageData({
@@ -2907,11 +2938,16 @@ function buildPageData({
     ? "-"
     : `${expRateValue.toLocaleString("ko-KR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
   const majorStats = buildMajorStats(details);
+  const attackType = resolveAttackType({
+    statData: stat,
+    className: basic.character_class,
+    jobName: basic.character_job_name
+  });
   const profileName = basic.character_name || characterName;
   const fallbackOverallRanking = parseNumericValue(basic.ranking ?? stat.ranking);
   const guildTab = buildGuildTab(details, profileName, worldNameCanonical);
   const equipmentTab = buildEquipmentTab(details, fallbackList);
-  const unionTab = buildUnionTab(details, fallbackList);
+  const unionTab = buildUnionTab(details);
   const androidTab = buildAndroidTab(details, fallbackList);
   const jewelSymbolVmatrixTab = buildJewelSymbolVmatrixTab(details, fallbackList);
   const hexamatrixTab = buildHexamatrixTab(details);
@@ -2946,7 +2982,8 @@ function buildPageData({
           ? `\uC804\uCCB4\uB7AD\uD0B9 - ${Number(fallbackOverallRanking).toLocaleString("ko-KR")}\uC704`
         : "\uC804\uCCB4\uB7AD\uD0B9 - -",
     majorStats,
-    majorStatOrder: resolveMajorStatOrderByClassName(basic.character_job_name || basic.character_class || "")
+    attackType,
+    majorStatOrder: attackType === "magical" ? [...magicalMajorStatOrder] : [...physicalMajorStatOrder]
   };
 
   return {
@@ -3012,6 +3049,49 @@ async function getCharacterId(req, res) {
       error: errorBody
     });
   }
+}
+
+// Ranking and guild-member lists show a thumbnail per row. Only the image URL is
+// kept (12h), so a popular ranking page costs Nexon calls once, not on every view.
+const characterImageCache = new TtlLruCache({ maxEntries: 20000, maxBytes: 8 * 1024 * 1024 });
+const characterImageTtlMs = 12 * 60 * 60 * 1000;
+const characterImageMissTtlMs = 10 * 60 * 1000;
+
+async function getCharacterImage(req, res) {
+  if (!env.nexonApiKey) {
+    return res.status(500).json(buildApiKeyError());
+  }
+
+  const parsed = parseCharacterQuery(req, res);
+  if (!parsed) {
+    return;
+  }
+
+  const { characterName, worldNameCanonical, nexonWorldName } = parsed;
+  const cacheKey = `${worldNameCanonical}::${characterName}`;
+  let imageUrl = characterImageCache.get(cacheKey);
+
+  if (imageUrl === undefined) {
+    try {
+      const ocidResult = await resolveOcid(characterName, worldNameCanonical, nexonWorldName, { shouldLog: false });
+      const ocid = String(ocidResult?.data?.ocid || "").trim();
+      const basic = ocid ? await getCharacterByOcid("/maplestorym/v1/character/basic", ocid) : null;
+      imageUrl = String(basic?.data?.character_image || basic?.data?.character_icon || "").trim();
+      characterImageCache.set(cacheKey, imageUrl, imageUrl ? characterImageTtlMs : characterImageMissTtlMs, imageUrl.length);
+    } catch (error) {
+      const statusCode = error.response?.status;
+      if (statusCode >= 400 && statusCode < 500 && statusCode !== 429) {
+        characterImageCache.set(cacheKey, "", characterImageMissTtlMs, 0);
+      }
+      return res.status(statusCode === 400 ? 404 : 502).json({ ok: false, imageUrl: "" });
+    }
+  }
+
+  if (!imageUrl) {
+    return res.status(404).json({ ok: false, imageUrl: "" });
+  }
+  res.set("Cache-Control", "public, max-age=3600");
+  return res.json({ ok: true, imageUrl });
 }
 
 async function getAllCharacterDetails(req, res) {
@@ -3158,7 +3238,8 @@ async function getCharacterPageData(req, res) {
 
     const historyAvailable = await hasExpHistory(ocid);
     const fallbackDetails = await loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit);
-    const overallRankingResult = await resolveLatestOverallRankingByOcid(ocid, { days: 7 });
+    // Rankings are aggregated once a day (~02:30 KST) for the top 10,000, so today or yesterday is enough.
+    const overallRankingResult = await resolveLatestOverallRankingByOcid(ocid, { days: 2 });
 
     const pageData = buildPageData({
       characterName,
@@ -3743,7 +3824,22 @@ async function getRankingRootOfTimeController(req, res) {
   return getRankingController(req, res, "/maplestorym/v1/ranking/root-of-time", getRankingRootOfTime);
 }
 
+async function getRankingCombatPowerController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/combat-power", getRankingCombatPower);
+}
+
+async function getRankingDojangController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/dojang", getRankingDojang);
+}
+
+async function getRankingKerningMTowerController(req, res) {
+  return getRankingController(req, res, "/maplestorym/v1/ranking/kerning-m-tower", getRankingKerningMTower);
+}
+
 module.exports = {
+  buildMajorStats,
+  resolveAttackType,
+  getCharacterImage,
   getCharacterId,
   getAllCharacterDetails,
   getCharacterPageData,
@@ -3775,5 +3871,8 @@ module.exports = {
   getRankingAchievementController,
   getRankingSharenianBattlefieldController,
   getRankingSharenianWaterwayController,
-  getRankingRootOfTimeController
+  getRankingRootOfTimeController,
+  getRankingCombatPowerController,
+  getRankingDojangController,
+  getRankingKerningMTowerController
 };

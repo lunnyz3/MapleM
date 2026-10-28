@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/hexamatrix-stat",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "hexamatrix_stat": [
+      {
+        "stat_core_slot": "number",
+        "stat_info": [
+          {
+            "page_no": "number",
+            "activate_flag": "string",
+            "main_stat": "string",
+            "main_stat_level": "number",
+            "sub_1_stat": "string",
+            "sub_1_stat_level": "number",
+            "sub_2_stat": "string",
+            "sub_2_stat_level": "number"
+          }
+        ]
+      }
+    ]
+  }
+}

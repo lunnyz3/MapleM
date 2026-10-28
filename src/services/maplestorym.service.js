@@ -1,7 +1,7 @@
-const axios = require("axios");
 const mongoose = require("mongoose");
 const { env } = require("../config/env");
 const { RequestLog } = require("../models/request-log.model");
+const { createNexonClient } = require("../nexon/client");
 
 const idEndpointPath = "/maplestorym/v1/id";
 const unionEndpointPath = "/maplestorym/v1/user/union";
@@ -14,103 +14,102 @@ const rankingAchievementEndpointPath = "/maplestorym/v1/ranking/achievement";
 const rankingSharenianBattlefieldEndpointPath = "/maplestorym/v1/ranking/sharenian-battlefield";
 const rankingSharenianWaterwayEndpointPath = "/maplestorym/v1/ranking/sharenian-waterway";
 const rankingRootOfTimeEndpointPath = "/maplestorym/v1/ranking/root-of-time";
-const maxRetryCount = 2;
+const rankingCombatPowerEndpointPath = "/maplestorym/v1/ranking/combat-power";
+const rankingDojangEndpointPath = "/maplestorym/v1/ranking/dojang";
+const rankingKerningMTowerEndpointPath = "/maplestorym/v1/ranking/kerning-m-tower";
 const quotaErrorWriteSuspendMs = 10 * 60 * 1000;
 let requestLogWritesSuspendedUntil = 0;
 
-async function requestNexon(endpoint, params) {
-  for (let attempt = 1; attempt <= maxRetryCount + 1; attempt += 1) {
-    try {
-      const response = await axios.get(endpoint, {
-        params,
-        headers: {
-          "x-nxopen-api-key": env.nexonApiKey
-        },
-        timeout: 10000
-      });
+// Every Nexon call goes through one client: response cache, in-flight dedupe,
+// concurrency cap and backoff on 429/5xx (see src/nexon/client.js).
+const nexonClient = createNexonClient({
+  baseUrl: env.nexonBaseUrl,
+  apiKey: env.nexonApiKey
+});
 
-      return {
-        endpoint,
-        data: response.data,
-        statusCode: response.status
-      };
-    } catch (error) {
-      const status = error.response?.status;
-      const canRetry = status === 429 && attempt <= maxRetryCount;
-
-      if (!canRetry) {
-        throw error;
-      }
+// Periodic usage line in the server log, e.g. to watch the daily Nexon quota.
+const statsLogIntervalMs = Number(process.env.NEXON_STATS_LOG_INTERVAL_MS ?? 10 * 60 * 1000);
+if (statsLogIntervalMs > 0) {
+  let lastLoggedRequests = 0;
+  setInterval(() => {
+    const stats = nexonClient.getStats();
+    if (stats.requests !== lastLoggedRequests) {
+      lastLoggedRequests = stats.requests;
+      console.log(`[Nexon] ${JSON.stringify(stats)}`);
     }
-  }
+  }, statsLogIntervalMs).unref();
+}
+
+function requestNexon(endpointPath, params) {
+  return nexonClient.request(endpointPath, params);
 }
 
 async function getCharacterOcid(characterName, worldName) {
-  const endpoint = `${env.nexonBaseUrl}${idEndpointPath}`;
-  return requestNexon(endpoint, {
+  return requestNexon(idEndpointPath, {
     character_name: characterName,
     world_name: worldName
   });
 }
 
 async function getCharacterByOcid(endpointPath, ocid) {
-  const endpoint = `${env.nexonBaseUrl}${endpointPath}`;
-  return requestNexon(endpoint, { ocid });
+  return requestNexon(endpointPath, { ocid });
 }
 
 async function getUserUnion(ocid) {
-  const endpoint = `${env.nexonBaseUrl}${unionEndpointPath}`;
-  return requestNexon(endpoint, { ocid });
+  return requestNexon(unionEndpointPath, { ocid });
 }
 
 async function getUserUnionRaider(ocid) {
-  const endpoint = `${env.nexonBaseUrl}${unionRaiderEndpointPath}`;
-  return requestNexon(endpoint, { ocid });
+  return requestNexon(unionRaiderEndpointPath, { ocid });
 }
 
 async function getGuildId(guildName, worldName) {
-  const endpoint = `${env.nexonBaseUrl}${guildIdEndpointPath}`;
-  return requestNexon(endpoint, {
+  return requestNexon(guildIdEndpointPath, {
     guild_name: guildName,
     world_name: worldName
   });
 }
 
 async function getGuildBasic(oguildId) {
-  const endpoint = `${env.nexonBaseUrl}${guildBasicEndpointPath}`;
-  return requestNexon(endpoint, {
+  return requestNexon(guildBasicEndpointPath, {
     oguild_id: oguildId
   });
 }
 
 async function getRankingLevel(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingLevelEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingLevelEndpointPath, params);
 }
 
 async function getRankingUnion(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingUnionEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingUnionEndpointPath, params);
 }
 
 async function getRankingAchievement(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingAchievementEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingAchievementEndpointPath, params);
 }
 
 async function getRankingSharenianBattlefield(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingSharenianBattlefieldEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingSharenianBattlefieldEndpointPath, params);
 }
 
 async function getRankingSharenianWaterway(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingSharenianWaterwayEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingSharenianWaterwayEndpointPath, params);
 }
 
 async function getRankingRootOfTime(params) {
-  const endpoint = `${env.nexonBaseUrl}${rankingRootOfTimeEndpointPath}`;
-  return requestNexon(endpoint, params);
+  return requestNexon(rankingRootOfTimeEndpointPath, params);
+}
+
+async function getRankingCombatPower(params) {
+  return requestNexon(rankingCombatPowerEndpointPath, params);
+}
+
+async function getRankingDojang(params) {
+  return requestNexon(rankingDojangEndpointPath, params);
+}
+
+async function getRankingKerningMTower(params) {
+  return requestNexon(rankingKerningMTowerEndpointPath, params);
 }
 
 function isStorageQuotaError(error) {
@@ -246,7 +245,12 @@ async function writeRequestLog({
   });
 }
 
+function getNexonClientStats() {
+  return nexonClient.getStats();
+}
+
 module.exports = {
+  getNexonClientStats,
   getCharacterOcid,
   getCharacterByOcid,
   getUserUnion,
@@ -259,5 +263,8 @@ module.exports = {
   getRankingSharenianBattlefield,
   getRankingSharenianWaterway,
   getRankingRootOfTime,
+  getRankingCombatPower,
+  getRankingDojang,
+  getRankingKerningMTower,
   saveRequestLog
 };

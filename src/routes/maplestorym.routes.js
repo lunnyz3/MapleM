@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  getCharacterImage,
   getCharacterId,
   getAllCharacterDetails,
   getCharacterPageData,
@@ -19,6 +20,9 @@ const {
   getRankingSharenianBattlefieldController,
   getRankingSharenianWaterwayController,
   getRankingRootOfTimeController,
+  getRankingCombatPowerController,
+  getRankingDojangController,
+  getRankingKerningMTowerController,
   getCharacterItemEquipment,
   getCharacterCashItemEquipment,
   getCharacterSymbol,
@@ -37,6 +41,7 @@ const {
 const router = express.Router();
 
 router.get("/id", getCharacterId);
+router.get("/character/image", getCharacterImage);
 router.get("/character/all", getAllCharacterDetails);
 router.get("/character/page-data", getCharacterPageData);
 router.get("/character/exp-history", getCharacterExpHistory);
@@ -68,6 +73,9 @@ router.get("/ranking/achievement", getRankingAchievementController);
 router.get("/ranking/sharenian-battlefield", getRankingSharenianBattlefieldController);
 router.get("/ranking/sharenian-waterway", getRankingSharenianWaterwayController);
 router.get("/ranking/root-of-time", getRankingRootOfTimeController);
+router.get("/ranking/combat-power", getRankingCombatPowerController);
+router.get("/ranking/dojang", getRankingDojangController);
+router.get("/ranking/kerning-m-tower", getRankingKerningMTowerController);
 // Aliases to tolerate short or typo-prone client paths.
 router.get("/character/item-equip", getCharacterItemEquipment);
 router.get("/character/cashitem", getCharacterCashItemEquipment);

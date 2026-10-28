@@ -126,8 +126,8 @@ async function callPythonChat({ method, path, params, body }) {
   return response;
 }
 
-function sendFeatureDisabled(res) {
-  return res.status(503).json({
+function sendFeatureDisabled(res, statusCode = 503) {
+  return res.status(statusCode).json({
     ok: false,
     status: "unavailable",
     code: CHATBOT_DISABLED_CODE,
@@ -147,7 +147,8 @@ function relayProxyResponse(res, proxyResponse) {
 
 async function getChatSessionStatus(req, res) {
   if (!env.chatbotEnabled) {
-    return sendFeatureDisabled(res);
+    // A status probe is not an error: the page just hides the chat panel.
+    return sendFeatureDisabled(res, 200);
   }
 
   const scope = validateCharacterScope(req, "query");

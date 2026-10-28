@@ -66,6 +66,7 @@ function renderRankingGuildCell({
   guildName,
   guildMarkIcon,
   linkable = false,
+  hydrateMark = true,
 }) {
   const world = String(worldName || "").trim();
   const guild = String(guildName || "").trim();
@@ -76,7 +77,7 @@ function renderRankingGuildCell({
       : "";
   const guildMarkHtml = guildMark
     ? `<img class="ranking-guild-mark" src="${escapeHtml(guildMark)}" alt="${escapeHtml(String(guild || "길드"))}" loading="lazy" />`
-    : world && guild && guild !== "-"
+    : hydrateMark && world && guild && guild !== "-"
       ? `<img class="ranking-guild-mark js-ranking-guild-mark" src="" alt="${escapeHtml(String(guild || "길드"))}" loading="lazy" data-world-name="${escapeHtml(world)}" data-guild-name="${escapeHtml(guild)}" hidden />`
       : "";
   const guildLabel = escapeHtml(guild || "-");
@@ -91,6 +92,13 @@ function renderRankingGradeCell(unionGrade, unionGradeIcon) {
   return `<span class="ranking-grade-cell">${icon ? `<img class="ranking-grade-icon" src="${escapeHtml(icon)}" alt="${escapeHtml(String(unionGrade || "등급"))}" loading="lazy" />` : ""}<span>${escapeHtml(unionGrade || "-")}</span></span>`;
 }
 
+// Character rankings that add one metric column to the level-ranking layout.
+const characterMetricRankings = Object.freeze({
+  "combat-power": { label: "전투력", field: "character_combat_power" },
+  dojang: { label: "층", field: "dojang_floor" },
+  "kerning-m-tower": { label: "층", field: "tower_floor" },
+});
+
 function getRankingColumns(type) {
   if (type === "union") {
     return ["#", "캐릭터", "등급", "유니온 레벨", "직업", "길드"];
@@ -98,14 +106,14 @@ function getRankingColumns(type) {
   if (type === "achievement") {
     return ["#", "캐릭터", "업적 점수", "티어", "길드"];
   }
-  if (type === "sharenian-battlefield") {
+  if (isGuildRankingType(type)) {
     return ["#", "길드", "점수", "길드마스터"];
-  }
-  if (type === "sharenian-waterway") {
-    return ["#", "캐릭터", "점수", "길드", "길드마스터"];
   }
   if (type === "root-of-time") {
     return ["#", "캐릭터", "점수", "직업", "길드"];
+  }
+  if (characterMetricRankings[type]) {
+    return ["#", "캐릭터", characterMetricRankings[type].label, "직업", "길드"];
   }
   return ["#", "캐릭터", "레벨", "직업", "길드"];
 }
@@ -126,15 +134,14 @@ function renderRankingRow(type, row, rankNo, targetCharacterNameNorm = "") {
     return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(row.achievement_score))}</td><td>${renderRankingGradeCell(row.achievement_grade_name, row.achievement_grade_icon)}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td></tr>`;
   }
 
-  if (type === "sharenian-battlefield") {
+  if (isGuildRankingType(type)) {
     return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon, linkable: true })}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
   }
 
-  if (type === "sharenian-waterway") {
-    const fallbackCharacterName = String(
-      row.character_name || row.guild_master_name || "-",
-    );
-    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row, fallbackCharacterName)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row.season_score)))}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, guildMarkIcon: row.guild_mark_icon })}</td><td>${renderRankingCharacterNameLink(row.guild_master_name || "-", row.world_name)}</td></tr>`;
+  if (characterMetricRankings[type]) {
+    const metric = characterMetricRankings[type];
+    // These rankings carry no guild_mark_icon; skip per-guild mark lookups to save Nexon calls.
+    return `<tr${rowClassAttr}><td class="is-num">${escapeHtml(String(rankNo))}</td><td>${renderRankingCharacterCell(row)}</td><td class="is-num ranking-value-highlight">${escapeHtml(formatNumber(parseNumericValue(row[metric.field])))}</td><td>${escapeHtml(row.character_class || "-")}</td><td>${renderRankingGuildCell({ worldName: row.world_name, guildName: row.guild_name, linkable: true, hydrateMark: false })}</td></tr>`;
   }
 
   if (type === "root-of-time") {
@@ -156,7 +163,10 @@ function renderRankingTable(type, rows, pageNo, options = {}) {
   const offset = (pageNo - 1) * rankingPageSize;
   const body = rows
     .map((row, index) => {
-      const rankNo = parseNumericValue(row?.ranking) ?? offset + index + 1;
+      // With a world filter Nexon returns only that world's rows; `ranking` stays the
+      // overall rank, so show the in-world rank instead.
+      const rankValue = options?.worldFiltered ? row?.world_ranking : row?.ranking;
+      const rankNo = parseNumericValue(rankValue) ?? offset + index + 1;
       return renderRankingRow(type, row, rankNo, targetCharacterNameNorm);
     })
     .join("");
@@ -176,6 +186,15 @@ function renderRankingPagination(buttonWrapEl, currentPage) {
     )
     .join("");
 }
+
+// Both Sharenian rankings are guild rankings with the same row shape.
+function isGuildRankingType(type) {
+  return type === "sharenian-battlefield" || type === "sharenian-waterway";
+}
+
+// Guild rankings are not published every day; an empty day falls back to the
+// most recent day with data (at most this many days back).
+const emptyGuildRankingFallbackDays = 14;
 
 async function fetchRankingPageData(type, date, worldName, pageNo, options = {}) {
   const allowReadyFallback = options?.allowReadyFallback !== false;
@@ -240,6 +259,26 @@ async function fetchRankingPageData(type, date, worldName, pageNo, options = {})
   }
 
   const ranking = toArray(payload?.data?.ranking);
+  const emptyFallbackAttempt = Number(options?.emptyFallbackAttempt) || 0;
+  if (
+    !ranking.length &&
+    pageNo === 1 &&
+    isGuildRankingType(type) &&
+    emptyFallbackAttempt < emptyGuildRankingFallbackDays
+  ) {
+    const previousDate = shiftDateText(date, -1);
+    if (previousDate && previousDate >= rankingDateFloor) {
+      const fallbackResult = await fetchRankingPageData(type, previousDate, worldName, pageNo, {
+        allowReadyFallback: false,
+        emptyFallbackAttempt: emptyFallbackAttempt + 1,
+      });
+      return {
+        ...fallbackResult,
+        effectiveDate: fallbackResult?.effectiveDate || previousDate,
+        fallbackFromDate: fallbackResult?.fallbackFromDate || date,
+      };
+    }
+  }
   const rows = ranking.slice(localOffset, localOffset + rankingPageSize);
   return {
     rows,
@@ -495,6 +534,7 @@ function initRankingPage() {
       titleEl.textContent = `${rankingTypes[currentType].label} | 조회일 ${effectiveDate || currentDate}`;
       tableWrapEl.innerHTML = renderRankingTable(currentType, rows, currentPage, {
         targetCharacterName,
+        worldFiltered: Boolean(currentWorld),
       });
       if (allowsNicknameSearch && targetCharacterName) {
         if (targetLookupResult?.ranking && jumpedPageFallback) {

@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/guild/basic",
+    "request_params": [
+      "oguild_id"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "guild_name": "string",
+    "world_name": "string",
+    "guild_level": "number",
+    "guild_create_date": "string",
+    "guild_keyword": [
+      "string"
+    ],
+    "guild_mark_icon": "string",
+    "guild_master_name": "string",
+    "guild_member_count": "number",
+    "guild_member": [
+      {
+        "character_name": "string",
+        "character_level": "number",
+        "guild_activity": "number",
+        "guild_personal_skill": [
+          {
+            "skill_name": "string",
+            "skill_level": "number",
+            "skill_option": "string",
+            "skill_icon": "string"
+          }
+        ]
+      }
+    ],
+    "guild_building": [
+      {
+        "building_name": "string",
+        "building_level": "number"
+      }
+    ],
+    "guild_skill": [
+      {
+        "skill_name": "string",
+        "skill_level": "number",
+        "skill_option": "string",
+        "skill_icon": "string"
+      }
+    ],
+    "guild_ability": [
+      {
+        "ability_no": "number",
+        "ability_name": "string",
+        "ability_level": "number",
+        "ability_option": "string",
+        "ability_icon": "string"
+      }
+    ]
+  }
+}

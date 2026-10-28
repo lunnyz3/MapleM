@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/basic",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_name": "string",
+    "world_name": "string",
+    "character_date_create": "string",
+    "character_date_last_login": "string",
+    "character_date_last_logout": "string",
+    "character_job_name": "string",
+    "character_class": "string",
+    "character_gender": "string",
+    "character_exp": "number",
+    "character_exp_rate": "string",
+    "character_level": "number",
+    "character_image": "string"
+  }
+}

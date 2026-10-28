@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/beauty-equipment",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_gender": "string",
+    "character_class": "string",
+    "character_hair": {
+      "hair_name": "string",
+      "base_color": "string",
+      "mix_color": "string",
+      "mix_rate": "string",
+      "freestyle_coupon_flag": "string"
+    },
+    "character_face": {
+      "face_name": "string",
+      "base_color": "string",
+      "mix_color": "string",
+      "mix_rate": "string",
+      "freestyle_coupon_flag": "null"
+    },
+    "character_skin_name": "string",
+    "additional_character_hair": {
+      "hair_name": "null",
+      "base_color": "null",
+      "mix_color": "null",
+      "mix_rate": "null",
+      "freestyle_coupon_flag": "null"
+    },
+    "additional_character_face": {
+      "face_name": "null",
+      "base_color": "null",
+      "mix_color": "null",
+      "mix_rate": "null",
+      "freestyle_coupon_flag": "null"
+    },
+    "additional_character_skin_name": "null"
+  }
+}

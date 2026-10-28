@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/vmatrix",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "character_class": "string",
+    "vmatrix_total_score": "number",
+    "character_v_core_equipment": [
+      {
+        "vcore_type": "string",
+        "vcore_level": "number",
+        "vcore_score": "number",
+        "vcore_skill_name1": "string",
+        "vcore_skill_name2": "null|string",
+        "vcore_skill_name3": "null|string",
+        "vcore_skill_name4": "null|string",
+        "vcore_expire_flag": "string",
+        "vcore_expire_date": "null|string",
+        "vcore_equipment_flag": "string"
+      }
+    ]
+  }
+}

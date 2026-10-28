@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/character/jewel",
+    "request_params": [
+      "ocid"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "use_jewel_page_no": "number",
+    "use_jewel_set_option": "string",
+    "jewel_equipment": [
+      {
+        "jewel_page_no": "number",
+        "jewel_info": [
+          {
+            "slot_no": "number",
+            "jewel_name": "string",
+            "jewel_grade": "string",
+            "jewel_color": "string",
+            "jewel_option": "string",
+            "jewel_icon": "string"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -3,11 +3,18 @@ const express = require("express");
 const { apiRouter } = require("./routes/api.routes");
 const { initShareImageCleanupJob } = require("./controllers/share.controller");
 
+const publicDir = path.join(__dirname, "..", "public");
+
+function sendPublicPage(fileName) {
+  // root 옵션을 써야 체크아웃 경로에 점(.)으로 시작하는 폴더가 있어도 send 가 거부하지 않는다.
+  return (req, res) => res.sendFile(fileName, { root: publicDir });
+}
+
 function createApp() {
   const app = express();
 
   app.use(express.json());
-  app.use(express.static(path.join(__dirname, "..", "public")));
+  app.use(express.static(publicDir));
   app.use(
     "/vendor/html2canvas",
     express.static(path.join(__dirname, "..", "node_modules", "html2canvas", "dist")),
@@ -25,34 +32,18 @@ function createApp() {
     });
   });
 
-  app.get("/character/:worldName/:characterName", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "character.html"));
-  });
-  app.get(/^\/character\/[^/]+\/.+$/, (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "character.html"));
-  });
-  app.get("/ranking", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "ranking.html"));
-  });
-  app.get("/ranking/:rankingType", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "ranking.html"));
-  });
-  app.get("/guild", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
-  });
-  app.get("/guild/:worldName/:guildName", (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
-  });
-  app.get(/^\/guild\/[^/]+\/.+$/, (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "guild.html"));
-  });
+  app.get("/character/:worldName/:characterName", sendPublicPage("character.html"));
+  app.get(/^\/character\/[^/]+\/.+$/, sendPublicPage("character.html"));
+  app.get("/ranking", sendPublicPage("ranking.html"));
+  app.get("/ranking/:rankingType", sendPublicPage("ranking.html"));
+  app.get("/guild", sendPublicPage("guild.html"));
+  app.get("/guild/:worldName/:guildName", sendPublicPage("guild.html"));
+  app.get(/^\/guild\/[^/]+\/.+$/, sendPublicPage("guild.html"));
   app.get("/go/maplem", (req, res) => {
     res.redirect(302, "https://maplem.co.kr");
   });
 
-  app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, "..", "public", "index.html"));
-  });
+  app.get(/.*/, sendPublicPage("index.html"));
 
   return app;
 }

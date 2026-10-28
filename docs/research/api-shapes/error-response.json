@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/id (error case)",
+    "request_params": [
+      "character_name",
+      "world_name"
+    ],
+    "http_status": 400,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name"
+  },
+  "shape": {
+    "error": {
+      "name": "string",
+      "message": "string"
+    }
+  }
+}

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "db:dedupe-daily": "node scripts/dedupe-requestlogs-daily.js"
+    "db:dedupe-daily": "node scripts/dedupe-requestlogs-daily.js",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "keywords": [],
   "author": "",
@@ -18,5 +19,8 @@
     "html2canvas": "^1.4.1",
     "mongoose": "^9.2.1",
     "multer": "^2.1.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
   }
 }

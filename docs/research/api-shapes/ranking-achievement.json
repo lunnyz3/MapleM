@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/ranking/achievement",
+    "request_params": [
+      "date"
+    ],
+    "http_status": 200,
+    "captured_at": "2026-10-28",
+    "source": "live-response",
+    "notation": "values removed; leaf = JSON type name, 'a|b' = union, 'absent' = key missing in some array items, [] = empty array (no item sample), __also = object/array may also be that primitive, __optional = object key absent in some items"
+  },
+  "shape": {
+    "ranking": [
+      {
+        "date": "string",
+        "ranking": "number",
+        "world_ranking": "number",
+        "character_name": "string",
+        "world_name": "string",
+        "achievement_score": "number",
+        "achievement_grade_name": "string",
+        "achievement_grade_icon": "string",
+        "main_honor_badge": [
+          {
+            "badge_no": "number",
+            "badge_name": "string",
+            "badge_option": "string",
+            "badge_icon": "string"
+          }
+        ]
+      }
+    ]
+  }
+}

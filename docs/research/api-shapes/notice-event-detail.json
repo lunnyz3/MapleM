@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "endpoint": "GET /maplestorym/v1/notice-event/detail",
+    "request_params": [
+      "notice_id"
+    ],
+    "captured_at": "2026-10-28",
+    "source": "spec-only (not called live; derived from official OpenAPI YAML)",
+    "spec_url": "https://openapi.nexon.com/static/api/maplestorym/28_ko_script20250414070823.yaml",
+    "notation": "values removed; leaf = JSON type name per spec (integer -> number)"
+  },
+  "shape": {
+    "title": "string",
+    "url": "string",
+    "contents": "string",
+    "date": "string"
+  }
+}
