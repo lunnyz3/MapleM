@@ -195,7 +195,8 @@ const physicalJobNames = new Set(
     "호영",
     "아이엘",
     "에릴",
-    "칼리"
+    "칼리",
+    "렌"
   ].map((name) => normalizeForMatch(name))
 );
 

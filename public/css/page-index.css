@@ -1,178 +1,116 @@
 body[data-page="index"] {
-color: #e6efff;
-  background:
-    radial-gradient(1100px 600px at 80% -10%, rgba(76, 163, 255, 0.28), transparent 58%),
-    radial-gradient(1000px 620px at 20% 110%, rgba(62, 234, 170, 0.18), transparent 58%),
-    linear-gradient(180deg, #0d1320 0%, #121a2b 52%, #0d1524 100%);
-}
-
-body[data-page="index"] {
-background: #f4f6fb;
+  color: var(--ui-text) !important;
+  background: var(--ui-bg-accent), var(--ui-bg) !important;
 }
 
 body[data-page="index"] .page--index {
-position: relative;
+  position: relative;
   width: min(980px, calc(100% - 32px));
-  margin: 30px auto 60px;
+  min-height: calc(100dvh - 82px);
+  margin: 0 auto !important;
+  padding: 40px 0 64px;
   display: grid;
-  gap: 16px;
-  place-items: stretch;
-}
-
-body[data-page="index"] .page--index::before {
-content: none;
-}
-
-body[data-page="index"] .index-head {
-display: grid;
-  gap: 6px;
-  padding: 6px 4px;
-}
-
-body[data-page="index"] .index-head h1 {
-margin: 0;
-  font-size: clamp(30px, 4.5vw, 42px);
-  font-weight: 900;
-  color: #2c3b52;
-}
-
-body[data-page="index"] .index-head p {
-margin: 0;
-  color: #6b7c96;
-  font-size: 14px;
-  font-weight: 600;
+  place-items: center;
 }
 
 body[data-page="index"] .index-search {
-position: relative;
+  position: relative;
   width: 100%;
-  border: 1px solid #dfe5f0;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow:
-    0 10px 24px rgba(18, 34, 66, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  padding: 18px 20px 20px;
-}
-
-body[data-page="index"] .index-search + .index-search {
-margin-top: 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--ui-panel) 94%, transparent);
+  box-shadow: var(--ui-shadow);
+  padding: clamp(32px, 5vw, 56px);
 }
 
 body[data-page="index"] .index-search h2 {
-margin: 0 0 10px;
-  font-size: 20px;
-  font-weight: 800;
-  color: #2c3b52;
+  margin: 0 0 28px;
+  color: var(--ui-text);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 900;
+  text-align: center;
 }
 
 body[data-page="index"] .index-form {
-margin-top: 6px;
   display: grid;
-  grid-template-columns: 180px 1fr 96px;
-  gap: 10px;
+  grid-template-columns: 210px minmax(0, 1fr) 120px;
+  gap: 14px;
   align-items: end;
 }
 
 body[data-page="index"] .index-form label span {
-color: #6b7c96;
-  font-weight: 700;
+  color: var(--ui-muted);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 body[data-page="index"] .index-form input, body[data-page="index"] .index-form select {
-border: 1px solid #d0d7e2;
-  background: #f7f9fc;
-  color: #2c3b52;
+  height: 56px;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-panel-soft);
+  color: var(--ui-text);
+  padding: 0 16px;
+  font-size: 16px;
 }
 
 body[data-page="index"] .index-form input::placeholder {
-color: #98a6bc;
+  color: color-mix(in srgb, var(--ui-muted) 68%, transparent);
 }
 
 body[data-page="index"] .index-form input:focus, body[data-page="index"] .index-form select:focus {
-border-color: #2f6fed;
+  border-color: var(--ui-primary);
   outline: 2px solid rgba(47, 111, 237, 0.2);
 }
 
 body[data-page="index"] .index-form button {
-border: 0;
-  background: #2f6fed;
+  height: 56px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--ui-primary) 78%, #2fa5ff), color-mix(in srgb, var(--ui-primary) 92%, #1d67ea));
   color: #ffffff;
+  font-size: 16px;
   font-weight: 800;
-  border-radius: 12px;
-  height: 44px;
-}
-
-body[data-page="index"] .route-preview {
-margin-top: 12px;
-  color: #6b7c96;
-  border-color: #d4dbea;
-  background: #f6f8fc;
-}
-
-.route-preview {
-margin: 12px 0 0;
-  font-size: 14px;
-  color: #305b45;
-  background: #eefaf2;
-  border: 1px dashed #8ec2a4;
-  border-radius: 10px;
-  padding: 10px 12px;
 }
 
 @media (max-width: 980px) {
-body[data-page="index"] .index-form {
-grid-template-columns: 1fr;
-}
+  body[data-page="index"] .page--index {
+    min-height: auto;
+    padding: 48px 0 64px;
+  }
+
+  body[data-page="index"] .index-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 620px) {
-body[data-page="index"] .page--index {
-width: calc(100% - 16px);
-    margin: 8px auto 16px;
-    min-height: calc(100vh - 24px);
-}
+  body[data-page="index"] .page--index {
+    width: calc(100% - 20px);
+    padding: 28px 0 40px;
+  }
 
-body[data-page="index"] .index-search {
-border-radius: 14px;
-    padding: 18px 14px;
-}
+  body[data-page="index"] .index-search {
+    border-radius: 20px;
+    padding: 28px 18px;
+  }
 
-body[data-page="index"] .topbar, body[data-page="index"] .topbar__left, body[data-page="index"] .topbar__nav, body[data-page="index"] .topbar__dropdown {
-overflow: visible;
-}
+  body[data-page="index"] .index-search h2 {
+    margin-bottom: 22px;
+  }
 
-body[data-page="index"] .topbar__dropdown-menu {
-left: 0 !important;
+  body[data-page="index"] .topbar,
+  body[data-page="index"] .topbar__left,
+  body[data-page="index"] .topbar__nav,
+  body[data-page="index"] .topbar__dropdown {
+    overflow: visible;
+  }
+
+  body[data-page="index"] .topbar__dropdown-menu {
+    left: 0 !important;
     right: auto !important;
     min-width: min(88vw, 320px) !important;
     max-width: calc(100vw - 24px);
     z-index: 1200;
-}
-}
-
-body[data-page="index"] {
-color: var(--ui-text) !important;
-  background: var(--ui-bg-accent), var(--ui-bg) !important;
-}
-
-body[data-page="index"] .index-search {
-border: 1px solid var(--ui-line) !important;
-  background: color-mix(in srgb, var(--ui-panel) 92%, transparent) !important;
-  box-shadow: var(--ui-shadow) !important;
-}
-
-body[data-page="index"] .index-search h1, body[data-page="index"] .index-form label span {
-color: var(--ui-text) !important;
-}
-
-body[data-page="index"] .index-form input, body[data-page="index"] .index-form select {
-border-color: var(--ui-line) !important;
-  background: var(--ui-panel-soft) !important;
-  color: var(--ui-text) !important;
-}
-
-body[data-page="index"] .index-form button {
-border-color: color-mix(in srgb, var(--ui-primary) 80%, #1c78ff) !important;
-  background: linear-gradient(140deg, color-mix(in srgb, var(--ui-primary) 78%, #2fa5ff), color-mix(in srgb, var(--ui-primary) 92%, #1d67ea)) !important;
+  }
 }

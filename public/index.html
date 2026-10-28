@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>메이플M 플러스 - maplem.co.kr</title>
     <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <link rel="stylesheet" href="/css/common.css?v=20260303p" />
-    <link rel="stylesheet" href="/css/page-index.css?v=20260303p" />
+    <link rel="stylesheet" href="/css/common.css?v=20260725c" />
+    <link rel="stylesheet" href="/css/page-index.css?v=20260725a" />
   </head>
   <body data-page="index">
     <header class="topbar">
@@ -36,6 +36,7 @@
             <option value="유니온">유니온</option>
             <option value="엘리시움">엘리시움</option>
             <option value="아케인">아케인</option>
+            <option value="챌린저스">챌린저스</option>
           </select>
           <input id="topCharacterName" name="character_name" placeholder="캐릭터명" aria-label="캐릭터명" />
           <button type="submit">검색</button>
@@ -44,9 +45,6 @@
     </header>
 
     <main class="page page--index">
-      <header class="index-head">
-        <h1>통합 조회</h1>
-      </header>
       <section class="index-search">
         <h2>캐릭터 조회</h2>
         <form id="searchForm" class="index-form">
@@ -60,6 +58,7 @@
               <option value="유니온">유니온</option>
               <option value="엘리시움">엘리시움</option>
               <option value="아케인">아케인</option>
+              <option value="챌린저스">챌린저스</option>
             </select>
           </label>
           <label>
@@ -69,30 +68,8 @@
           <button type="submit">조회</button>
         </form>
       </section>
-      <section class="index-search">
-        <h2>길드 조회</h2>
-        <form id="guildSearchForm" class="index-form">
-          <label>
-            <span>월드명</span>
-            <select id="guildWorldName" name="world_name" required>
-              <option value="스카니아" selected>스카니아</option>
-              <option value="루나">루나</option>
-              <option value="제니스">제니스</option>
-              <option value="크로아">크로아</option>
-              <option value="유니온">유니온</option>
-              <option value="엘리시움">엘리시움</option>
-              <option value="아케인">아케인</option>
-            </select>
-          </label>
-          <label>
-            <span>길드명</span>
-            <input id="guildName" name="guild_name" placeholder="길드명을 입력하세요" required />
-          </label>
-          <button type="submit">조회</button>
-        </form>
-      </section>
     </main>
 
-    <script type="module" src="/js/main.js?v=20260303p"></script>
+    <script type="module" src="/js/main.js?v=20260725a"></script>
   </body>
 </html>

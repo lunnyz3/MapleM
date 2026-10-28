@@ -463,6 +463,7 @@ const physicalJobNames = new Set(
     "아이엘",
     "에릴",
     "칼리",
+    "렌",
   ].map(normalizeForMatch),
 );
 const magicalJobNames = new Set(

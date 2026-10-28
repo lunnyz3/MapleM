@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "db:dedupe-daily": "node scripts/dedupe-requestlogs-daily.js"
   },
   "keywords": [],
   "author": "",

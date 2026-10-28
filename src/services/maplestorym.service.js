@@ -130,6 +130,68 @@ async function saveRequestLog({
   const logMode = responseBody?.mode ? String(responseBody.mode) : "";
   const throttleMs = Number.isFinite(env.mongoLogThrottleMs) ? Math.max(0, env.mongoLogThrottleMs) : 120000;
 
+  if (["all", "page-data"].includes(logMode) && normalizedCharacterName && normalizedWorldName) {
+    const now = new Date();
+    const kstDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(now);
+
+    const [year, month, day] = kstDate.split("-").map(Number);
+    const kstOffsetMs = 9 * 60 * 60 * 1000;
+    const dayStartUtc = new Date(Date.UTC(year, month - 1, day) - kstOffsetMs);
+    const dayEndUtc = new Date(dayStartUtc.getTime() + 24 * 60 * 60 * 1000);
+    const identityFilter = {
+      characterName: normalizedCharacterName,
+      worldName: normalizedWorldName,
+      endpoint
+    };
+    const existingToday = await RequestLog.findOne({
+      ...identityFilter,
+      $or: [
+        { snapshotDate: kstDate },
+        { createdAt: { $gte: dayStartUtc, $lt: dayEndUtc } }
+      ]
+    })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .select({ _id: 1 })
+      .lean();
+    const replaceFilter = existingToday?._id
+      ? { _id: existingToday._id }
+      : { ...identityFilter, snapshotDate: kstDate };
+    const saved = await RequestLog.findOneAndReplace(
+      replaceFilter,
+      {
+        characterName: normalizedCharacterName,
+        worldName: normalizedWorldName,
+        ocid: normalizedOcid,
+        endpoint,
+        snapshotDate: kstDate,
+        statusCode,
+        success,
+        responseBody
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        runValidators: true
+      }
+    );
+
+    // Remove legacy aggregate logs created earlier on the same KST date.
+    // The upserted daily snapshot above is the only document retained for today.
+    await RequestLog.deleteMany({
+      _id: { $ne: saved._id },
+      ...identityFilter,
+      createdAt: { $gte: dayStartUtc, $lt: dayEndUtc }
+    });
+
+    return saved;
+  }
+
   if (throttleMs > 0) {
     const filter = {
       characterName: normalizedCharacterName,
