@@ -20,12 +20,13 @@ export class ApiError extends Error {
 
 /**
  * @param {string} url
+ * @param {RequestInit} [init]
  * @returns {Promise<{ response: Response, body: any }>}
  */
-async function getJson(url) {
+export async function getJson(url, init = {}) {
   let response;
   try {
-    response = await fetch(url, { headers: { Accept: "application/json" } });
+    response = await fetch(url, { ...init, headers: { Accept: "application/json", ...(init.headers || {}) } });
   } catch {
     throw new ApiError("네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
   }
@@ -42,7 +43,7 @@ async function getJson(url) {
  * 오늘 랭킹이 아직 집계되지 않았다는 넥슨 응답인지.
  * @param {any} body
  */
-function isNotReady(body) {
+export function isNotReady(body) {
   const error = body?.error?.error || body?.error || {};
   const text = `${error.name || ""} ${error.message || body?.message || ""}`.toLowerCase();
   return text.includes("openapi00009") || text.includes("data is ready") || text.includes("valid parameter");
@@ -52,7 +53,7 @@ function isNotReady(body) {
  * @param {Response} response
  * @param {any} body
  */
-function toApiError(response, body) {
+export function toApiError(response, body, fallback = "랭킹 정보를 불러오지 못했어요.") {
   const status = response.status;
   if (status === 429) {
     return new ApiError("요청이 너무 많아요. 1분쯤 뒤에 다시 시도해 주세요.", { status, detail: "HTTP 429" });
@@ -60,7 +61,7 @@ function toApiError(response, body) {
   if (status >= 500) {
     return new ApiError("넥슨 API 응답이 원활하지 않아요. 잠시 후 다시 시도해 주세요.", { status, detail: `HTTP ${status}` });
   }
-  return new ApiError("랭킹 정보를 불러오지 못했어요.", { status, detail: `HTTP ${status}` });
+  return new ApiError(fallback, { status, detail: `HTTP ${status}` });
 }
 
 /**

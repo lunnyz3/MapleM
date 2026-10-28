@@ -52,10 +52,11 @@ const CATEGORIES = Object.freeze({
   equipment: "장비",
   skill: "스킬",
   growth: "성장",
-  content: "콘텐츠"
+  content: "콘텐츠",
+  manual: "직접 입력"
 });
 
-const CATEGORY_ORDER = Object.freeze(["equipment", "skill", "growth", "content"]);
+const CATEGORY_ORDER = Object.freeze(["equipment", "skill", "growth", "content", "manual"]);
 
 const GROUPS = Object.freeze({
   basicOption: "기본 옵션",
@@ -83,7 +84,15 @@ const GROUPS = Object.freeze({
   guild: "길드",
   hexaStat: "헥사 스탯",
   solJanus: "솔 야누스",
-  linkSkill: "링크 스킬"
+  linkSkill: "링크 스킬",
+  // 직접 입력(src/game-data/manual-inputs.json groups)
+  starcorus: "스타코러스",
+  stigma: "성흔",
+  blessing: "빛의 성소 축복",
+  unionChampion: "유니온 챔피언",
+  honorBadge: "명예 배지",
+  monsterCollection: "몬스터 컬렉션",
+  petAttack: "펫 공격력"
 });
 
 const PRESET_DIMENSIONS = Object.freeze(["equipment", "android", "hyper", "jewel", "link", "unionStat"]);

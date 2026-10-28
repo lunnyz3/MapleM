@@ -1,0 +1,21 @@
+/*
+ * 제목·큰 숫자용 SUIT(SIL OFL 1.1, © SUNN, 예약 글꼴 이름 "SUIT").
+ * npm @sun-typeface/suit@2.0.5(만든 사람이 직접 올린 배포본)의 woff2를 고치지 않고 그대로 직접 호스팅한다.
+ * OFL은 고친 판에 "SUIT" 이름을 쓰지 못하게 하므로 글자를 잘라내지 않고 원본 두 굵기(700·800)만 쓴다.
+ * 브라우저는 실제로 쓰인 굵기만 내려받는다. 라이선스 전문: /preview/licenses/SUIT-OFL.txt
+ */
+@font-face {
+  font-family: "SUIT";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../../../node_modules/@sun-typeface/suit/fonts/static/woff2/SUIT-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "SUIT";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../../../node_modules/@sun-typeface/suit/fonts/static/woff2/SUIT-ExtraBold.woff2") format("woff2");
+}

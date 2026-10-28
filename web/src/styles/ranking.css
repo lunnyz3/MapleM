@@ -1,0 +1,483 @@
+/* 랭킹 화면(/preview/ranking) */
+
+.rk {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.rk > .tabs-frame {
+  margin-inline: 0;
+}
+
+/* ---------- 조건 ---------- */
+.rk-filters {
+  gap: var(--sp-2);
+}
+
+.rk-filters__row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(220px, 1fr) minmax(0, 2.2fr);
+  gap: var(--sp-4);
+  align-items: end;
+}
+
+.rk-find {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1.6fr);
+  gap: var(--sp-3);
+  align-items: end;
+  min-width: 0;
+}
+
+.rk-find:not(:has(.rk-find__world)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rk-find__msg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.rk-find__msg:empty {
+  display: none;
+}
+
+.rk-find__msg.is-error {
+  color: var(--danger);
+}
+
+.rk-find__msg.is-info {
+  color: var(--primary-strong);
+}
+
+@media (max-width: 1079px) {
+  .rk-filters__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rk-find {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 719px) {
+  .rk-filters__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3);
+  }
+
+  .rk-find {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .input-group__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* ---------- 기준일 안내 ---------- */
+.rk-basis {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-glass);
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+}
+
+.rk-basis > .icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--primary-strong);
+}
+
+.rk-basis strong {
+  color: var(--text);
+}
+
+.rk-basis__moved {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.rk-basis__sub {
+  display: block;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+/* ---------- 상위 3 ---------- */
+.rk-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: end;
+}
+
+.rk-podium__item--1 {
+  order: 2;
+}
+
+.rk-podium__item--2 {
+  order: 1;
+}
+
+.rk-podium__item--3 {
+  order: 3;
+}
+
+.rk-podium__card {
+  --spot-color: rgba(242, 178, 31, 0.18);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--sp-6) var(--sp-4) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: var(--shadow-1);
+  transition:
+    box-shadow var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease);
+}
+
+.rk-podium__card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.rk-podium__item--1 .rk-podium__card {
+  padding-top: var(--sp-8);
+  border-color: color-mix(in srgb, var(--gold-500) 45%, var(--border));
+  background:
+    radial-gradient(120% 70% at 50% 0%, var(--gold-bg), transparent 70%),
+    var(--surface);
+}
+
+.rk-podium__badge {
+  position: absolute;
+  top: -18px;
+}
+
+.rk-podium__card .avatar {
+  border-radius: 22px;
+  box-shadow: var(--shadow-1);
+}
+
+.rk-podium__name {
+  margin-top: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--fs-18);
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rk-podium__meta {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rk-podium__value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: var(--fs-22);
+  font-weight: 800;
+}
+
+.rk-podium__item--1 .rk-podium__value {
+  font-size: var(--fs-28);
+}
+
+@media (max-width: 719px) {
+  .rk-podium {
+    display: none;
+  }
+}
+
+/* ---------- 표 ---------- */
+.rk-panel {
+  padding: 0;
+  overflow: hidden;
+  scroll-margin-top: calc(var(--topbar-h) + 16px);
+}
+
+.rk-table-wrap {
+  overflow-x: auto;
+}
+
+.rk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-14);
+}
+
+.rk-table thead th {
+  position: sticky;
+  top: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.rk-table td,
+.rk-table tbody th {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.rk-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.rk-table tbody tr {
+  transition: background-color var(--dur-hover) var(--ease);
+}
+
+.rk-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.rk-table tr.is-hit {
+  background: var(--primary-soft);
+  box-shadow: inset 4px 0 0 var(--primary);
+}
+
+.rk-col-rank {
+  width: 112px;
+}
+
+.rk-table .rk-col-metric {
+  text-align: right;
+}
+
+.rk-col-world {
+  white-space: nowrap;
+}
+
+.rk-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rk-rank__sub {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.rk-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: var(--touch);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.rk-who:hover .rk-who__name {
+  color: var(--primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rk-who__text {
+  display: grid;
+  min-width: 0;
+}
+
+.rk-who__name {
+  overflow: hidden;
+  font-size: var(--fs-16);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rk-who__meta {
+  overflow: hidden;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rk-metric {
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rk-metric__affix {
+  margin-inline: 1px;
+  color: var(--text-subtle);
+  font-size: 0.8em;
+  font-weight: 700;
+}
+
+.rk-muted {
+  color: var(--text-subtle);
+}
+
+/* ---------- 모바일 카드 목록 ---------- */
+.rk-cards {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .rk-table-wrap {
+    display: none;
+  }
+
+  .rk-cards {
+    display: grid;
+  }
+
+  .rk-card {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rk-card:last-child {
+    border-bottom: 0;
+  }
+
+  .rk-card.is-hit {
+    background: var(--primary-soft);
+    box-shadow: inset 4px 0 0 var(--primary);
+  }
+
+  .rk-card__main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 0;
+  }
+
+  .rk-card__main .rk-rank {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .rk-card__main .rk-rank__sub {
+    font-size: 10px;
+  }
+
+  .rk-card__main .rk-who {
+    gap: 10px;
+  }
+
+  .rk-card__more > summary {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-height: var(--touch);
+    padding: 0 12px;
+    color: var(--text-subtle);
+    font-size: var(--fs-12);
+    font-weight: 700;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .rk-card__more > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rk-card__more[open] > summary .icon {
+    transform: rotate(180deg);
+  }
+
+  .rk-card__more > summary .icon {
+    transition: transform var(--dur-panel) var(--ease);
+  }
+
+  .rk-card__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    margin: 0 12px 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    font-size: var(--fs-14);
+  }
+
+  .rk-card__facts dt {
+    color: var(--text-subtle);
+    font-size: var(--fs-12);
+    font-weight: 600;
+  }
+
+  .rk-card__facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+  }
+}
+
+/* ---------- 자리표시 ---------- */
+.rk-skeleton {
+  display: grid;
+}
+
+.rk-skeleton__row {
+  display: grid;
+  grid-template-columns: 34px 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rk-skeleton__text {
+  display: grid;
+  gap: 8px;
+}
+
+.rk-panel .state {
+  padding: var(--sp-10) var(--sp-4);
+}
+
+.rk-stamp {
+  justify-content: center;
+}

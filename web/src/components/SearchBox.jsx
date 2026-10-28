@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { DEFAULT_WORLD, WORLDS, detailUrl } from "../lib/game.js";
 import { addRecent, entryKey, getSaved, useSaved } from "../lib/storage.js";
 import { Icon } from "./Icon.jsx";
+import { Magnetic } from "./Motion.jsx";
 import { Segmented } from "./Tabs.jsx";
 
 /** @typedef {import("../lib/game.js").SearchKind} SearchKind */
@@ -221,10 +222,12 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true })
           onKeyDown={onKeyDown}
         />
 
-        <button type="submit" class="btn btn--primary search__submit">
-          <Icon name="search" size={20} />
-          <span class="search__submit-text">검색</span>
-        </button>
+        <Magnetic class="search__magnet">
+          <button type="submit" class="btn btn--primary search__submit">
+            <Icon name="search" size={20} />
+            <span class="search__submit-text">검색</span>
+          </button>
+        </Magnetic>
       </div>
 
       <p id={hintId} class="search__hint" role="status" aria-live="polite">

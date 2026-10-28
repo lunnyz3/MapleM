@@ -14,19 +14,23 @@ const outDir = fileURLToPath(new URL("../dist/preview", import.meta.url));
 const apiOrigin = process.env.MAPLEM_API_ORIGIN || "http://localhost:3200";
 
 /**
- * Pretendard(SIL OFL 1.1) 글꼴 파일을 함께 배포하므로 라이선스 전문을 빌드 결과에 넣는다.
+ * 직접 호스팅하는 글꼴(모두 SIL OFL 1.1)의 라이선스 전문을 빌드 결과에 함께 넣는다.
+ *   /preview/licenses/pretendard-OFL.txt  ← npm pretendard@1.3.9
+ *   /preview/licenses/SUIT-OFL.txt        ← npm @sun-typeface/suit@2.0.5
  * @returns {import("vite").Plugin}
  */
 function fontLicense() {
+  const files = [
+    ["licenses/pretendard-OFL.txt", "pretendard/dist/LICENSE.txt"],
+    ["licenses/SUIT-OFL.txt", "@sun-typeface/suit/LICENSE"]
+  ];
   return {
     name: "maplem:font-license",
     apply: "build",
     generateBundle() {
-      this.emitFile({
-        type: "asset",
-        fileName: "licenses/pretendard-OFL.txt",
-        source: readFileSync(require.resolve("pretendard/dist/LICENSE.txt"), "utf8")
-      });
+      for (const [fileName, from] of files) {
+        this.emitFile({ type: "asset", fileName, source: readFileSync(require.resolve(from), "utf8") });
+      }
     }
   };
 }

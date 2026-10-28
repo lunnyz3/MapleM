@@ -198,7 +198,7 @@ async function writeRequestLog({
       },
       {
         upsert: true,
-        new: true,
+        returnDocument: "after",
         setDefaultsOnInsert: true,
         runValidators: true
       }

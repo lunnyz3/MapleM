@@ -56,6 +56,8 @@
   /* ---------- 글꼴·크기 ---------- */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
     "Noto Sans KR", "Malgun Gothic", sans-serif;
+  /* 제목·큰 숫자: SUIT(직접 호스팅, 700·800). 없는 글자는 본문 글꼴로 */
+  --font-display: "SUIT", var(--font-sans);
   --fs-12: 0.75rem;
   --fs-14: 0.875rem;
   --fs-16: 1rem;

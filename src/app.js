@@ -1,6 +1,7 @@
 const path = require("path");
 const express = require("express");
 const { apiRouter } = require("./routes/api.routes");
+const { v2Router } = require("./routes/v2.routes");
 const { initShareImageCleanupJob } = require("./controllers/share.controller");
 const { createRateLimiter } = require("./middleware/rate-limit");
 const { securityHeaders } = require("./middleware/security-headers");
@@ -67,7 +68,10 @@ function createApp() {
     return rateLimiters.nexonData(req, res, next);
   });
   app.post("/api/share/item-image", rateLimiters.shareUploads);
+  // Recomputes a character from Nexon data, so it shares the character-page budget.
+  app.post("/api/v2/character-stats", rateLimiters.characterPages);
 
+  app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);
 
   // Keep API responses JSON-only, even for unknown API routes.

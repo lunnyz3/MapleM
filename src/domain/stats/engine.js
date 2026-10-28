@@ -22,6 +22,7 @@ const {
   linkContributions,
   unionStatContributions
 } = require("./sources/content");
+const { manualContributions } = require("./sources/manual");
 
 function characterContext(details) {
   const basic = details?.basic?.data || {};
@@ -146,7 +147,28 @@ function buildSheet({ selection, fixed, contributionsByDimension, context }) {
   return { selection, contributions, totals, combatPower: combatPower(totals), attackType };
 }
 
-function prepare(details) {
+function resolveCurrentSelection(presets, contributionsByDimension) {
+  const current = currentSelection(presets);
+  // A dimension whose current preset is unknown falls back to its first option.
+  PRESET_DIMENSIONS.forEach((dimension) => {
+    if (!contributionsByDimension[dimension].has(current[dimension])) {
+      current[dimension] = findOption(presets, dimension, current[dimension])?.no ?? null;
+    }
+  });
+  return current;
+}
+
+function hasManual(manual) {
+  return Boolean(manual) && Object.keys(manual).length > 0;
+}
+
+/**
+ * `manual` is the validated "직접 입력" values ({ id: number }, see sources/manual.js). They
+ * do not depend on presets, so they join the fixed contributions and the boss-setting search
+ * runs again with them. Job-family inputs (깡공·공격력%·대미지) go to the attack type the
+ * presets in use have without them.
+ */
+function prepare(details, manual) {
   const context = characterContext(details);
   const presets = readPresets(details);
   const fixed = fixedContributions(details, context);
@@ -158,15 +180,20 @@ function prepare(details) {
     });
     contributionsByDimension[dimension] = map;
   });
-  return { context, presets, fixed, contributionsByDimension };
+  const prepared = { context, presets, fixed, contributionsByDimension, manual: null };
+  if (!hasManual(manual)) return prepared;
+  const current = resolveCurrentSelection(presets, contributionsByDimension);
+  const family = buildSheet({ selection: current, fixed, contributionsByDimension, context }).attackType;
+  const added = manualContributions(manual, { family });
+  return { ...prepared, fixed: [...fixed, ...added], manual: { values: { ...manual }, family, contributions: added.length } };
 }
 
 /**
  * Stat sheet for a given preset selection ({ equipment: 2, android: 1, ... }). Missing or
  * unknown numbers fall back to the preset in use. Used by the calibration report.
  */
-function computeStatSheetForSelection(details, selection = {}) {
-  const { context, presets, fixed, contributionsByDimension } = prepare(details);
+function computeStatSheetForSelection(details, selection = {}, { manual } = {}) {
+  const { context, presets, fixed, contributionsByDimension } = prepare(details, manual);
   const current = currentSelection(presets);
   const resolved = Object.fromEntries(
     PRESET_DIMENSIONS.map((dimension) => {
@@ -179,16 +206,10 @@ function computeStatSheetForSelection(details, selection = {}) {
   return buildSheet({ selection: resolved, fixed, contributionsByDimension, context });
 }
 
-function computeStatSheets(details) {
-  const { context, presets, fixed, contributionsByDimension } = prepare(details);
+function computeStatSheets(details, { manual } = {}) {
+  const { context, presets, fixed, contributionsByDimension, manual: manualInfo } = prepare(details, manual);
 
-  const current = currentSelection(presets);
-  // A dimension whose current preset is unknown falls back to its first option.
-  PRESET_DIMENSIONS.forEach((dimension) => {
-    if (!contributionsByDimension[dimension].has(current[dimension])) {
-      current[dimension] = findOption(presets, dimension, current[dimension])?.no ?? null;
-    }
-  });
+  const current = resolveCurrentSelection(presets, contributionsByDimension);
 
   const search = searchBossSelection({
     presets,
@@ -216,7 +237,8 @@ function computeStatSheets(details) {
     boss,
     current: currentSheet,
     combinationCount: search.combinationCount,
-    options
+    options,
+    manual: manualInfo
   };
 }
 

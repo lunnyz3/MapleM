@@ -16,6 +16,7 @@ const { soulBoss } = require("../../src/domain/stats/sources/equipment");
 const equipmentRules = require("../../src/game-data/equipment-rules.json");
 const itemSetData = require("../../src/game-data/item-sets.json");
 const linkRules = require("../../src/game-data/link-skills.json");
+const { normalizeManualInputs } = require("../../src/domain/stats/sources/manual");
 
 const root = path.resolve(__dirname, "../..");
 const reportPath = path.join(root, "docs/research/calibration/engine-report.md");
@@ -257,6 +258,108 @@ function withoutManual(key, value, manual) {
   return value - manual.reduce((sum, item) => sum + item, 0);
 }
 
+// maplemworlds 인증 캐릭터의 서버 저장 입력(화면 분류 '스타코러스'·'성흔'… 항목)을 우리 직접 입력
+// 항목(src/game-data/manual-inputs.json)으로 옮긴 값. 유니온 챔피언·명예 배지·몬스터 컬렉션은 화면
+// 합계를 만드는 등급·배지·지역 조합으로 풀었다(예: 명예 배지 치피 15 = 보스 헌터 Lv.4+3+2).
+const MW_MANUAL_INPUTS = Object.freeze({
+  "아케인-나로": {
+    petAttack: 2252,
+    starcorusAttackPercent: 36,
+    starcorusDamage: 36,
+    starcorusCriticalDamage: 28,
+    starcorusFinalDamage: 35.5,
+    starcorusMaxDamage: 485000000,
+    unionChampion1: 4,
+    unionChampion2: 4,
+    unionChampion3: 4,
+    unionChampion4: 4,
+    blessingDamage: 25.03,
+    blessingBossDamage: 11.63,
+    blessingCriticalDamage: 16.5,
+    stigmaAkan: 1,
+    stigmaAzazel: 1,
+    honorBadge1: 8,
+    honorBadge2: 7,
+    honorBadge3: 6,
+    collectionIer: 1,
+    collectionMuLung: 1,
+    collectionEsfera: 1,
+    collectionBurningCernium: 1,
+    collectionLabyrinth: 1,
+    collectionOdiu: 1
+  },
+  "크로아-여신": {
+    petAttack: 2252,
+    starcorusAttackPercent: 36,
+    starcorusDamage: 36,
+    starcorusCriticalDamage: 28,
+    starcorusFinalDamage: 37,
+    starcorusMaxDamage: 445000000,
+    unionChampion1: 4,
+    unionChampion2: 3,
+    unionChampion3: 2,
+    blessingDamage: 9.03,
+    blessingCriticalDamage: 5.18,
+    blessingFinalDamage: 4.9,
+    stigmaAkan: 1,
+    stigmaAzazel: 1,
+    honorBadge1: 8,
+    honorBadge2: 7,
+    honorBadge3: 6,
+    collectionIer: 1,
+    collectionLabyrinth: 1
+  }
+});
+
+// Our engine with maplemworlds' boss-setting selection, with and without the inputs above,
+// against that site's screen totals (inputs included).
+function manualInputCheck(entry) {
+  const raw = MW_MANUAL_INPUTS[entry.key];
+  if (!raw || !entry.competitorFile) return null;
+  const fixture = readJson(entry.fixtureFile);
+  const competitor = readJson(entry.competitorFile);
+  const { values, warnings } = normalizeManualInputs(raw);
+  if (warnings.length) throw new Error(`${entry.key} manual input warnings: ${JSON.stringify(warnings)}`);
+  const base = computeStatSheets(fixture.details);
+  const selection = Object.fromEntries(
+    Object.entries(siteSelection(competitor, "mw", "boss")).map(([dimension, no]) => [dimension, no ?? base.boss.selection[dimension]])
+  );
+  const without = computeStatSheetForSelection(fixture.details, selection);
+  const withManual = computeStatSheetForSelection(fixture.details, selection, { manual: values });
+  const rows = ROLES.map(([roleLabel, keys]) => {
+    const mwRaw = roleValues(roleLabel, keys, competitor.maplemworlds, TOGGLES.boss.mw);
+    const key = mwRaw.key;
+    const statName = Object.keys(STAT_NAMES).find((label) => STAT_NAMES[label] === key);
+    const mwManual = mwManualItems(competitor.maplemworlds, statName, "boss");
+    const mwManualDelta = mwRaw.value === null ? null : mwRaw.value - withoutManual(key, mwRaw.value, mwManual);
+    const oursDelta = withManual.totals[key] - without.totals[key];
+    return {
+      role: roleLabel,
+      key,
+      without: without.totals[key],
+      with: withManual.totals[key],
+      oursDelta,
+      mwManualDelta,
+      mw: mwRaw.value,
+      manualMatch: mwManualDelta !== null && Math.abs(oursDelta - mwManualDelta) <= tolerance(key),
+      totalMatch: mwRaw.value !== null && Math.abs(withManual.totals[key] - mwRaw.value) <= tolerance(key)
+    };
+  });
+  const full = computeStatSheets(fixture.details, { manual: values });
+  return {
+    key: entry.key,
+    className: base.character.className,
+    inputCount: Object.keys(values).length,
+    rows,
+    combatPower: {
+      without: without.combatPower,
+      with: withManual.combatPower,
+      mw: competitor.maplemworlds?.combatPower?.["보스 세팅(기본) 전투력"] ?? null
+    },
+    bossSelection: { plain: base.boss.selection, manual: full.boss.selection }
+  };
+}
+
 function siteSelection(competitor, site, mode) {
   const preset = competitor[site === "mw" ? "maplemworlds" : "maplemtool"]?.presets?.[TOGGLES[mode][site === "mw" ? "mwPreset" : "mtPreset"]] || {};
   if (site === "mw") {
@@ -464,7 +567,7 @@ function validateSetTable(entries) {
   return { agree, differences, unknown: [...unknown.entries()] };
 }
 
-function buildReport(results, missing, setCheck) {
+function buildReport(results, missing, setCheck, manualChecks = []) {
   const lines = [];
   const now = new Date().toISOString();
   const core = results.filter((result) => result.group === "core");
@@ -476,7 +579,7 @@ function buildReport(results, missing, setCheck) {
   lines.push("- 경쟁 사이트 수집·사이트 간 비교는 `docs/research/calibration/README.md`, 규칙 추출은 `docs/research/rules/`.");
   lines.push("- 일치 기준: 깡공·최대 대미지 ±0.5, % 스탯 ±0.01, 방어율 무시 ±0.001. 직업 계열(물리/마법)은 사이트가 보여 준 쪽으로 비교한다.");
   lines.push("- 스탯 비교는 각 사이트가 고른 프리셋 조합으로 우리 엔진을 다시 계산해 한다(조합 선택 차이와 규칙 차이를 나눠 보려는 것). 조합 선택이 같은지는 따로 센다.");
-  lines.push("- maplemworlds 인증 캐릭터는 수동 입력(펫 깡공, 스타코러스, 성흔, 축복, 유니온 챔피언, 명예 배지, 몬스터 컬렉션)이 서버에 저장돼 화면값에 섞인다. 그 사이트 화면의 해당 항목을 빼고 비교했다(넥슨 API에 없는 값).");
+  lines.push("- maplemworlds 인증 캐릭터는 수동 입력(펫 깡공, 스타코러스, 성흔, 축복, 유니온 챔피언, 명예 배지, 몬스터 컬렉션)이 서버에 저장돼 화면값에 섞인다. 그 사이트 화면의 해당 항목을 빼고 비교했다(넥슨 API에 없는 값). 그 값을 우리 직접 입력으로 넣어 맞춰 본 결과는 7장.");
   lines.push("- '설명됨'은 아래 4장의 규칙 차이를 우리 값에 되돌려 넣었을 때 그 사이트 값과 같아지는 경우다. 설명되지 않는 불일치는 대부분 데이터 시점 차이(사이트가 캐시한 넥슨 데이터와 우리 캡처 시각이 다름)다.");
   lines.push("");
 
@@ -560,7 +663,7 @@ function buildReport(results, missing, setCheck) {
   lines.push("");
   lines.push("두 사이트와 같게 둔 기본 조건:");
   lines.push("");
-  lines.push("- 넥슨 API에 없는 수동 입력(스타코러스, 컨스텔라 코어, 유니온 챔피언, 축복, 성흔, 명예 배지, 몬스터 컬렉션, 펫 깡공)은 0이다. 그래서 계산 전투력은 공식 랭킹 전투력보다 낮다(두 사이트 중앙값 기준 공식이 약 1.29배, README 2-2). 화면에는 '계산 전투력(추정)'으로 표시한다.");
+  lines.push("- 넥슨 API에 없는 수동 입력(스타코러스, 컨스텔라 코어, 유니온 챔피언, 축복, 성흔, 명예 배지, 몬스터 컬렉션, 펫 깡공)은 기본 0이다. 그래서 계산 전투력은 공식 랭킹 전투력보다 낮다(두 사이트 중앙값 기준 공식이 약 1.29배, README 2-2). 화면에는 '계산 전투력(추정)'으로 표시한다. 사용자가 '직접 입력'(POST /api/v2/character-stats, 항목 src/game-data/manual-inputs.json)으로 넣으면 더하고 보스 세팅 조합도 다시 고른다(7장). 컨스텔라 코어는 두 사이트처럼 전투력 밖이다.");
   lines.push("- 성흔 세트(API 세트명에 '성흔')와 길드 공용 스킬은 넣지 않는다. 지하수로·전장 전용 길드 어빌리티도 뺀다.");
   lines.push("- 깡공은 넥슨 API 능력치 값이 아니라 출처 합 + 레벨 기본 공격력으로 만든다.");
   lines.push("- 전투력 공식에 방어율 무시와 치명타 확률은 들어가지 않는다.");
@@ -615,6 +718,38 @@ function buildReport(results, missing, setCheck) {
     lines.push(`경쟁 사이트 값이 아직 없는 캐릭터: ${missing.join(", ")}`);
     lines.push("");
   }
+
+  if (manualChecks.length) {
+    lines.push("## 7. 직접 입력 대조 (maplemworlds 인증 캐릭터)");
+    lines.push("");
+    lines.push("maplemworlds 인증 캐릭터는 수동 입력이 서버에 저장돼 화면 합계에 들어 있다. 그 화면의 수동 입력 항목(스타코러스·성흔·축복·유니온 챔피언·명예 배지·몬스터 컬렉션·펫)을 우리 직접 입력 항목으로 옮겨 넣고(scripts/dev/calibration-report.js `MW_MANUAL_INPUTS`), 그 사이트가 고른 보스 세팅 조합으로 다시 계산했다.");
+    lines.push("");
+    lines.push("- '입력 기여'는 우리 엔진에서 직접 입력이 더한 값, 'mw 입력 항목'은 그 사이트 화면의 수동 입력 항목 합(방어율 무시는 곱연산으로 환산)이다. 둘이 같으면 입력 규칙이 같다는 뜻이다.");
+    lines.push("- '합계 차이'는 직접 입력을 넣은 우리 합계 − 그 사이트 화면 합계다. 남는 차이는 입력과 무관한 1·4장의 규칙 차이다.");
+    lines.push("");
+    manualChecks.forEach((check) => {
+      const matched = check.rows.filter((row) => row.manualMatch).length;
+      lines.push(`### ${check.key} (${check.className}, 입력 ${check.inputCount}개)`);
+      lines.push("");
+      lines.push("| 스탯 | 우리(입력 없음) | 우리(직접 입력) | 입력 기여 | mw 입력 항목 | maplemworlds 화면 | 합계 차이 |");
+      lines.push("|---|---|---|---|---|---|---|");
+      check.rows.forEach((row) => {
+        const gap = row.mw === null ? null : row.with - row.mw;
+        const diff = gap === null ? "-" : fmt(row.key, Math.abs(gap) < tolerance(row.key) / 10 ? 0 : gap);
+        lines.push(
+          `| ${row.role} | ${fmt(row.key, row.without)} | ${fmt(row.key, row.with)} | ${fmt(row.key, row.oursDelta)} | ${row.mwManualDelta === null ? "-" : fmt(row.key, row.mwManualDelta)}${row.manualMatch ? " ✓" : ""} | ${fmt(row.key, row.mw)} | ${diff} |`
+        );
+      });
+      lines.push("");
+      lines.push(`- 입력 기여 일치 ${matched}/${check.rows.length}, 합계 일치 ${check.rows.filter((row) => row.totalMatch).length}/${check.rows.length}.`);
+      lines.push(
+        `- 계산 전투력(mw 조합): 입력 없음 ${fmt("physicalAttack", check.combatPower.without)} → 직접 입력 ${fmt("physicalAttack", check.combatPower.with)}, maplemworlds 화면 ${fmt("physicalAttack", check.combatPower.mw)}.`
+      );
+      const same = JSON.stringify(check.bossSelection.plain) === JSON.stringify(check.bossSelection.manual);
+      lines.push(`- 우리 보스 세팅 조합: 입력 없음 ${JSON.stringify(check.bossSelection.plain)} → 직접 입력 ${same ? "같음" : JSON.stringify(check.bossSelection.manual)}.`);
+      lines.push("");
+    });
+  }
   return lines.join("\n");
 }
 
@@ -638,7 +773,8 @@ function run() {
       }
     });
   const setCheck = validateSetTable(characters);
-  fs.writeFileSync(reportPath, `${buildReport(results, missing, setCheck)}\n`);
+  const manualChecks = characters.map((entry) => manualInputCheck(entry)).filter(Boolean);
+  fs.writeFileSync(reportPath, `${buildReport(results, missing, setCheck, manualChecks)}\n`);
   console.log(`report: ${path.relative(root, reportPath)} (${results.length} characters, ${missing.length} without competitor data)`);
   return results;
 }

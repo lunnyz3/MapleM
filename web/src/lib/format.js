@@ -105,3 +105,45 @@ export function formatRelativeTime(timestamp, now = Date.now()) {
   if (abs < 86400 * 30) return relativeFormat.format(Math.round(seconds / 86400), "day");
   return relativeFormat.format(Math.round(seconds / (86400 * 30)), "month");
 }
+
+const kstDateTimeFormat = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false
+});
+
+/**
+ * ISO 시각 → 서울 기준 "2026.10.28 18:44". 읽을 수 없으면 "".
+ * @param {string | number | Date | null | undefined} value
+ */
+export function formatDateTimeKst(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return kstDateTimeFormat.format(date).replace(/-/g, ".");
+}
+
+/**
+ * "2026-10-28" → "10월 28일"
+ * @param {string | null | undefined} dateText
+ */
+export function formatMonthDay(dateText) {
+  if (!dateText) return "";
+  const [, month, day] = dateText.split("-").map(Number);
+  return `${month}월 ${day}일`;
+}
+
+/**
+ * 소수 자릿수를 정해 쉼표 표기(정수는 소수점 없이).
+ * @param {unknown} value
+ * @param {number} [digits]
+ */
+export function formatDecimal(value, digits = 2) {
+  const number = toNumber(value);
+  if (number === null) return "-";
+  return number.toLocaleString("ko-KR", { maximumFractionDigits: digits });
+}

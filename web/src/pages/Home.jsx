@@ -4,6 +4,7 @@ import { Avatar } from "../components/Avatar.jsx";
 import { Card } from "../components/Card.jsx";
 import { Cloud, Leaf, Sparkle } from "../components/Decor.jsx";
 import { Icon } from "../components/Icon.jsx";
+import { Aurora, BlurText, Reveal, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
@@ -12,7 +13,7 @@ import { StatTile } from "../components/StatTile.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { TabPanel, Tabs } from "../components/Tabs.jsx";
 import { loadRanking, peekRanking } from "../lib/api.js";
-import { formatRelativeTime } from "../lib/format.js";
+import { formatComma, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
 import { RANKING_TYPES, detailUrl, getRankingType, urls } from "../lib/game.js";
 import { addRecent, clearRecent, entryKey, getSaved, removeRecent, toggleFavorite, useSaved } from "../lib/storage.js";
 
@@ -23,6 +24,7 @@ function Hero() {
   return (
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero__sky" aria-hidden="true">
+        <Aurora tone="sky" />
         <Cloud class="hero__cloud hero__cloud--1" width={260} />
         <Cloud class="hero__cloud hero__cloud--2" width={150} />
         <Cloud class="hero__cloud hero__cloud--3" width={120} />
@@ -39,7 +41,10 @@ function Hero() {
           메이플스토리M 캐릭터·길드 검색
         </p>
         <h1 id="hero-title" class="hero__title">
-          모험가의 오늘을 <em>한눈에</em>
+          <BlurText text="모험가의 오늘을" />{" "}
+          <em>
+            <BlurText text="한눈에" stagger={0} class="hero__title-em" />
+          </em>
         </h1>
         <p class="hero__lead">넥슨 Open API 공식 데이터로 장비·스탯·랭킹을 빠르게 확인하세요.</p>
         <SearchBox id="hero-search" size="lg" />
@@ -186,7 +191,7 @@ function Shortcuts() {
       </h2>
       <Card class="shortcuts__lookup" title="빠른 조회" icon="search" tone="sky" headingLevel={3} description="이름으로 바로 찾기">
         <div class="lookup-tiles">
-          <button type="button" class="lookup-tile tone-sky" onClick={() => requestSearchFocus("character")}>
+          <button type="button" class="lookup-tile tone-sky spotlight" {...spotlightHandlers()} onClick={() => requestSearchFocus("character")}>
             <span class="lookup-tile__icon">
               <Icon name="user" size={26} />
             </span>
@@ -196,7 +201,7 @@ function Shortcuts() {
             </span>
             <Icon name="arrowRight" size={20} class="lookup-tile__go" />
           </button>
-          <button type="button" class="lookup-tile tone-mint" onClick={() => requestSearchFocus("guild")}>
+          <button type="button" class="lookup-tile tone-mint spotlight" {...spotlightHandlers()} onClick={() => requestSearchFocus("guild")}>
             <span class="lookup-tile__icon">
               <Icon name="flag" size={26} />
             </span>
@@ -213,7 +218,7 @@ function Shortcuts() {
         <ul class="ranking-tiles">
           {RANKING_TYPES.map((type) => (
             <li key={type.id}>
-              <a class={`ranking-tile tone-${type.tone}`} href={urls.ranking(type.id)}>
+              <a class={`ranking-tile tone-${type.tone} spotlight`} href={urls.ranking(type.id)} {...spotlightHandlers()}>
                 <span class="ranking-tile__icon">
                   <Icon name={type.icon} size={22} />
                 </span>
@@ -369,10 +374,10 @@ function RankingPreview() {
 }
 
 const RECORDS = [
-  { type: "level", label: "레벨", icon: "crown", tone: "gold" },
-  { type: "combat-power", label: "전투력", icon: "bolt", tone: "peach" },
-  { type: "dojang", label: "무릉도장", icon: "gate", tone: "mint" },
-  { type: "root-of-time", label: "시간의 근원", icon: "hourglass", tone: "lavender" }
+  { type: "level", label: "레벨", icon: "crown", tone: "gold", field: "character_level", big: false },
+  { type: "combat-power", label: "전투력", icon: "bolt", tone: "peach", field: "character_combat_power", big: true },
+  { type: "dojang", label: "무릉도장", icon: "gate", tone: "mint", field: "dojang_floor", big: false },
+  { type: "root-of-time", label: "시간의 근원", icon: "hourglass", tone: "lavender", field: "max_damage", big: true }
 ];
 
 function TodayRecords() {
@@ -422,6 +427,7 @@ function TodayRecords() {
               prefix={value?.prefix}
               unit={value?.unit}
               full={value?.full}
+              count={row ? { value: toNumber(row[record.field]), format: record.big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n) } : undefined}
               sub={row ? `${row.character_name} · ${row.world_name}` : state?.status === "error" ? "불러오지 못했어요" : "기록 없음"}
             />
           );

@@ -1,4 +1,5 @@
 import { Icon } from "./Icon.jsx";
+import { CountUp } from "./Motion.jsx";
 import { Skeleton } from "./Skeleton.jsx";
 
 /**
@@ -15,10 +16,11 @@ import { Skeleton } from "./Skeleton.jsx";
  *   sub?: any,
  *   delta?: number | null,
  *   href?: string,
- *   loading?: boolean
+ *   loading?: boolean,
+ *   count?: { value: number | null, format: (n: number) => string }
  * }} props
  */
-export function StatTile({ label, icon, tone = "sky", value = "-", prefix, unit, full, sub, delta = null, href, loading = false }) {
+export function StatTile({ label, icon, tone = "sky", value = "-", prefix, unit, full, sub, delta = null, href, loading = false, count }) {
   const Tag = href ? "a" : "div";
   return (
     <Tag class={`stat-tile tone-${tone}`} href={href} aria-busy={loading ? "true" : undefined}>
@@ -40,7 +42,7 @@ export function StatTile({ label, icon, tone = "sky", value = "-", prefix, unit,
         <>
           <span class="stat-tile__value num" title={full}>
             {prefix ? <span class="stat-tile__affix">{prefix}</span> : null}
-            <strong>{value}</strong>
+            <strong>{count && count.value !== null ? <CountUp value={count.value} format={count.format} /> : value}</strong>
             {unit ? <span class="stat-tile__affix">{unit}</span> : null}
           </span>
           {delta !== null && delta !== 0 ? (

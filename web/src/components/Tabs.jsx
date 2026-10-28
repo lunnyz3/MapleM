@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Icon } from "./Icon.jsx";
+import { Indicator, useIndicator } from "./Motion.jsx";
 
 /**
  * @typedef {{ id: string, label: string, icon?: string, count?: number }} TabItem
@@ -28,6 +29,8 @@ export function Tabs({ items, value, onChange, label, idBase, variant = "pill", 
   const tabRefs = useRef([]);
   const [edges, setEdges] = useState({ start: true, end: true });
   const selectedIndex = Math.max(0, items.findIndex((item) => item.id === value));
+  // 선택 표시가 탭 사이를 미끄러져 옮겨 간다(재기 전에는 선택된 탭이 스스로 칠한다).
+  const box = useIndicator(listRef, '[aria-selected="true"]', [selectedIndex, items.length]);
 
   // 가로로 밀리는 탭 목록: 양 끝에 더 있음을 흐림으로 알린다.
   useEffect(() => {
@@ -77,6 +80,7 @@ export function Tabs({ items, value, onChange, label, idBase, variant = "pill", 
     scrollable ? "tabs--scroll" : "",
     scrollable && !edges.start ? "has-more-start" : "",
     scrollable && !edges.end ? "has-more-end" : "",
+    box ? "has-indicator" : "",
     className
   ]
     .filter(Boolean)
@@ -85,6 +89,7 @@ export function Tabs({ items, value, onChange, label, idBase, variant = "pill", 
   return (
     <div class={scrollable ? "tabs-frame" : undefined}>
       <div ref={listRef} class={classes} role="tablist" aria-label={label} onKeyDown={onKeyDown}>
+        <Indicator box={box} class="tabs__indicator" />
         {items.map((item, index) => {
           const selected = index === selectedIndex;
           return (
@@ -145,9 +150,12 @@ export function TabPanel({ idBase, value, busy = false, class: className = "", c
  * }} props
  */
 export function Segmented({ name, legend, options, value, onChange, class: className = "" }) {
+  const ref = useRef(/** @type {HTMLFieldSetElement | null} */ (null));
+  const box = useIndicator(ref, ".segmented__option.is-checked", [value, options.length]);
   return (
-    <fieldset class={`segmented ${className}`}>
+    <fieldset ref={ref} class={`segmented${box ? " has-indicator" : ""} ${className}`}>
       <legend class="sr-only">{legend}</legend>
+      <Indicator box={box} class="segmented__indicator" />
       {options.map((option) => (
         <label key={option.value} class={`segmented__option${option.value === value ? " is-checked" : ""}`}>
           <input

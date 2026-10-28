@@ -60,7 +60,7 @@ function SiteFooter() {
         <nav class="site-footer__links" aria-label="사이트 정보">
           <a href={urls.legacyHome}>기존 화면으로</a>
           <a href={`${urls.home}design`}>디자인 시스템</a>
-          <a href={`${urls.home}licenses/pretendard-OFL.txt`}>글꼴 라이선스 (Pretendard · SIL OFL 1.1)</a>
+          <a href={urls.licenses}>라이선스·출처 (Pretendard · SUIT 글꼴, SIL OFL 1.1)</a>
         </nav>
       </div>
     </footer>

@@ -167,17 +167,26 @@ export function getRankingType(id) {
   return RANKING_TYPES.find((type) => type.id === id) || RANKING_TYPES[0];
 }
 
-/** 기존 상세 화면 주소(새 화면이 생기기 전까지). */
+/** 화면 주소. 캐릭터·랭킹은 새 화면(/preview/…), 길드는 아직 기존 화면. */
 export const urls = {
   /** @param {string} world @param {string} name */
-  character: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  character: (world, name) => `/preview/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  /** @param {string} world @param {string} name */
+  legacyCharacter: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
   /** @param {string} world @param {string} name */
   guild: (world, name) => `/guild/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,
+  /** @param {string} type @param {Record<string, string | number>} [params] */
+  ranking: (type, params = {}) => {
+    const query = new URLSearchParams({ type });
+    for (const [key, value] of Object.entries(params)) if (value !== "" && value !== undefined) query.set(key, String(value));
+    return `/preview/ranking?${query}`;
+  },
   /** @param {string} type */
-  ranking: (type) => `/ranking.html?type=${encodeURIComponent(type)}`,
+  legacyRanking: (type) => `/ranking.html?type=${encodeURIComponent(type)}`,
   guildSearch: "/guild",
   legacyHome: "/",
-  home: "/preview/"
+  home: "/preview/",
+  licenses: "/preview/licenses"
 };
 
 /**

@@ -2938,6 +2938,10 @@ async function getRankingKerningMTowerController(req, res) {
 module.exports = {
   buildMajorStats,
   resolveAttackType,
+  // Shared with the v2 stats controller (same Nexon cache and error shape).
+  resolveOcid,
+  fetchCharacterDetails,
+  getErrorInfo,
   getCharacterImage,
   getCharacterId,
   getAllCharacterDetails,

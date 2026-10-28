@@ -95,6 +95,16 @@ function majorStatOrder(sheet) {
   return [...(sheet.attackType === "magical" ? MAGICAL_ORDER : PHYSICAL_ORDER)];
 }
 
+const COMBAT_POWER_FORMULA =
+  "추정치: 깡공×(공격력%+0.3×(1+보스 공격력))×(1+대미지)×(1.2+치명타 피해)×(1+최종 대미지)×(최대 대미지/1억)^0.2.";
+
+function combatPowerNote(manual) {
+  if (!manual) {
+    return `${COMBAT_POWER_FORMULA} 넥슨 API에 없는 스타코러스·유니온 챔피언·성흔·축복·명예 배지·몬스터 컬렉션은 0으로 둬서 공식 전투력보다 낮게 나옵니다(경쟁 사이트도 같음).`;
+  }
+  return `${COMBAT_POWER_FORMULA} 넥슨 API에 없는 값은 직접 입력 ${Object.keys(manual.values).length}개를 반영했고, 입력하지 않은 항목은 0으로 둡니다.`;
+}
+
 /** Which presets the boss setting uses, next to the ones in use now. */
 function formatStatSetting(result) {
   const dimensions = PRESET_DIMENSIONS.filter((dimension) => result.options[dimension].available.length).map((dimension) => ({
@@ -116,8 +126,12 @@ function formatStatSetting(result) {
     currentSelection: { ...result.current.selection },
     sameAsCurrent: PRESET_DIMENSIONS.every((dimension) => result.boss.selection[dimension] === result.current.selection[dimension]),
     combatPower: { boss: result.boss.combatPower, current: result.current.combatPower },
-    combatPowerNote:
-      "추정치: 깡공×(공격력%+0.3×(1+보스 공격력))×(1+대미지)×(1.2+치명타 피해)×(1+최종 대미지)×(최대 대미지/1억)^0.2. 넥슨 API에 없는 스타코러스·유니온 챔피언·성흔·축복·명예 배지·몬스터 컬렉션은 0으로 둬서 공식 전투력보다 낮게 나옵니다(경쟁 사이트도 같음).",
+    combatPowerNote: combatPowerNote(result.manual),
+    manual: {
+      applied: Boolean(result.manual),
+      count: result.manual ? Object.keys(result.manual.values).length : 0,
+      attackFamily: result.manual ? result.manual.family : null
+    },
     attackType: result.boss.attackType,
     dimensions,
     rule: "장비·기계 심장·하이퍼 스탯·쥬얼·링크 스킬·유니온 스탯 프리셋 조합 가운데 계산 전투력이 가장 높은 조합"
