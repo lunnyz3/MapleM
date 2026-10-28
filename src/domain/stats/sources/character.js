@@ -1,9 +1,9 @@
 "use strict";
 
-// Job passive, V matrix cores and the base max damage. maplemworlds adds one constant
-// (공격력% 300, 대미지 60, 보공 10, 치피 30, 최종 10, 최대 대미지 4억) to every job; here the
-// constant is split into job passive + V cores so characters with lower core levels get the
-// lower value maplemtool shows (src/game-data/skill-passives.json).
+// Job passive, V matrix cores and the base max damage. At full core levels every job gets
+// 공격력% 300, 대미지 60, 보공 10, 치피 30, 최종 10, 최대 대미지 4억; the value is split into
+// job passive + V cores so characters with lower core levels get a lower value
+// (src/game-data/skill-passives.json).
 
 const passives = require("../../../game-data/skill-passives.json");
 const characterBase = require("../../../game-data/character-base.json");

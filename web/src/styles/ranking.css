@@ -89,35 +89,63 @@
 /* ---------- 기준일 안내 ---------- */
 .rk-basis {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  padding: var(--sp-3) var(--sp-4);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface-glass);
-  color: var(--text-muted);
-  font-size: var(--fs-14);
+  min-height: 20px;
+  padding: 0 4px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
 }
 
-.rk-basis > .icon {
-  flex: none;
-  margin-top: 2px;
-  color: var(--primary-strong);
-}
-
-.rk-basis strong {
-  color: var(--text);
-}
-
-.rk-basis__moved {
-  color: var(--warning);
+.rk-basis__date {
   font-weight: 700;
 }
 
-.rk-basis__sub {
-  display: block;
-  color: var(--text-subtle);
-  font-size: var(--fs-12);
+/* 머리: 랭킹 아이콘 + 글자 단위로 튀어 오르는 제목 */
+.page-head--rank {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-block: var(--sp-6);
+}
+
+.page-head__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--tone-fg);
+  box-shadow: var(--shadow-2);
+  animation: icon-pop 640ms var(--ease-spring) both;
+}
+
+@keyframes icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-30deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-head__icon {
+    animation: none;
+  }
+}
+
+@media (max-width: 719px) {
+  .page-head__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
 }
 
 /* ---------- 상위 3 ---------- */
@@ -141,7 +169,8 @@
 }
 
 .rk-podium__card {
-  --spot-color: rgba(242, 178, 31, 0.18);
+  --spot-color: rgba(242, 178, 31, 0.26);
+  --spot-ring: rgba(242, 178, 31, 0.95);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -161,8 +190,22 @@
 }
 
 .rk-podium__card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-2);
+  border-color: transparent;
+  box-shadow:
+    0 24px 48px -18px rgba(242, 178, 31, 0.55),
+    var(--shadow-pop);
+}
+
+.rk-podium__tilt {
+  --tilt-radius: 20px;
+}
+
+.rk-podium__card .avatar {
+  transition: transform 420ms var(--ease-spring);
+}
+
+.rk-podium__card:hover .avatar {
+  transform: translateZ(30px) scale(1.08);
 }
 
 .rk-podium__item--1 .rk-podium__card {
@@ -194,12 +237,7 @@
 }
 
 .rk-podium__meta {
-  max-width: 100%;
-  overflow: hidden;
-  color: var(--text-subtle);
-  font-size: var(--fs-12);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  justify-content: center;
 }
 
 .rk-podium__value {
@@ -285,10 +323,6 @@
   text-align: right;
 }
 
-.rk-col-world {
-  white-space: nowrap;
-}
-
 .rk-rank {
   display: inline-flex;
   align-items: center;
@@ -331,11 +365,7 @@
 }
 
 .rk-who__meta {
-  overflow: hidden;
-  color: var(--text-subtle);
   font-size: var(--fs-12);
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .rk-metric {
@@ -478,6 +508,40 @@
   padding: var(--sp-10) var(--sp-4);
 }
 
-.rk-stamp {
-  justify-content: center;
+/* 표 행이 위에서부터 차례로 들어온다(처음 12행만 늦춤) */
+.rk-table tbody tr,
+.rk-cards > li {
+  animation: row-in 460ms var(--ease-spring) backwards;
+}
+
+.rk-table tbody tr:nth-child(-n + 12),
+.rk-cards > li:nth-child(-n + 12) {
+  animation-delay: calc(var(--row-i, 0) * 1ms);
+}
+
+.rk-table tbody tr:nth-child(2), .rk-cards > li:nth-child(2) { --row-i: 30; }
+.rk-table tbody tr:nth-child(3), .rk-cards > li:nth-child(3) { --row-i: 60; }
+.rk-table tbody tr:nth-child(4), .rk-cards > li:nth-child(4) { --row-i: 90; }
+.rk-table tbody tr:nth-child(5), .rk-cards > li:nth-child(5) { --row-i: 120; }
+.rk-table tbody tr:nth-child(6), .rk-cards > li:nth-child(6) { --row-i: 150; }
+.rk-table tbody tr:nth-child(7), .rk-cards > li:nth-child(7) { --row-i: 180; }
+.rk-table tbody tr:nth-child(8), .rk-cards > li:nth-child(8) { --row-i: 210; }
+.rk-table tbody tr:nth-child(9), .rk-cards > li:nth-child(9) { --row-i: 240; }
+.rk-table tbody tr:nth-child(10), .rk-cards > li:nth-child(10) { --row-i: 270; }
+.rk-table tbody tr:nth-child(11), .rk-cards > li:nth-child(11) { --row-i: 300; }
+.rk-table tbody tr:nth-child(12), .rk-cards > li:nth-child(12) { --row-i: 330; }
+
+.rk-table .rank-badge {
+  transition: transform 320ms var(--ease-spring);
+}
+
+.rk-table tbody tr:hover .rank-badge {
+  transform: scale(1.15) rotate(-10deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-table tbody tr,
+  .rk-cards > li {
+    animation: none;
+  }
 }

@@ -1,7 +1,7 @@
 "use strict";
 
-// Character stat engine. Rules and constants follow maplemworlds.kr and maplemtool.com (see
-// src/game-data/*.json _meta and docs/research/calibration/engine-report.md).
+// Character stat engine. Rules and constants live in src/game-data/*.json (see each _meta);
+// test/stat-engine-calibration.test.js pins the results for five captured characters.
 
 const { computeStatSheets } = require("./engine");
 const { formatMajorStats, formatStatSetting, majorStatOrder } = require("./format");

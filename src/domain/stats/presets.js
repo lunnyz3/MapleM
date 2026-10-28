@@ -129,8 +129,7 @@ function readPresets(details) {
 }
 
 // Options the boss-setting search tries. Hunting link presets (엘프의 축복 EXP) are skipped
-// only when link-skills.json says so (maplemworlds does, maplemtool does not), and never when
-// every preset is a hunting one.
+// only when link-skills.json says so, and never when every preset is a hunting one.
 function searchOptions(presets, dimension) {
   const { options } = presets[dimension];
   if (dimension !== "link" || !linkRules.huntingPreset.excludeFromBossSetting) return options;

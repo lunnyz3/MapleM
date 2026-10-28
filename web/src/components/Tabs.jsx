@@ -133,7 +133,10 @@ export function TabPanel({ idBase, value, busy = false, class: className = "", c
       aria-busy={busy ? "true" : "false"}
       tabIndex={0}
     >
-      {children}
+      {/* 탭을 바꾸면 내용이 새로 들어오며 떠오른다(움직임 줄이기면 바로 보인다). */}
+      <div key={value} class="tab-panel__enter">
+        {children}
+      </div>
     </div>
   );
 }

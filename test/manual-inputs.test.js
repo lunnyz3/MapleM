@@ -22,9 +22,10 @@ test("manual-input list has the agreed shape", () => {
     assert.equal(typeof item.id, "string");
     assert.equal(typeof item.label, "string");
     assert.equal(typeof item.group, "string");
-    assert.equal(typeof item.description, "string");
     assert.ok(["flat", "percent", "level"].includes(item.unit), item.id);
-    assert.ok(["maplemworlds", "maplemtool", "both"].includes(item.source), item.id);
+    // Only labels, ranges, units, steps and appliesTo are served; no notes or provenance.
+    assert.equal(item.description, undefined, item.id);
+    assert.equal(item.source, undefined, item.id);
     assert.equal(item.default, 0);
     assert.ok(item.min <= 0 && item.max > item.min && item.step > 0, item.id);
     assert.ok(item.appliesTo.length > 0, item.id);
@@ -34,6 +35,7 @@ test("manual-input list has the agreed shape", () => {
       assert.equal(item.levels[0].value, 0);
       item.levels.forEach((level) => {
         assert.equal(typeof level.label, "string");
+        assert.equal(level.source, undefined, `${item.id} level ${level.value}`);
         Object.keys(level.effects).forEach((key) => assert.ok(item.appliesTo.includes(key), `${item.id} level ${level.value}: ${key}`));
       });
       assert.equal(item.max, Math.max(...item.levels.map((level) => level.value)));
@@ -122,7 +124,7 @@ test("level items: union champion is cumulative, the stigma set needs the same l
   near(champion.physicalDamagePercent - plain.physicalDamagePercent, 4, "S+ once");
   near(champion.criticalDamage - plain.criticalDamage, 4, "SS once");
 
-  // 붉은빛 유니크 both → 보공 5+7 and the set's 최대 대미지 5,000만 (maplemworlds 나로·여신 screen).
+  // 붉은빛 유니크 on both → 보공 5+7 and the set's 최대 대미지 5,000만.
   const set = computeStatSheets(physical.details, { manual: { stigmaAkan: 1, stigmaAzazel: 1 } }).current.totals;
   near(set.bossDamage - plain.bossDamage, 12, "stigma boss damage");
   near(set.maxDamage - plain.maxDamage, 50000000, "stigma set max damage");

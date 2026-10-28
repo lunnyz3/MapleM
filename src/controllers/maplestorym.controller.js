@@ -23,6 +23,7 @@ const {
   getRankingKerningMTower,
   saveRequestLog
 } = require("../services/maplestorym.service");
+const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
 
 const characterDetailEndpoints = [
   { key: "basic", path: "/maplestorym/v1/character/basic" },
@@ -848,8 +849,8 @@ async function resolveLatestOverallRankingByOcid(ocid, options = {}) {
 
 // The stat endpoint's 전투력 reflects whatever the character is wearing right now (it can
 // be a fraction of the real value on a farming preset); the combat-power ranking holds
-// the official daily value, available for the top 10,000.
-async function resolveOfficialCombatPowerByOcid(ocid, options = {}) {
+// a daily value for the top 10,000.
+async function resolveRankingCombatPowerByOcid(ocid, options = {}) {
   const found = await resolveLatestRankingRowByOcid(ocid, getRankingCombatPower, options.days);
   const value = parseNumericValue(found?.row?.character_combat_power);
   return value === null
@@ -2012,7 +2013,7 @@ function buildPageData({
   details,
   fallbackDetails,
   overallRankingResult,
-  officialCombatPower = null
+  combatPower = null
 }) {
   const basic = details?.basic?.data || {};
   const stat = details?.stat?.data || {};
@@ -2062,10 +2063,8 @@ function buildPageData({
     expRate: expRateValue,
     currentExp: parseNumericValue(expRaw),
     ranking: basic.ranking || stat.ranking || "-",
-    combatPower: {
-      official: officialCombatPower,
-      current: readStatValue(stat, "전투력")
-    },
+    // Highest 전투력 observed in the last 24 hours ({ value, observedAt }).
+    combatPower: combatPower || { value: readStatValue(stat, "전투력"), observedAt: null },
     overallRanking: overallRankingResult?.ranking ?? fallbackOverallRanking ?? null,
     overallRankingText:
       overallRankingResult?.ranking !== null && overallRankingResult?.ranking !== undefined
@@ -2332,11 +2331,19 @@ async function getCharacterPageData(req, res) {
     });
 
     // Rankings are aggregated once a day (~02:30 KST) for the top 10,000, so today or yesterday is enough.
-    const [historyAvailable, fallbackDetails, overallRankingResult, officialCombatPower] = await Promise.all([
+    const [historyAvailable, fallbackDetails, overallRankingResult, rankingCombatPower] = await Promise.all([
       hasExpHistory(ocid),
       loadRecentPageDataDetailsByOcid(ocid, presetFallbackLookbackLimit),
       resolveLatestOverallRankingByOcid(ocid, { days: 2 }),
-      resolveOfficialCombatPowerByOcid(ocid, { days: 2 })
+      resolveRankingCombatPowerByOcid(ocid, { days: 2 })
+    ]);
+    const combatPower = await observeCombatPower(ocid, [
+      { value: readStatValue(details?.stat?.data, "전투력"), source: "stat" },
+      rankingCombatPower && {
+        value: rankingCombatPower.value,
+        observedAt: rankingObservedAt(rankingCombatPower.date),
+        source: "ranking"
+      }
     ]);
 
     const pageData = buildPageData({
@@ -2347,7 +2354,7 @@ async function getCharacterPageData(req, res) {
       details,
       fallbackDetails,
       overallRankingResult,
-      officialCombatPower
+      combatPower
     });
 
     pageData.meta.historyAvailable = historyAvailable;
@@ -2938,6 +2945,7 @@ async function getRankingKerningMTowerController(req, res) {
 module.exports = {
   buildMajorStats,
   resolveAttackType,
+  readStatValue,
   // Shared with the v2 stats controller (same Nexon cache and error shape).
   resolveOcid,
   fetchCharacterDetails,

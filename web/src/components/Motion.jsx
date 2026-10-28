@@ -1,7 +1,5 @@
 // 인터랙션 컴포넌트(직접 구현, 외부 의존성 없음).
-// 숫자 카운트업 · 스크롤 등장 · 블러 텍스트 등장 · 스포트라이트 · 틸트 · 자석 버튼 · 오로라 배경.
-// 동작 아이디어는 React Bits(reactbits.dev)의 Count Up · Blur Text · Spotlight Card · Tilted Card · Magnet · Aurora 를 참고했다.
-// React Bits 는 "MIT + Commons Clause" 라이선스라 코드를 가져오지 않고 새로 썼다(출처: /preview/licenses).
+// 숫자 카운트업 · 스크롤 등장 · 블러/글자 단위 텍스트 등장 · 스포트라이트 · 틸트(+반사광) · 자석 버튼 · 오로라 · 떠다니는 입자.
 // 원칙: transform·opacity 위주, prefers-reduced-motion 이면 끈다, 정밀 포인터(마우스)에서만 따라 움직인다.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { hasFinePointer, prefersReducedMotion, useInView } from "../lib/motion.js";
@@ -99,7 +97,24 @@ export function BlurText({ text, as: Tag = "span", class: className = "", id, st
 }
 
 /**
- * 스포트라이트: 마우스를 따라 카드 위에 은은한 빛. 반환값을 요소에 펼쳐 넣는다.
+ * 글자 단위 등장: 글자마다 아래에서 튀어 오르며 차례로 나타난다(큰 숫자·이름용).
+ * @param {{ text: string, as?: any, class?: string, id?: string, stagger?: number }} props
+ */
+export function SplitText({ text, as: Tag = "span", class: className = "", id, stagger = 34 }) {
+  const chars = Array.from(String(text || ""));
+  return (
+    <Tag id={id} class={`split-text ${className}`} aria-label={text}>
+      {chars.map((char, index) => (
+        <span key={index} class="split-text__char" aria-hidden="true" style={{ "--char-index": index, "--char-stagger": `${stagger}ms` }}>
+          {char === " " ? " " : char}
+        </span>
+      ))}
+    </Tag>
+  );
+}
+
+/**
+ * 스포트라이트: 마우스를 따라 카드 위에 빛과 테두리 광택. 반환값을 요소에 펼쳐 넣는다.
  * CSS 는 .spotlight(--spot-x, --spot-y)를 읽는다.
  */
 export function spotlightHandlers() {
@@ -116,10 +131,10 @@ export function spotlightHandlers() {
 }
 
 /**
- * 틸트 카드: 마우스 위치에 따라 최대 maxDeg 만큼 기울어진다(정밀 포인터·움직임 허용일 때만).
- * @param {{ maxDeg?: number, class?: string, children?: any }} props
+ * 틸트 카드: 마우스 위치에 따라 최대 maxDeg 만큼 기울고, 반사광이 커서를 따라간다(정밀 포인터·움직임 허용일 때만).
+ * @param {{ maxDeg?: number, scale?: number, glare?: boolean, class?: string, children?: any }} props
  */
-export function Tilt({ maxDeg = 5, class: className = "", children }) {
+export function Tilt({ maxDeg = 10, scale = 1.03, glare = true, class: className = "", children }) {
   const ref = useRef(/** @type {HTMLDivElement | null} */ (null));
   const frame = useRef(0);
 
@@ -134,6 +149,9 @@ export function Tilt({ maxDeg = 5, class: className = "", children }) {
     frame.current = requestAnimationFrame(() => {
       element.style.setProperty("--tilt-x", `${(-y * maxDeg).toFixed(2)}deg`);
       element.style.setProperty("--tilt-y", `${(x * maxDeg).toFixed(2)}deg`);
+      element.style.setProperty("--tilt-s", String(scale));
+      element.style.setProperty("--glare-x", `${((x + 0.5) * 100).toFixed(1)}%`);
+      element.style.setProperty("--glare-y", `${((y + 0.5) * 100).toFixed(1)}%`);
       element.classList.add("is-tilting");
     });
   };
@@ -143,6 +161,7 @@ export function Tilt({ maxDeg = 5, class: className = "", children }) {
     cancelAnimationFrame(frame.current);
     element.style.setProperty("--tilt-x", "0deg");
     element.style.setProperty("--tilt-y", "0deg");
+    element.style.setProperty("--tilt-s", "1");
     element.classList.remove("is-tilting");
   };
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
@@ -150,6 +169,38 @@ export function Tilt({ maxDeg = 5, class: className = "", children }) {
   return (
     <div ref={ref} class={`tilt ${className}`} onPointerMove={onMove} onPointerLeave={onLeave}>
       {children}
+      {glare ? <span class="tilt__glare" aria-hidden="true" /> : null}
+    </div>
+  );
+}
+
+/** 0~1 사이 고정 난수(같은 화면에서 입자 배치가 매번 같게). @param {number} seed */
+const seeded = (seed) => {
+  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  return x - Math.floor(x);
+};
+
+/**
+ * 떠다니는 빛 입자(장식). 아주 천천히 위로 떠오르며 깜빡인다. 움직임 줄이기면 멈춘다.
+ * @param {{ count?: number, class?: string }} props
+ */
+export function Particles({ count = 18, class: className = "" }) {
+  return (
+    <div class={`particles ${className}`} aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => (
+        <span
+          key={i}
+          class="particles__dot"
+          style={{
+            left: `${(seeded(i + 1) * 100).toFixed(1)}%`,
+            top: `${(seeded(i + 31) * 100).toFixed(1)}%`,
+            "--p-size": `${(2 + seeded(i + 7) * 4).toFixed(1)}px`,
+            "--p-dur": `${(7 + seeded(i + 13) * 9).toFixed(1)}s`,
+            "--p-delay": `${(-seeded(i + 19) * 12).toFixed(1)}s`,
+            "--p-drift": `${((seeded(i + 23) - 0.5) * 40).toFixed(0)}px`
+          }}
+        />
+      ))}
     </div>
   );
 }

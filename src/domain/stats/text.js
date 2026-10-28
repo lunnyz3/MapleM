@@ -1,8 +1,7 @@
 "use strict";
 
 // Reads Nexon option text ("최대 대미지 59,500,000, 물리 공격력 10%", "물리 공격력 및 마법 공격력
-// 7.5% 증가", "치명타 피해 : 4%") into stat contributions. Rules shared by both reference
-// sites (docs/research/rules/maplemworlds.md 1.2, maplemtool.md 1.4):
+// 7.5% 증가", "치명타 피해 : 4%") into stat contributions. Rules:
 // - 데미지 → 대미지, 크리티컬 대미지 → 치명타 피해, 보스 몬스터 공격 시 대미지 → 보스 공격력
 // - "물리 X 및 마법 X", "물리 X / 마법 X", "물리/마법 X" give the same value to both
 // - an attack line whose number carries % is attack %, other stats ignore %

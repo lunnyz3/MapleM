@@ -187,7 +187,7 @@
   }
 }
 
-/* 푸터: 출처 표기 */
+/* 푸터: 데이터 출처 한 줄 */
 .site-footer {
   border-top: 1px solid var(--border);
   background: var(--surface-soft);
@@ -196,10 +196,12 @@
 }
 
 .site-footer__inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: var(--sp-4) var(--sp-8);
-  padding-block: var(--sp-8);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-6);
+  padding-block: var(--sp-6);
 }
 
 .site-footer__brand {
@@ -216,20 +218,14 @@
 .site-footer__source {
   font-weight: 700;
   color: var(--text-muted);
-}
-
-.site-footer__body {
-  display: grid;
-  gap: 4px;
-  color: var(--text-subtle);
+  letter-spacing: 0.01em;
 }
 
 .site-footer__links {
-  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 8px;
-  margin-left: -8px;
+  gap: 4px;
+  margin-right: -8px;
 }
 
 .site-footer__links a {
@@ -238,8 +234,10 @@
   min-height: var(--touch);
   padding: 0 8px;
   border-radius: 8px;
-  color: var(--text-muted);
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
   font-weight: 600;
+  text-decoration: none;
 }
 
 .site-footer__links a:hover {
@@ -248,11 +246,12 @@
 
 @media (max-width: 719px) {
   .site-footer__inner {
-    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .site-footer__links {
-    grid-column: 1;
+    margin: 0 0 0 -8px;
   }
 }
 
@@ -868,20 +867,77 @@ a.stat-tile:hover .stat-tile__go {
   line-height: 1;
 }
 
-/* ================= SourceStamp ================= */
-.source-stamp {
-  display: flex;
-  flex-wrap: wrap;
+/* ================= 데이터 신선도 ================= */
+.freshness {
+  display: inline-flex;
   align-items: center;
-  gap: 4px 8px;
+  gap: 6px;
   color: var(--text-subtle);
   font-size: var(--fs-12);
+  font-weight: 600;
   line-height: 1.4;
 }
 
-.source-stamp__note {
-  color: var(--warning);
-  font-weight: 600;
+.freshness__dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mint-500);
+}
+
+.freshness__dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--mint-500);
+  animation: fresh-ping 2.4s var(--ease) infinite;
+}
+
+@keyframes fresh-ping {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* ================= 월드·등급 아이콘 ================= */
+.world-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+
+.grade-icon {
+  flex: none;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.row-meta__text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* ================= SearchBox ================= */

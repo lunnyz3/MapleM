@@ -84,7 +84,7 @@ function addVector(target, source) {
 
 /**
  * Tries every preset combination and keeps the one with the highest combat power. Ties keep
- * the first combination in preset-number order, like maplemworlds.
+ * the first combination in preset-number order.
  */
 function searchBossSelection({ presets, contributionsByDimension, fixedVector, level }) {
   const lists = PRESET_DIMENSIONS.map((dimension) =>

@@ -6,7 +6,8 @@ import { BrandMark, Cloud, Leaf, Sparkle } from "../components/Decor.jsx";
 import { ICON_NAMES, Icon } from "../components/Icon.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
-import { SourceStamp } from "../components/SourceStamp.jsx";
+import { Freshness } from "../components/Freshness.jsx";
+import { GradeIcon, WorldIcon } from "../components/GameIcons.jsx";
 import { StatTile } from "../components/StatTile.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
@@ -47,13 +48,6 @@ const TYPE_SCALE = [
   ["16", "본문", "var(--fs-16)", 400],
   ["14", "보조", "var(--fs-14)", 400],
   ["12", "캡션", "var(--fs-12)", 400]
-];
-
-const SOURCE_BADGES = [
-  ["sky", "공식", "넥슨 Open API 값"],
-  ["lavender", "계산", "공개한 산식으로 계산"],
-  ["gold", "추정", "추정 모델, 오차 있음"],
-  ["peach", "직접 입력", "사용자가 넣은 값"]
 ];
 
 /** @param {{ title: string, children: any, description?: string }} props */
@@ -179,14 +173,9 @@ export function DesignSystem() {
             </a>
           </div>
           <div class="ds-row">
-            {SOURCE_BADGES.map(([tone, label, help]) => (
-              <span class="ds-badge-sample" key={label}>
-                <span class={`badge tone-${tone}`}>{label}</span>
-                <span class="ds-badge-sample__help">{help}</span>
-              </span>
-            ))}
+            <Freshness at={Date.now() - 3 * 3600 * 1000} />
+            <Freshness date={kstToday()} />
           </div>
-          <SourceStamp date={kstToday()} note="최근 집계일 기준" />
         </Card>
       </Section>
 
@@ -203,6 +192,14 @@ export function DesignSystem() {
             <Avatar world="" name="구름" size={44} />
             <Avatar kind="guild" world="" name="길드" size={44} />
           </div>
+          <div class="ds-row">
+            {["스카니아", "루나", "제니스", "크로아", "유니온", "엘리시움", "아케인"].map((world) => (
+              <WorldIcon key={world} world={world} size={20} />
+            ))}
+            {["노비스 1", "베테랑 2", "마스터 3", "그랜드마스터 4", "슈프림 5"].map((grade) => (
+              <GradeIcon key={grade} label={grade} size={32} />
+            ))}
+          </div>
         </Card>
       </Section>
 
@@ -214,7 +211,7 @@ export function DesignSystem() {
             scrollable
             value={tab}
             onChange={setTab}
-            items={["종합", "유니온", "업적", "전장", "지하수로", "시간의 근원", "전투력", "무릉도장", "커닝M타워"].map((label, index) => ({
+            items={["종합", "전투력", "지하수로", "유니온", "업적", "시간의 근원", "전장"].map((label, index) => ({
               id: index === 0 ? "level" : `t${index}`,
               label
             }))}
@@ -249,7 +246,7 @@ export function DesignSystem() {
       <Section title="수치 타일" description="큰 수는 한국식 단위, 마우스를 올리면 전체 값. 변화량은 ▲▼ 기호와 함께.">
         <div class="ds-grid ds-grid--tiles">
           <StatTile label="전투력" icon="bolt" tone="peach" value="11억 5,390만" full="1,153,901,361" sub="성령 · 스카니아" delta={1250000} />
-          <StatTile label="무릉도장" icon="gate" tone="mint" value="71" unit="층" sub="지난주보다" delta={-2} />
+          <StatTile label="업적" icon="medal" tone="lavender" value="28,700" unit="점" sub="은은" delta={-2} />
           <StatTile label="레벨" icon="crown" tone="gold" prefix="Lv." value="298" sub="피카츄 · 유니온" />
           <StatTile label="불러오는 중" icon="hourglass" tone="lavender" loading />
         </div>
@@ -261,7 +258,7 @@ export function DesignSystem() {
             <SkeletonList rows={3} />
           </Card>
           <Card title="빈 상태" icon="info" tone="lavender" headingLevel={3}>
-            <EmptyState compact title="최근 집계된 랭킹이 없어요" description="넥슨 랭킹은 하루 한 번 집계돼요." />
+            <EmptyState compact title="최근 집계된 랭킹이 없어요" />
           </Card>
           <Card title="오류" icon="alert" tone="peach" headingLevel={3}>
             <ErrorState compact title="랭킹을 불러오지 못했어요" description="넥슨 API 응답이 원활하지 않아요." detail="HTTP 502" onRetry={() => {}} />

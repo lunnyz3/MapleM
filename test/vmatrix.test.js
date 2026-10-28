@@ -52,7 +52,7 @@ test("getActiveVcores drops unequipped and expired cores", () => {
   assert.deepEqual(active.map((core) => core.name), ["A"]);
 });
 
-// Values observed on maplemtool.com's simulator on 2026-10-28 (Blink, levels 1–30).
+// Operator-confirmed values for a common core (Blink, levels 1–30), 2026-10-28.
 test("attack % per core level matches the observed table and caps at 25 at Lv.30", () => {
   const observed = { 1: 7.6, 2: 8.2, 10: 13, 20: 19, 29: 24.4, 30: 25 };
   for (const [level, expected] of Object.entries(observed)) {
@@ -74,13 +74,13 @@ test("only equipped common cores add attack %; Erda, 판테온 and other cores a
   assert.equal(vmatrixSum(details, "magicalAttackPercent"), 50);
 });
 
-test("useful-skill base effects (+9/+12) are not added, as on both reference sites", () => {
+test("useful-skill base effects (+9/+12) are not added", () => {
   const details = coresOf(currentCore("쓸만한 샤프 아이즈", 30), currentCore("쓸만한 윈드 부스터", 30));
   assert.equal(vmatrixSum(details, "criticalDamage"), 0);
   assert.equal(vmatrixSum(details, "bossDamage"), 0);
 });
 
-test("job passive 50 plus ten Lv.30 common cores equals the 300% both sites show", () => {
+test("job passive 50 plus ten Lv.30 common cores equals 300%", () => {
   const names = [
     "블링크",
     "로프 커넥트",

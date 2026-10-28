@@ -100,9 +100,9 @@ const COMBAT_POWER_FORMULA =
 
 function combatPowerNote(manual) {
   if (!manual) {
-    return `${COMBAT_POWER_FORMULA} 넥슨 API에 없는 스타코러스·유니온 챔피언·성흔·축복·명예 배지·몬스터 컬렉션은 0으로 둬서 공식 전투력보다 낮게 나옵니다(경쟁 사이트도 같음).`;
+    return `${COMBAT_POWER_FORMULA} 직접 입력하지 않은 스타코러스·유니온 챔피언·성흔·축복·명예 배지·몬스터 컬렉션은 0으로 두므로 게임 속 전투력보다 낮게 나올 수 있습니다.`;
   }
-  return `${COMBAT_POWER_FORMULA} 넥슨 API에 없는 값은 직접 입력 ${Object.keys(manual.values).length}개를 반영했고, 입력하지 않은 항목은 0으로 둡니다.`;
+  return `${COMBAT_POWER_FORMULA} 직접 입력 ${Object.keys(manual.values).length}개를 반영했고, 입력하지 않은 항목은 0으로 둡니다.`;
 }
 
 /** Which presets the boss setting uses, next to the ones in use now. */

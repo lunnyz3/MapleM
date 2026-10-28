@@ -1,22 +1,17 @@
 {
   "_meta": {
-    "description": "넥슨 API에 없는 스탯의 '직접 입력' 항목. 사용자가 넣은 값만 보스 세팅·현재 착용 계산과 계산 전투력에 더한다(기본 0, 두 경쟁 사이트와 같음). GET /api/v2/manual-inputs가 이 표를 그대로 내보낸다.",
+    "description": "넥슨 API에 없는 스탯의 '직접 입력' 항목. 사용자가 넣은 값만 보스 세팅·현재 착용 계산과 계산 전투력에 더한다(기본 0). GET /api/v2/manual-inputs는 라벨·범위·단위·단계·appliesTo만 내보낸다(description은 내부 메모).",
     "updatedAt": "2026-10-28",
-    "sources": [
-      "maplemworlds.kr index-5Pk4vujo.js — 수동 입력 목록(앵커 I8=[j8,y8,E8,C8,X8,V8,U8,h8]), 스타코러스 노드(앵커 TA=[{id:\"start\"), 성흔(앵커 Nl=[{id:\"green\"), 명예 배지(앵커 tl=[[\"만물상\",\"경험), 몬스터 컬렉션(앵커 rn=[{key:\"victoria\"), 유니온 챔피언(앵커 u>=1&&o(m?\"물리 공격력%\":\"마법 공격력%\",4)), 펫 입력 상한(앵커 X8={id:\"pet\"), 축복 표(앵커 As={1:{\"물리 공격력\":)",
-      "maplemtool.com app.3b4c69e71622b30c.js·tables.d39c9358b9414219.json — 빈칸 채우기(앵커 SOURCE_DEFINITIONS=[{name:\"캐릭터 레벨\"), msm-stellacode.json, msm-stigma.json, msm-medal.json, msm-blessing.json, 몬스터 컬렉션(앵커 var pu={\"보스 공격력\":[1,2,3]), 유니온 챔피언(앵커 N3=[\"B\",\"A\",\"S\",\"SS\"]), 펫(앵커 PET_MAGNET_MAX)",
-      "추출 정리: docs/research/rules/manual-defaults.json, maplemworlds.md 1.9절, maplemtool.md 1.12절, union.json, pets.json, blessing.json"
-    ],
-    "extractedAt": "2026-10-28",
+    "verification": "2026-10 기준 넥슨 API 캐릭터 53명 데이터로 계산값을 대조해 검증했다.",
     "notes": [
-      "stat 이름: attack(깡공)·attackPercent(공격력%)·damage(대미지)는 직업 계열 스탯이다. 물리·마법 가운데 캐릭터 계열(직접 입력 없이 계산한 현재 착용 시트의 attackType) 쪽에만 더한다. maplemworlds는 '물리/마법 대미지'·'대미지'를 직업 계열로 바꾸고 스타코러스 노드의 '마법'을 물리 직업이면 '물리'로 바꾼다. 스타일리스트 배지는 maplemworlds가 물리·마법 공격력%에 각각 더하지만 전투력에는 계열 쪽만 쓰이므로 같은 결과다.",
-      "max(최대값)는 두 사이트 값표에서 계산한 상한이다. 스타코러스: 공격력%·대미지 5+6+7+5+6+7=36, 보공·치피 5+6+10+7=28, 최종 선택형 2칸(최대 10)+10+10=40, 최대 대미지 선택형 3칸(최대 1억 2,000만)+3,000만×3+5,000만×2=5억 5,000만. 축복: 5칸 × 레전더리 최대값(공격력% 15, 대미지 14.2, 보공 12.5, 치피 9, 최종 8.1, 방무 3.3). 펫: maplemworlds 입력 상한 2,252(700×3+152).",
-      "step은 두 사이트 값표의 최소 단위다. 스타코러스 최대 대미지 선택지(3,000만~1억 2,000만, 7,500만·8,500만 포함)는 모두 500만의 배수다.",
-      "축복 방어율 무시는 입력값을 한 줄로 곱연산한다(칸마다 따로 곱하지 않음). maplemtool은 축복 방무를 쥬얼 세트·HEXA 스탯과 한 묶음으로 합산한 뒤 곱하므로 칸 합계를 넣으면 그 사이트와 같다. maplemworlds의 축복 방무 처리 방식은 확인하지 못했다(추정).",
-      "성흔 세트는 아칸·아자젤 두 칸이 같은 빛깔·같은 등급일 때 자동으로 붙는다(두 사이트 같음). 전투 스탯이 있는 세트는 붉은빛(최대 대미지)과 푸른빛(대미지)뿐이다. 초록빛(경험치)·주황빛 세트(치명타 확률)는 전투력에 들어가지 않는다.",
-      "명예 배지: 스타일리스트·보스 헌터 레벨값은 두 사이트 같다. 보스 처치 배지(해방된 무기의 주인 보공 2, 욕망의 마녀 등 보공 3)는 maplemtool 표에만 있다(보스 방어력은 우리 스탯 목록에 없어 뺐다). 만물상·육성의 달인·재주꾼·MVP 배지는 전투 스탯이 없어 목록에서 뺐다.",
-      "몬스터 컬렉션: 전투 스탯 보상(치피·보공·최종)이 있는 지역만 넣었다. 치명타 확률·관통률·경험치 보상은 두 사이트 모두 합산하지 않는다.",
-      "넣지 않은 항목: 컨스텔라 코어(두 사이트 모두 전투력 밖), 길드 요리(15분 버프, maplemtool만), 유니온 스탯(넥슨 API에 있음)."
+      "stat 이름: attack(깡공)·attackPercent(공격력%)·damage(대미지)는 직업 계열 스탯이다. 물리·마법 가운데 캐릭터 계열(직접 입력 없이 계산한 현재 착용 시트의 attackType) 쪽에만 더한다. 스타일리스트 배지의 공격력%도 계열 쪽에만 더한다.",
+      "max(최대값)는 게임 값표에서 계산한 상한이다. 스타코러스: 공격력%·대미지 5+6+7+5+6+7=36, 보공·치피 5+6+10+7=28, 최종 선택형 2칸(최대 10)+10+10=40, 최대 대미지 선택형 3칸(최대 1억 2,000만)+3,000만×3+5,000만×2=5억 5,000만. 축복: 5칸 × 레전더리 최대값(공격력% 15, 대미지 14.2, 보공 12.5, 치피 9, 최종 8.1, 방무 3.3). 펫: 2,252(700×3+152).",
+      "step은 값표의 최소 단위다. 스타코러스 최대 대미지 선택지(3,000만~1억 2,000만, 7,500만·8,500만 포함)는 모두 500만의 배수다.",
+      "축복 방어율 무시는 입력값(칸 합계)을 한 줄로 곱연산한다(칸마다 따로 곱하지 않음).",
+      "성흔 세트는 아칸·아자젤 두 칸이 같은 빛깔·같은 등급일 때 자동으로 붙는다. 전투 스탯이 있는 세트는 붉은빛(최대 대미지)과 푸른빛(대미지)뿐이다. 초록빛(경험치)·주황빛 세트(치명타 확률)는 전투력에 들어가지 않는다.",
+      "명예 배지: 스타일리스트·보스 헌터 레벨값과 보스 처치 배지(해방된 무기의 주인 보공 2, 욕망의 마녀 등 보공 3)를 넣었다(보스 방어력은 스탯 목록에 없어 뺐다). 만물상·육성의 달인·재주꾼·MVP 배지는 전투 스탯이 없어 뺐다.",
+      "몬스터 컬렉션: 전투 스탯 보상(치피·보공·최종)이 있는 지역만 넣었다. 치명타 확률·관통률·경험치 보상은 합산하지 않는다.",
+      "넣지 않은 항목: 컨스텔라 코어(전투력 밖), 길드 요리(15분 버프), 유니온 스탯(넥슨 API에 있음)."
     ]
   },
   "groups": [
@@ -47,7 +42,6 @@
       "min": 0,
       "max": 36,
       "step": 1,
-      "source": "both",
       "description": "열어 둔 공격력% 노드의 합(노드 5·6·7 두 줄, 최대 36). 직업 계열 공격력%에 더한다."
     },
     {
@@ -59,7 +53,6 @@
       "min": 0,
       "max": 36,
       "step": 1,
-      "source": "both",
       "description": "열어 둔 대미지 노드의 합(노드 5·6·7 두 줄, 최대 36). 직업 계열 대미지에 더한다."
     },
     {
@@ -71,7 +64,6 @@
       "min": 0,
       "max": 28,
       "step": 1,
-      "source": "both",
       "description": "열어 둔 보스 공격력 노드의 합(5·6·10·7, 최대 28)."
     },
     {
@@ -83,7 +75,6 @@
       "min": 0,
       "max": 28,
       "step": 1,
-      "source": "both",
       "description": "열어 둔 치명타 피해 노드의 합(5·6·10·7, 최대 28)."
     },
     {
@@ -95,7 +86,6 @@
       "min": 0,
       "max": 40,
       "step": 0.5,
-      "source": "both",
       "description": "선택형 최종 대미지 노드 2칸(5.5~10, 0.5 간격)과 끝 노드 10·10의 합(최대 40)."
     },
     {
@@ -107,7 +97,6 @@
       "min": 0,
       "max": 550000000,
       "step": 5000000,
-      "source": "both",
       "description": "선택형 최대 대미지 노드 3칸(3,000만~1억 2,000만)과 3,000만×3, 5,000만×2 노드의 합(최대 5억 5,000만)."
     },
     {
@@ -118,7 +107,6 @@
       "min": 0,
       "max": 8,
       "step": 1,
-      "source": "both",
       "description": "아칸 칸의 빛깔·등급. 아자젤과 같은 빛깔·등급이면 세트 효과(붉은빛 최대 대미지 5,000만/2,500만, 푸른빛 대미지 3/1.5)가 자동으로 붙는다.",
       "levels": [
         { "value": 0, "label": "없음", "effects": {} },
@@ -140,7 +128,6 @@
       "min": 0,
       "max": 8,
       "step": 1,
-      "source": "both",
       "description": "아자젤 칸의 빛깔·등급. 아칸과 같은 빛깔·등급이면 세트 효과가 자동으로 붙는다.",
       "levels": [
         { "value": 0, "label": "없음", "effects": {} },
@@ -163,7 +150,6 @@
       "min": 0,
       "max": 75,
       "step": 0.01,
-      "source": "both",
       "description": "축복 칸 가운데 물리·마법 공격력 옵션 값의 합(칸당 최대 15, 5칸). 직업 계열 공격력%에 더한다."
     },
     {
@@ -175,7 +161,6 @@
       "min": 0,
       "max": 71,
       "step": 0.01,
-      "source": "both",
       "description": "물리·마법 대미지 옵션 값의 합(축복 레벨 7 이상 유니크·레전더리, 칸당 최대 14.2). 직업 계열 대미지에 더한다."
     },
     {
@@ -187,7 +172,6 @@
       "min": 0,
       "max": 62.5,
       "step": 0.01,
-      "source": "both",
       "description": "보스 공격력 옵션 값의 합(칸당 최대 12.5)."
     },
     {
@@ -199,7 +183,6 @@
       "min": 0,
       "max": 45,
       "step": 0.01,
-      "source": "both",
       "description": "치명타 피해 옵션 값의 합(유니크 이상, 칸당 최대 9)."
     },
     {
@@ -211,7 +194,6 @@
       "min": 0,
       "max": 40.5,
       "step": 0.01,
-      "source": "both",
       "description": "최종 대미지 옵션 값의 합(유니크 이상, 칸당 최대 8.1)."
     },
     {
@@ -223,7 +205,6 @@
       "min": 0,
       "max": 16.5,
       "step": 0.01,
-      "source": "both",
       "description": "방어율 무시 옵션 값의 합(유니크 이상, 칸당 최대 3.3). 한 줄로 곱연산한다. 전투력에는 들어가지 않는다."
     },
     {
@@ -234,7 +215,6 @@
       "min": 0,
       "max": 4,
       "step": 1,
-      "source": "both",
       "description": "챔피언 등급. 효과는 누적이다(B 공격력% 4 → A 보공 4 → S 대미지 4 → SS 치피 4).",
       "levels": "unionChampion"
     },
@@ -246,7 +226,6 @@
       "min": 0,
       "max": 4,
       "step": 1,
-      "source": "both",
       "description": "챔피언 등급. 효과는 누적이다.",
       "levels": "unionChampion"
     },
@@ -258,7 +237,6 @@
       "min": 0,
       "max": 4,
       "step": 1,
-      "source": "both",
       "description": "챔피언 등급. 효과는 누적이다.",
       "levels": "unionChampion"
     },
@@ -270,7 +248,6 @@
       "min": 0,
       "max": 4,
       "step": 1,
-      "source": "both",
       "description": "챔피언 등급. 효과는 누적이다.",
       "levels": "unionChampion"
     },
@@ -282,8 +259,7 @@
       "min": 0,
       "max": 15,
       "step": 1,
-      "source": "both",
-      "description": "장착한 명예 배지(3칸). 전투 스탯이 있는 배지만 고를 수 있다. 보스 처치 배지는 maplemtool 표 기준.",
+      "description": "장착한 명예 배지(3칸). 전투 스탯이 있는 배지만 고를 수 있다.",
       "levels": "honorBadge"
     },
     {
@@ -294,7 +270,6 @@
       "min": 0,
       "max": 15,
       "step": 1,
-      "source": "both",
       "description": "장착한 명예 배지(3칸).",
       "levels": "honorBadge"
     },
@@ -306,7 +281,6 @@
       "min": 0,
       "max": 15,
       "step": 1,
-      "source": "both",
       "description": "장착한 명예 배지(3칸).",
       "levels": "honorBadge"
     },
@@ -318,7 +292,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 치명타 피해 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -333,7 +306,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 치명타 피해 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -348,7 +320,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 치명타 피해 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -363,7 +334,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 보스 공격력 +3%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -378,7 +348,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 보스 공격력 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -393,7 +362,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 보스 공격력 +1%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -408,7 +376,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 최종 대미지 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -423,7 +390,6 @@
       "min": 0,
       "max": 1,
       "step": 1,
-      "source": "both",
       "description": "지역 보상 완료 여부. 최종 대미지 +2%.",
       "levels": [
         { "value": 0, "label": "미완료", "effects": {} },
@@ -439,7 +405,6 @@
       "min": 0,
       "max": 2252,
       "step": 1,
-      "source": "both",
       "description": "API에 없는 개별 펫 공격력과 펫장비 강화 공격력의 합(최대 2,252). 루나 쁘띠 펫 레벨 L의 공격력은 L≤30이면 10×L, 그 위는 300+20×(L−30)(Lv.50=700). 1번 펫이 장비를 낀 루나 쁘띠면 펫장비 강화 0~10단계 100·102·104·106·110·115·120·127·134·143·152를 더한다. 루나 쁘띠가 아닌 펫은 칸당 4. 펫 세트·펫 장비 옵션은 API로 이미 더한다."
     }
   ],
@@ -461,13 +426,13 @@
       { "value": 6, "label": "보스 헌터 Lv.2 (치명타 피해 +3%)", "effects": { "criticalDamage": 3 } },
       { "value": 7, "label": "보스 헌터 Lv.3 (치명타 피해 +5%)", "effects": { "criticalDamage": 5 } },
       { "value": 8, "label": "보스 헌터 Lv.4 (치명타 피해 +7%)", "effects": { "criticalDamage": 7 } },
-      { "value": 9, "label": "해방된 무기의 주인 (보스 공격력 +2%)", "effects": { "bossDamage": 2 }, "source": "maplemtool" },
-      { "value": 10, "label": "욕망의 마녀 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" },
-      { "value": 11, "label": "검은 마법사의 친위대장 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" },
-      { "value": 12, "label": "타락한 빛의 초월자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" },
-      { "value": 13, "label": "선택받은 자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" },
-      { "value": 14, "label": "의지의 감시자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" },
-      { "value": 15, "label": "오염에 물든 연구자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 }, "source": "maplemtool" }
+      { "value": 9, "label": "해방된 무기의 주인 (보스 공격력 +2%)", "effects": { "bossDamage": 2 } },
+      { "value": 10, "label": "욕망의 마녀 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } },
+      { "value": 11, "label": "검은 마법사의 친위대장 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } },
+      { "value": 12, "label": "타락한 빛의 초월자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } },
+      { "value": 13, "label": "선택받은 자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } },
+      { "value": 14, "label": "의지의 감시자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } },
+      { "value": 15, "label": "오염에 물든 연구자 (보스 공격력 +3%)", "effects": { "bossDamage": 3 } }
     ]
   }
 }

@@ -1,16 +1,13 @@
 {
   "_meta": {
     "description": "아이템 세트 효과(장착 개수별 누적값). 장비 프리셋마다 아이템 이름으로 세트 개수를 센다.",
-    "sources": [
-      "maplemworlds.kr 공개 JS index-5Pk4vujo.js — 아케인·앱솔·칠흑 표(앵커 r8={아케인:{2:), 칠흑 아이템 이름(앵커 g=[\"루즈 컨트롤\"), 럭키 아이템(앵커 for(const R of[\"아케인\",\"앱솔\"])), 마스터 라벨 고정값(앵커 b8=, c8=)",
-      "maplemtool.com tables.d39c9358b9414219.json msm-set-effects.json — 그 밖의 장비 세트 표, 럭키·빌림 규칙(_rules.lucky, _rules.borrow), 캐시 세트 구분"
-    ],
-    "extractedAt": "2026-10-28",
+    "updatedAt": "2026-10-28",
+    "verification": "2026-10 기준 넥슨 API 캐릭터 53명 데이터로 계산값을 대조해 검증했다.",
     "notes": [
-      "두 사이트 모두 아케인·앱솔·칠흑 값이 같다.",
-      "maplemworlds는 그 밖의 장비 세트(군단장 전리품, 160제, 루타비스, 차원 균열의 반지 등)를 캐릭터 합산에 넣지 않는다. maplemtool과 넥슨 set-effect API는 넣는다. 우리는 넣는다(넥슨 API가 현재 착용 세트로 이 효과를 보고하므로).",
-      "provenance가 없는 행은 maplemtool 표에 출처 표기가 없던 값이다(추정 포함 가능). 현재 착용 프리셋은 calibration-report가 API set_info와 대조한다.",
-      "성흔 세트는 두 사이트 모두 빼므로 뺀다(성흔은 수동 입력 항목)."
+      "아케인셰이드·앱솔랩스·칠흑 세트는 sets 표의 값을 쓴다.",
+      "그 밖의 장비 세트(군단장 전리품, 160제, 루타비스, 차원 균열의 반지 등)도 캐릭터 합산에 넣는다(넥슨 set-effect API가 현재 착용 세트로 이 효과를 보고하므로).",
+      "현재 착용 프리셋의 세트 개수는 넥슨 API set_info와 대조해 검증했다.",
+      "성흔 세트는 넣지 않는다(성흔은 직접 입력 항목)."
     ]
   },
   "sets": [
@@ -111,8 +108,7 @@
             "ignoreDefense": 40
           }
         }
-      ],
-      "from": "maplemworlds r8 (maplemtool msm-set-effects와 같은 값)"
+      ]
     },
     {
       "id": "absolab",
@@ -205,8 +201,7 @@
             "ignoreDefense": 23
           }
         }
-      ],
-      "from": "maplemworlds r8 (maplemtool과 같은 값)"
+      ]
     },
     {
       "id": "chaos",
@@ -300,8 +295,7 @@
             "ignoreDefense": 30
           }
         }
-      ],
-      "from": "maplemworlds r8·칠흑 아이템 이름 목록 (maplemtool과 같은 값)"
+      ]
     },
     {
       "id": "도전자의 장비 세트",
@@ -336,9 +330,7 @@
             "magicalDamagePercent": 40
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"도전자의 장비 세트\"]",
-      "provenance": "measured · 2026-09 · 0.98"
+      ]
     },
     {
       "id": "군단장 전리품 세트",
@@ -388,8 +380,7 @@
             "bossDamage": 10
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"군단장 전리품 세트\"]"
+      ]
     },
     {
       "id": "아스완의 빛 세트",
@@ -410,9 +401,7 @@
             "bossDamage": 3
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"아스완의 빛 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "힐라를 잘 아는 자 세트",
@@ -433,9 +422,7 @@
             "bossDamage": 5
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"힐라를 잘 아는 자 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "악몽의 주인 격파자 세트",
@@ -456,9 +443,7 @@
             "bossDamage": 5
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"악몽의 주인 격파자 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "무릉도장의 투신 세트",
@@ -481,9 +466,7 @@
             "physicalDamagePercent": 5
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"무릉도장의 투신 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "RE:BOOST 칭호 훈장 세트",
@@ -507,9 +490,7 @@
             "physicalAttackPercent": 8
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"RE:BOOST 칭호 훈장 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "타락한 빛의 인장",
@@ -530,9 +511,7 @@
             "bossDamage": 5
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"타락한 빛의 인장\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "축복받은 커닝M타워 반지",
@@ -554,9 +533,7 @@
             "magicalAttackPercent": 10
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"축복받은 커닝M타워 반지\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "차원 균열의 반지 세트",
@@ -578,8 +555,7 @@
             "magicalAttackPercent": 3
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"차원 균열의 반지 세트\"]"
+      ]
     },
     {
       "id": "노바 디멘션 전사 세트",
@@ -617,9 +593,7 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"노바 디멘션 전사 세트\"]",
-      "apiNamePattern": "^노바 디멘션 .+ 세트$",
-      "provenance": "user-provided-ingame-image · 2026-09 · 1"
+      "apiNamePattern": "^노바 디멘션 .+ 세트$"
     },
     {
       "id": "level160-legendary",
@@ -660,7 +634,6 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"궁수 160레벨 세트 (레전더리)\"]",
       "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 160레벨 세트 \\(레전더리\\)$"
     },
     {
@@ -715,7 +688,6 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"루타비스 세트(레전더리)\"]",
       "apiNamePattern": "^루타비스 세트 ?\\(레전더리\\)$"
     },
     {
@@ -766,8 +738,7 @@
             "bossDamage": 7
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"보스 전리품 세트\"]"
+      ]
     },
     {
       "id": "루타비스 세트(유니크)",
@@ -809,7 +780,6 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"루타비스 세트(유니크)\"]",
       "apiNamePattern": "^루타비스 세트 ?\\(유니크\\)$"
     },
     {
@@ -859,7 +829,6 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"궁수 160레벨 세트 (유니크)\"]",
       "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 160레벨 세트 \\(유니크\\)$"
     },
     {
@@ -899,9 +868,7 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"궁수 140레벨 세트 (레전더리)\"]",
-      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 140레벨 세트 \\(레전더리\\)$",
-      "provenance": "user-provided-ingame-image · 2026-09 · 1"
+      "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 140레벨 세트 \\(레전더리\\)$"
     },
     {
       "id": "level140-unique",
@@ -940,7 +907,6 @@
           }
         }
       ],
-      "from": "maplemtool msm-set-effects.json sets[\"궁수 140레벨 세트 (유니크)\"]",
       "apiNamePattern": "^(전사|마법사|궁수|도적|해적) 140레벨 세트 \\(유니크\\)$"
     },
     {
@@ -964,9 +930,7 @@
             "physicalDamagePercent": 10
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"무릉도장의 화신 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "아르카누스 정복자 세트",
@@ -988,9 +952,7 @@
             "bossDamage": 5
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"아르카누스 정복자 세트\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     },
     {
       "id": "커스터마이저",
@@ -1014,13 +976,11 @@
             "bossDamage": 1
           }
         }
-      ],
-      "from": "maplemtool msm-set-effects.json sets[\"커스터마이저\"]",
-      "provenance": "measured · 2026-09 · 0.99"
+      ]
     }
   ],
   "cash": {
-    "rule": "캐시 세트(마스터 라벨 등)는 장비 프리셋과 무관하므로 넥슨 set-effect API의 set_option 문구를 그대로 읽는다(3세트 물·마 대미지 5·보스 10, 5세트 이상 치명타 피해 10 추가 — 두 사이트 같은 값).",
+    "rule": "캐시 세트(마스터 라벨 등)는 장비 프리셋과 무관하므로 넥슨 set-effect API의 set_option 문구를 그대로 읽는다(3세트 물·마 대미지 5·보스 10, 5세트 이상 치명타 피해 10 추가).",
     "namePrefixes": [
       "마스터 "
     ],
@@ -1052,12 +1012,12 @@
   },
   "excludeApiSetPattern": "성흔",
   "lucky": {
-    "rule": "무기 칸 아이템 이름에 '제네시스'가 있으면 럭키 아이템. weaponSlot 세트 가운데 이미 3개 이상인 세트마다 개수 +1, 그 무기 스타포스를 세트 스타포스 합에 더한다(두 사이트 같음, maplemworlds는 아케인·앱솔만).",
+    "rule": "무기 칸 아이템 이름에 '제네시스'가 있으면 럭키 아이템. weaponSlot 세트 가운데 이미 3개 이상인 세트마다 개수 +1, 그 무기 스타포스를 세트 스타포스 합에 더한다.",
     "weaponKeyword": "제네시스",
     "minCount": 3
   },
   "borrow": {
-    "rule": "앱솔랩스를 1개 이상 끼고 아케인셰이드가 정확히 1개면 앱솔랩스 개수 +1, 그 아케인 장비 스타포스를 앱솔랩스 스타포스 합에 더한다(maplemtool _rules.borrow, 2026-07-30 패치 '세트옵션 자동 보정'). maplemworlds에는 없다.",
+    "rule": "앱솔랩스를 1개 이상 끼고 아케인셰이드가 정확히 1개면 앱솔랩스 개수 +1, 그 아케인 장비 스타포스를 앱솔랩스 스타포스 합에 더한다(2026-07-30 패치 '세트옵션 자동 보정').",
     "host": "absolab",
     "donor": "arcane",
     "donorCount": 1

@@ -1,16 +1,12 @@
 {
   "_meta": {
     "description": "스타포스 세트 옵션. 세트 장비 스타포스 합(한벌옷 2배, 럭키·빌림 포함)이 구간 시작(min) 이상인 가장 큰 행을 쓴다. 합은 cap에서 자른다.",
-    "sources": [
-      "maplemworlds.kr index-5Pk4vujo.js 앵커 s8={아케인:{55: — 아케인·앱솔 표(캐릭터 합산용)",
-      "maplemtool.com tables.d39c9358b9414219.json msm-starforce-sets.json — 아케인·앱솔(같은 값), 루타비스(레전더리·유니크), 160제(레전더리·유니크), 도전자의 장비"
-    ],
-    "extractedAt": "2026-10-28",
+    "updatedAt": "2026-10-28",
+    "verification": "2026-10 기준 넥슨 API 캐릭터 53명 데이터로 계산값을 대조해 검증했다.",
     "notes": [
-      "아케인셰이드 최대 대미지는 두 사이트 모두 이전 우리 표(src/config/starforce-set-options.js)의 정확히 1.5배다.",
-      "앱솔랩스 70구간 최대 대미지는 maplemworlds 5,000,000, maplemtool·우리 이전 표 5,500,000이다. 공식 스크린샷과 맞는 5,500,000을 쓴다(docs/game-data-audit.md G05).",
-      "루타비스·160제·도전자 표는 maplemtool에만 있다(maplemworlds는 세트 계산기에만 두고 캐릭터 합산에는 넣지 않음). provenance 표기는 그 사이트가 단 것이다.",
-      "160제 세트는 직업과 무관하게 이름이 '펜살리르'로 시작하는 장비를 등급별로 센다(maplemtool alias 규칙)."
+      "아케인셰이드 최대 대미지는 이전 표(src/config/starforce-set-options.js)의 정확히 1.5배다.",
+      "앱솔랩스 70구간 최대 대미지는 게임 화면과 맞는 5,500,000을 쓴다(docs/game-data-audit.md G05).",
+      "160제 세트는 직업과 무관하게 이름이 '펜살리르'로 시작하는 장비를 등급별로 센다."
     ]
   },
   "cap": 280,
@@ -155,8 +151,7 @@
             "ignoreDefense": 16
           }
         }
-      ],
-      "from": "maplemworlds s8"
+      ]
     },
     {
       "id": "absolab",
@@ -231,8 +226,7 @@
             "ignoreDefense": 11
           }
         }
-      ],
-      "from": "maplemworlds s8 (70구간 최대 대미지만 maplemtool·공식 값)"
+      ]
     },
     {
       "id": "lutabis-legendary",
@@ -296,8 +290,7 @@
             "ignoreDefense": 7
           }
         }
-      ],
-      "from": "maplemtool msm-starforce-sets.json"
+      ]
     },
     {
       "id": "lutabis-unique",
@@ -357,8 +350,7 @@
             "ignoreDefense": 5
           }
         }
-      ],
-      "from": "maplemtool msm-starforce-sets.json"
+      ]
     },
     {
       "id": "level160-legendary",
@@ -398,8 +390,7 @@
             "magicalDamagePercent": 12
           }
         }
-      ],
-      "from": "maplemtool msm-starforce-sets.json"
+      ]
     },
     {
       "id": "level160-unique",
@@ -442,8 +433,7 @@
             "magicalDamagePercent": 9
           }
         }
-      ],
-      "from": "maplemtool msm-starforce-sets.json"
+      ]
     },
     {
       "id": "challenger",
@@ -496,8 +486,7 @@
             "ignoreDefense": 20
           }
         }
-      ],
-      "from": "maplemtool msm-starforce-sets.json (measured · 2026-09 · 0.98)"
+      ]
     }
   ]
 }

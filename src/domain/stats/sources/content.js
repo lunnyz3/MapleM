@@ -69,7 +69,7 @@ function guildContributions(details) {
   return contributions;
 }
 
-// Symbols with the same option text are shown as one row (maplemworlds).
+// Symbols with the same option text are shown as one row.
 function symbolContributions(details) {
   const data = details?.symbol?.data || {};
   const symbols = [...toArray(data.arcane_symbol), ...toArray(data.authentic_symbol), ...toArray(data.grand_symbol)];
@@ -274,7 +274,7 @@ function linkContributions(option, character) {
   );
 
   // The character's own link (Lv.1/2/3 at character level 70/120/260), capped at the link's
-  // max level together with the same link in the preset (maplemtool rule).
+  // max level together with the same link in the preset.
   const self = selfLinkFor(character.className);
   const natural = selfLinkLevel(character.level);
   if (self && natural > 0) {

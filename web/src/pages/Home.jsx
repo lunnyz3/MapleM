@@ -1,15 +1,15 @@
-// 새 메인 대시보드: 검색 히어로 · 내 캐릭터(즐겨찾기·최근 검색) · 바로가기 · 랭킹 미리보기 · 오늘의 최고 기록.
+// 새 메인: 검색 · 내 캐릭터(즐겨찾기·최근 검색) · 랭킹 미리보기 · 랭킹 바로가기.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
 import { Card } from "../components/Card.jsx";
 import { Cloud, Leaf, Sparkle } from "../components/Decor.jsx";
+import { Freshness } from "../components/Freshness.jsx";
+import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, BlurText, Reveal, spotlightHandlers } from "../components/Motion.jsx";
+import { Aurora, CountUp, Particles, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
-import { SourceStamp } from "../components/SourceStamp.jsx";
-import { StatTile } from "../components/StatTile.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { TabPanel, Tabs } from "../components/Tabs.jsx";
 import { loadRanking, peekRanking } from "../lib/api.js";
@@ -20,11 +20,13 @@ import { addRecent, clearRecent, entryKey, getSaved, removeRecent, toggleFavorit
 /** @typedef {import("../lib/api.js").RankingResult} RankingResult */
 /** @typedef {{ status: "loading" } | { status: "ready", result: RankingResult } | { status: "error", error: any }} LoadState */
 
+/** 검색만 있는 하늘 영역(오로라 · 입자 · 구름 · 단풍잎 장식). */
 function Hero() {
   return (
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero" aria-label="캐릭터·길드 검색">
       <div class="hero__sky" aria-hidden="true">
         <Aurora tone="sky" />
+        <Particles count={22} />
         <Cloud class="hero__cloud hero__cloud--1" width={260} />
         <Cloud class="hero__cloud hero__cloud--2" width={150} />
         <Cloud class="hero__cloud hero__cloud--3" width={120} />
@@ -36,17 +38,6 @@ function Hero() {
         <Sparkle class="hero__sparkle hero__sparkle--3" size={12} />
       </div>
       <div class="hero__content">
-        <p class="hero__eyebrow">
-          <Leaf size={16} />
-          메이플스토리M 캐릭터·길드 검색
-        </p>
-        <h1 id="hero-title" class="hero__title">
-          <BlurText text="모험가의 오늘을" />{" "}
-          <em>
-            <BlurText text="한눈에" stagger={0} class="hero__title-em" />
-          </em>
-        </h1>
-        <p class="hero__lead">넥슨 Open API 공식 데이터로 장비·스탯·랭킹을 빠르게 확인하세요.</p>
         <SearchBox id="hero-search" size="lg" />
       </div>
     </section>
@@ -54,20 +45,20 @@ function Hero() {
 }
 
 /**
- * @param {{ entry: import("../lib/storage.js").SavedEntry, list: "favorites" | "recent", favorite: boolean, onRemoved: () => void }} props
+ * @param {{ entry: import("../lib/storage.js").SavedEntry, list: "favorites" | "recent", favorite: boolean, onRemoved: () => void, index?: number }} props
  */
-function SavedItem({ entry, list, favorite, onRemoved }) {
+function SavedItem({ entry, list, favorite, onRemoved, index = 0 }) {
   const key = entryKey(entry);
-  const kindText = entry.kind === "guild" ? "길드" : "캐릭터";
   return (
-    <li class="saved-item">
-      <a class="saved-item__link" href={detailUrl(entry.kind, entry.world, entry.name)} onClick={() => addRecent(entry)}>
+    <li class="saved-item" style={{ "--stagger": index }}>
+      <a class="saved-item__link spotlight" href={detailUrl(entry.kind, entry.world, entry.name)} onClick={() => addRecent(entry)} {...spotlightHandlers()}>
         <Avatar kind={entry.kind} world={entry.world} name={entry.name} size={44} />
         <span class="saved-item__text">
           <span class="saved-item__name">{entry.name}</span>
           <span class="saved-item__meta">
-            {entry.world} · {kindText}
-            {list === "recent" && entry.at ? ` · ${formatRelativeTime(entry.at)}` : ""}
+            <WorldIcon world={entry.world} />
+            {entry.kind === "guild" ? <Icon name="flag" size={14} /> : null}
+            {list === "recent" && entry.at ? <span>{formatRelativeTime(entry.at)}</span> : null}
           </span>
         </span>
       </a>
@@ -118,7 +109,6 @@ function MyCharacters() {
       title="내 캐릭터"
       icon="heart"
       tone="peach"
-      description="로그인 없이 이 브라우저에만 저장돼요"
       action={
         tab === "recent" && recent.length ? (
           <button type="button" class="btn btn--ghost btn--sm" onClick={() => (clearRecent(), focusPanel())}>
@@ -140,22 +130,15 @@ function MyCharacters() {
       />
       <TabPanel idBase="my" value={tab} panelRef={panelRef} class="mychars__panel">
         {list.length ? (
-          <ul class="saved-list">
-            {list.slice(0, 5).map((entry) => (
-              <SavedItem key={entryKey(entry)} entry={entry} list={tab} favorite={favoriteKeys.has(entryKey(entry))} onRemoved={focusPanel} />
+          <ul class="saved-list stagger-in">
+            {list.slice(0, 5).map((entry, index) => (
+              <SavedItem key={entryKey(entry)} index={index} entry={entry} list={tab} favorite={favoriteKeys.has(entryKey(entry))} onRemoved={focusPanel} />
             ))}
-            {list.length < 4 ? (
-              <li class="saved-list__hint">
-                <Icon name={tab === "favorites" ? "heart" : "clock"} size={18} />
-                {tab === "favorites" ? "최근 검색에서 하트를 누르면 여기에 추가돼요" : "검색한 캐릭터·길드는 10개까지 저장돼요"}
-              </li>
-            ) : null}
           </ul>
         ) : tab === "favorites" ? (
           <EmptyState
             compact
             title="아직 즐겨찾기가 없어요"
-            description="최근 검색 목록의 하트를 누르면 여기에 모여요."
             action={
               recent.length ? (
                 <button type="button" class="btn btn--secondary" onClick={() => setTab("recent")}>
@@ -169,7 +152,6 @@ function MyCharacters() {
             compact
             art="search"
             title="최근 검색한 캐릭터가 없어요"
-            description="캐릭터를 검색하면 여기서 바로 다시 볼 수 있어요."
             action={
               <button type="button" class="btn btn--secondary" onClick={() => requestSearchFocus("character")}>
                 <Icon name="search" size={20} />
@@ -183,79 +165,51 @@ function MyCharacters() {
   );
 }
 
-function Shortcuts() {
+/** 랭킹 바로가기: 7종을 정해진 순서대로(틸트 + 스포트라이트 타일). */
+function RankingShortcuts() {
   return (
-    <section class="shortcuts" aria-labelledby="shortcuts-title">
-      <h2 id="shortcuts-title" class="sr-only">
-        바로가기
-      </h2>
-      <Card class="shortcuts__lookup" title="빠른 조회" icon="search" tone="sky" headingLevel={3} description="이름으로 바로 찾기">
-        <div class="lookup-tiles">
-          <button type="button" class="lookup-tile tone-sky spotlight" {...spotlightHandlers()} onClick={() => requestSearchFocus("character")}>
-            <span class="lookup-tile__icon">
-              <Icon name="user" size={26} />
-            </span>
-            <span class="lookup-tile__text">
-              <strong>캐릭터 조회</strong>
-              <span>장비 · 스탯 · 성장 기록</span>
-            </span>
-            <Icon name="arrowRight" size={20} class="lookup-tile__go" />
-          </button>
-          <button type="button" class="lookup-tile tone-mint spotlight" {...spotlightHandlers()} onClick={() => requestSearchFocus("guild")}>
-            <span class="lookup-tile__icon">
-              <Icon name="flag" size={26} />
-            </span>
-            <span class="lookup-tile__text">
-              <strong>길드 조회</strong>
-              <span>길드 정보 · 길드원</span>
-            </span>
-            <Icon name="arrowRight" size={20} class="lookup-tile__go" />
-          </button>
-        </div>
-      </Card>
-
-      <Card class="shortcuts__rankings" title="랭킹 바로가기" icon="trophy" tone="gold" headingLevel={3} description="넥슨 공식 랭킹 9종">
-        <ul class="ranking-tiles">
-          {RANKING_TYPES.map((type) => (
-            <li key={type.id}>
+    <Card class="shortcuts" title="랭킹 바로가기" icon="trophy" tone="gold">
+      <ul class="ranking-tiles stagger-in">
+        {RANKING_TYPES.map((type, index) => (
+          <li key={type.id} style={{ "--stagger": index }}>
+            <Tilt maxDeg={12} scale={1.04} class="ranking-tile__tilt">
               <a class={`ranking-tile tone-${type.tone} spotlight`} href={urls.ranking(type.id)} {...spotlightHandlers()}>
                 <span class="ranking-tile__icon">
                   <Icon name={type.icon} size={22} />
                 </span>
-                <span class="ranking-tile__text">
-                  <strong>{type.name}</strong>
-                  <span>{type.desc}</span>
-                </span>
+                <strong class="ranking-tile__name">{type.name}</strong>
+                <Icon name="arrowRight" size={18} class="ranking-tile__go" />
               </a>
-            </li>
-          ))}
-        </ul>
-      </Card>
-    </section>
+            </Tilt>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 
 /**
- * @param {{ type: import("../lib/game.js").RankingType, row: Record<string, any> }} props
+ * @param {{ type: import("../lib/game.js").RankingType, row: Record<string, any>, index: number }} props
  */
-function RankRow({ type, row }) {
+function RankRow({ type, row, index }) {
   const isGuild = type.subject === "guild";
   const name = String((isGuild ? row.guild_name : row.character_name) || "-");
   const world = String(row.world_name || "");
   const value = type.value(row);
   const rank = Number(row.ranking) || 0;
+  const number = toNumber(row[type.field]);
   return (
-    <li>
-      <a class={`rank-row${rank === 1 ? " rank-row--first" : ""}`} href={detailUrl(type.subject, world, name)}>
+    <li class="rank-list__item" style={{ "--stagger": index }}>
+      <a class={`rank-row spotlight${rank === 1 ? " rank-row--first" : ""}`} href={detailUrl(type.subject, world, name)} {...spotlightHandlers()}>
         <RankBadge rank={rank} />
         <Avatar kind={type.subject} world={world} name={name} src={isGuild ? row.guild_mark_icon || "" : ""} size={44} />
         <span class="rank-row__who">
           <span class="rank-row__name">{name}</span>
-          <span class="rank-row__meta">{type.meta(row).join(" · ")}</span>
+          <RowMeta type={type} row={row} max={2} class="rank-row__meta" />
         </span>
         <span class="rank-row__value num" title={value.full}>
           {value.prefix ? <span class="rank-row__affix">{value.prefix}</span> : null}
-          {value.text}
+          {number !== null ? <CountUp value={number} format={type.big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n)} duration={800} /> : value.text}
           {value.unit ? <span class="rank-row__affix">{value.unit}</span> : null}
         </span>
       </a>
@@ -295,14 +249,8 @@ function useRanking(typeId) {
   return [state, () => setAttempt((count) => count + 1)];
 }
 
-/** @param {RankingResult | undefined} result */
-function stampNote(result) {
-  if (!result?.date || result.date === result.requestedDate) return "";
-  return "최근 집계일 기준";
-}
-
 function RankingPreview() {
-  const [typeId, setTypeId] = useState("level");
+  const [typeId, setTypeId] = useState(RANKING_TYPES[0].id);
   const type = getRankingType(typeId);
   const [state, retry] = useRanking(typeId);
   const result = state.status === "ready" ? state.result : undefined;
@@ -310,10 +258,9 @@ function RankingPreview() {
   return (
     <Card
       class="ranking-card"
-      title="랭킹 미리보기"
+      title="랭킹"
       icon="trophy"
       tone="gold"
-      description={`${type.label} · ${type.metric} 상위 5`}
       action={
         <a class="text-link" href={urls.ranking(type.id)}>
           전체 보기
@@ -346,9 +293,9 @@ function RankingPreview() {
           />
         ) : null}
         {result && result.rows.length ? (
-          <ol class="rank-list" aria-label={`${type.label} 상위 ${result.rows.length}명`}>
-            {result.rows.map((row) => (
-              <RankRow key={`${row.ranking}-${row.character_name || row.guild_name}`} type={type} row={row} />
+          <ol class="rank-list stagger-in" aria-label={`${type.label} 상위 ${result.rows.length}명`}>
+            {result.rows.map((row, index) => (
+              <RankRow key={`${row.ranking}-${row.character_name || row.guild_name}`} type={type} row={row} index={index} />
             ))}
           </ol>
         ) : null}
@@ -356,7 +303,6 @@ function RankingPreview() {
           <EmptyState
             compact
             title="최근 집계된 랭킹이 없어요"
-            description="넥슨 랭킹은 하루 한 번 집계돼요. 다른 날짜를 골라 보세요."
             action={
               <a class="btn btn--secondary" href={urls.ranking(type.id)}>
                 다른 날짜 보기
@@ -366,75 +312,9 @@ function RankingPreview() {
         ) : null}
       </TabPanel>
       <footer class="ranking-card__foot">
-        <SourceStamp date={result?.date} note={stampNote(result)} />
-        <span class="ranking-card__hint">이름을 누르면 상세 정보로 이동해요</span>
+        <Freshness date={result?.date} />
       </footer>
     </Card>
-  );
-}
-
-const RECORDS = [
-  { type: "level", label: "레벨", icon: "crown", tone: "gold", field: "character_level", big: false },
-  { type: "combat-power", label: "전투력", icon: "bolt", tone: "peach", field: "character_combat_power", big: true },
-  { type: "dojang", label: "무릉도장", icon: "gate", tone: "mint", field: "dojang_floor", big: false },
-  { type: "root-of-time", label: "시간의 근원", icon: "hourglass", tone: "lavender", field: "max_damage", big: true }
-];
-
-function TodayRecords() {
-  /** @type {[Record<string, LoadState>, any]} */
-  const [states, setStates] = useState({});
-
-  useEffect(() => {
-    let alive = true;
-    for (const record of RECORDS) {
-      loadRanking(record.type).then(
-        (result) => alive && setStates((prev) => ({ ...prev, [record.type]: { status: "ready", result } })),
-        (error) => alive && setStates((prev) => ({ ...prev, [record.type]: { status: "error", error } }))
-      );
-    }
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const levelState = states.level;
-  const stampDate = levelState?.status === "ready" ? levelState.result.date : null;
-
-  return (
-    <section class="records" aria-labelledby="records-title">
-      <header class="records__head">
-        <h2 id="records-title" class="section-title">
-          <Sparkle size={18} class="section-title__mark" />
-          오늘의 최고 기록
-        </h2>
-        <p class="records__desc">공식 랭킹 1위</p>
-      </header>
-      <div class="records__grid">
-        {RECORDS.map((record) => {
-          const state = states[record.type];
-          const type = getRankingType(record.type);
-          const row = state?.status === "ready" ? state.result.rows[0] : undefined;
-          const value = row ? type.value(row) : null;
-          return (
-            <StatTile
-              key={record.type}
-              label={record.label}
-              icon={record.icon}
-              tone={/** @type {any} */ (record.tone)}
-              href={urls.ranking(record.type)}
-              loading={!state}
-              value={value?.text ?? "-"}
-              prefix={value?.prefix}
-              unit={value?.unit}
-              full={value?.full}
-              count={row ? { value: toNumber(row[record.field]), format: record.big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n) } : undefined}
-              sub={row ? `${row.character_name} · ${row.world_name}` : state?.status === "error" ? "불러오지 못했어요" : "기록 없음"}
-            />
-          );
-        })}
-      </div>
-      <SourceStamp date={stampDate} class="records__stamp" />
-    </section>
   );
 }
 
@@ -445,10 +325,9 @@ export function Home() {
         <Hero />
         <MyCharacters />
       </div>
-      <Shortcuts />
       <div class="home-data">
         <RankingPreview />
-        <TodayRecords />
+        <RankingShortcuts />
       </div>
     </div>
   );

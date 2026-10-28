@@ -14,16 +14,12 @@ function cleanNumber(value) {
 }
 
 /**
- * Totals of every stat. 방어율 무시 multiplies every option line: 1 − Π(1 − v/100)
- * (maplemworlds; the arcane set and arcane starforce option count as one line). Everything
- * else is a plain sum.
+ * Totals of every stat. 방어율 무시 multiplies every option line: 1 − Π(1 − v/100) (the arcane
+ * set and arcane starforce option count as one line). Everything else is a plain sum.
  *
- * maplemtool groups before multiplying instead: the lines of one item are summed, a set and
- * its own starforce set are summed, and all non-equipment sources (jewel, HEXA stat, …) are
- * summed into one term. Both rules reproduce their site on 47/48 characters
- * (docs/research/calibration/README.md 2-2); maplemworlds' rule is the operator's reference,
- * so it is the one used here. Line-level factors are kept on each contribution, so switching
- * would only change how `factors` are grouped below.
+ * Line-level factors are kept on each contribution, so grouping lines differently (for
+ * example summing per item before multiplying) would only change how `factors` are grouped
+ * below.
  */
 function sumContributions(contributions) {
   const totals = emptyTotals();
@@ -45,8 +41,8 @@ function sumContributions(contributions) {
 }
 
 /**
- * Level base attack goes to whichever flat attack (physical or magical) is larger, as both
- * reference sites build flat attack from sources instead of reading the API stat.
+ * Level base attack goes to whichever flat attack (physical or magical) is larger; flat attack
+ * is built from sources instead of read from the API stat.
  */
 function baseAttackContribution(level, totals) {
   const value = levelBaseAttack(level);

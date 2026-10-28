@@ -4,7 +4,14 @@
 const { env } = require("../config/env");
 const { normalizeWorldName } = require("../config/worlds");
 const { buildCharacterStats, listManualInputs, normalizeManualInputs } = require("../domain/stats");
-const { resolveOcid, fetchCharacterDetails, getErrorInfo, resolveAttackType } = require("./maplestorym.controller");
+const {
+  resolveOcid,
+  fetchCharacterDetails,
+  getErrorInfo,
+  resolveAttackType,
+  readStatValue
+} = require("./maplestorym.controller");
+const { observeCombatPower } = require("../services/combat-power.service");
 
 // The body is a world, a name and at most a few dozen numbers.
 const MAX_BODY_BYTES = 4096;
@@ -79,10 +86,11 @@ async function postCharacterStats(req, res) {
   const { query, nexonWorldName, values, warnings } = parsed;
 
   let details;
+  let ocid;
   try {
     // Same cached Nexon client as page-data; nothing is written to the request log.
     const ocidResult = await resolveOcid(query.characterName, query.worldNameCanonical, nexonWorldName, { shouldLog: false });
-    const ocid = ocidResult?.data?.ocid;
+    ocid = ocidResult?.data?.ocid;
     if (!ocid) {
       return res.status(502).json({ ok: false, message: "OCID was not returned from Nexon API", query });
     }
@@ -105,6 +113,11 @@ async function postCharacterStats(req, res) {
     return res.status(500).json({ ok: false, message: "stat engine failed", query });
   }
 
+  // Highest 전투력 seen in the last 24 hours, this lookup included ({ value, observedAt }).
+  const combatPower = await observeCombatPower(ocid, [
+    { value: readStatValue(details?.stat?.data, "전투력"), source: "stat" }
+  ]);
+
   const basic = details?.basic?.data || {};
   return res.json({
     ok: true,
@@ -118,7 +131,8 @@ async function postCharacterStats(req, res) {
         className: basic.character_class,
         jobName: basic.character_job_name
       }),
-      imageUrl: basic.character_image || basic.character_icon || ""
+      imageUrl: basic.character_image || basic.character_icon || "",
+      combatPower
     },
     majorStats: stats.majorStats,
     majorStatsCurrent: stats.majorStatsCurrent,

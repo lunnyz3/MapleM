@@ -25,12 +25,56 @@ export const RANKING_DATE_FLOOR = "2025-11-27";
  * @property {string} short     탭 이름
  * @property {string} icon
  * @property {Tone} tone
- * @property {string} desc      바로가기 설명
  * @property {SearchKind} subject
  * @property {string} metric    값 이름
  * @property {(row: Record<string, any>) => RankingValue} value
- * @property {(row: Record<string, any>) => string[]} meta
+ * @property {(row: Record<string, any>) => string[]} meta   이름 아래 보조 글자(월드·등급 글자는 넣지 않는다)
+ * @property {(row: Record<string, any>) => { src: string, label: string }} [grade]  등급 아이콘
+ * @property {string} field     핵심 값 필드(카운트업용)
+ * @property {boolean} [big]    큰 수(한국식 단위)
  */
+
+/** 월드 → 아이콘(public/assets) */
+const WORLD_ICON_FILES = {
+  스카니아: "scania",
+  루나: "luna",
+  제니스: "zenith",
+  크로아: "croa",
+  유니온: "union",
+  엘리시움: "elysium",
+  아케인: "arcane"
+};
+
+/** @param {string} world */
+export function worldIconSrc(world) {
+  const file = WORLD_ICON_FILES[/** @type {keyof typeof WORLD_ICON_FILES} */ (String(world || "").trim())];
+  return file ? `/assets/${file}.png` : "";
+}
+
+/**
+ * 등급 이름("마스터", "그랜드마스터 3", "슈프림 V") → 기본 등급 아이콘. API 아이콘이 없을 때만 쓴다.
+ * @param {string} name
+ */
+export function gradeFallbackIcon(name) {
+  const text = String(name || "").replace(/\s+/g, "").toLowerCase();
+  if (!text) return "";
+  const roman = { i: 1, ii: 2, iii: 3, iv: 4, v: 5 };
+  const digit = text.match(/([1-5])$/);
+  const romanMatch = text.match(/(iv|v|i{1,3})$/);
+  const level = digit ? Number(digit[1]) : romanMatch ? roman[/** @type {keyof typeof roman} */ (romanMatch[1])] : 1;
+  const key = text.includes("슈프림") || text.includes("supreme")
+    ? "supreme"
+    : text.includes("그랜드") || text.includes("grandmaster")
+      ? "grandmaster"
+      : text.includes("마스터") || text.includes("master")
+        ? "master"
+        : text.includes("베테랑") || text.includes("veteran")
+          ? "veteran"
+          : text.includes("노비스") || text.includes("nobis") || text.includes("novice")
+            ? "nobis"
+            : "";
+  return key ? `/assets/ico-${key}${level}.png` : "";
+}
 
 /** @param {unknown} v @param {string} [unit] @param {string} [prefix] @returns {RankingValue} */
 const plain = (v, unit, prefix) => ({ text: formatComma(v), unit, prefix, full: `${prefix || ""}${formatComma(v)}${unit || ""}` });
@@ -41,7 +85,11 @@ const compact = (...parts) => parts.map((part) => String(part ?? "").trim()).fil
 /** @param {Record<string, any>} row */
 const levelText = (row) => (row.character_level ? `Lv.${row.character_level}` : "");
 
-/** @type {RankingType[]} */
+/**
+ * 랭킹 종류. 화면(탭·바로가기·미리보기)은 이 순서를 그대로 따른다.
+ * meta 에는 월드·등급 글자를 넣지 않는다(월드는 아이콘, 등급은 grade 아이콘으로 보여준다).
+ * @type {RankingType[]}
+ */
 export const RANKING_TYPES = [
   {
     id: "level",
@@ -50,76 +98,11 @@ export const RANKING_TYPES = [
     short: "종합",
     icon: "crown",
     tone: "gold",
-    desc: "레벨 순위",
     subject: "character",
     metric: "레벨",
     value: (row) => plain(row.character_level, "", "Lv."),
-    meta: (row) => compact(row.character_class, row.world_name, row.guild_name && `${row.guild_name} 길드`)
-  },
-  {
-    id: "union",
-    label: "유니온 랭킹",
-    name: "유니온",
-    short: "유니온",
-    icon: "union",
-    tone: "sky",
-    desc: "유니온 레벨",
-    subject: "character",
-    metric: "유니온 레벨",
-    value: (row) => plain(row.union_level, "", "Lv."),
-    meta: (row) => compact(row.character_class, row.world_name, row.union_grade)
-  },
-  {
-    id: "achievement",
-    label: "업적 랭킹",
-    name: "업적",
-    short: "업적",
-    icon: "medal",
-    tone: "lavender",
-    desc: "업적 점수",
-    subject: "character",
-    metric: "업적 점수",
-    value: (row) => plain(row.achievement_score, "점"),
-    meta: (row) => compact(row.world_name, row.achievement_grade_name)
-  },
-  {
-    id: "sharenian-battlefield",
-    label: "샤레니안의 전장",
-    name: "샤레니안의 전장",
-    short: "전장",
-    icon: "swords",
-    tone: "peach",
-    desc: "길드 시즌 점수",
-    subject: "guild",
-    metric: "시즌 점수",
-    value: (row) => korean(row.season_score, "점"),
-    meta: (row) => compact(row.guild_master_name && `마스터 ${row.guild_master_name}`, row.world_name)
-  },
-  {
-    id: "sharenian-waterway",
-    label: "샤레니안의 지하수로",
-    name: "샤레니안의 지하수로",
-    short: "지하수로",
-    icon: "waterway",
-    tone: "mint",
-    desc: "길드 시즌 점수",
-    subject: "guild",
-    metric: "시즌 점수",
-    value: (row) => korean(row.season_score, "점"),
-    meta: (row) => compact(row.guild_master_name && `마스터 ${row.guild_master_name}`, row.world_name)
-  },
-  {
-    id: "root-of-time",
-    label: "시간의 근원",
-    name: "시간의 근원",
-    short: "시간의 근원",
-    icon: "hourglass",
-    tone: "lavender",
-    desc: "최대 피해량",
-    subject: "character",
-    metric: "최대 피해량",
-    value: (row) => korean(row.max_damage),
-    meta: (row) => compact(row.character_class, row.world_name, levelText(row))
+    meta: (row) => compact(row.character_class, row.guild_name),
+    field: "character_level"
   },
   {
     id: "combat-power",
@@ -128,37 +111,84 @@ export const RANKING_TYPES = [
     short: "전투력",
     icon: "bolt",
     tone: "peach",
-    desc: "공식 전투력",
     subject: "character",
     metric: "전투력",
     value: (row) => korean(row.character_combat_power),
-    meta: (row) => compact(row.character_class, row.world_name, levelText(row))
+    meta: (row) => compact(row.character_class, levelText(row)),
+    field: "character_combat_power",
+    big: true
   },
   {
-    id: "dojang",
-    label: "무릉도장",
-    name: "무릉도장",
-    short: "무릉도장",
-    icon: "gate",
+    id: "sharenian-waterway",
+    label: "샤레니안의 지하수로",
+    name: "샤레니안의 지하수로",
+    short: "지하수로",
+    icon: "waterway",
     tone: "mint",
-    desc: "최고 층수",
-    subject: "character",
-    metric: "최고 층수",
-    value: (row) => plain(row.dojang_floor, "층"),
-    meta: (row) => compact(row.character_class, row.world_name, levelText(row))
+    subject: "guild",
+    metric: "시즌 점수",
+    value: (row) => korean(row.season_score, "점"),
+    meta: (row) => compact(row.guild_master_name),
+    grade: (row) => ({ src: row.grade_icon || "", label: "" }),
+    field: "season_score",
+    big: true
   },
   {
-    id: "kerning-m-tower",
-    label: "커닝M타워",
-    name: "커닝M타워",
-    short: "커닝M타워",
-    icon: "tower",
+    id: "union",
+    label: "유니온 랭킹",
+    name: "유니온",
+    short: "유니온",
+    icon: "union",
     tone: "sky",
-    desc: "최고 층수",
     subject: "character",
-    metric: "최고 층수",
-    value: (row) => plain(row.tower_floor, "층"),
-    meta: (row) => compact(row.character_class, row.world_name, levelText(row))
+    metric: "유니온 레벨",
+    value: (row) => plain(row.union_level, "", "Lv."),
+    meta: (row) => compact(row.character_class),
+    grade: (row) => ({ src: row.union_grade_icon || "", label: String(row.union_grade || "") }),
+    field: "union_level"
+  },
+  {
+    id: "achievement",
+    label: "업적 랭킹",
+    name: "업적",
+    short: "업적",
+    icon: "medal",
+    tone: "lavender",
+    subject: "character",
+    metric: "업적 점수",
+    value: (row) => plain(row.achievement_score, "점"),
+    meta: (row) => compact(row.character_class),
+    grade: (row) => ({ src: row.achievement_grade_icon || "", label: String(row.achievement_grade_name || "") }),
+    field: "achievement_score"
+  },
+  {
+    id: "root-of-time",
+    label: "시간의 근원",
+    name: "시간의 근원",
+    short: "시간의 근원",
+    icon: "hourglass",
+    tone: "lavender",
+    subject: "character",
+    metric: "최대 피해량",
+    value: (row) => korean(row.max_damage),
+    meta: (row) => compact(row.character_class, levelText(row)),
+    field: "max_damage",
+    big: true
+  },
+  {
+    id: "sharenian-battlefield",
+    label: "샤레니안의 전장",
+    name: "샤레니안의 전장",
+    short: "전장",
+    icon: "swords",
+    tone: "peach",
+    subject: "guild",
+    metric: "시즌 점수",
+    value: (row) => korean(row.season_score, "점"),
+    meta: (row) => compact(row.guild_master_name),
+    grade: (row) => ({ src: row.grade_icon || "", label: "" }),
+    field: "season_score",
+    big: true
   }
 ];
 
@@ -186,6 +216,7 @@ export const urls = {
   guildSearch: "/guild",
   legacyHome: "/",
   home: "/preview/",
+  design: "/preview/design",
   licenses: "/preview/licenses"
 };
 

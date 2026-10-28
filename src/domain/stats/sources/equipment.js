@@ -61,7 +61,7 @@ function itemContributions(item) {
     additionalSum[entry.key] = (additionalSum[entry.key] || 0) + entry.value;
   });
 
-  // Base option lines already include the same stat's additional option (Nexon API, both sites).
+  // Base option lines already include the same stat's additional option (Nexon API).
   const basic = parseOptionList(item?.item_basic_option).map((entry) => ({
     ...entry,
     value: Math.max(0, entry.value - (additionalSum[entry.key] || 0))

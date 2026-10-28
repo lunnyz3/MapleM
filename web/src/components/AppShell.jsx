@@ -46,21 +46,15 @@ function SiteFooter() {
       <div class="container site-footer__inner">
         <div class="site-footer__brand">
           <BrandMark size={28} />
-          <div>
-            <p class="site-footer__name">메이플M 플러스</p>
-            <p class="site-footer__source" lang="en">
-              Data based on NEXON Open API
-            </p>
-          </div>
+          <p class="site-footer__name">메이플M 플러스</p>
         </div>
-        <div class="site-footer__body">
-          <p>메이플M 플러스는 넥슨의 공식 서비스가 아닙니다. 게임 데이터의 권리는 넥슨에 있습니다.</p>
-          <p>랭킹은 하루 한 번 집계되며, 캐릭터 정보는 게임 반영까지 10~15분 정도 걸릴 수 있습니다.</p>
-        </div>
+        <p class="site-footer__source" lang="en">
+          Data based on NEXON Open API
+        </p>
         <nav class="site-footer__links" aria-label="사이트 정보">
-          <a href={urls.legacyHome}>기존 화면으로</a>
-          <a href={`${urls.home}design`}>디자인 시스템</a>
-          <a href={urls.licenses}>라이선스·출처 (Pretendard · SUIT 글꼴, SIL OFL 1.1)</a>
+          <a href={urls.legacyHome}>기존 화면</a>
+          <a href={urls.design}>디자인 시스템</a>
+          <a href={urls.licenses}>라이선스</a>
         </nav>
       </div>
     </footer>
@@ -68,7 +62,7 @@ function SiteFooter() {
 }
 
 /**
- * 공통 틀: 상단바(로고·메뉴·테마) · 본문 · 출처 푸터 · 모바일 하단 탭바.
+ * 공통 틀: 상단바(로고·메뉴·테마) · 본문 · 푸터(데이터 출처 한 줄) · 모바일 하단 탭바.
  * @param {{ current?: NavKey, children?: any }} props
  */
 export function AppShell({ current = "", children }) {

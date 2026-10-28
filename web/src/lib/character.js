@@ -68,10 +68,10 @@ export const SLOT_LAYOUT = [
 
 /** 등급 → 색 계열·글자 (design-system 2.3: 레어 sky / 에픽 lavender / 유니크 gold / 레전더리 mint) */
 const GRADES = {
-  rare: { label: "레어", letter: "R", tone: "sky" },
-  epic: { label: "에픽", letter: "E", tone: "lavender" },
-  unique: { label: "유니크", letter: "U", tone: "gold" },
-  legendary: { label: "레전더리", letter: "L", tone: "mint" }
+  rare: { key: "rare", label: "레어", letter: "R", tone: "sky", icon: "/assets/ico-potential-rare.png" },
+  epic: { key: "epic", label: "에픽", letter: "E", tone: "lavender", icon: "/assets/ico-potential-epic.png" },
+  unique: { key: "unique", label: "유니크", letter: "U", tone: "gold", icon: "/assets/ico-potential-unique.png" },
+  legendary: { key: "legendary", label: "레전더리", letter: "L", tone: "mint", icon: "/assets/ico-potential-legendary.png" }
 };
 
 /**
@@ -100,6 +100,80 @@ export function potentialInfo(options, grade) {
 export function starforce(value) {
   const number = toNumber(value);
   return number !== null && number > 0 ? Math.round(number) : null;
+}
+
+/** 엠블렘 문장 이름 → 문장 아이콘 */
+const EMBLEM_ICONS = [
+  ["기민한", "/assets/emblem_ki.png"],
+  ["무자비한", "/assets/emblem_mu.png"],
+  ["강대한", "/assets/emblem_ka.png"],
+  ["신성한", "/assets/emblem_si.png"],
+  ["압도의", "/assets/emblem_ap.png"]
+];
+
+/** @param {number} level */
+function emblemLevelGif(level) {
+  if (level >= 1 && level <= 3) return "/assets/emblem_1_3.gif";
+  if (level === 4) return "/assets/emblem_4.gif";
+  if (level === 5 || level === 6) return "/assets/emblem_5_6.gif";
+  if (level === 7 || level === 8) return "/assets/emblem_7_8.gif";
+  if (level === 9) return "/assets/emblem_9.gif";
+  if (level >= 10) return "/assets/emblem_10.gif";
+  return "";
+}
+
+/**
+ * "최대 대미지 59,500,000, 보스 공격력 10%" → [{ name, value }]. 숫자 속 쉼표(뒤에 공백 없음)는 자르지 않는다.
+ * @param {string} text
+ */
+export function splitOptionText(text) {
+  return String(text || "")
+    .split(/\s*[|\n]\s*|,\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(/^(.*?)\s*([+-]?[\d,.]+%?)$/);
+      return match && match[1] ? { name: match[1].replace(/[:：]\s*$/, ""), value: match[2] } : { name: part, value: "" };
+    });
+}
+
+/**
+ * 장비의 엠블렘 문장: 이름·레벨·아이콘·레벨 배경 GIF·옵션 줄. 없으면 null.
+ * @param {any} info
+ */
+export function emblemInfo(info) {
+  const name = String(info?.emblem_name ?? info?.emblemName ?? "").trim();
+  if (!name) return null;
+  const level = Math.floor(Number(info?.emblem_level ?? info?.emblemLevel) || 0);
+  const compactName = name.replace(/\s+/g, "");
+  const icon = EMBLEM_ICONS.find(([key]) => compactName.includes(key))?.[1] || "";
+  return {
+    name,
+    level: level > 0 ? level : null,
+    icon,
+    levelGif: level > 0 ? emblemLevelGif(level) : "",
+    options: splitOptionText(info?.emblem_option ?? info?.emblemOption ?? "")
+  };
+}
+
+/**
+ * 스타포스 별 줄: 5개씩 묶고 한 줄에 20개(10강마다 반짝임 표시용 milestone).
+ * @param {number | null} count
+ * @returns {Array<Array<Array<{ index: number, milestone: boolean }>>>} 줄 → 묶음 → 별
+ */
+export function starRows(count) {
+  if (!count || count <= 0) return [];
+  const rows = [];
+  for (let start = 0; start < count; start += 20) {
+    const row = [];
+    for (let group = start; group < Math.min(count, start + 20); group += 5) {
+      const stars = [];
+      for (let i = group; i < Math.min(count, group + 5); i += 1) stars.push({ index: i, milestone: (i + 1) % 10 === 0 });
+      row.push(stars);
+    }
+    rows.push(row);
+  }
+  return rows;
 }
 
 /**
@@ -209,6 +283,22 @@ export function statOrder(profile) {
     "maxDamage",
     "ignoreDefense"
   ];
+}
+
+/**
+ * 프로필 전투력 하나로 읽기.
+ *   새 형식: { value, observedAt } (최근 24시간 최고 관측값)
+ *   예전 형식: { official: { value }, current } → official.value, 없으면 current
+ * @param {any} combatPower
+ * @returns {{ value: number | null, observedAt: string | null }}
+ */
+export function combatPowerOf(combatPower) {
+  if (combatPower && typeof combatPower === "object") {
+    const value = toNumber(combatPower.value) ?? toNumber(combatPower.official?.value) ?? toNumber(combatPower.current);
+    return { value: value !== null && value > 0 ? value : null, observedAt: combatPower.observedAt || null };
+  }
+  const value = toNumber(combatPower);
+  return { value: value !== null && value > 0 ? value : null, observedAt: null };
 }
 
 /**

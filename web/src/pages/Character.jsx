@@ -4,15 +4,16 @@ import "../styles/character.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Card } from "../components/Card.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, BlurText, CountUp, Reveal, Tilt, spotlightHandlers } from "../components/Motion.jsx";
+import { Aurora, CountUp, Particles, Reveal, SplitText, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { SearchBox } from "../components/SearchBox.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
-import { SourceBadge, SourceStamp } from "../components/SourceStamp.jsx";
+import { Freshness } from "../components/Freshness.jsx";
+import { WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
-import { formatStat, formatStatDelta, groupBreakdown, isFlatStat, statOrder } from "../lib/character.js";
+import { combatPowerOf, formatStat, formatStatDelta, groupBreakdown, isFlatStat, statOrder } from "../lib/character.js";
 import { loadCharacterPage, loadManualInputs, postCharacterStats } from "../lib/data.js";
-import { formatComma, formatDateDot, formatDecimal, formatKoreanUnits, toNumber } from "../lib/format.js";
+import { formatComma, formatDecimal, formatKoreanUnits, toNumber } from "../lib/format.js";
 import { WORLDS, urls } from "../lib/game.js";
 import { readManual, writeManual } from "../lib/manual.js";
 import { addRecent, entryKey, isFavorite, toggleFavorite, useSaved } from "../lib/storage.js";
@@ -23,7 +24,7 @@ import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./char
 /** @typedef {"boss" | "current"} StatMode */
 
 /**
- * 프로필 머리: 오로라 배경 · 캐릭터 그림(틸트) · 이름(블러 등장) · 레벨·경험치 · 공식 전투력 칩.
+ * 프로필 머리: 오로라 배경 · 캐릭터 그림(틸트) · 이름(글자 등장) · 레벨·경험치 · 전투력 칩 · 갱신 시각.
  * @param {{ data: any, world: string }} props
  */
 function ProfileHeader({ data, world }) {
@@ -32,15 +33,15 @@ function ProfileHeader({ data, world }) {
   const saved = useSaved();
   const favKey = entryKey({ kind: "character", world, name });
   const favorite = saved.favorites.some((item) => entryKey(item) === favKey) || isFavorite(favKey);
-  const official = profile.combatPower?.official;
-  const officialValue = toNumber(official?.value);
+  const power = combatPowerOf(profile.combatPower);
   const expRate = Math.max(0, Math.min(100, Number(profile.expRate) || 0));
   const overall = Number(profile.overallRanking) || 0;
 
   return (
     <section class="ch-hero" aria-labelledby="ch-name">
       <Aurora tone="sky" />
-      <Tilt maxDeg={6} class="ch-hero__art">
+      <Particles count={16} />
+      <Tilt maxDeg={16} scale={1.05} class="ch-hero__art">
         <div class="ch-hero__stage">
           {profile.imageUrl ? (
             <img src={profile.imageUrl} alt={`${name} 캐릭터 이미지`} width={160} height={160} decoding="async" />
@@ -54,11 +55,14 @@ function ProfileHeader({ data, world }) {
 
       <div class="ch-hero__info">
         <p class="ch-hero__eyebrow">
-          <span class="badge tone-sky">{world}</span>
+          <span class="ch-hero__world">
+            <WorldIcon world={world} size={16} />
+            {world}
+          </span>
           <span>{profile.jobName || profile.className || "직업 정보 없음"}</span>
         </p>
         <h1 id="ch-name" class="ch-hero__name display">
-          <BlurText text={name} />
+          <SplitText text={name} stagger={55} />
         </h1>
         <div class="ch-hero__level">
           <strong class="display num">Lv.{profile.level ?? "-"}</strong>
@@ -69,15 +73,13 @@ function ProfileHeader({ data, world }) {
         </div>
 
         <ul class="ch-hero__chips">
-          {officialValue !== null ? (
+          {power.value !== null ? (
             <li class="chip chip--power spotlight" {...spotlightHandlers()}>
               <Icon name="bolt" size={18} />
-              <span class="chip__label">공식 전투력</span>
-              <strong class="chip__value display" title={`${formatComma(officialValue)}${official?.date ? ` · ${formatDateDot(official.date)} 집계` : ""}`}>
-                <CountUp value={officialValue} format={(n) => formatKoreanUnits(n)} duration={1100} />
+              <span class="chip__label">전투력</span>
+              <strong class="chip__value display" title={formatComma(power.value)}>
+                <CountUp value={power.value} format={(n) => formatKoreanUnits(n)} duration={1400} />
               </strong>
-              {official?.ranking ? <span class="chip__sub num">{formatComma(official.ranking)}위</span> : null}
-              <SourceBadge kind="official" />
             </li>
           ) : null}
           {overall ? (
@@ -115,7 +117,7 @@ function ProfileHeader({ data, world }) {
             <Icon name="external" size={16} />
           </a>
         </div>
-        <SourceStamp at={data.meta?.dataTimestamp} note={official?.date ? `공식 전투력 ${formatDateDot(official.date)} 집계` : ""} />
+        <Freshness at={data.meta?.dataTimestamp} />
       </div>
     </section>
   );
@@ -147,12 +149,6 @@ function Breakdown({ statKey, stat }) {
           </li>
         ))}
       </ul>
-      {statKey === "ignoreDefense" ? (
-        <p class="bd-note">
-          <Icon name="info" size={16} />
-          방어율 무시는 옵션마다 곱해서 합쳐요. 아래 값을 그대로 더한 값과 달라요.
-        </p>
-      ) : null}
       <div class="bd-cats">
         {categories.map((category) => (
           <section key={category.key} class={`bd-cat tone-${category.tone}`} aria-label={`${category.label} ${formatStatDelta(statKey, category.value)}`}>
@@ -187,9 +183,9 @@ function Breakdown({ statKey, stat }) {
 
 /**
  * 주요 스탯: 보스 세팅/현재 착용 토글 · 사용 프리셋 · 계산 전투력 · 스탯 타일 · 출처별 내역.
- * @param {{ stats: any, mode: StatMode, onMode: (mode: StatMode) => void, manualActive: boolean, at?: string }} props
+ * @param {{ stats: any, mode: StatMode, onMode: (mode: StatMode) => void }} props
  */
-function StatsPanel({ stats, mode, onMode, manualActive, at }) {
+function StatsPanel({ stats, mode, onMode }) {
   const setting = stats.statSetting;
   const hasCurrent = Boolean(stats.majorStatsCurrent);
   const effectiveMode = mode === "current" && hasCurrent ? "current" : "boss";
@@ -202,7 +198,7 @@ function StatsPanel({ stats, mode, onMode, manualActive, at }) {
   const dims = Array.isArray(setting?.dimensions) ? setting.dimensions : [];
 
   return (
-    <Card class="stats-card" title="주요 스탯" icon="sparkle" tone="lavender" description="옵션 줄을 출처별로 더한 값이에요">
+    <Card class="stats-card" title="주요 스탯" icon="sparkle" tone="lavender">
       {setting && hasCurrent ? (
         <div class="stat-mode">
           <Segmented
@@ -215,13 +211,6 @@ function StatsPanel({ stats, mode, onMode, manualActive, at }) {
               { value: "current", label: "현재 착용", icon: "user" }
             ]}
           />
-          <p class="stat-mode__desc">
-            {effectiveMode === "boss"
-              ? setting.sameAsCurrent
-                ? "지금 착용한 조합이 계산 전투력이 가장 높은 조합이에요."
-                : `프리셋 조합 ${formatComma(setting.combinationCount || 0)}개 중 계산 전투력이 가장 높은 조합이에요.`
-              : "넥슨 API가 알려 준 지금 착용 중인 프리셋이에요."}
-          </p>
         </div>
       ) : null}
 
@@ -244,22 +233,11 @@ function StatsPanel({ stats, mode, onMode, manualActive, at }) {
       {Number.isFinite(Number(power)) ? (
         <div class="calc-power">
           <div class="calc-power__main">
-            <span class="calc-power__label">
-              계산 전투력 <SourceBadge kind="estimate" />
-            </span>
+            <span class="calc-power__label">추정 전투력</span>
             <strong class="calc-power__value display">
-              <CountUp value={Number(power)} format={(n) => formatKoreanUnits(n)} duration={800} title={formatComma(power)} />
+              <CountUp value={Number(power)} format={(n) => formatKoreanUnits(n)} duration={1100} title={formatComma(power)} />
             </strong>
           </div>
-          {setting?.combatPowerNote ? (
-            <details class="calc-power__note">
-              <summary>
-                <Icon name="info" size={16} />
-                계산 방법
-              </summary>
-              <p>{setting.combatPowerNote}</p>
-            </details>
-          ) : null}
         </div>
       ) : null}
 
@@ -302,16 +280,11 @@ function StatsPanel({ stats, mode, onMode, manualActive, at }) {
             <h3 class="bd-panel__title">
               {majorStats[selectedKey]?.label} <span class="bd-panel__total num">{majorStats[selectedKey]?.displayValue}</span>
             </h3>
-            <p class="bd-panel__hint">분류 → 그룹을 눌러 항목을 펼쳐 보세요</p>
           </header>
           <Breakdown key={`${selectedKey}-${effectiveMode}`} statKey={selectedKey} stat={majorStats[selectedKey]} />
         </section>
       ) : null}
 
-      <footer class="stats-card__foot">
-        <SourceStamp kind={manualActive ? "manual" : "calc"} source={manualActive ? "넥슨 Open API + 직접 입력으로 계산" : "넥슨 Open API 옵션을 합산"} at={at} />
-        <SourceStamp kind="estimate" source="계산 전투력은 공개 산식의 추정치" />
-      </footer>
     </Card>
   );
 }
@@ -429,7 +402,7 @@ export function Character({ world, name }) {
   if (!validWorld || !name) {
     return (
       <div class="ch ch--empty">
-        <EmptyState art="search" title="월드와 캐릭터 이름을 확인해 주세요" description="주소 형식: /preview/character/월드/이름" />
+        <EmptyState art="search" title="월드와 캐릭터 이름을 확인해 주세요" />
         <div class="ch-search card">
           <SearchBox id="ch-search" size="md" showKindSwitch={false} />
         </div>
@@ -447,7 +420,6 @@ export function Character({ world, name }) {
           <EmptyState
             art="search"
             title={`${world} 월드에서 '${name}' 캐릭터를 찾지 못했어요`}
-            description="이름이 바뀌었거나 오래 접속하지 않은 캐릭터일 수 있어요. 이름과 월드를 다시 확인해 주세요."
           />
         ) : (
           <ErrorState title="캐릭터 정보를 불러오지 못했어요" description={state.error?.message} detail={state.error?.detail} onRetry={() => setAttempt((n) => n + 1)} />
@@ -480,7 +452,7 @@ export function Character({ world, name }) {
 
       <div class="ch-stats-row">
         <Reveal class="ch-stats-row__main">
-          <StatsPanel stats={stats} mode={mode} onMode={setMode} manualActive={Boolean(applied)} at={data.meta?.dataTimestamp} />
+          <StatsPanel stats={stats} mode={mode} onMode={setMode} />
         </Reveal>
         <Reveal class="ch-stats-row__side" delay={80}>
           <ManualPanel
@@ -497,12 +469,12 @@ export function Character({ world, name }) {
       <section class="ch-tabs" aria-label="상세 정보">
         <Tabs idBase="ch" label="상세 정보" scrollable value={tab} onChange={setTab} items={TAB_ITEMS} />
         <TabPanel idBase="ch" value={tab} class="ch-tabs__panel">
-          {tab === "equipment" ? <Equipment data={data} mode={mode} presetNo={bossPresets.equipment} at={data.meta?.dataTimestamp} /> : null}
-          {tab === "stats" ? <StatsTab data={data} presets={bossPresets} at={data.meta?.dataTimestamp} /> : null}
-          {tab === "symbol" ? <SymbolTab data={data} presets={bossPresets} at={data.meta?.dataTimestamp} /> : null}
-          {tab === "hexa" ? <HexaTab data={data} at={data.meta?.dataTimestamp} /> : null}
-          {tab === "union" ? <UnionTab data={data} at={data.meta?.dataTimestamp} /> : null}
-          {tab === "guild" ? <GuildTab data={data} world={world} at={data.meta?.dataTimestamp} /> : null}
+          {tab === "equipment" ? <Equipment data={data} mode={mode} presetNo={bossPresets.equipment} /> : null}
+          {tab === "stats" ? <StatsTab data={data} presets={bossPresets} /> : null}
+          {tab === "symbol" ? <SymbolTab data={data} presets={bossPresets} /> : null}
+          {tab === "hexa" ? <HexaTab data={data} /> : null}
+          {tab === "union" ? <UnionTab data={data} /> : null}
+          {tab === "guild" ? <GuildTab data={data} world={world} /> : null}
           {tab === "exp" ? <ExpTab data={data} /> : null}
         </TabPanel>
       </section>

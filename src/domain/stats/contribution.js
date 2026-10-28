@@ -4,7 +4,7 @@ const { STAT_SHORT_LABELS } = require("./keys");
 
 /**
  * One stat contribution. For 방어율 무시, `factors` keeps every option line so the total can
- * be multiplied line by line (maplemworlds rule) while the breakdown shows one row per item.
+ * be multiplied line by line while the breakdown shows one row per item.
  */
 function makeContribution({ key, value, category, group, label, rawText = "", factors }) {
   const contribution = { key, value, category, group, label, rawText };

@@ -29,7 +29,6 @@ function lazyPage(loader, exportName) {
       return (
         <EmptyState
           title="화면을 불러오지 못했어요"
-          description="새 버전이 배포되었을 수 있어요. 새로고침해 주세요."
           action={
             <button type="button" class="btn btn--primary" onClick={() => window.location.reload()}>
               새로고침
@@ -67,7 +66,7 @@ function resolveRoute() {
   if (rest === "") return { title: "메이플M 플러스 · 새 메인 미리보기", nav: "home", Page: Home };
   if (rest === "/design") return { title: "디자인 시스템 · 메이플M 플러스", nav: "", Page: DesignSystem };
   if (rest === "/ranking") return { title: "랭킹 · 메이플M 플러스", nav: "ranking", Page: Ranking };
-  if (rest === "/licenses") return { title: "라이선스·출처 · 메이플M 플러스", nav: "", Page: Licenses };
+  if (rest === "/licenses") return { title: "라이선스 · 메이플M 플러스", nav: "", Page: Licenses };
   const character = rest.match(/^\/character\/([^/]+)\/([^/]+)$/);
   if (character) {
     let world = "";
@@ -88,7 +87,6 @@ function NotFound() {
     <div class="not-found">
       <EmptyState
         title="아직 준비 중인 화면이에요"
-        description="새 화면은 하나씩 열리고 있어요. 지금은 메인·랭킹·캐릭터 상세를 미리 볼 수 있어요."
         action={
           <a class="btn btn--primary" href={urls.home}>
             새 메인으로

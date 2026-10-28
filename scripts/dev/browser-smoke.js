@@ -2,7 +2,7 @@
 const { launchBrowser } = require("./browser");
 
 async function main() {
-  const url = process.argv[2] || "https://maplemworlds.kr/";
+  const url = process.argv[2] || "https://maplem.co.kr/";
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();

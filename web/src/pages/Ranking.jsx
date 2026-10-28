@@ -1,17 +1,18 @@
-// 랭킹 화면(/preview/ranking): 공식 랭킹 9종 · 월드 · 날짜 · 쪽 · 이름 찾기.
+// 랭킹 화면(/preview/ranking): 랭킹 7종 · 월드 · 날짜 · 쪽 · 이름 찾기.
 // 주소의 ?type=&date=&world_name=&page=&name= 과 화면 상태를 맞춘다(뒤로 가기 지원).
 import "../styles/ranking.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, BlurText, CountUp, Reveal, Tilt, spotlightHandlers } from "../components/Motion.jsx";
+import { Aurora, CountUp, Particles, Reveal, SplitText, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
-import { SourceStamp } from "../components/SourceStamp.jsx";
+import { Freshness } from "../components/Freshness.jsx";
+import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { TabPanel, Tabs } from "../components/Tabs.jsx";
 import { RANKING_PAGE_SIZE, findCharacterRank, loadRankingPage } from "../lib/data.js";
-import { formatComma, formatDateDot, formatKoreanUnits, formatMonthDay, kstToday, shiftDate, toNumber } from "../lib/format.js";
+import { formatComma, formatDateDot, formatKoreanUnits, kstToday, shiftDate, toNumber } from "../lib/format.js";
 import { DEFAULT_WORLD, RANKING_DATE_FLOOR, RANKING_TYPES, WORLDS, getRankingType, urls } from "../lib/game.js";
 import { prefersReducedMotion } from "../lib/motion.js";
 
@@ -67,32 +68,20 @@ function MetricValue({ type, row }) {
 }
 
 /**
- * 종류별 추가 열.
+ * 종류별 추가 열. 월드·등급은 이름 아래 아이콘으로 보여주므로 열을 따로 두지 않는다.
  * @param {string} typeId
  * @returns {Array<{ key: string, label: string, render: (row: any) => any }>}
  */
 function extraColumns(typeId) {
-  const guildCell = (row) =>
-    row.guild_name ? (
-      <span class="rk-guild">
-        {row.guild_name}
-      </span>
-    ) : (
-      <span class="rk-muted">-</span>
-    );
+  const guildCell = (row) => (row.guild_name ? <span class="rk-guild">{row.guild_name}</span> : <span class="rk-muted">-</span>);
   switch (typeId) {
     case "level":
-      return [{ key: "guild", label: "길드", render: guildCell }];
     case "union":
-      return [
-        { key: "grade", label: "유니온 등급", render: (row) => row.union_grade || "-" },
-        { key: "guild", label: "길드", render: guildCell }
-      ];
+      return [{ key: "guild", label: "길드", render: guildCell }];
     case "achievement":
-      return [{ key: "grade", label: "업적 등급", render: (row) => row.achievement_grade_name || "-" }];
     case "sharenian-battlefield":
     case "sharenian-waterway":
-      return [{ key: "master", label: "길드 마스터", render: (row) => row.guild_master_name || "-" }];
+      return [];
     default:
       return [
         { key: "level", label: "레벨", render: (row) => (row.character_level ? `Lv.${row.character_level}` : "-") },
@@ -117,7 +106,7 @@ function RankCell({ row, world }) {
 }
 
 /**
- * 캐릭터/길드 이름 칸(아바타 + 이름 + 보조 정보).
+ * 캐릭터/길드 이름 칸(아바타 + 이름 + 월드·등급 아이콘과 짧은 보조 글자).
  * @param {{ type: import("../lib/game.js").RankingType, row: any }} props
  */
 function WhoCell({ type, row }) {
@@ -130,7 +119,7 @@ function WhoCell({ type, row }) {
       <Avatar kind={type.subject} world={world} name={name} src={guild ? row.guild_mark_icon || "" : ""} size={40} lazy />
       <span class="rk-who__text">
         <span class="rk-who__name">{name}</span>
-        <span class="rk-who__meta">{guild ? `${world} 길드` : [row.character_class, world].filter(Boolean).join(" · ")}</span>
+        <RowMeta type={type} row={row} max={1} class="rk-who__meta" />
       </span>
     </a>
   );
@@ -154,9 +143,6 @@ function RankingTable({ type, rows, world, highlight }) {
               {world ? "월드 순위" : "순위"}
             </th>
             <th scope="col">{type.subject === "guild" ? "길드" : "캐릭터"}</th>
-            <th scope="col" class="rk-col-world">
-              월드
-            </th>
             {columns.map((column) => (
               <th scope="col" key={column.key}>
                 {column.label}
@@ -179,7 +165,6 @@ function RankingTable({ type, rows, world, highlight }) {
                 <th scope="row" class="rk-col-who">
                   <WhoCell type={type} row={row} />
                 </th>
-                <td class="rk-col-world">{row.world_name || "-"}</td>
                 {columns.map((column) => (
                   <td key={column.key}>{column.render(row)}</td>
                 ))}
@@ -221,7 +206,9 @@ function RankingCards({ type, rows, world, highlight }) {
               <dl class="rk-card__facts">
                 <div>
                   <dt>월드</dt>
-                  <dd>{row.world_name || "-"}</dd>
+                  <dd>
+                    <WorldIcon world={row.world_name} size={18} />
+                  </dd>
                 </div>
                 <div>
                   <dt>전체 순위</dt>
@@ -258,16 +245,6 @@ function Podium({ type, rows, world }) {
   const top = rows.slice(0, 3);
   if (top.length < 3) return null;
   const guild = type.subject === "guild";
-  const metricKey = {
-    level: "character_level",
-    union: "union_level",
-    achievement: "achievement_score",
-    "root-of-time": "max_damage",
-    "combat-power": "character_combat_power",
-    dojang: "dojang_floor",
-    "kerning-m-tower": "tower_floor"
-  }[type.id] || "season_score";
-  const big = ["root-of-time", "combat-power", "sharenian-battlefield", "sharenian-waterway"].includes(type.id);
   return (
     <ol class="rk-podium" aria-label={`${type.label} 상위 3`}>
       {top.map((row, index) => {
@@ -277,17 +254,17 @@ function Podium({ type, rows, world }) {
         const rank = world ? Number(row.world_ranking) || index + 1 : Number(row.ranking) || index + 1;
         return (
           <Reveal as="li" key={`${rank}-${name}`} delay={index * 90} class={`rk-podium__item rk-podium__item--${index + 1}`}>
-            <Tilt maxDeg={4} class="rk-podium__tilt">
+            <Tilt maxDeg={14} scale={1.04} class="rk-podium__tilt">
               <a class="rk-podium__card spotlight" href={guild ? urls.guild(rowWorld, name) : urls.character(rowWorld, name)} {...spotlightHandlers()}>
                 <span class="rk-podium__badge">
                   <RankBadge rank={rank} size={44} />
                 </span>
                 <Avatar kind={type.subject} world={rowWorld} name={name} src={guild ? row.guild_mark_icon || "" : ""} size={72} />
                 <span class="rk-podium__name">{name}</span>
-                <span class="rk-podium__meta">{type.meta(row).slice(0, 2).join(" · ")}</span>
+                <RowMeta type={type} row={row} max={1} class="rk-podium__meta" />
                 <span class="rk-podium__value display" title={value.full}>
                   {value.prefix ? <span class="rk-metric__affix">{value.prefix}</span> : null}
-                  <CountUp value={toNumber(row[metricKey])} format={big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n)} />
+                  <CountUp value={toNumber(row[type.field])} format={type.big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n)} duration={1200} />
                   {value.unit ? <span class="rk-metric__affix">{value.unit}</span> : null}
                 </span>
               </a>
@@ -498,18 +475,15 @@ export function Ranking() {
 
   return (
     <div class="rk">
-      <header class={`page-head tone-${type.tone}`}>
+      <header class={`page-head page-head--rank tone-${type.tone}`}>
         <Aurora tone={isGuild ? "mint" : "sky"} />
-        <p class="page-head__eyebrow">
-          <Icon name="trophy" size={16} />
-          넥슨 공식 랭킹 9종
-        </p>
+        <Particles count={14} />
+        <span class="page-head__icon" key={`icon-${type.id}`} aria-hidden="true">
+          <Icon name={type.icon} size={28} />
+        </span>
         <h1 class="page-head__title display">
-          <BlurText key={type.id} text={type.label} />
+          <SplitText key={type.id} text={type.label} />
         </h1>
-        <p class="page-head__lead">
-          {type.metric} 기준 순위예요. {isGuild ? "길드 이름을 누르면 길드 정보로 이동해요." : "이름을 누르면 캐릭터 상세로 이동해요."}
-        </p>
       </header>
 
       <Tabs idBase="rk" label="랭킹 종류" scrollable value={query.type} onChange={(id) => update({ type: id })} items={tabItems} />
@@ -630,24 +604,9 @@ export function Ranking() {
         </p>
       </section>
 
-      <div class="rk-basis" role="note">
-        <Icon name="clock" size={18} />
-        <p>
-          {result?.date ? (
-            <>
-              <strong class="num">{formatDateDot(result.date)}</strong> 집계 기준
-              {moved ? (
-                <span class="rk-basis__moved">
-                  {" "}
-                  · {formatMonthDay(result.requestedDate)}에는 집계된 랭킹이 없어 가장 가까운 이전 집계일로 옮겼어요
-                </span>
-              ) : null}
-            </>
-          ) : (
-            "집계일을 확인하는 중이에요"
-          )}
-          <span class="rk-basis__sub">넥슨 랭킹은 하루 한 번 집계되고, 그날 집계가 끝나기 전에는 전날 순위가 최신이에요.</span>
-        </p>
+      <div class="rk-basis">
+        {result?.date ? <Freshness date={result.date} /> : <span class="rk-basis__wait">집계일 확인 중</span>}
+        {moved ? <span class="rk-basis__date num">{formatDateDot(result.date)}</span> : null}
       </div>
 
       {result && result.page === 1 && result.rows.length >= 3 ? <Podium type={type} rows={result.rows} world={query.world} /> : null}
@@ -677,7 +636,6 @@ export function Ranking() {
           query.page > 1 ? (
             <EmptyState
               title={`${query.page}쪽에는 순위가 없어요`}
-              description="마지막 쪽을 넘었어요. 처음 쪽으로 돌아가 보세요."
               action={
                 <button type="button" class="btn btn--secondary" onClick={() => update({ page: 1 })}>
                   1쪽으로
@@ -687,7 +645,6 @@ export function Ranking() {
           ) : (
             <EmptyState
               title="최근 집계된 랭킹이 없어요"
-              description={`${formatDateDot(query.date)} 전후로 집계된 ${type.label} 데이터가 없어요. 다른 날짜를 골라 보세요.`}
               action={
                 <button type="button" class="btn btn--secondary" onClick={() => update({ date: shiftDate(query.date, -7) })}>
                   일주일 전 보기
@@ -702,7 +659,6 @@ export function Ranking() {
         <Pager page={query.page} hasMore={Boolean(result.hasMore)} onPage={(page) => update({ page })} disabled={state.status === "loading"} />
       ) : null}
 
-      <SourceStamp date={result?.date} note={moved ? "가장 가까운 집계일 기준" : ""} class="rk-stamp" />
     </div>
   );
 }

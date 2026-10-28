@@ -6,7 +6,6 @@ import { Card } from "../../components/Card.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { Magnetic } from "../../components/Motion.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
-import { SourceBadge } from "../../components/SourceStamp.jsx";
 import { formatComma, formatDecimal, formatKoreanUnits, formatRelativeTime } from "../../lib/format.js";
 
 /** @typedef {import("../../lib/data.js").ManualInputDef} ManualInputDef */
@@ -105,8 +104,6 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
       title="직접 입력"
       icon="user"
       tone="peach"
-      description="넥슨 API에 없는 값을 채워 스탯을 다시 계산해요"
-      action={<SourceBadge kind="manual" />}
     >
       {defs.status === "loading" ? (
         <div class="manual-loading" aria-busy="true">
@@ -123,9 +120,6 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
             <Icon name="clock" size={26} />
           </span>
           <p class="manual-soon__title">준비 중이에요</p>
-          <p class="manual-soon__desc">
-            스타코러스·몬스터 컬렉션처럼 넥슨 API에 없는 값을 직접 넣어 스탯과 계산 전투력에 더하는 기능을 만들고 있어요. 지금 보이는 스탯은 공식 API 값만으로 계산했어요.
-          </p>
         </div>
       ) : null}
 
@@ -170,7 +164,6 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                               <select
                                 id={id}
                                 value={draft[def.id] === "" || draft[def.id] === undefined ? String(def.default ?? 0) : draft[def.id]}
-                                aria-describedby={def.description ? `${id}-desc` : undefined}
                                 onChange={(event) => setDraft({ ...draft, [def.id]: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}
                               >
                                 {options.some((option) => option.value === Number(def.default ?? 0)) ? null : <option value={String(def.default ?? 0)}>입력 안 함</option>}
@@ -197,7 +190,6 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                                 step={step}
                                 placeholder={String(def.default ?? 0)}
                                 value={draft[def.id] ?? ""}
-                                aria-describedby={def.description ? `${id}-desc` : undefined}
                                 onInput={(event) => setDraft({ ...draft, [def.id]: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
                               />
                               {unit ? <span class="stepper__unit">{unit}</span> : null}
@@ -206,12 +198,6 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                               </button>
                             </div>
                           )}
-                          {def.description ? (
-                            <p class="manual-field__desc" id={`${id}-desc`}>
-                              {def.description}
-                              {options ? "" : ` (${valueText(def, Number(def.min))}~${valueText(def, Number(def.max))})`}
-                            </p>
-                          ) : null}
                         </div>
                       );
                     })}
@@ -245,7 +231,7 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
             {result.status === "error" ? (
               <p class="manual-status__error">
                 <Icon name="alert" size={16} />
-                {result.error} 공식 API 값으로 계산한 스탯을 보여주고 있어요.
+                {result.error}
               </p>
             ) : null}
             {applied ? (
@@ -256,7 +242,7 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                 </p>
                 {Number.isFinite(powerBefore) && Number.isFinite(powerAfter) && powerBefore !== powerAfter ? (
                   <p class="manual-power num">
-                    계산 전투력 {formatKoreanUnits(powerBefore)} <Icon name="arrowRight" size={16} /> <strong>{formatKoreanUnits(powerAfter)}</strong>
+                    추정 전투력 {formatKoreanUnits(powerBefore)} <Icon name="arrowRight" size={16} /> <strong>{formatKoreanUnits(powerAfter)}</strong>
                     <span class="manual-power__delta">
                       {/** @type {number} */ (powerAfter) > /** @type {number} */ (powerBefore) ? "▲" : "▼"} {formatKoreanUnits(Math.abs(/** @type {number} */ (powerAfter) - /** @type {number} */ (powerBefore)))}
                     </span>
@@ -275,12 +261,11 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                 {warnings.length ? (
                   <p class="manual-status__warn">
                     <Icon name="info" size={16} />
-                    {warnings.length}개 값은 반영하지 않았거나 범위에 맞춰 고쳤어요.
+                    {warnings.length}개 값은 범위에 맞춰 고쳤어요.
                   </p>
                 ) : null}
               </>
             ) : null}
-            {result.status === "idle" && !filled ? <p class="manual-status__hint">입력한 값은 이 브라우저에만 저장돼요.</p> : null}
           </div>
         </form>
       ) : null}

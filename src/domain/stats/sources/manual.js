@@ -1,8 +1,8 @@
 "use strict";
 
 // "직접 입력": stats the Nexon API does not expose (스타코러스, 성흔, 축복, 유니온 챔피언, 명예 배지,
-// 몬스터 컬렉션, 펫 공격력). Both reference sites leave them at 0 unless the user fills them in;
-// the item table and its sources are in src/game-data/manual-inputs.json.
+// 몬스터 컬렉션, 펫 공격력). They stay at 0 unless the user fills them in; the item table is
+// src/game-data/manual-inputs.json.
 
 const rules = require("../../../game-data/manual-inputs.json");
 const { STAT_KEYS, STAT_SHORT_LABELS } = require("../keys");
@@ -84,16 +84,13 @@ function listManualInputs() {
       step: item.step,
       default: 0,
       appliesTo,
-      jobFamily: stats.some((stat) => Boolean(FAMILY_STATS[stat])),
-      description: item.description,
-      source: item.source
+      jobFamily: stats.some((stat) => Boolean(FAMILY_STATS[stat]))
     };
     if (item.unit === "level") {
       entry.levels = item.levels.map((level) => ({
         value: level.value,
         label: level.label,
-        effects: concreteEffects(level.effects),
-        ...(level.source ? { source: level.source } : {})
+        effects: concreteEffects(level.effects)
       }));
     }
     return entry;

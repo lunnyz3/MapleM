@@ -24,7 +24,7 @@ function isWeapon(item) {
 function itemStarforce(item) {
   const starforce = Number(item?.starforce_upgrade);
   if (!Number.isFinite(starforce) || starforce <= 0) return 0;
-  // A one-piece overall counts twice (top + bottom), as in both reference sites.
+  // A one-piece overall counts twice (top + bottom).
   return String(item?.item_equipment_slot_name || "").trim() === "한벌옷" ? starforce * 2 : starforce;
 }
 
@@ -194,7 +194,7 @@ function computeItemSets(items, context = {}) {
     );
   });
 
-  // Arcane set + arcane starforce 방무 count as one factor (maplemworlds "아케인셰이드 세트 (합산)").
+  // Arcane set + arcane starforce 방무 count as one factor ("아케인셰이드 세트 (합산)").
   const arcaneSet = contributions.find((entry) => entry.key === "ignoreDefense" && entry.group === "setEffect" && entry.setId === "arcane");
   const arcaneStarforce = contributions.find(
     (entry) => entry.key === "ignoreDefense" && entry.group === "starforceSet" && entry.setId === "arcane"

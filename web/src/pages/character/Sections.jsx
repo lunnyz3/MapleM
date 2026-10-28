@@ -1,10 +1,10 @@
 // 캐릭터 상세 탭: 스탯(하이퍼·링크) · 심볼(+쥬얼) · HEXA/V · 유니온 · 길드 · 경험치 그래프.
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useId, useMemo, useRef, useState } from "preact/hooks";
 import { Avatar } from "../../components/Avatar.jsx";
-import { Icon } from "../../components/Icon.jsx";
+import { Icon, LEAF_PATH, LEAF_STEM_PATH, SPARKLE_PATH } from "../../components/Icon.jsx";
 import { CountUp, Reveal, spotlightHandlers } from "../../components/Motion.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
-import { SourceStamp } from "../../components/SourceStamp.jsx";
+import { GradeIcon } from "../../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../../components/States.jsx";
 import { presetByNo, shortSymbolName } from "../../lib/character.js";
 import { loadExpHistory } from "../../lib/data.js";
@@ -48,9 +48,9 @@ function PresetNote({ no, active }) {
 // ======================= 스탯 탭 =======================
 
 /**
- * @param {{ data: any, presets: Record<string, number>, at?: string }} props
+ * @param {{ data: any, presets: Record<string, number> }} props
  */
-export function StatsTab({ data, presets, at }) {
+export function StatsTab({ data, presets}) {
   const hyperTab = data.tabs?.hyperStat;
   const hyper = presetByNo(hyperTab, presets.hyper);
   const hyperRows = Array.isArray(hyper?.data?.hyperStatInfo) ? hyper.data.hyperStatInfo : [];
@@ -100,12 +100,14 @@ export function StatsTab({ data, presets, at }) {
           <EmptyState compact title="링크 스킬 정보가 없어요" />
         )}
       </section>
-      <SourceStamp at={at} class="sect-grid__stamp" />
     </div>
   );
 }
 
 // ======================= 심볼 탭 =======================
+
+/** 심볼 아이콘이 없을 때 쓰는 기본 그림 */
+const SYMBOL_FALLBACK = ["/assets/simbol-1.png", "/assets/simbol-2.png", "/assets/simbol-3.png", "/assets/simbol-4.png", "/assets/simbol-5.png", "/assets/simbol-6.png"];
 
 /** @param {{ title: string, list: any[], tone: string }} props */
 function SymbolGroup({ title, list, tone }) {
@@ -116,7 +118,10 @@ function SymbolGroup({ title, list, tone }) {
       <ul class={`symbol-grid tone-${tone}`}>
         {list.map((symbol, index) => (
           <Reveal as="li" key={index} delay={index * 40} class="symbol spotlight" {...spotlightHandlers()}>
-            <GameIcon src={symbol.symbolIcon} size={44} />
+            <span class="symbol__orb">
+              <GameIcon src={symbol.symbolIcon || SYMBOL_FALLBACK[index % SYMBOL_FALLBACK.length]} size={44} />
+              {Number(symbol.symbolLevel) >= 20 ? <span class="symbol__max">MAX</span> : null}
+            </span>
             <span class="symbol__name">{shortSymbolName(symbol.symbolName)}</span>
             <strong class="symbol__level display num">Lv.{symbol.symbolLevel}</strong>
             <span class="symbol__opt">{symbol.symbolOption || "-"}</span>
@@ -128,9 +133,9 @@ function SymbolGroup({ title, list, tone }) {
 }
 
 /**
- * @param {{ data: any, presets: Record<string, number>, at?: string }} props
+ * @param {{ data: any, presets: Record<string, number> }} props
  */
-export function SymbolTab({ data, presets, at }) {
+export function SymbolTab({ data, presets}) {
   const tab = data.tabs?.jewelSymbolVmatrix;
   const arcane = Array.isArray(tab?.symbol?.arcaneSymbols) ? tab.symbol.arcaneSymbols : [];
   const authentic = Array.isArray(tab?.symbol?.authenticSymbols) ? tab.symbol.authenticSymbols : [];
@@ -138,7 +143,7 @@ export function SymbolTab({ data, presets, at }) {
   const jewels = Array.isArray(jewelPreset?.data?.jewelInfo) ? jewelPreset.data.jewelInfo : [];
 
   if (!arcane.length && !authentic.length && !jewels.length) {
-    return <EmptyState title="심볼·쥬얼 정보가 없어요" description="넥슨 API에서 받은 심볼 정보가 없어요." />;
+    return <EmptyState title="심볼·쥬얼 정보가 없어요" />;
   }
 
   return (
@@ -170,7 +175,6 @@ export function SymbolTab({ data, presets, at }) {
           ) : null}
         </section>
       ) : null}
-      <SourceStamp at={at} />
     </div>
   );
 }
@@ -180,9 +184,9 @@ export function SymbolTab({ data, presets, at }) {
 const VCORE_TYPES = { Skill: "스킬 코어", Enhancement: "강화 코어", Common: "공용 코어", JobList: "직업 공용 코어", Special: "특수 코어" };
 
 /**
- * @param {{ data: any, at?: string }} props
+ * @param {{ data: any }} props
  */
-export function HexaTab({ data, at }) {
+export function HexaTab({ data}) {
   const hexa = data.tabs?.hexamatrix || {};
   const skills = Array.isArray(hexa.hexaSkills) ? hexa.hexaSkills : [];
   const cores = Array.isArray(hexa.hexaStatCoreList) ? hexa.hexaStatCoreList : [];
@@ -206,7 +210,10 @@ export function HexaTab({ data, at }) {
     <div class="sect-stack">
       {skills.length ? (
         <section class="sect">
-          <SubTitle count={skills.length}>HEXA 스킬</SubTitle>
+          <SubTitle count={skills.length}>
+            <img class="sub-title__art" src="/assets/sole_erda.png" alt="" width={22} height={22} />
+            HEXA 스킬
+          </SubTitle>
           <ul class="hexa-grid">
             {skills.map((skill, index) => (
               <Reveal as="li" key={index} delay={index * 40} class="hexa-node">
@@ -275,7 +282,6 @@ export function HexaTab({ data, at }) {
           ))}
         </section>
       ) : null}
-      <SourceStamp at={at} />
     </div>
   );
 }
@@ -283,9 +289,9 @@ export function HexaTab({ data, at }) {
 // ======================= 유니온 =======================
 
 /**
- * @param {{ data: any, at?: string }} props
+ * @param {{ data: any }} props
  */
-export function UnionTab({ data, at }) {
+export function UnionTab({ data}) {
   const union = data.tabs?.union || {};
   const summary = union.summary || {};
   const segments = Array.isArray(summary.unionLevelTotalOptionSegments) ? summary.unionLevelTotalOptionSegments : [];
@@ -296,7 +302,7 @@ export function UnionTab({ data, at }) {
   return (
     <div class="sect-stack">
       <div class="union-hero spotlight" {...spotlightHandlers()}>
-        {summary.unionGradeIcon ? <img class="union-hero__icon" src={summary.unionGradeIcon} alt="" width={64} height={64} /> : null}
+        <GradeIcon src={summary.unionGradeIcon || ""} label={summary.unionGrade || ""} size={72} class="union-hero__icon" />
         <div>
           <p class="union-hero__grade">{summary.unionGrade || "유니온"}</p>
           <p class="union-hero__level display">
@@ -340,21 +346,32 @@ export function UnionTab({ data, at }) {
           </ul>
         </section>
       </div>
-      <SourceStamp at={at} />
     </div>
   );
 }
 
 // ======================= 길드 =======================
 
+/** 길드 건물 이름 → 그림 */
+const BUILDING_ART = [
+  [["도서관", "library"], "/assets/guild-library.png"],
+  [["나무", "메이플", "tree"], "/assets/guild-mapletree.png"],
+  [["회계", "account"], "/assets/guild-accountant.png"],
+  [["캠프", "모닥불", "camp"], "/assets/guild-campfire.png"],
+  [["요리", "chef", "cook"], "/assets/guild-chef.png"]
+];
+
+/** @param {string} name */
+const buildingArt = (name) => BUILDING_ART.find(([words]) => words.some((word) => String(name || "").toLowerCase().includes(word)))?.[1] || "";
+
 /**
- * @param {{ data: any, world: string, at?: string }} props
+ * @param {{ data: any, world: string }} props
  */
-export function GuildTab({ data, world, at }) {
+export function GuildTab({ data, world}) {
   const guild = data.tabs?.guild || {};
   const summary = guild.summary;
   if (!summary?.guildName) {
-    return <EmptyState title="가입한 길드가 없어요" description="길드에 가입하면 길드 정보와 길드원 기여도를 볼 수 있어요." />;
+    return <EmptyState title="가입한 길드가 없어요" />;
   }
   const members = Array.isArray(guild.memberPreview) ? guild.memberPreview : [];
   const skills = Array.isArray(guild.guildSkills) ? guild.guildSkills : [];
@@ -423,18 +440,22 @@ export function GuildTab({ data, world, at }) {
           {buildings.length ? (
             <>
               <SubTitle count={buildings.length}>길드 건물</SubTitle>
-              <ul class="chip-list">
-                {buildings.map((building, index) => (
-                  <li key={index} class="soft-chip">
-                    {building.buildingName} <span class="num">Lv.{building.buildingLevel}</span>
-                  </li>
-                ))}
+              <ul class="building-list">
+                {buildings.map((building, index) => {
+                  const art = buildingArt(building.buildingName);
+                  return (
+                    <li key={index} class="building spotlight" {...spotlightHandlers()}>
+                      {art ? <img class="building__art" src={art} alt="" loading="lazy" decoding="async" /> : <Icon name="flag" size={28} />}
+                      <span class="building__name">{building.buildingName}</span>
+                      <strong class="building__lv num">Lv.{building.buildingLevel}</strong>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           ) : null}
         </section>
       </div>
-      <SourceStamp at={at} />
     </div>
   );
 }
@@ -442,76 +463,297 @@ export function GuildTab({ data, world, at }) {
 // ======================= 경험치 그래프 =======================
 
 /**
- * 성장 그래프(SVG). 하루 넘게 비는 구간은 선을 잇지 않고 "기록 없음"으로 표시한다.
+ * 요소의 실제 너비(px). 글자가 늘어나지 않게 SVG 를 실제 크기로 그린다.
+ * @param {import("preact").RefObject<HTMLElement>} ref
+ */
+function useWidth(ref) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const measure = () => setWidth(Math.round(element.getBoundingClientRect().width));
+    measure();
+    if (typeof ResizeObserver !== "function") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
+}
+
+/**
+ * 단조 3차 보간(Fritsch–Carlson) 경로: 값이 튀어 오르지 않는 부드러운 선.
+ * @param {Array<{ x: number, y: number }>} pts
+ */
+function smoothPath(pts) {
+  if (!pts.length) return "";
+  if (pts.length === 1) return `M${pts[0].x} ${pts[0].y}`;
+  const n = pts.length;
+  const dx = [];
+  const slope = [];
+  for (let i = 0; i < n - 1; i += 1) {
+    dx.push(pts[i + 1].x - pts[i].x);
+    slope.push((pts[i + 1].y - pts[i].y) / (dx[i] || 1));
+  }
+  const m = [slope[0]];
+  for (let i = 1; i < n - 1; i += 1) m.push(slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2);
+  m.push(slope[n - 2]);
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) {
+      m[i] = 0;
+      m[i + 1] = 0;
+      continue;
+    }
+    const a = m[i] / slope[i];
+    const b = m[i + 1] / slope[i];
+    const h = Math.hypot(a, b);
+    if (h > 3) {
+      m[i] = (3 / h) * a * slope[i];
+      m[i + 1] = (3 / h) * b * slope[i];
+    }
+  }
+  let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i += 1) {
+    const c1x = pts[i].x + dx[i] / 3;
+    const c1y = pts[i].y + (m[i] * dx[i]) / 3;
+    const c2x = pts[i + 1].x - dx[i] / 3;
+    const c2y = pts[i + 1].y - (m[i + 1] * dx[i]) / 3;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${pts[i + 1].x.toFixed(1)} ${pts[i + 1].y.toFixed(1)}`;
+  }
+  return d;
+}
+
+/** 눈금 간격(레벨 단위)을 고른다. @param {number} span */
+function tickStep(span) {
+  const steps = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10];
+  return steps.find((step) => span / step <= 4) || 10;
+}
+
+/** 레벨+경험치 → 눈금 글자. @param {number} y */
+function tickLabel(y) {
+  const level = Math.floor(y + 1e-9);
+  const pct = Math.round((y - level) * 100);
+  return pct === 0 ? `Lv.${level}` : `${pct}%`;
+}
+
+/** @param {string} date */
+const dayNumber = (date) => Math.round(Date.parse(`${date}T00:00:00Z`) / 86400000);
+
+/** @param {string} date "2026-10-03" → "10.03" */
+const shortDate = (date) => date.slice(5).replace("-", ".");
+
+/**
+ * 성장 그래프: 레벨 진행(부드러운 선 + 그라데이션 영역) 위, 하루 증가량 막대 아래.
+ * 점·막대에 마우스를 올리거나 눌러 보면 날짜·레벨·경험치·전날 대비 증가량을 보여준다.
+ * 하루 넘게 비는 구간은 선을 잇지 않고 "기록 없음"으로 표시한다.
  * @param {{ points: Array<{ dateKst: string, level: number | null, expRate: number | null }> }} props
  */
 function TrendChart({ points }) {
-  const width = 640;
-  const height = 240;
-  const pad = { l: 48, r: 16, t: 16, b: 32 };
-  const series = points
-    .map((p) => ({ date: p.dateKst, y: (Number(p.level) || 0) + (Number(p.expRate) || 0) / 100, level: p.level, rate: p.expRate }))
-    .filter((p) => p.date && Number.isFinite(p.y));
+  const boxRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const width = Math.max(280, useWidth(boxRef));
+  const [active, setActive] = useState(/** @type {number | null} */ (null));
+  const gradientId = `trend-${useId()}`;
+  const narrow = width < 520;
+  const height = narrow ? 260 : 320;
+  const pad = { l: narrow ? 46 : 58, r: narrow ? 12 : 20, t: 18, b: 30 };
+  const barBand = narrow ? 52 : 64; // 아래 막대 영역 높이
+  const lineBottom = height - pad.b - barBand - 26;
+
+  const series = useMemo(() => {
+    const list = points
+      .map((p) => ({ date: p.dateKst, level: Number(p.level) || 0, rate: Number(p.expRate) || 0 }))
+      .filter((p) => p.date && p.level > 0)
+      .map((p) => ({ ...p, y: p.level + p.rate / 100, day: dayNumber(p.date) }));
+    return list.map((p, i) => {
+      const prev = list[i - 1];
+      return { ...p, gain: prev ? (p.y - prev.y) * 100 : null, gapDays: prev ? p.day - prev.day : 0 };
+    });
+  }, [points]);
+
   if (series.length < 2) return null;
-  const dayIndex = (date) => Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${series[0].date}T00:00:00Z`)) / 86400000);
-  const span = Math.max(1, dayIndex(series[series.length - 1].date));
+
+  const first = series[0];
+  const last = series[series.length - 1];
+  const span = Math.max(1, last.day - first.day);
   const ys = series.map((p) => p.y);
-  const yMin = Math.floor(Math.min(...ys));
-  const yMax = Math.max(yMin + 1, Math.ceil(Math.max(...ys)));
-  const xOf = (date) => pad.l + (dayIndex(date) / span) * (width - pad.l - pad.r);
-  const yOf = (y) => pad.t + (1 - (y - yMin) / (yMax - yMin)) * (height - pad.t - pad.b);
+  const rawMin = Math.min(...ys);
+  const rawMax = Math.max(...ys);
+  const padY = Math.max(0.04, (rawMax - rawMin) * 0.12);
+  const step = tickStep(rawMax - rawMin + padY * 2);
+  const yMin = Math.floor((rawMin - padY) / step) * step;
+  const yMax = Math.ceil((rawMax + padY) / step) * step;
+  const xOf = (day) => pad.l + ((day - first.day) / span) * (width - pad.l - pad.r);
+  const yOf = (y) => pad.t + (1 - (y - yMin) / (yMax - yMin || 1)) * (lineBottom - pad.t);
+  const ticks = [];
+  for (let y = yMin; y <= yMax + 1e-9; y += step) ticks.push(Number(y.toFixed(4)));
+
+  const gains = series.map((p) => (p.gain !== null && p.gain > 0 ? p.gain : 0));
+  const maxGain = Math.max(1, ...gains);
+  const barTop = height - pad.b - barBand;
+  const barW = Math.max(4, Math.min(18, ((width - pad.l - pad.r) / (span + 1)) * 0.56));
 
   /** @type {Array<typeof series>} */
   const segments = [[series[0]]];
   /** @type {Array<{ x1: number, x2: number }>} */
   const gaps = [];
   for (let i = 1; i < series.length; i += 1) {
-    const prev = series[i - 1];
-    const cur = series[i];
-    if (dayIndex(cur.date) - dayIndex(prev.date) > 1) {
-      gaps.push({ x1: xOf(prev.date), x2: xOf(cur.date) });
-      segments.push([cur]);
-    } else segments[segments.length - 1].push(cur);
+    if (series[i].gapDays > 1) {
+      gaps.push({ x1: xOf(series[i - 1].day), x2: xOf(series[i].day) });
+      segments.push([series[i]]);
+    } else segments[segments.length - 1].push(series[i]);
   }
+
+  /** @param {PointerEvent} event */
+  const pick = (event) => {
+    const box = boxRef.current?.getBoundingClientRect();
+    if (!box) return;
+    const x = event.clientX - box.left;
+    let best = 0;
+    let bestDist = Infinity;
+    series.forEach((p, i) => {
+      const dist = Math.abs(xOf(p.day) - x);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    setActive(best);
+  };
+
+  const cur = active !== null ? series[active] : null;
+  const tipX = cur ? xOf(cur.day) : 0;
+  // 툴팁은 점 옆(오른쪽, 모자라면 왼쪽)에 띄워 점을 가리지 않는다.
+  const tipLeft = cur ? (tipX + 16 + 180 <= width ? tipX + 16 : Math.max(0, tipX - 196)) : 0;
+  const tipTop = cur ? Math.max(0, Math.min(height - 96, yOf(cur.y) - 44)) : 0;
 
   return (
     <figure class="trend">
-      <svg viewBox={`0 0 ${width} ${height}`} class="trend__svg" role="img" aria-label={`레벨 변화: ${series[0].date} Lv.${series[0].level}에서 ${series[series.length - 1].date} Lv.${series[series.length - 1].level}`}>
-        {[yMin, (yMin + yMax) / 2, yMax].map((y) => (
-          <g key={y}>
-            <line x1={pad.l} x2={width - pad.r} y1={yOf(y)} y2={yOf(y)} class="trend__grid" />
-            <text x={pad.l - 8} y={yOf(y)} class="trend__axis" text-anchor="end" dominant-baseline="middle">
-              {formatDecimal(y, 1)}
-            </text>
-          </g>
-        ))}
-        {gaps.map((gap, index) => (
-          <g key={index}>
-            <rect x={gap.x1} y={pad.t} width={Math.max(0, gap.x2 - gap.x1)} height={height - pad.t - pad.b} class="trend__gap" />
-            {gap.x2 - gap.x1 > 56 ? (
-              <text x={(gap.x1 + gap.x2) / 2} y={pad.t + 14} class="trend__gap-text" text-anchor="middle">
-                기록 없음
+      <div
+        ref={boxRef}
+        class="trend__box"
+        onPointerMove={pick}
+        onPointerDown={pick}
+        onPointerLeave={(event) => event.pointerType === "mouse" && setActive(null)}
+      >
+        <svg
+          class="trend__svg"
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label={`레벨 변화: ${first.date} Lv.${first.level} ${formatDecimal(first.rate, 2)}%에서 ${last.date} Lv.${last.level} ${formatDecimal(last.rate, 2)}%`}
+        >
+          <defs>
+            <linearGradient id={`${gradientId}-area`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" class="trend__stop-a" />
+              <stop offset="1" class="trend__stop-b" />
+            </linearGradient>
+            <linearGradient id={`${gradientId}-line`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" class="trend__stop-l1" />
+              <stop offset="1" class="trend__stop-l2" />
+            </linearGradient>
+            <linearGradient id={`${gradientId}-bar`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" class="trend__stop-bar1" />
+              <stop offset="1" class="trend__stop-bar2" />
+            </linearGradient>
+          </defs>
+
+          {ticks.map((y) => (
+            <g key={y} class="trend__tick">
+              <line x1={pad.l} x2={width - pad.r} y1={yOf(y)} y2={yOf(y)} class="trend__grid" />
+              <text x={pad.l - 10} y={yOf(y)} class="trend__axis" text-anchor="end" dominant-baseline="middle">
+                {tickLabel(y)}
               </text>
-            ) : null}
-          </g>
-        ))}
-        {segments.map((segment, index) => (
-          <path key={index} class="trend__line" d={segment.map((p, i) => `${i ? "L" : "M"}${xOf(p.date).toFixed(1)} ${yOf(p.y).toFixed(1)}`).join(" ")} />
-        ))}
-        {series.map((p) => (
-          <circle key={p.date} cx={xOf(p.date)} cy={yOf(p.y)} r="3.5" class="trend__dot">
-            <title>
-              {formatDateDot(p.date)} · Lv.{p.level} {formatDecimal(p.rate, 2)}%
-            </title>
-          </circle>
-        ))}
-        <text x={pad.l} y={height - 8} class="trend__axis">
-          {formatMonthDay(series[0].date)}
-        </text>
-        <text x={width - pad.r} y={height - 8} class="trend__axis" text-anchor="end">
-          {formatMonthDay(series[series.length - 1].date)}
-        </text>
-      </svg>
+            </g>
+          ))}
+          <line x1={pad.l} x2={width - pad.r} y1={height - pad.b} y2={height - pad.b} class="trend__base" />
+
+          {gaps.map((gap, index) => (
+            <g key={index} class="trend__gap-g">
+              <rect x={gap.x1 + 4} y={pad.t} width={Math.max(0, gap.x2 - gap.x1 - 8)} height={height - pad.t - pad.b} rx="10" class="trend__gap" />
+              {gap.x2 - gap.x1 > 60 ? (
+                <text x={(gap.x1 + gap.x2) / 2} y={pad.t + 16} class="trend__gap-text" text-anchor="middle">
+                  기록 없음
+                </text>
+              ) : null}
+            </g>
+          ))}
+
+          {/* 하루 증가량 막대 */}
+          {series.map((p, i) => {
+            const h = gains[i] > 0 ? Math.max(3, (gains[i] / maxGain) * (barBand - 8)) : 0;
+            if (!h) return null;
+            return (
+              <rect
+                key={`bar-${p.date}`}
+                class={`trend__bar${active === i ? " is-active" : ""}`}
+                x={xOf(p.day) - barW / 2}
+                y={height - pad.b - h}
+                width={barW}
+                height={h}
+                rx={Math.min(5, barW / 2)}
+                fill={`url(#${gradientId}-bar)`}
+                style={{ "--i": i }}
+              />
+            );
+          })}
+          <text x={pad.l - 10} y={barTop + 14} class="trend__axis trend__axis--bar" text-anchor="end">
+            하루
+          </text>
+
+          {/* 레벨 진행 영역 + 선 */}
+          {segments.map((segment, index) => {
+            const pts = segment.map((p) => ({ x: xOf(p.day), y: yOf(p.y) }));
+            const line = smoothPath(pts);
+            const area = pts.length > 1 ? `${line} L${pts[pts.length - 1].x.toFixed(1)} ${lineBottom} L${pts[0].x.toFixed(1)} ${lineBottom} Z` : "";
+            return (
+              <g key={index}>
+                {area ? <path class="trend__area" d={area} fill={`url(#${gradientId}-area)`} /> : null}
+                <path class="trend__line" d={line} pathLength={1} stroke={`url(#${gradientId}-line)`} />
+              </g>
+            );
+          })}
+
+          {cur ? <line class="trend__guide" x1={tipX} x2={tipX} y1={pad.t} y2={height - pad.b} /> : null}
+
+          {series.map((p, i) => (
+            <circle
+              key={p.date}
+              cx={xOf(p.day)}
+              cy={yOf(p.y)}
+              r={active === i ? 6.5 : i === series.length - 1 ? 4.5 : 3}
+              class={`trend__dot${active === i ? " is-active" : ""}${i === series.length - 1 ? " is-last" : ""}`}
+              style={{ "--i": i }}
+            />
+          ))}
+
+          <text x={xOf(first.day)} y={height - 8} class="trend__axis" text-anchor="start">
+            {shortDate(first.date)}
+          </text>
+          {!narrow && span > 6 ? (
+            <text x={xOf(first.day + Math.round(span / 2))} y={height - 8} class="trend__axis" text-anchor="middle">
+              {shortDate(new Date((first.day + Math.round(span / 2)) * 86400000).toISOString().slice(0, 10))}
+            </text>
+          ) : null}
+          <text x={xOf(last.day)} y={height - 8} class="trend__axis" text-anchor="end">
+            {shortDate(last.date)}
+          </text>
+        </svg>
+
+        {cur ? (
+          <div class="trend__tip" style={{ transform: `translate(${tipLeft}px, ${tipTop}px)` }} aria-hidden="true">
+            <p class="trend__tip-date">{formatDateDot(cur.date)}</p>
+            <p class="trend__tip-level num">
+              Lv.{cur.level} <strong>{formatDecimal(cur.rate, 2)}%</strong>
+            </p>
+            <p class={`trend__tip-gain num${cur.gain !== null && cur.gain > 0 ? " is-up" : ""}`}>
+              {cur.gain === null
+                ? "첫 기록"
+                : `${cur.gapDays > 1 ? `${cur.gapDays}일 전 대비` : "전날 대비"} ${cur.gain >= 0 ? "+" : ""}${formatDecimal(cur.gain, 2)}%`}
+            </p>
+          </div>
+        ) : null}
+      </div>
       <figcaption class="sr-only">
         <table>
           <caption>날짜별 레벨과 경험치</caption>
@@ -520,6 +762,7 @@ function TrendChart({ points }) {
               <th scope="col">날짜</th>
               <th scope="col">레벨</th>
               <th scope="col">경험치</th>
+              <th scope="col">이전 기록 대비</th>
             </tr>
           </thead>
           <tbody>
@@ -528,12 +771,43 @@ function TrendChart({ points }) {
                 <td>{p.date}</td>
                 <td>{p.level}</td>
                 <td>{formatDecimal(p.rate, 2)}%</td>
+                <td>{p.gain === null ? "-" : `${formatDecimal(p.gain, 2)}%`}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </figcaption>
     </figure>
+  );
+}
+
+/** 성장 기록이 없을 때: 점선 그래프가 그려지는 일러스트. */
+function ExpEmpty() {
+  return (
+    <div class="exp-empty">
+      <svg class="exp-empty__art" width="220" height="128" viewBox="0 0 220 128" aria-hidden="true" focusable="false">
+        <rect x="8" y="10" width="204" height="104" rx="18" class="exp-empty__card" />
+        <g class="exp-empty__grid">
+          <line x1="28" x2="192" y1="40" y2="40" />
+          <line x1="28" x2="192" y1="66" y2="66" />
+          <line x1="28" x2="192" y1="92" y2="92" />
+        </g>
+        <g class="exp-empty__bars">
+          <rect x="44" y="84" width="10" height="8" rx="3" />
+          <rect x="76" y="78" width="10" height="14" rx="3" />
+          <rect x="108" y="82" width="10" height="10" rx="3" />
+          <rect x="140" y="72" width="10" height="20" rx="3" />
+        </g>
+        <path class="exp-empty__line" d="M30 86 C 60 82, 74 70, 98 68 S 140 52, 168 34" pathLength="1" />
+        <circle cx="168" cy="34" r="5" class="exp-empty__dot" />
+        <g transform="translate(176 8) rotate(16) scale(1.05)" class="exp-empty__leaf">
+          <path d={LEAF_PATH} stroke-width="1.2" stroke-linejoin="round" />
+          <path d={LEAF_STEM_PATH} fill="none" stroke-width="1.6" stroke-linecap="round" />
+        </g>
+        <path d={SPARKLE_PATH} transform="translate(14 0) scale(0.6)" class="exp-empty__sparkle" />
+      </svg>
+      <p class="exp-empty__title">아직 쌓인 성장 기록이 없어요</p>
+    </div>
   );
 }
 
@@ -566,38 +840,41 @@ export function ExpTab({ data }) {
   const first = daily[0];
   const last = daily[daily.length - 1];
   const gained = first && last ? (Number(last.level) || 0) + (Number(last.expRate) || 0) / 100 - ((Number(first.level) || 0) + (Number(first.expRate) || 0) / 100) : 0;
+  const rate = Number(exp.currentExpRate ?? data.profile?.expRate);
 
   return (
     <div class="sect-stack">
       <div class="exp-summary">
-        <div class="exp-summary__item">
+        <div class="exp-summary__item spotlight" {...spotlightHandlers()}>
           <span class="exp-summary__label">현재 레벨</span>
-          <strong class="display num">Lv.{exp.currentLevel ?? data.profile?.level ?? "-"}</strong>
+          <strong class="display num">
+            Lv.
+            <CountUp value={Number(exp.currentLevel ?? data.profile?.level) || 0} format={(n) => formatComma(Math.round(n))} />
+          </strong>
         </div>
-        <div class="exp-summary__item">
+        <div class="exp-summary__item spotlight" {...spotlightHandlers()}>
           <span class="exp-summary__label">경험치</span>
-          <strong class="display num">{exp.expText || "-"}</strong>
+          <strong class="display num">{Number.isFinite(rate) ? <CountUp value={rate} format={(n) => `${formatDecimal(n, 2)}%`} /> : exp.expText || "-"}</strong>
+          {Number.isFinite(rate) ? (
+            <span class="exp-summary__bar" aria-hidden="true">
+              <span style={{ "--exp": `${Math.max(0, Math.min(100, rate))}%` }} />
+            </span>
+          ) : null}
         </div>
         {daily.length >= 2 ? (
-          <div class="exp-summary__item">
-            <span class="exp-summary__label">
-              {formatMonthDay(first.dateKst)} 이후
-            </span>
-            <strong class="display num">+{formatDecimal(gained * 100, 1)}%</strong>
+          <div class="exp-summary__item spotlight" {...spotlightHandlers()}>
+            <span class="exp-summary__label">{formatMonthDay(first.dateKst)} 이후</span>
+            <strong class="display num exp-summary__gain">
+              +<CountUp value={gained * 100} format={(n) => `${formatDecimal(n, 1)}%`} />
+            </strong>
           </div>
         ) : null}
       </div>
 
-      {state.status === "loading" ? <Skeleton height={240} radius={16} /> : null}
+      {state.status === "loading" ? <Skeleton height={300} radius={16} /> : null}
       {state.status === "error" ? <ErrorState compact title="성장 기록을 불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} /> : null}
       {state.status === "ready" && daily.length >= 2 ? <TrendChart points={daily} /> : null}
-      {state.status === "ready" && daily.length < 2 ? (
-        <EmptyState
-          title="아직 쌓인 성장 기록이 없어요"
-          description="이 사이트에서 캐릭터를 조회할 때마다 경험치를 기록해요. 이틀 넘게 기록이 쌓이면 그래프로 보여드려요."
-        />
-      ) : null}
-      <SourceStamp kind="calc" source="메이플M 플러스 조회 기록(자체 수집)" note={last ? `최근 기록 ${formatDateDot(last.dateKst)}` : ""} />
+      {state.status === "ready" && daily.length < 2 ? <ExpEmpty /> : null}
     </div>
   );
 }
