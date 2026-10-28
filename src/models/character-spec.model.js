@@ -22,6 +22,8 @@ const characterSpecSchema = new mongoose.Schema(
     maxDamage: { type: Number, default: null },
     combatPower: { type: Number, default: null },
     scoreVersion: { type: Number, required: true },
+    // Name/class changes seen between collections: [{ field, from, to, at }] (last 50).
+    history: { type: [mongoose.Schema.Types.Mixed], default: undefined },
     source: { type: String, default: "lookup" },
     checkedAt: { type: Date, required: true }
   },

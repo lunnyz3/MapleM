@@ -115,7 +115,16 @@ async function recordCharacterItems({
   // Unknown values keep what an earlier lookup stored.
   if (finiteOrNull(combatPower)) spec.combatPower = finiteOrNull(combatPower);
   if (finiteOrNull(maxDamage)) spec.maxDamage = finiteOrNull(maxDamage);
-  await CharacterSpec.updateOne({ ocid: key }, { $set: spec }, { upsert: true });
+  const before = await CharacterSpec.findOneAndUpdate({ ocid: key }, { $set: spec }, { upsert: true, returnDocument: "before", projection: { characterName: 1, characterClass: 1, worldName: 1 } }).lean();
+  const changes = [];
+  if (before) {
+    [["characterName", "name"], ["characterClass", "class"], ["worldName", "world"]].forEach(([field, label]) => {
+      if (before[field] && spec[field] && before[field] !== spec[field]) changes.push({ field: label, from: before[field], to: spec[field], at: now });
+    });
+  }
+  if (changes.length) {
+    await CharacterSpec.updateOne({ ocid: key }, { $push: { history: { $each: changes, $slice: -50 } } });
+  }
   return collected;
 }
 

@@ -8,6 +8,7 @@ import { GradeIcon } from "../../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../../components/States.jsx";
 import { presetByNo, shortSymbolName } from "../../lib/character.js";
 import { loadExpHistory } from "../../lib/data.js";
+import { getJson } from "../../lib/api.js";
 import { formatComma, formatDateDot, formatDecimal, formatKoreanUnits, formatMonthDay } from "../../lib/format.js";
 import { urls } from "../../lib/game.js";
 import { hexaCoreType, hexaSpend, symbolCost } from "../../lib/hexaCalc.mjs";
@@ -897,6 +898,43 @@ function levelUpForecast(daily, level, rate) {
   return { days, date, perDay };
 }
 
+const HISTORY_LABELS = { name: "닉네임", guild: "길드", class: "직업", world: "월드" };
+
+/** 닉네임·길드·직업이 바뀐 기록(사이트 조회·수집 때 본 값). 없으면 아무것도 그리지 않는다. */
+function ChangeHistory({ ocid }) {
+  const [events, setEvents] = useState(/** @type {any[]} */ ([]));
+  useEffect(() => {
+    if (!ocid) return undefined;
+    let alive = true;
+    getJson(`/api/v2/character-history?${new URLSearchParams({ ocid })}`).then(
+      ({ response, body }) => alive && response.ok && body?.ok && setEvents(Array.isArray(body.events) ? body.events : []),
+      () => {}
+    );
+    return () => {
+      alive = false;
+    };
+  }, [ocid]);
+  if (!events.length) return null;
+  return (
+    <section class="sect">
+      <SubTitle count={events.length}>변경 이력</SubTitle>
+      <ol class="history-list">
+        {events.map((event, index) => (
+          <li key={index}>
+            <span class="history-list__date num">{formatDateDot(String(event.at).slice(0, 10))}</span>
+            <span class="badge">{HISTORY_LABELS[event.field] || event.field}</span>
+            <span class="history-list__change">
+              <span class="history-list__from">{event.from}</span>
+              <Icon name="arrowRight" size={14} />
+              <strong>{event.to}</strong>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function ExpTab({ data }) {
   const ocid = data.ocid;
   const [state, setState] = useState(/** @type {{ status: "loading" } | { status: "ready", daily: any[] } | { status: "error", error: any }} */ ({ status: "loading" }));
@@ -968,6 +1006,7 @@ export function ExpTab({ data }) {
       {state.status === "error" ? <ErrorState compact title="성장 기록을 불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} /> : null}
       {state.status === "ready" && daily.length >= 2 ? <TrendChart points={daily} /> : null}
       {state.status === "ready" && daily.length < 2 ? <ExpEmpty /> : null}
+      <ChangeHistory ocid={ocid} />
     </div>
   );
 }

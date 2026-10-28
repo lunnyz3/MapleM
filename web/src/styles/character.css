@@ -2961,3 +2961,45 @@ button.eq-slot:hover .eq-slot__img {
     animation: none;
   }
 }
+
+/* 변경 이력 */
+.history-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 2px;
+  font-size: var(--fs-14);
+}
+
+.history-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.history-list__date {
+  min-width: 6.5em;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.history-list__change {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.history-list__from {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}

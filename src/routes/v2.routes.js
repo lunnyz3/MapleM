@@ -3,7 +3,7 @@ const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getNotices } = require("../controllers/notices-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
-const { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs, getSpecSummary } = require("../controllers/item-ranking-v2.controller");
+const { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs, getSpecSummary, getCharacterHistory } = require("../controllers/item-ranking-v2.controller");
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.get("/item-ranking", getItemRanking);
 router.get("/spec-ranking", getSpecRanking);
 router.post("/specs", postSpecs);
 router.get("/spec-summary", getSpecSummary);
+router.get("/character-history", getCharacterHistory);
 router.get("/notices", getNotices);
 router.get("/item-collection", (req, res) => res.json({ ok: true, ...itemCollector.getStatus() }));
 

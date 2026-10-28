@@ -218,3 +218,18 @@ test("레벨 훑기: 랭킹 캐릭터 + 그 길드·길드 랭킹 길드의 길�
   assert.equal(stats.guilds, 2);
   assert.equal(stats.unknownLevel, 1);
 });
+
+test("변경 이력: 시간순 기록에서 닉네임·길드·직업이 바뀐 때만 뽑는다", () => {
+  const { changesFrom } = require("../src/services/character-history.service");
+  const at = (day) => new Date(`2026-10-${day}T00:00:00Z`);
+  const events = changesFrom([
+    { at: at(1), name: "가", guild: "A", class: "비숍" },
+    { at: at(2), name: "가", guild: "A", class: "비숍" },
+    { at: at(3), name: "나", guild: undefined, class: "비숍" },
+    { at: at(4), name: "나", guild: "B", class: "아크메이지(썬,콜)" }
+  ]);
+  assert.deepEqual(
+    events.map((event) => `${event.field}:${event.from}>${event.to}`),
+    ["name:가>나", "guild:A>B", "class:비숍>아크메이지(썬,콜)"]
+  );
+});
