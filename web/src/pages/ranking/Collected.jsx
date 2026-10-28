@@ -1,7 +1,8 @@
-// 자체 수집 랭킹: 아이템(부위·계열별 템환산 순위)과 스펙(템환산·잠재·에디·최대 대미지·전투력).
+// 자체 수집 랭킹: 아이템(아케인셰이드·앱솔랩스, 무기 종류·방어구 부위별 템환산 순위)과
+// 스펙(템환산·잠재·에디·최대 대미지·전투력).
 // 사이트에서 조회된 캐릭터 + 매일 모으는 전투력 랭킹 1만 명이 대상이다.
 import "../../styles/collected.css";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { Avatar } from "../../components/Avatar.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { RankBadge } from "../../components/RankBadge.jsx";
@@ -17,7 +18,10 @@ import { WORLDS, urls } from "../../lib/game.js";
 import { EquipDetail } from "../character/Equipment.jsx";
 
 /** 부위 순서(장비창 순). 서버에 있는 부위만 보여 준다. */
-const SLOT_ORDER = ["무기", "보조무기", "엠블렘", "모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토", "벨트", "반지", "목걸이", "귀고리", "얼굴장식", "눈장식", "포켓", "뱃지", "훈장", "칭호"];
+/** 순위를 매기는 계열과 방어구 부위(무기는 무기 종류별). 서버 item-score.json 과 같다. */
+const FAMILIES = ["아케인셰이드", "앱솔랩스"];
+const ARMOR_SLOTS = ["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토"];
+const WEAPON_TAB = "무기";
 
 export const SPEC_METRICS = [
   { id: "itemScore", label: "템환산", format: (row) => formatComma(Math.round(row.itemScore)) },
@@ -140,32 +144,51 @@ function Owner({ row }) {
  */
 export function ItemRanking({ query, onQuery }) {
   const [opened, setOpened] = useState(/** @type {any} */ (null));
-  const groupUrl = `/api/v2/item-ranking/groups?${new URLSearchParams({ slot: query.slot, world_name: query.world })}`;
-  const groups = useJson(groupUrl, groupUrl);
-  const listParams = new URLSearchParams({ slot: query.slot, page: String(query.page) });
-  if (query.family) listParams.set("family", query.family);
+  // 부위 목록(무기는 무기 종류별) — 월드별 개수
+  const slotsUrl = `/api/v2/item-ranking/groups?${new URLSearchParams({ world_name: query.world })}`;
+  const slotsState = useJson(slotsUrl, slotsUrl);
+  const allSlots = slotsState.data?.slots || [];
+  const weaponTypes = allSlots.filter((entry) => entry.weapon);
+  // "무기"만 고른 상태면 가장 많은 무기 종류부터 보여 준다.
+  const slot = query.slot === WEAPON_TAB ? weaponTypes[0]?.slot || "" : query.slot;
+  const isWeapon = slot ? !ARMOR_SLOTS.includes(slot) : query.slot === WEAPON_TAB;
+  const family = FAMILIES.includes(query.family) ? query.family : FAMILIES[0];
+
+  const familyUrl = slot ? `/api/v2/item-ranking/groups?${new URLSearchParams({ slot, world_name: query.world })}` : "";
+  const familyState = useJson(familyUrl, familyUrl);
+  const familyCounts = new Map((familyState.data?.families || []).map((entry) => [entry.family, entry.count]));
+
+  const listParams = new URLSearchParams({ slot, family, page: String(query.page) });
   if (query.world) listParams.set("world_name", query.world);
   if (query.noEmblem) listParams.set("sort", "scoreWithoutEmblem");
-  const listUrl = `/api/v2/item-ranking?${listParams}`;
+  const listUrl = slot ? `/api/v2/item-ranking?${listParams}` : "";
   const list = useJson(listUrl, listUrl);
 
-  const slotItems = useMemo(() => {
-    const counts = new Map((groups.data?.slots || []).map((entry) => [entry.slot, entry.count]));
-    const known = SLOT_ORDER.filter((slot) => counts.has(slot) || slot === query.slot);
-    return known.map((slot) => ({ id: slot, label: slot }));
-  }, [groups.data, query.slot]);
-  const families = groups.data?.families || [];
-  const familyItems = [{ id: "", label: "전체" }, ...families.filter((entry) => entry.count > 1 || entry.family === query.family).slice(0, 10).map((entry) => ({ id: entry.family, label: entry.family, count: entry.count }))];
+  const topItems = [WEAPON_TAB, ...ARMOR_SLOTS.filter((name) => allSlots.some((entry) => entry.slot === name))].map((name) => ({ id: name, label: name }));
   const rows = list.data?.rows || [];
   const scoreField = query.noEmblem ? "scoreWithoutEmblem" : "score";
 
   return (
     <>
-      <Tabs idBase="crk-slot" label="부위" scrollable value={query.slot} onChange={(slot) => onQuery({ slot, family: "", page: 1 })} items={slotItems.length ? slotItems : [{ id: query.slot, label: query.slot }]} />
+      <Tabs
+        idBase="crk-slot"
+        label="부위"
+        scrollable
+        value={isWeapon ? WEAPON_TAB : slot}
+        onChange={(next) => onQuery({ slot: next, page: 1 })}
+        items={topItems}
+      />
 
       <section class="rk-filters card crk-filters" aria-label="아이템 랭킹 조건">
         <div class="crk-filters__row">
           <WorldSelect id="crk-item-world" world={query.world} onWorld={(world) => onQuery({ world, page: 1 })} />
+          <Segmented
+            name="crk-family"
+            legend="계열"
+            value={family}
+            onChange={(value) => onQuery({ family: value, page: 1 })}
+            options={FAMILIES.map((name) => ({ value: name, label: familyCounts.has(name) ? `${name} ${formatComma(familyCounts.get(name))}` : name }))}
+          />
           <Segmented
             name="crk-emblem"
             legend="점수 기준"
@@ -177,18 +200,18 @@ export function ItemRanking({ query, onQuery }) {
             ]}
           />
         </div>
-        {families.length > 1 ? (
-          <div class="crk-chips" role="group" aria-label="계열">
-            {familyItems.map((item) => (
+        {isWeapon && weaponTypes.length ? (
+          <div class="crk-chips" role="group" aria-label="무기 종류">
+            {weaponTypes.map((entry) => (
               <button
                 type="button"
-                key={item.id || "all"}
-                class={`crk-chip${item.id === query.family ? " is-active" : ""}`}
-                aria-pressed={item.id === query.family}
-                onClick={() => onQuery({ family: item.id, page: 1 })}
+                key={entry.slot}
+                class={`crk-chip${entry.slot === slot ? " is-active" : ""}`}
+                aria-pressed={entry.slot === slot}
+                onClick={() => onQuery({ slot: entry.slot, page: 1 })}
               >
-                {item.label}
-                {item.count ? <span class="crk-chip__count num">{formatComma(item.count)}</span> : null}
+                {entry.slot}
+                <span class="crk-chip__count num">{formatComma(entry.count)}</span>
               </button>
             ))}
           </div>
@@ -196,7 +219,8 @@ export function ItemRanking({ query, onQuery }) {
       </section>
 
       <div class="rk-panel card crk-panel" aria-busy={list.status === "loading"}>
-        {list.status === "loading" ? <ListSkeleton /> : null}
+        {!slot && slotsState.status === "ready" ? <EmptyState title="아직 모은 장비가 없어요" /> : null}
+        {list.status === "loading" && (slot || slotsState.status === "loading") ? <ListSkeleton /> : null}
         {list.status === "error" ? <ErrorState title="랭킹을 불러오지 못했어요" description={list.error?.message} onRetry={list.retry} /> : null}
         {list.status === "ready" && !rows.length ? <EmptyState title="아직 모은 장비가 없어요" /> : null}
         {list.status === "ready" && rows.length ? (

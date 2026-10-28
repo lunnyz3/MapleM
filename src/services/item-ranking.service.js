@@ -1,6 +1,6 @@
 // Item ranking and spec ranking built from characters seen on the site and the daily
-// combat-power ranking collection. Items are ranked inside their group (slot + family,
-// e.g. "아케인셰이드 어깨"), characters by spec metrics. Everything needs MongoDB; without it
+// combat-power ranking collection. 아케인셰이드·앱솔랩스 items are ranked inside their group
+// (family + weapon type or armor slot, e.g. "아케인셰이드 완드"); characters by spec metrics. Everything needs MongoDB; without it
 // writes are skipped and reads come back empty.
 const mongoose = require("mongoose");
 const { EquipmentItem } = require("../models/equipment-item.model");
@@ -14,6 +14,9 @@ const PAGE_SIZE = 20;
 const MAX_PAGE = 500;
 const groupTotalCache = new TtlLruCache({ maxEntries: 2000, maxBytes: 1024 * 1024 });
 const GROUP_TOTAL_TTL_MS = 10 * 60 * 1000;
+
+// Armor slots of the ranked families; every other ranked slot is a weapon type.
+const ARMOR_SLOTS = new Set(["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토"]);
 
 const SPEC_METRICS = Object.freeze({
   itemScore: { field: "itemScore", label: "템환산" },
@@ -53,7 +56,7 @@ async function recordCharacterItems({
 }) {
   const key = String(ocid || "").trim();
   if (!key || !itemData || !isMongoConnected()) return null;
-  const collected = collectCharacterItems(itemData);
+  const collected = await collectCharacterItems(itemData);
   if (!collected.items.length) return null;
 
   const owner = {
@@ -113,7 +116,7 @@ async function groupTotal(slot, family) {
   const cacheKey = `${slot}\u0000${family}`;
   const cached = groupTotalCache.get(cacheKey);
   if (cached !== undefined) return cached;
-  const total = await EquipmentItem.countDocuments({ slot, family }).maxTimeMS(DB_TIMEOUT_MS);
+  const total = await EquipmentItem.countDocuments({ slot, family, scoreVersion: SCORE_VERSION }).maxTimeMS(DB_TIMEOUT_MS);
   groupTotalCache.set(cacheKey, total, GROUP_TOTAL_TTL_MS, 64);
   return total;
 }
@@ -125,14 +128,14 @@ async function groupTotal(slot, family) {
 async function rankCharacterItems(ocid) {
   const key = String(ocid || "").trim();
   if (!key || !isMongoConnected()) return {};
-  const items = await EquipmentItem.find({ ocid: key })
+  const items = await EquipmentItem.find({ ocid: key, family: { $ne: "" }, scoreVersion: SCORE_VERSION })
     .select({ fingerprint: 1, slot: 1, family: 1, label: 1, score: 1, scoreWithoutEmblem: 1, _id: 0 })
     .maxTimeMS(DB_TIMEOUT_MS)
     .lean();
   const entries = await Promise.all(
     items.map(async (item) => {
       const [above, total] = await Promise.all([
-        EquipmentItem.countDocuments({ slot: item.slot, family: item.family, score: { $gt: item.score } }).maxTimeMS(DB_TIMEOUT_MS),
+        EquipmentItem.countDocuments({ slot: item.slot, family: item.family, scoreVersion: SCORE_VERSION, score: { $gt: item.score } }).maxTimeMS(DB_TIMEOUT_MS),
         groupTotal(item.slot, item.family)
       ]);
       return [
@@ -158,31 +161,31 @@ function pageOf(value) {
 /** Slots with item counts, then the families of `slot` with counts (most owned first). */
 async function listItemGroups({ slot, worldName } = {}) {
   if (!isMongoConnected()) return { slots: [], families: [] };
-  const match = worldName ? { worldName } : {};
+  // Rows scored by an older rule are left out until they are collected again.
+  const match = { family: { $ne: "" }, scoreVersion: SCORE_VERSION };
+  if (worldName) match.worldName = worldName;
   const [slots, families] = await Promise.all([
     EquipmentItem.aggregate([{ $match: match }, { $group: { _id: "$slot", count: { $sum: 1 } } }, { $sort: { count: -1 } }]).option({ maxTimeMS: DB_TIMEOUT_MS }),
     slot
       ? EquipmentItem.aggregate([
           { $match: { ...match, slot } },
           { $group: { _id: "$family", count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 40 }
+          { $sort: { count: -1 } }
         ]).option({ maxTimeMS: DB_TIMEOUT_MS })
       : []
   ]);
   return {
-    slots: slots.map((entry) => ({ slot: entry._id, count: entry.count })),
+    slots: slots.map((entry) => ({ slot: entry._id, count: entry.count, weapon: !ARMOR_SLOTS.has(entry._id) })),
     families: families.map((entry) => ({ family: entry._id, count: entry.count }))
   };
 }
 
-/** One page of the item ranking. `sort` is "score" (문장 포함) or "scoreWithoutEmblem". */
+/** One page of the item ranking. `sort` is "score" (문장 포함) or "scoreWithoutEmblem". Only ranked families. */
 async function listItemRanking({ slot, family, worldName, sort = "score", page = 1 } = {}) {
   const field = sort === "scoreWithoutEmblem" ? "scoreWithoutEmblem" : "score";
   const current = pageOf(page);
   if (!slot || !isMongoConnected()) return { rows: [], total: 0, page: current, pageSize: PAGE_SIZE, sort: field };
-  const filter = { slot };
-  if (family) filter.family = family;
+  const filter = { slot, family: family || { $ne: "" }, scoreVersion: SCORE_VERSION };
   if (worldName) filter.worldName = worldName;
   const [rows, total] = await Promise.all([
     EquipmentItem.find(filter)
@@ -208,7 +211,7 @@ async function listSpecRanking({ metric = "itemScore", worldName, characterClass
   const definition = SPEC_METRICS[metric] || SPEC_METRICS.itemScore;
   const current = pageOf(page);
   if (!isMongoConnected()) return { rows: [], total: 0, page: current, pageSize: PAGE_SIZE, metric };
-  const filter = { [definition.field]: { $ne: null, $gt: 0 } };
+  const filter = { [definition.field]: { $ne: null, $gt: 0 }, scoreVersion: SCORE_VERSION };
   if (worldName) filter.worldName = worldName;
   if (characterClass) filter.characterClass = characterClass;
   const [rows, total] = await Promise.all([

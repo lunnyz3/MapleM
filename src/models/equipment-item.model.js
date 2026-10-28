@@ -15,7 +15,8 @@ const equipmentItemSchema = new mongoose.Schema(
     characterLevel: { type: Number, default: 0 },
     attackType: { type: String, default: "physical" },
     slot: { type: String, required: true },
-    family: { type: String, required: true },
+    // "" = not ranked (only 아케인셰이드·앱솔랩스 are).
+    family: { type: String, default: "" },
     label: { type: String, default: "" },
     itemName: { type: String, default: "" },
     starforce: { type: Number, default: 0 },
@@ -32,6 +33,7 @@ const equipmentItemSchema = new mongoose.Schema(
 
 equipmentItemSchema.index({ ocid: 1, fingerprint: 1 }, { unique: true });
 equipmentItemSchema.index({ slot: 1, family: 1, score: -1 });
+equipmentItemSchema.index({ slot: 1, family: 1, scoreWithoutEmblem: -1 });
 equipmentItemSchema.index({ slot: 1, score: -1 });
 equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, score: -1 });
 equipmentItemSchema.index({ checkedAt: 1 }, { name: "checkedAt_ttl", expireAfterSeconds: ITEM_TTL_SECONDS });

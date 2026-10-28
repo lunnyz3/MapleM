@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const { fillPresetMasteryInfo } = require("../../transform/equipment-mastery");
 const { parseOption } = require("../stats/text");
 const { scoreItem, itemGroup, attackTypeOfItems } = require("./score");
+const { masteryBonusLines, withoutMastery } = require("./mastery");
 
 function toArray(value) {
   return Array.isArray(value) ? value : [];
@@ -42,12 +43,12 @@ function hasName(item) {
   return Boolean(String(item?.item_name || "").trim());
 }
 
-// Potential sum = 보스 공격력 + the attack type's 대미지 %.
-function potentialSum(items, field, attackType) {
+// Potential sum = 보스 공격력 + the attack type's 대미지 % (rolled values, mastery bonuses taken off).
+function potentialSum(entries, field, attackType) {
   const damageKey = attackType === "magical" ? "magicalDamagePercent" : "physicalDamagePercent";
   let sum = 0;
-  items.forEach((item) => {
-    toArray(item?.[field]).forEach((option) => {
+  entries.forEach((entry) => {
+    toArray(entry.rolled?.[field]).forEach((option) => {
       parseOption(option).forEach((entry) => {
         if (entry.key === "bossDamage" || entry.key === damageKey) sum += entry.value;
       });
@@ -62,7 +63,7 @@ function potentialSum(items, field, attackType) {
  *   items: [{ fingerprint, item, slot, family, label, score, scoreWithoutEmblem, worn }]
  *   best: preset with the highest score sum (ties → lower preset number), with sums for ranking
  */
-function collectCharacterItems(itemData) {
+async function collectCharacterItems(itemData) {
   const data = fillPresetMasteryInfo(itemData || {}) || {};
   const worn = toArray(data.item_equipment).filter(hasName);
   const presets = toArray(data.equipment_preset)
@@ -76,20 +77,28 @@ function collectCharacterItems(itemData) {
     const existing = byFingerprint.get(fingerprint);
     // Worn copies carry mastery_info and item_combat_power, so they win over preset copies.
     if (existing && (existing.worn || !isWorn)) return fingerprint;
-    const group = itemGroup(item);
-    byFingerprint.set(fingerprint, {
-      fingerprint,
-      item,
-      slot: group.slot,
-      family: group.family,
-      label: group.label,
-      ...scoreItem(item, attackType),
-      worn: isWorn
-    });
+    byFingerprint.set(fingerprint, { fingerprint, item, worn: isWorn });
     return fingerprint;
   };
   worn.forEach((item) => add(item, true));
   const presetSets = presets.map((preset) => ({ no: preset.no, items: preset.items, fingerprints: preset.items.map((item) => add(item, false)) }));
+  for (const entry of byFingerprint.values()) {
+    let masteryLines = null;
+    try {
+      masteryLines = await masteryBonusLines(entry.item, { attackType, className: data.character_class });
+    } catch {
+      // Unknown split: score the displayed values.
+      masteryLines = null;
+    }
+    const group = itemGroup(entry.item);
+    Object.assign(entry, {
+      slot: group.slot,
+      family: group.family,
+      label: group.label,
+      rolled: withoutMastery(entry.item, masteryLines),
+      ...scoreItem(entry.item, attackType, masteryLines)
+    });
+  }
   if (!presetSets.length && worn.length) {
     presetSets.push({ no: Number(data.use_preset_no) || 1, items: worn, fingerprints: worn.map(itemFingerprint) });
   }
@@ -103,13 +112,13 @@ function collectCharacterItems(itemData) {
         no: preset.no,
         score: Math.round(score * 10) / 10,
         scoreWithoutEmblem: Math.round(entries.reduce((sum, entry) => sum + entry.scoreWithoutEmblem, 0) * 10) / 10,
-        potential: potentialSum(preset.items, "item_potential_option", attackType),
-        additionalPotential: potentialSum(preset.items, "item_additional_potential_option", attackType)
+        potential: potentialSum(entries, "item_potential_option", attackType),
+        additionalPotential: potentialSum(entries, "item_additional_potential_option", attackType)
       };
     }
   });
 
-  return { attackType, items: [...byFingerprint.values()], best };
+  return { attackType, items: [...byFingerprint.values()].map(({ rolled, ...entry }) => entry), best };
 }
 
 module.exports = { collectCharacterItems, itemFingerprint };

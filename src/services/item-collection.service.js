@@ -54,11 +54,11 @@ function createItemCollector({
     return { date: null, rows: [] };
   }
 
-  async function collectRow(row, startOfDay) {
+  async function collectRow(row, startOfDay, force) {
     const name = String(row?.character_name || "").trim();
     const world = String(row?.world_name || "").trim();
     if (!name || !world) return "failed";
-    if (await collectedSince(world, name, startOfDay)) return "skipped";
+    if (!force && (await collectedSince(world, name, startOfDay))) return "skipped";
     const ocid = await resolveOcid(name, world);
     if (!ocid) return "failed";
     const itemData = await fetchItems(ocid);
@@ -67,7 +67,7 @@ function createItemCollector({
     return "saved";
   }
 
-  async function run() {
+  async function run(force) {
     const today = kstDate(now());
     status = { state: "running", date: today, rankingDate: null, total: 0, saved: 0, skipped: 0, failed: 0, startedAt: new Date(now()).toISOString(), finishedAt: null, error: null };
     try {
@@ -82,7 +82,7 @@ function createItemCollector({
           const row = rows[next];
           next += 1;
           try {
-            status[await collectRow(row, startOfDay)] += 1;
+            status[await collectRow(row, startOfDay, force)] += 1;
           } catch (error) {
             status.failed += 1;
             if (status.failed <= 5) logger.error("[item-collection] row failed:", error?.message || error);
@@ -104,10 +104,13 @@ function createItemCollector({
     return status;
   }
 
-  /** Runs once (no overlap); resolves with the status. */
-  function runOnce() {
+  /**
+   * Runs once (no overlap); resolves with the status. `force` collects characters already
+   * collected today too (after a scoring rule change).
+   */
+  function runOnce({ force = false } = {}) {
     if (!running) {
-      running = run().finally(() => {
+      running = run(force).finally(() => {
         running = null;
       });
     }

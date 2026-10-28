@@ -1,12 +1,16 @@
 "use strict";
 
-// Item score (템환산): how much one item's options raise a fixed reference character's
-// combat power. 1 point = +0.1%. Rules and the reference live in src/game-data/item-score.json.
+// Item score (템환산): how much one item's rolled options (추가 옵션, 잠재, 에디셔널, 문장) raise a
+// fixed reference character's combat power. 1 point = +0.1%. Base options (item base attack,
+// starforce) are left out, and so are equipment mastery bonuses: the score ranks the rolls. Rules and the reference live in src/game-data/item-score.json.
 
 const scoreRules = require("../../game-data/item-score.json");
 const { itemContributions } = require("../stats/sources/equipment");
 const { isMagicJob } = require("../stats/sources/character");
 const { combatPower } = require("../stats/aggregate");
+const { withoutMastery } = require("./mastery");
+
+const SCORED_GROUPS = new Set(["additionalOption", "potential", "additionalPotential", "emblem"]);
 
 const FAMILY_KEYS = Object.freeze({
   magical: { attack: "magicalAttack", attackPercent: "magicalAttackPercent", damagePercent: "magicalDamagePercent" },
@@ -69,12 +73,12 @@ function scoreFor(contributions, attackType) {
 }
 
 /**
- * Score of one item. Souls are left out (they move between items); the emblem counts only in
- * `score`, not in `scoreWithoutEmblem`.
+ * Score of one item from its option rolls. `masteryLines` (from mastery.js) takes the mastery
+ * bonuses off first. The emblem counts only in `score`, not in `scoreWithoutEmblem`.
  * @returns {{ score: number, scoreWithoutEmblem: number, hasEmblem: boolean }}
  */
-function scoreItem(item, attackType) {
-  const contributions = itemContributions(item).filter((entry) => entry.group !== "soul");
+function scoreItem(item, attackType, masteryLines = null) {
+  const contributions = itemContributions(withoutMastery(item, masteryLines)).filter((entry) => SCORED_GROUPS.has(entry.group));
   const withoutEmblem = contributions.filter((entry) => entry.group !== "emblem");
   return {
     score: scoreFor(contributions, attackType),
@@ -84,22 +88,21 @@ function scoreItem(item, attackType) {
 }
 
 /**
- * Ranking group: slot (slot name without the slot number, so "반지 (3번째 슬롯)" joins "반지";
- * the page name is the weapon type for weapons) + family (제네시스,
- * 아케인셰이드, …; the item name when no family matches).
+ * Ranking group. Only the families in item-score.json (아케인셰이드, 앱솔랩스) are ranked:
+ * weapons per weapon type (the page name, e.g. "완드"), armor per slot. Other items get
+ * family "" and no rank.
  */
 function itemGroup(item) {
   const name = String(item?.item_name || "").trim();
-  const slot = String(item?.item_equipment_slot_name || item?.item_equipment_page_name || "")
-    .replace(/\s*\(\d+번째 슬롯\)$/, "")
-    .trim();
+  const slotName = String(item?.item_equipment_slot_name || "").replace(/\s*\(\d+번째 슬롯\)$/, "").trim();
+  const pageName = String(item?.item_equipment_page_name || "").trim();
+  const slot = slotName === "무기" ? pageName || slotName : slotName || pageName;
   const family = scoreRules.families.find((entry) => entry.nameIncludes.some((keyword) => name.includes(keyword)));
-  const familyLabel = family ? family.label : name;
   return {
     slot,
-    family: familyLabel,
-    // "아케인셰이드 어깨" for a family, otherwise the item name.
-    label: family ? `${familyLabel} ${slot}` : familyLabel
+    family: family ? family.label : "",
+    label: family ? `${family.label} ${slot}` : name,
+    weapon: slotName === "무기"
   };
 }
 
