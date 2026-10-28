@@ -512,10 +512,16 @@ function itemBreakdown(item, profile) {
   return pending;
 }
 
+/** @param {any} module @param {number | null | undefined} probability fraction (0–1) */
+function toPercentText(module, probability) {
+  const value = Number(probability);
+  return Number.isFinite(value) && value > 0 ? module.formatAdditionalOptionPercent(value * 100) : "";
+}
+
 /**
  * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 추가 옵션 상위 %("3.2%"). 없으면 null.
  * @param {any} item @param {any} profile
- * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionTop: string } | null>}
+ * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionTop: string, potentialTop: string, additionalPotentialTop: string } | null>}
  */
 export async function itemInsight(item, profile) {
   const result = await itemBreakdown(item, profile);
@@ -528,7 +534,10 @@ export async function itemInsight(item, profile) {
       additionalPotential: texts(breakdown.mastery?.additionalPotential),
       additional: texts(breakdown.mastery?.additional)
     },
-    additionalOptionTop: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent)
+    additionalOptionTop: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent),
+    // Potential odds are computed from pre-mastery values, same as the share caption.
+    potentialTop: toPercentText(result.module, breakdown.potentialProbability),
+    additionalPotentialTop: toPercentText(result.module, breakdown.additionalProbability)
   };
 }
 

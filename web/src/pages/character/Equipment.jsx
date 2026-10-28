@@ -155,8 +155,8 @@ export function EquipDetail({ item, profile = null, compact = false }) {
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
         <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} />
-        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} />
-        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} />
+        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialTop ? `상위 ${insight.potentialTop}` : ""} />
+        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialTop ? `상위 ${insight.additionalPotentialTop}` : ""} />
         {emblem ? (
           <section class="eq-opts eq-opts--emblem">
             <h4 class="eq-opts__head">
@@ -376,6 +376,20 @@ export function Equipment({ data, world, mode, presetNo }) {
                 <div class="eq-tip__inner" key={tip.item.itemName}>
                   <EquipDetail item={tip.item} profile={profile} compact />
                 </div>
+              </div>
+              {/* 공유 알약: 마우스를 올린 장비 바로 위에 띄워(위가 모자라면 아래) 툴팁이 위로 밀려도 바로 누를 수 있다.
+                  툴팁 본문은 마우스가 지나가게 두어 옆 장비를 가리지 않는다. */}
+              <div
+                key={`share-${tip.item.itemName}`}
+                class={`eq-tip-share${tip.rect.top < 76 ? " is-below" : ""}`}
+                style={{
+                  left: `${Math.max(8, Math.min(window.innerWidth - 8, tip.rect.left + tip.rect.width / 2))}px`,
+                  top: `${tip.rect.top < 76 ? tip.rect.bottom + 6 : tip.rect.top - 6}px`
+                }}
+                onPointerEnter={keepTip}
+                onPointerLeave={hideTipSoon}
+              >
+                <ItemShare item={tip.item} profile={profile} world={world} compact />
               </div>
             </>,
             document.body
