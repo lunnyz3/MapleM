@@ -13,7 +13,8 @@ import { ToastHost } from "./Toast.jsx";
 const NAV = [
   { key: "home", label: "홈", href: urls.home },
   { key: "ranking", label: "랭킹", href: urls.ranking("level") },
-  { key: "guild", label: "길드", href: urls.guildSearch }
+  { key: "guild", label: "길드", href: urls.guildSearch },
+  { key: "compare", label: "비교", href: urls.compare() }
 ];
 
 /** 모바일 하단 탭바. 계산기 탭은 계산기 화면이 생기면 추가한다. */

@@ -53,6 +53,7 @@ function lazyPage(loader, exportName) {
 const Ranking = lazyPage(() => import("./pages/Ranking.jsx"), "Ranking");
 const Character = lazyPage(() => import("./pages/Character.jsx"), "Character");
 const Guild = lazyPage(() => import("./pages/Guild.jsx"), "Guild");
+const Compare = lazyPage(() => import("./pages/Compare.jsx"), "Compare");
 const Licenses = lazyPage(() => import("./pages/Licenses.jsx"), "Licenses");
 const DesignSystem = lazyPage(() => import("./pages/DesignSystem.jsx"), "DesignSystem");
 
@@ -67,6 +68,7 @@ function resolveRoute() {
   if (rest === "") return { title: "메이플M 플러스 · 새 메인 미리보기", nav: "home", Page: Home };
   if (rest === "/design") return { title: "디자인 시스템 · 메이플M 플러스", nav: "", Page: DesignSystem };
   if (rest === "/ranking") return { title: "랭킹 · 메이플M 플러스", nav: "ranking", Page: Ranking };
+  if (rest === "/compare") return { title: "캐릭터 비교 · 메이플M 플러스", nav: "compare", Page: Compare };
   if (rest === "/guild") return { title: "길드 · 메이플M 플러스", nav: "guild", Page: Guild };
   const guild = rest.match(/^\/guild\/([^/]+)\/([^/]+)$/);
   if (guild) {

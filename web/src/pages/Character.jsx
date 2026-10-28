@@ -106,6 +106,10 @@ function ProfileHeader({ data, world }) {
 
         <div class="ch-hero__actions">
           <ProfileShareButton data={data} world={world} />
+          <a class="btn btn--secondary btn--sm" href={urls.compare(world, name)}>
+            <Icon name="swords" size={18} />
+            비교
+          </a>
           <button
             type="button"
             class={`btn btn--secondary btn--sm fav-btn${favorite ? " is-on" : ""}`}
