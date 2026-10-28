@@ -2351,6 +2351,14 @@ button.eq-slot:hover .eq-slot__img {
   line-height: 18px;
 }
 
+/* 장비 마스터리로 오른 만큼(줄마다): 값 옆에 작게 */
+.eq-opts__bonus {
+  margin-left: 5px;
+  color: var(--tip-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .eq-opts ul {
   display: grid;
   gap: 3px;

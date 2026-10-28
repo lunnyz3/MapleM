@@ -492,26 +492,71 @@ export async function copyText(text) {
 
 // ---------------- 잠재 상위 % 자랑 문구 ----------------
 
+/** @type {WeakMap<object, Promise<any>>} 장비별 계산 결과(문구·장비 상세가 같이 쓴다) */
+const breakdowns = new WeakMap();
+
+/**
+ * 확률표(/probability/*.json) 계산은 기존 모듈을 그대로 쓴다(처음 쓸 때 따로 내려받음). 실패하면 null.
+ * 장비 마스터리 상승분은 모듈이 빼고 계산한다.
+ * @param {any} item @param {any} profile
+ */
+function itemBreakdown(item, profile) {
+  if (!item || typeof item !== "object") return Promise.resolve(null);
+  let pending = breakdowns.get(item);
+  if (!pending) {
+    pending = import("../../../public/js/features/item-share.js")
+      .then(async (module) => ({ module, breakdown: await module.resolveTopPercentBreakdown(item, profile) }))
+      .catch(() => null);
+    breakdowns.set(item, pending);
+  }
+  return pending;
+}
+
+/**
+ * 장비 상세에 쓰는 계산 결과: 줄별 마스터리 상승분("+4%")과 추가 옵션 상위 %("3.2%"). 없으면 null.
+ * @param {any} item @param {any} profile
+ * @returns {Promise<{ bonuses: { potential: string[], additionalPotential: string[], additional: string[] }, additionalOptionTop: string } | null>}
+ */
+export async function itemInsight(item, profile) {
+  const result = await itemBreakdown(item, profile);
+  const breakdown = result?.breakdown;
+  if (!breakdown) return null;
+  const texts = (/** @type {any} */ section) => (Array.isArray(section?.lines) ? section.lines.map((line) => line?.text || "") : []);
+  return {
+    bonuses: {
+      potential: texts(breakdown.mastery?.potential),
+      additionalPotential: texts(breakdown.mastery?.additionalPotential),
+      additional: texts(breakdown.mastery?.additional)
+    },
+    additionalOptionTop: result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent)
+  };
+}
+
 /**
  * 기존 화면과 같은 문구("상위 0.012345%, 블랙큐브 N개, 에디셔널 큐브 M개 짜리 아이템입니다!").
- * 확률표(/probability/*.json) 계산은 기존 모듈을 그대로 쓴다(처음 쓸 때 따로 내려받음). 계산할 수 없으면 "".
+ * 추가 옵션 상위 % 를 계산할 수 있으면 "…, 추가 옵션 상위 3.2% 짜리 아이템입니다!"처럼 붙인다. 계산할 수 없으면 "".
  * 기존 화면은 소수 6자리로 잘라 아주 귀한 아이템이 "상위 0.000000%"로 나왔으므로, 그보다 작으면 유효숫자 2자리까지 늘린다.
  * @param {any} item @param {any} profile
  * @returns {Promise<string>}
  */
 export async function topPercentCaption(item, profile) {
   try {
-    const module = await import("../../../public/js/features/item-share.js");
-    const breakdown = await module.resolveTopPercentBreakdown(item, profile);
-    const percent = Number(breakdown?.totalPercent);
-    if (!Number.isFinite(percent) || percent <= 0) return "";
+    const result = await itemBreakdown(item, profile);
+    const breakdown = result?.breakdown;
+    if (!breakdown) return "";
+    const flame = result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent);
+    const flameLabel = flame ? `추가 옵션 상위 ${flame}` : "";
+    const percent = Number(breakdown.totalPercent);
+    if (breakdown.totalPercent === null || !Number.isFinite(percent) || percent <= 0) {
+      return flameLabel ? `${flameLabel} 짜리 아이템입니다!` : "";
+    }
     const bounded = Math.min(100, percent);
     const digits = bounded >= 0.000001 ? 6 : Math.min(20, -Math.floor(Math.log10(bounded)) + 1);
     const cubes = (/** @type {unknown} */ probability) => {
       const value = Number(probability);
       return Number.isFinite(value) && value > 0 ? `${Math.ceil(1 / value).toLocaleString("ko-KR")}개` : "-";
     };
-    return `상위 ${bounded.toFixed(digits)}%, 블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)} 짜리 아이템입니다!`;
+    return `상위 ${bounded.toFixed(digits)}%, 블랙큐브 ${cubes(breakdown.potentialProbability)}, 에디셔널 큐브 ${cubes(breakdown.additionalProbability)}${flameLabel ? `, ${flameLabel}` : ""} 짜리 아이템입니다!`;
   } catch {
     return "";
   }

@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { OUTPUTS, parseLevelRange, splitOfficialKey } = require("../scripts/data/sync-probability");
+const { FLAME_OUTPUTS, OUTPUTS, parseFlamePage, parseLevelRange, splitOfficialKey } = require("../scripts/data/sync-probability");
 
 // public/probability/*.json 은 scripts/data/sync-probability.js 가 공식 '확률형 아이템 정보' 큐브 페이지
 // (2026-10-28 기준)에서 만든 파일이다. 공식 표의 줄별 합계는 반올림 때문에 99.99996% ~ 100.06% 이다.
@@ -142,19 +142,25 @@ test("엠블렘 잠재능력 표는 에디셔널 표와 다른 공식 6266 표�
   assert.ok(!has528(additional["엠블렘 180"]["레전더리"].first));
 });
 
-test("확률 파일 이름은 <부위>_[additional_]potential_prob.json 이고 item-share.js 설정과 일치한다", async () => {
+test("확률 파일 이름은 <부위>_[additional_]potential_prob.json · <묶음>_flame_prob.json 이고 item-share.js 설정과 일치한다", async () => {
   const files = fs.readdirSync(PROBABILITY_DIR).sort();
-  for (const file of files) {
+  const cubeFiles = files.filter((file) => file.endsWith("potential_prob.json"));
+  const flameFiles = files.filter((file) => file.endsWith("_flame_prob.json"));
+  for (const file of cubeFiles) {
     assert.match(file, /^[a-z]+_(?:additional_)?potential_prob\.json$/, `파일명 규칙 위반: ${file}`);
   }
-  assert.deepEqual(files, OUTPUTS.map((output) => output.file).sort());
+  assert.deepEqual(cubeFiles, OUTPUTS.map((output) => output.file).sort());
+  assert.deepEqual(flameFiles, FLAME_OUTPUTS.map((output) => output.file).sort());
+  assert.deepEqual(files, [...cubeFiles, ...flameFiles, "equipment_mastery.json"].sort());
 
-  const { SLOT_PROBABILITY_CONFIG } = await importItemShare();
+  const { SLOT_PROBABILITY_CONFIG, FLAME_FILE_BY_SLOT } = await importItemShare();
   const referenced = Object.values(SLOT_PROBABILITY_CONFIG).flatMap((config) => [config.potentialFile, config.additionalFile]);
   assert.equal(referenced.length, 24);
   for (const file of referenced) assert.ok(files.includes(file), `item-share.js 가 없는 파일을 참조: ${file}`);
   assert.equal(SLOT_PROBABILITY_CONFIG.gloves.potentialFile, "gloves_potential_prob.json");
   assert.equal(SLOT_PROBABILITY_CONFIG.gloves.additionalFile, "gloves_additional_potential_prob.json");
+  assert.deepEqual(Object.keys(FLAME_FILE_BY_SLOT).sort(), Object.keys(SLOT_PROBABILITY_CONFIG).sort());
+  for (const file of Object.values(FLAME_FILE_BY_SLOT)) assert.ok(flameFiles.includes(file), `item-share.js 가 없는 파일을 참조: ${file}`);
 });
 
 test("item-share.js 의 레벨 예외 목록이 공식 '잠재옵션 범위' 표와 같다", async () => {
@@ -264,4 +270,280 @@ test("동기화 스크립트가 공식 표 이름과 잠재옵션 범위를 해�
   assert.deepEqual(parseLevelRange("100레벨 장비 (망토(케이프)의 경우, 90레벨 장비)"), { default: 100, bySlot: { 망토: 90 } });
   assert.deepEqual(parseLevelRange("신발 / 어깨 : 100레벨 장비 망토 : 120레벨 장비"), { default: null, bySlot: { 신발: 100, 어깨: 100, 망토: 120 } });
   assert.deepEqual(parseLevelRange("160레벨 장비"), { default: 160, bySlot: {} });
+});
+
+// ---------------------------------------------------------------------------
+// 추가 옵션(환생의 불꽃) 확률표: 공식 5795 페이지에서 만든 public/probability/*_flame_prob.json
+
+const FLAME_NAMES = ["골드리프 환생의 불꽃", "환생의 불꽃", "강력한 환생의 불꽃", "영원한 환생의 불꽃"];
+const flameOption = (file, flame, option) => readTable(file)[flame].options.find((entry) => squash(entry.option) === squash(option));
+
+test("추가 옵션 표: 불꽃 4종, 옵션 확률 합계 100%, MIN ≤ MAX, 레벨 목록이 같다", () => {
+  const chance = { "골드리프 환생의 불꽃": "5%", "환생의 불꽃": "10%", "강력한 환생의 불꽃": "50%", "영원한 환생의 불꽃": "100%" };
+  for (const { file, group } of FLAME_OUTPUTS) {
+    const data = readTable(file);
+    assert.equal(data._meta.source, "https://m.nexon.com/probability/5795?language=ko", file);
+    assert.equal(data._meta.official_group, group, file);
+    assert.deepEqual(tableKeys(data), FLAME_NAMES, file);
+    for (const flame of FLAME_NAMES) {
+      const block = data[flame];
+      assert.equal(block.two_option_chance, chance[flame], `${file} ${flame}`);
+      assert.equal(block.level_basis, file === "heart_flame_prob.json" ? "등급" : "장비 레벨", `${file} ${flame}`);
+      const sum = block.options.reduce((acc, entry) => acc + percent(entry.p), 0);
+      assert.ok(Math.abs(sum - 100) <= SUM_TOLERANCE, `${file} ${flame} 옵션 확률 합계 ${sum}`);
+      const levels = Object.keys(block.options[0].ranges);
+      for (const entry of block.options) {
+        assert.deepEqual(Object.keys(entry.ranges), levels, `${file} ${flame} ${entry.option}`);
+        assert.ok(percent(entry.step) > 0, `${file} ${flame} ${entry.option} 증가값`);
+        for (const [level, range] of Object.entries(entry.ranges)) {
+          assert.ok(percent(range.min) <= percent(range.max), `${file} ${flame} ${entry.option} ${level}`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(Object.keys(readTable("weapon_flame_prob.json")["영원한 환생의 불꽃"].options[0].ranges), ["100", "120", "140", "160", "180", "200"]);
+  assert.ok(readTable("weapon_flame_prob.json")._meta.official_notes.some((note) => note.includes("검은 환생의 불꽃")));
+});
+
+test("추가 옵션 표 대표 값: 영원한 200 방어구 방어율 무시·무기 물리공격력, 강력한 180 치명타확률", () => {
+  const ignore = flameOption("armor_flame_prob.json", "영원한 환생의 불꽃", "방어율 무시");
+  assert.equal(ignore.p, "9.0909%");
+  assert.equal(ignore.step, "0.001%");
+  assert.deepEqual(ignore.ranges["200"], { min: "4.90%", max: "5.90%" });
+  const attack = flameOption("weapon_flame_prob.json", "영원한 환생의 불꽃", "물리공격력");
+  assert.equal(attack.p, "7.1429%");
+  assert.deepEqual(attack.ranges["200"], { min: "1609", max: "1931" });
+  // 공식 패치노트의 마스터리 예시(앱솔랩스 그람 치명타 확률 1.7%, 최대 HP 1,481)는 강력한 환생의 불꽃 180 범위다.
+  assert.deepEqual(flameOption("weapon_flame_prob.json", "강력한 환생의 불꽃", "치명타확률").ranges["180"], { min: "1.70%", max: "1.90%" });
+  assert.deepEqual(flameOption("weapon_flame_prob.json", "강력한 환생의 불꽃", "최대 HP").ranges["180"], { min: "1411", max: "1560" });
+  // 영원한 환생의 불꽃에만 있는 옵션
+  assert.ok(flameOption("weapon_flame_prob.json", "영원한 환생의 불꽃", "마법대미지"));
+  assert.ok(!flameOption("weapon_flame_prob.json", "강력한 환생의 불꽃", "마법대미지"));
+  assert.ok(flameOption("armor_flame_prob.json", "영원한 환생의 불꽃", "경험치 획득량"));
+});
+
+test("동기화 스크립트가 추가 옵션 블록(옵션·확률·증가값·MIN/MAX)을 해석한다", () => {
+  const raw = {
+    headLines: ["환생의 불꽃 - 추가 옵션"],
+    introLines: ["⊙ 옵션값은 각 옵션의 최솟값(MIN)~최댓값(MAX) 범위에서 균등 확률로 결정됩니다.", "장비 레벨 180에 해당하는 추가 옵션이 부여됩니다.", "환생의 불꽃 종류"],
+    tables: [
+      {
+        rows: [
+          ["환생의 불꽃 종류", "2개 등장 확률"],
+          ...FLAME_NAMES.map((name, index) => [name === "환생의 불꽃" ? "환생의 불꽃 (캐시상점)" : name, ["5%", "10%", "50%", "100%"][index]]),
+        ],
+      },
+      {
+        rows: [
+          ["방어구, 공용 방어구 – 영원한 환생의 불꽃", "옵션", "최대 HP", "방어율 무시", ""],
+          ["확률", "50.0000%", "50.0000%%", ""],
+          ["증가값", "1", "0.001%", ""],
+          ["장비 레벨", "MIN", "MAX", "MIN", "MAX", ""],
+          ["180", "4801", "5657", "4.00%", "4.80%", ""],
+          ["200", "5658", "6788", "4.90%", "5.90%", ""],
+        ],
+      },
+    ],
+  };
+  const parsed = parseFlamePage(raw, { id: 5795, type: "flame", title: "환생의 불꽃 - 추가 옵션" });
+  const problems = parsed.problems.filter((problem) => !problem.startsWith("빈 표"));
+  assert.deepEqual(problems, []);
+  assert.equal(parsed.twoOptionChance["환생의 불꽃"], "10%");
+  const block = parsed.groups["방어구, 공용 방어구"]["영원한 환생의 불꽃"];
+  assert.equal(block.levelBasis, "장비 레벨");
+  assert.deepEqual(block.options[1], { option: "방어율 무시", p: "50.0000%%", step: "0.001%", ranges: { 180: { min: "4.00%", max: "4.80%" }, 200: { min: "4.90%", max: "5.90%" } } });
+  assert.deepEqual(parsed.notes, raw.introLines.slice(0, 2));
+});
+
+// ---------------------------------------------------------------------------
+// 장비 마스터리: 상위 % 는 마스터리 보너스를 뺀 원래 값으로 찾는다(public/probability/equipment_mastery.json).
+
+// 넥슨 API 응답(test/fixtures/characters/유니온-피카츄.json)의 장비를 화면용 필드로 옮긴다.
+const PIKACHU = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "characters", "유니온-피카츄.json"), "utf8"));
+const toOptions = (list) => (list || []).map((option) => ({ name: option.option_name, value: option.option_value }));
+function pikachuItem(slot) {
+  const raw = PIKACHU.details.itemEquipment.data.item_equipment.find((item) => item.item_equipment_slot_name === slot);
+  const mastery = raw.mastery_info;
+  return {
+    itemName: raw.item_name,
+    slotName: raw.item_equipment_slot_name,
+    pageName: raw.item_equipment_page_name,
+    equipmentLevel: raw.equipment_level,
+    potentialGrade: String(raw.item_potential_option_grade),
+    additionalPotentialGrade: String(raw.item_additional_potential_option_grade),
+    additionalOptionGrade: String(raw.item_additional_option_grade),
+    potentialOption: toOptions(raw.item_potential_option),
+    additionalPotentialOption: toOptions(raw.item_additional_potential_option),
+    additionalOption: toOptions(raw.item_additional_option),
+    masteryInfo: mastery
+      ? {
+          level: mastery.mastery_level,
+          basicPoint: mastery.base_option_point,
+          potentialPoint: mastery.potential_option_point,
+          additionalPoint: mastery.additional_option_point,
+          additionalPotentialPoint: mastery.additional_potential_option_point,
+        }
+      : null,
+  };
+}
+const MAGICAL = { attackType: "magical" };
+const near = (actual, expected, label) => assert.ok(Math.abs(actual - expected) <= Math.abs(expected) * 1e-9, `${label}: ${actual} ≠ ${expected}`);
+const lineTexts = (section) => section.lines.map((line) => line.text);
+
+test("마스터리 표: 공식 출처·확인일·줄당 최대 2개, 근거 없는 항목은 비워 둔다", () => {
+  const table = readTable("equipment_mastery.json");
+  assert.equal(table._meta.checked_at, "2026-10-28");
+  const urls = table._meta.sources.map((source) => source.url);
+  assert.ok(urls.includes("https://maplestorym.nexon.com/1198/board/1215/view/3511972"));
+  assert.ok(urls.includes("https://m.nexon.com/probability/5795?language=ko"));
+  for (const url of urls) assert.match(url, /^https:\/\/(?:maplestorym\.nexon\.com|m\.nexon\.com|openapi\.nexon\.com)\//, url);
+  assert.equal(table.max_bonus_per_line, 2);
+  assert.deepEqual(table.cube, { 레전더리: { percent: 2 }, 유니크: { percent: 1.5 } });
+  assert.deepEqual(table.flame["강력한 환생의 불꽃"], { 치명타확률: 1.5, "최대 HP": 450 });
+  assert.deepEqual(Object.keys(table.flame_grade), ["2", "3"]);
+  for (const flame of Object.keys(table.flame)) {
+    for (const option of Object.keys(table.flame[flame])) {
+      assert.ok(flameOption("weapon_flame_prob.json", flame, option) || flameOption("armor_flame_prob.json", flame, option), `${flame} ${option}`);
+    }
+  }
+  assert.ok(table._meta.unverified.length >= 3);
+});
+
+test("마스터리: 장갑 잠재 보너스 6 → 줄마다 +4%p 를 빼고(22.70/19.76/22.70 → 18.70/15.76/18.70) 확률표를 찾는다", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  const gloves = pikachuItem("장갑");
+  assert.equal(gloves.masteryInfo.potentialPoint, 6);
+  const withMastery = await resolveTopPercentBreakdown(gloves, MAGICAL);
+  assert.deepEqual(lineTexts(withMastery.mastery.potential), ["+4%", "+4%", "+4%"]);
+  assert.equal(withMastery.mastery.potential.status, "exact");
+  assert.deepEqual(lineTexts(withMastery.mastery.additionalPotential), ["", "", ""]);
+
+  // 같은 장비를 마스터리 없이 원래 값으로 넣은 결과와 같다.
+  const rolled = await resolveTopPercentBreakdown(
+    {
+      ...gloves,
+      masteryInfo: null,
+      potentialOption: [{ name: "보스 공격력", value: "18.70%" }, { name: "보스 공격력", value: "15.76%" }, { name: "보스 공격력", value: "18.70%" }],
+    },
+    MAGICAL,
+  );
+  near(withMastery.potentialProbability, rolled.potentialProbability, "잠재");
+  // 장갑 200 레전더리: 첫째 줄 18.70% 이상 3.48167%, 둘째 줄 15.76% 이상 8 × 0.87042%, 셋째 줄 18.70% 이상 0.87042%
+  near(withMastery.potentialProbability, 0.0348167 * (8 * 0.0087042) * 0.0087042, "잠재 값");
+  near(withMastery.additionalProbability, rolled.additionalProbability, "에디셔널(보너스 없음)");
+
+  // 마스터리를 빼지 않으면 22.70% 가 표 최대값(18.70%)보다 커서 첫째·셋째 줄이 최고 수치로 잡힌다.
+  const raw = await resolveTopPercentBreakdown({ ...gloves, masteryInfo: null }, MAGICAL);
+  assert.ok(withMastery.potentialProbability > raw.potentialProbability * 5);
+});
+
+test("마스터리: 어깨 에디셔널 보너스 6 → 16.40/10.30/16.40 을 12.40/6.30/12.40 으로 찾는다", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  const shoulder = pikachuItem("어깨");
+  assert.equal(shoulder.masteryInfo.additionalPotentialPoint, 6);
+  const result = await resolveTopPercentBreakdown(shoulder, MAGICAL);
+  assert.deepEqual(lineTexts(result.mastery.additionalPotential), ["+4%", "+4%", "+4%"]);
+  // 어깨 200 레전더리 마법 대미지: 12.40% 이상 4 × 3.00%, 6.30% 이상 12 × 0.75%, 12.40% 이상 4 × 0.75%
+  near(result.additionalProbability, 0.12 * 0.09 * 0.03, "에디셔널");
+  const raw = await resolveTopPercentBreakdown({ ...shoulder, masteryInfo: null }, MAGICAL);
+  near(result.potentialProbability, raw.potentialProbability, "잠재(보너스 없음)");
+});
+
+test("마스터리: 보너스가 줄 수보다 적으면 공식 표에 맞는 줄만 고른다(신발 에디셔널 4 → +4/+4/0, 추가 옵션 2 → 방어율 무시 +3.2)", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  const shoes = pikachuItem("신발");
+  const result = await resolveTopPercentBreakdown(shoes, MAGICAL);
+  assert.deepEqual(lineTexts(result.mastery.additionalPotential), ["+4%", "+4%", ""]);
+  assert.equal(result.mastery.additionalPotential.status, "exact");
+  assert.deepEqual(lineTexts(result.mastery.additional), ["+3.2%", ""]);
+  assert.equal(result.mastery.additional.flameName, "영원한 환생의 불꽃");
+  // 방어율 무시 8.63% − 2 × 1.6 = 5.43%: 4.90~5.90%(0.001% 간격, 1,001개) 중 5.430% 이상 471개, 옵션 확률 9.0909%
+  near(result.additionalOptionProbability, 0.090909 * (471 / 1001), "추가 옵션");
+  near(result.additionalOptionPercent, result.additionalOptionProbability * 100, "추가 옵션 %");
+});
+
+test("마스터리가 없는 장비는 결과가 그대로다", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  for (const slot of ["장갑", "어깨", "신발", "무기", "한벌옷"]) {
+    const item = pikachuItem(slot);
+    const none = await resolveTopPercentBreakdown({ ...item, masteryInfo: null }, MAGICAL);
+    const zero = await resolveTopPercentBreakdown(
+      { ...item, masteryInfo: { level: 6, basicPoint: 6, potentialPoint: 0, additionalPoint: 0, additionalPotentialPoint: 0 } },
+      MAGICAL,
+    );
+    for (const key of ["totalPercent", "potentialProbability", "additionalProbability", "additionalOptionProbability"]) {
+      assert.equal(zero[key], none[key], `${slot} ${key}`);
+    }
+    for (const section of ["potential", "additionalPotential", "additional"]) {
+      assert.ok(zero.mastery[section].lines.every((line) => line.text === ""), `${slot} ${section}`);
+    }
+  }
+  // 앞선 테스트의 2026-03 응답 값(마스터리 없음)과 같은 엠블렘 계산도 그대로다.
+  const emblem = pikachuItem("엠블렘");
+  const result = await resolveTopPercentBreakdown(emblem, MAGICAL);
+  assert.equal(result.mastery.potential.status, "none");
+});
+
+test("근거 없는 상승량은 빼지 않는다: 잠재 최대 HP 줄, 골드리프·캐시 불꽃(등급 1)", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  const shoes = pikachuItem("신발"); // 잠재 최대 HP 16,036 / 6,316 / 16,036
+  const none = await resolveTopPercentBreakdown({ ...shoes, masteryInfo: null }, MAGICAL);
+  const withHpBonus = await resolveTopPercentBreakdown(
+    { ...shoes, masteryInfo: { ...shoes.masteryInfo, potentialPoint: 2, additionalPoint: 0, additionalPotentialPoint: 0 } },
+    MAGICAL,
+  );
+  assert.equal(withHpBonus.potentialProbability, none.potentialProbability);
+  assert.deepEqual(lineTexts(withHpBonus.mastery.potential), ["", "", ""]);
+  const rare = await resolveTopPercentBreakdown({ ...shoes, additionalOptionGrade: "1" }, MAGICAL);
+  assert.equal(rare.additionalOptionProbability, null);
+});
+
+test("추가 옵션 상위 %: 둘째 줄은 2개 등장 확률을 곱하고, 직업에 맞는 옵션만 센다", async () => {
+  const { resolveTopPercentBreakdown, formatAdditionalOptionPercent, buildTopPercentCaption } = await importItemShare();
+  // 제네시스 그람(영원한, 보너스 4): 물리 공격력 3,107·2,875 → 1,907·1,675 (보너스 1개당 600)
+  const gram = {
+    itemName: "제네시스 그람",
+    slotName: "무기",
+    pageName: "그람",
+    equipmentLevel: 200,
+    additionalOptionGrade: "3",
+    additionalOption: [{ name: "물리 공격력", value: "3,107" }, { name: "물리 공격력", value: "2,875" }],
+    masteryInfo: { level: 6, basicPoint: 2, potentialPoint: 0, additionalPoint: 4, additionalPotentialPoint: 0 },
+  };
+  const result = await resolveTopPercentBreakdown(gram, { attackType: "physical" });
+  assert.deepEqual(lineTexts(result.mastery.additional), ["+1,200", "+1,200"]);
+  // 1,609~1,931(323개): 1,907 이상 25개, 1,675 이상 257개. 옵션 확률 7.1429%, 둘째 줄 등장 100%
+  near(result.additionalOptionProbability, 0.071429 * (25 / 323) * 0.071429 * (257 / 323), "그람");
+  assert.equal(result.totalPercent, null);
+  // 마법사에게 물리 공격력은 세지 않는다.
+  const mage = await resolveTopPercentBreakdown(gram, MAGICAL);
+  assert.equal(mage.additionalOptionProbability, null);
+
+  // 강력한 환생의 불꽃(등급 2): 둘째 줄 등장 50%
+  const strong = await resolveTopPercentBreakdown(
+    {
+      itemName: "테스트 숄더",
+      slotName: "어깨",
+      equipmentLevel: 180,
+      additionalOptionGrade: "2",
+      additionalOption: [{ name: "최대 HP", value: "1,500" }, { name: "아이템 드롭률", value: "2.40%" }],
+    },
+    MAGICAL,
+  );
+  // 방어구 강력한 180 아이템 드롭률 2.20~2.40%(3개) 중 2.40% 이상 1개, 옵션 확률 10%
+  near(strong.additionalOptionProbability, 0.5 * 0.1 * (1 / 3), "강력한");
+
+  assert.equal(formatAdditionalOptionPercent(3.2349), "3.2%");
+  assert.equal(formatAdditionalOptionPercent(0.08196), "0.082%");
+  assert.equal(formatAdditionalOptionPercent(null), "");
+  const caption = await buildTopPercentCaption(pikachuItem("신발"), MAGICAL);
+  assert.match(caption, /^상위 [\d.]+%, 블랙큐브 [\d,]+개, 에디셔널 큐브 [\d,]+개, 추가 옵션 상위 4\.3% 짜리 아이템입니다!$/);
+});
+
+test("줄 나누기: 보너스 수를 줄마다 최대 2개로 나누는 모든 경우", async () => {
+  const { enumerateBonusSplits } = await importItemShare();
+  assert.deepEqual(enumerateBonusSplits(3, 6, 2), [[2, 2, 2]]);
+  assert.deepEqual(enumerateBonusSplits(2, 3, 2), [[2, 1], [1, 2]]);
+  assert.equal(enumerateBonusSplits(3, 4, 2).length, 6);
+  assert.deepEqual(enumerateBonusSplits(3, 7, 2), []);
 });

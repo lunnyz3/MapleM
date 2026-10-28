@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// 잠재능력·에디셔널 잠재능력 확률표 동기화.
+// 잠재능력·에디셔널 잠재능력·추가 옵션(환생의 불꽃) 확률표 동기화.
 //
-// 넥슨 메이플스토리M 공식 '확률형 아이템 정보'의 큐브 페이지(잠재옵션 12개, 에디셔널 잠재능력 8개)를
-// Headless Chromium 으로 읽어 public/probability/*.json 을 다시 만들고, --verify 로 파일과 공식 페이지를 전 행 대조한다.
+// 넥슨 메이플스토리M 공식 '확률형 아이템 정보'의 큐브 페이지(잠재옵션 12개, 에디셔널 잠재능력 8개)와
+// '환생의 불꽃 - 추가 옵션' 페이지(5795)를 Headless Chromium 으로 읽어 public/probability/*.json 을 다시 만들고,
+// --verify 로 파일과 공식 페이지를 전 행 대조한다.
 //
 //   node scripts/data/sync-probability.js               공식 페이지 → public/probability/*.json 재생성
 //   node scripts/data/sync-probability.js --dry-run     파일은 그대로 두고 바뀔 항목만 출력
@@ -19,6 +20,12 @@
 //   - first 는 공식 표의 '첫번째 옵션', second·third 는 '두번째 / 세번째 옵션' 열(같은 분포를 두 번 저장)이다.
 //   - option·value·p 는 공식 표의 글자를 그대로 쓴다(예: "최대 HP", "3750", "5.00000%").
 //   - 공식 표 이름이 여러 부위를 묶으면(예: '한벌옷, 상하의 170') 부위마다 같은 표를 '<부위> <레벨>' 키로 나눠 저장한다.
+//
+// 추가 옵션 파일(<묶음>_flame_prob.json, 공식 페이지의 장비 묶음마다 하나)
+//   { "_meta": {...}, "<불꽃 이름>": { "two_option_chance": "100%", "level_basis": "장비 레벨",
+//       "options": [{ option, p, step, ranges: { "<레벨>": { min, max } } }] } }
+//   - 옵션 수치는 MIN~MAX 에서 step(공식 '증가값') 간격으로 균등하게 정해진다(공식 안내). 글자는 공식 표기 그대로.
+//   - p 는 그 옵션이 한 줄에 붙을 확률, two_option_chance 는 둘째 줄이 생길 확률(공식 '2개 등장 확률')이다.
 "use strict";
 
 const fs = require("fs");
@@ -63,7 +70,21 @@ const PAGES = [
   { id: 6263, type: "additional", title: "큐브 (에디셔널 잠재능력) - 어깨" },
   { id: 6264, type: "additional", title: "큐브 (에디셔널 잠재능력) - 벨트" },
   { id: 6265, type: "additional", title: "큐브 (에디셔널 잠재능력) - 엠블렘, 보조무기, 감시자의 눈(반지), 모방된 신의 매듭(목걸이)" },
+  { id: 5795, type: "flame", title: "환생의 불꽃 - 추가 옵션" },
 ];
+const CUBE_PAGES = PAGES.filter((page) => page.type !== "flame");
+
+// 추가 옵션(환생의 불꽃) 파일 → 공식 페이지 5795 의 장비 묶음 이름. 사이트는 무기·방어구 묶음만 계산에 쓴다.
+const FLAME_PAGE_ID = 5795;
+const FLAME_OUTPUTS = [
+  { file: "weapon_flame_prob.json", group: "무기, 보조무기, 엠블렘, 감시자의 눈, 모방된 신의 매듭" },
+  { file: "armor_flame_prob.json", group: "방어구, 공용 방어구" },
+  { file: "accessory_flame_prob.json", group: "포켓 장비, 장신구" },
+  { file: "heart_flame_prob.json", group: "기계심장" },
+];
+const FLAME_NAMES = ["골드리프 환생의 불꽃", "환생의 불꽃", "강력한 환생의 불꽃", "영원한 환생의 불꽃"];
+// 이 스크립트가 만들지 않지만 public/probability 에 같이 두는 파일
+const STATIC_FILES = ["equipment_mastery.json"];
 
 // 사이트 파일 → 공식 페이지와 담을 부위. 파일 이름은 public/js/features/item-share.js 의 SLOT_PROBABILITY_CONFIG 와 같아야 한다.
 const OUTPUTS = [
@@ -114,7 +135,7 @@ function extractPageInBrowser() {
     spannedCells: Array.from(table.querySelectorAll("td, th")).filter((cell) => cell.rowSpan > 1 || cell.colSpan > 1).length,
     rows: Array.from(table.rows).map((row) => Array.from(row.cells).map((cell) => clean(cell.innerText || cell.textContent))),
   }));
-  return { headLines: lines.slice(0, 8), notes: lines.filter((line) => line.startsWith("⊙")), tables };
+  return { headLines: lines.slice(0, 8), notes: lines.filter((line) => line.startsWith("⊙")), introLines: lines.slice(0, 60), tables };
 }
 
 async function waitForStableRows(page, timeoutMs = 30000) {
@@ -337,7 +358,7 @@ function parseAllPages(rawPages) {
       problems.push(`${def.id}: 페이지 원본 없음`);
       continue;
     }
-    const parsed = parseOfficialPage(raw, def);
+    const parsed = def.type === "flame" ? parseFlamePage(raw, def) : parseOfficialPage(raw, def);
     parsed.fetchedAt = raw.fetchedAt;
     parsedById.set(def.id, parsed);
     for (const problem of parsed.problems) problems.push(`${def.id}: ${problem}`);
@@ -620,6 +641,228 @@ function lineSums(data) {
 }
 
 // ---------------------------------------------------------------------------
+// 5-1. 추가 옵션(환생의 불꽃) 페이지
+
+const FLAME_VALUE_RE = /^\d+(?:\.\d+)?%?$/;
+const FLAME_PERCENT_RE = /^\d+(?:\.\d+)?%{1,2}$/; // 공식 표에 '10.0000%%' 오타가 있다
+
+// 블록 머리 '무기, 보조무기, … - 영원한 환생의 불꽃'(하이픈 또는 en dash) → { group, flame }
+function splitFlameBlockTitle(text) {
+  const match = cleanText(text).match(/^(.+?)\s+[-–]\s+(.+)$/);
+  return match ? { group: match[1].trim(), flame: match[2].trim() } : null;
+}
+
+// 공식 안내 문구: ⊙ 줄과 그 아래 '-'·'[' 줄, 레벨 예외 문장(⊙ 없이 이어지는 줄 포함)
+function flameNotes(raw) {
+  const lines = (raw.introLines || raw.notes || []).map(cleanText);
+  return lines.filter((line) => /^⊙|^- |^\[/.test(line) || /레벨 \d+에 해당하는 추가 옵션/.test(line));
+}
+
+function parseFlamePage(raw, def) {
+  const problems = [];
+  const groups = {};
+  const groupOrder = [];
+  const twoOptionChance = {};
+  const headOk = (raw.headLines || []).some((line) => squash(line) === squash(def.title));
+  if (!headOk) problems.push(`페이지 제목이 '${def.title}' 가 아닙니다: ${JSON.stringify((raw.headLines || []).slice(0, 3))}`);
+
+  for (const table of raw.tables || []) {
+    if (table.nested) continue;
+    const firstRow = (table.rows[0] || []).map(cleanText);
+    if (firstRow[0] === "환생의 불꽃 종류" && firstRow[1] === "2개 등장 확률") {
+      for (const cells of table.rows.slice(1)) {
+        const [name, chance] = cells.map(cleanText);
+        if (!name) continue;
+        if (!PERCENT_RE.test(chance)) problems.push(`2개 등장 확률을 해석하지 못했습니다: ${JSON.stringify(cells)}`);
+        else twoOptionChance[name.replace(/\s*\(캐시상점\)\s*$/, "")] = chance;
+      }
+      continue;
+    }
+    let block = null;
+    let names = null;
+    let probs = null;
+    let steps = null;
+    let current = null;
+    for (const rawCells of table.rows) {
+      let cells = rawCells.map(cleanText);
+      if (!cells.some(Boolean)) {
+        block = null;
+        current = null;
+        continue;
+      }
+      if (cells[1] === "옵션") {
+        const title = splitFlameBlockTitle(cells[0]);
+        if (!title) {
+          problems.push(`추가 옵션 블록 이름을 해석하지 못했습니다: ${cells[0]}`);
+          block = null;
+          continue;
+        }
+        if (!FLAME_NAMES.includes(title.flame)) problems.push(`알 수 없는 불꽃 이름: ${title.flame}`);
+        if (!groups[title.group]) {
+          groups[title.group] = {};
+          groupOrder.push(title.group);
+        }
+        if (groups[title.group][title.flame]) problems.push(`같은 블록이 두 번 나옵니다: ${title.group} - ${title.flame}`);
+        block = { levelBasis: "", options: [] };
+        groups[title.group][title.flame] = block;
+        cells = cells.slice(1);
+      }
+      if (!block) continue;
+      const head = cells[0];
+      const values = cells.slice(1);
+      if (head === "옵션") {
+        names = values.filter(Boolean);
+        probs = null;
+        steps = null;
+        current = null;
+      } else if (head === "확률") {
+        probs = values.filter(Boolean);
+      } else if (head === "증가값") {
+        steps = values.filter(Boolean);
+      } else if (head === "장비 레벨" || head === "등급") {
+        if (!names || !probs || !steps || names.length !== probs.length || names.length !== steps.length) {
+          problems.push(`${block === null ? "" : ""}옵션·확률·증가값 칸 수가 다릅니다: ${JSON.stringify({ names, probs, steps })}`);
+          current = null;
+          continue;
+        }
+        if (block.levelBasis && block.levelBasis !== head) problems.push(`레벨 기준이 섞여 있습니다: ${head}`);
+        block.levelBasis = head;
+        current = names.map((option, index) => {
+          if (!FLAME_PERCENT_RE.test(probs[index])) problems.push(`옵션 확률을 해석하지 못했습니다: ${option} ${probs[index]}`);
+          if (!FLAME_VALUE_RE.test(steps[index])) problems.push(`증가값을 해석하지 못했습니다: ${option} ${steps[index]}`);
+          const entry = { option, p: probs[index], step: steps[index], ranges: {} };
+          block.options.push(entry);
+          return entry;
+        });
+        const minMax = values.filter(Boolean);
+        if (minMax.length !== current.length * 2 || minMax.some((cell, i) => cell !== (i % 2 ? "MAX" : "MIN"))) {
+          problems.push(`MIN/MAX 머리행이 옵션 수와 맞지 않습니다: ${JSON.stringify(cells)}`);
+        }
+      } else if (/^\d+$/.test(head) && current) {
+        const filled = values.filter(Boolean);
+        if (filled.length !== current.length * 2) {
+          problems.push(`범위 칸 수가 옵션 수와 맞지 않습니다: ${JSON.stringify(cells)}`);
+          continue;
+        }
+        current.forEach((entry, index) => {
+          const min = filled[index * 2];
+          const max = filled[index * 2 + 1];
+          if (!FLAME_VALUE_RE.test(min) || !FLAME_VALUE_RE.test(max) || percentNumber(min) > percentNumber(max)) {
+            problems.push(`범위를 해석하지 못했습니다: ${entry.option} ${head} ${min}~${max}`);
+          }
+          if (entry.ranges[head]) problems.push(`같은 레벨이 두 번 나옵니다: ${entry.option} ${head}`);
+          entry.ranges[head] = { min, max };
+        });
+      } else {
+        problems.push(`행을 해석하지 못했습니다: ${JSON.stringify(cells)}`);
+      }
+    }
+  }
+
+  if (!groupOrder.length) problems.push("추가 옵션 표를 하나도 찾지 못했습니다");
+  for (const name of FLAME_NAMES) if (!twoOptionChance[name]) problems.push(`2개 등장 확률이 없습니다: ${name}`);
+  for (const group of groupOrder) {
+    for (const [flame, block] of Object.entries(groups[group])) {
+      const levels = block.options.length ? Object.keys(block.options[0].ranges) : [];
+      if (!levels.length) problems.push(`빈 표: ${group} - ${flame}`);
+      for (const entry of block.options) {
+        if (Object.keys(entry.ranges).join() !== levels.join()) problems.push(`레벨 목록이 다릅니다: ${group} - ${flame} ${entry.option}`);
+      }
+      const sum = block.options.reduce((acc, entry) => acc + percentNumber(entry.p), 0);
+      if (Math.abs(sum - 100) > 0.1) problems.push(`옵션 확률 합계가 100%가 아닙니다: ${group} - ${flame} ${sum.toFixed(4)}%`);
+    }
+  }
+  return { id: def.id, type: def.type, title: def.title, url: OFFICIAL_URL(def.id), groups, groupOrder, twoOptionChance, notes: flameNotes(raw), problems };
+}
+
+function buildFlameFile(output, parsed, generatedAt) {
+  const byFlame = parsed.groups[output.group];
+  if (!byFlame) throw new Error(`${output.file}: 공식 페이지에서 '${output.group}' 표를 찾지 못했습니다`);
+  const result = {};
+  for (const flame of FLAME_NAMES) {
+    const block = byFlame[flame];
+    if (!block) continue;
+    result[flame] = {
+      two_option_chance: parsed.twoOptionChance[flame],
+      level_basis: block.levelBasis,
+      options: block.options.map((entry) => ({ option: entry.option, p: entry.p, step: entry.step, ranges: { ...entry.ranges } })),
+    };
+  }
+  const meta = {
+    source: parsed.url,
+    source_title: parsed.title,
+    official_group: output.group,
+    generated_at: generatedAt,
+    generator: GENERATOR,
+    note: "옵션 수치는 ranges 의 min~max 에서 step 간격으로 균등하게 정해진다. p = 한 줄에 그 옵션이 붙을 확률, two_option_chance = 둘째 줄이 생길 확률. 글자는 공식 표기 그대로.",
+  };
+  if (parsed.notes.length) meta.official_notes = parsed.notes;
+  return { _meta: meta, ...result };
+}
+
+function buildFlameFiles(parsed, generatedAt) {
+  const files = new Map();
+  for (const output of FLAME_OUTPUTS) files.set(output.file, buildFlameFile(output, parsed, generatedAt));
+  return files;
+}
+
+// 추가 옵션 파일 대조: 불꽃마다 2개 등장 확률·레벨 기준, 옵션마다 이름·확률·증가값·레벨별 MIN/MAX 를 한 칸씩 비교한다.
+function verifyFlameAgainstOfficial(parsed, dir) {
+  const report = { files: [], mismatches: [], rowsCompared: 0, rowsMatched: 0 };
+  for (const output of FLAME_OUTPUTS) {
+    const entry = { file: output.file, page: FLAME_PAGE_ID, rows: 0, matched: 0, problems: [] };
+    report.files.push(entry);
+    const file = path.join(dir, output.file);
+    if (!fs.existsSync(file)) {
+      entry.problems.push("파일 없음");
+      report.mismatches.push(`${output.file}: 파일 없음`);
+      continue;
+    }
+    const data = readJson(file);
+    const byFlame = parsed.groups[output.group] || {};
+    const check = (ok, message) => {
+      entry.rows += 1;
+      if (ok) entry.matched += 1;
+      else entry.problems.push(message);
+    };
+    for (const [flame, block] of Object.entries(byFlame)) {
+      const site = data[flame];
+      if (!site) {
+        entry.problems.push(`키 없음: ${flame}`);
+        continue;
+      }
+      check(sameText(site.two_option_chance, parsed.twoOptionChance[flame]), `${flame}: 2개 등장 확률 공식 ${parsed.twoOptionChance[flame]} / 파일 ${site.two_option_chance}`);
+      check(sameText(site.level_basis, block.levelBasis), `${flame}: 레벨 기준 공식 ${block.levelBasis} / 파일 ${site.level_basis}`);
+      const count = Math.max(block.options.length, (site.options || []).length);
+      for (let i = 0; i < count; i += 1) {
+        const official = block.options[i];
+        const mine = (site.options || [])[i];
+        if (!official || !mine) {
+          check(false, `${flame} ${i + 1}번째 옵션: 공식 ${official ? official.option : "(없음)"} / 파일 ${mine ? mine.option : "(없음)"}`);
+          continue;
+        }
+        check(sameText(official.option, mine.option) && sameText(official.p, mine.p) && sameText(official.step, mine.step),
+          `${flame} ${official.option}: 공식 ${official.p}·${official.step} / 파일 ${mine.option} ${mine.p}·${mine.step}`);
+        const levels = new Set([...Object.keys(official.ranges), ...Object.keys(mine.ranges || {})]);
+        for (const level of levels) {
+          const a = official.ranges[level];
+          const b = (mine.ranges || {})[level];
+          check(a && b && sameText(a.min, b.min) && sameText(a.max, b.max),
+            `${flame} ${official.option} ${level}: 공식 ${a ? `${a.min}~${a.max}` : "(없음)"} / 파일 ${b ? `${b.min}~${b.max}` : "(없음)"}`);
+        }
+      }
+    }
+    for (const key of Object.keys(data)) {
+      if (key !== "_meta" && !byFlame[key]) entry.problems.push(`공식 페이지에 없는 키: ${key}`);
+    }
+    report.rowsCompared += entry.rows;
+    report.rowsMatched += entry.matched;
+    for (const problem of entry.problems) report.mismatches.push(`${output.file}: ${problem}`);
+  }
+  return report;
+}
+
+// ---------------------------------------------------------------------------
 // 6. 실행
 
 function parseArgs(argv) {
@@ -678,7 +921,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const log = (message) => console.log(message);
   if (args.help) {
-    console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(1, 17).join("\n"));
+    console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(1, 18).join("\n"));
     return 0;
   }
 
@@ -689,17 +932,33 @@ async function main() {
     for (const problem of problems.slice(0, 40)) console.error(`  - ${problem}`);
     return 2;
   }
-  const officialRows = [...parsedById.values()].reduce(
+  const cubeParsed = [...parsedById.values()].filter((parsed) => parsed.type !== "flame");
+  const flameParsed = parsedById.get(FLAME_PAGE_ID);
+  const officialRows = cubeParsed.reduce(
     (sum, parsed) => sum + parsed.keyOrder.reduce((acc, key) => acc + Object.values(parsed.tables[key]).reduce((a, b) => a + b.first.length + b.second.length, 0), 0),
     0,
   );
-  log(`공식 표 ${[...parsedById.values()].reduce((sum, p) => sum + p.keyOrder.length, 0)}개, 행 ${officialRows}개(첫번째 + 두번째/세번째 열)를 해석했습니다.`);
+  log(`공식 표 ${cubeParsed.reduce((sum, p) => sum + p.keyOrder.length, 0)}개, 행 ${officialRows}개(첫번째 + 두번째/세번째 열)를 해석했습니다.`);
+  const flameBlocks = flameParsed.groupOrder.reduce((sum, group) => sum + Object.keys(flameParsed.groups[group]).length, 0);
+  const flameOptions = flameParsed.groupOrder.reduce(
+    (sum, group) => sum + Object.values(flameParsed.groups[group]).reduce((acc, block) => acc + block.options.length, 0),
+    0,
+  );
+  log(`추가 옵션 표: 장비 묶음 ${flameParsed.groupOrder.length}개, 불꽃 블록 ${flameBlocks}개, 옵션 ${flameOptions}개를 해석했습니다.`);
 
   if (args.verify) {
-    const report = verifyAgainstOfficial(parsedById, args.out);
+    const cubeReport = verifyAgainstOfficial(parsedById, args.out);
+    const flameReport = verifyFlameAgainstOfficial(flameParsed, args.out);
+    const report = {
+      files: [...cubeReport.files, ...flameReport.files],
+      mismatches: [...cubeReport.mismatches, ...flameReport.mismatches],
+      rowsCompared: cubeReport.rowsCompared + flameReport.rowsCompared,
+      rowsMatched: cubeReport.rowsMatched + flameReport.rowsMatched,
+    };
     for (const entry of report.files) {
-      log(`  ${entry.problems.length ? "불일치" : "일치"}  ${entry.file}  ${entry.matched}/${entry.rows}행 (공식 ${entry.page})`);
+      log(`  ${entry.problems.length ? "불일치" : "일치"}  ${entry.file}  ${entry.matched}/${entry.rows}${entry.file.includes("_flame_") ? "칸" : "행"} (공식 ${entry.page})`);
     }
+    log(`추가 옵션 대조: ${flameReport.rowsMatched}/${flameReport.rowsCompared}칸 일치`);
     log(`전 행 대조: ${report.rowsMatched}/${report.rowsCompared}행 일치, 문제 ${report.mismatches.length}건`);
     for (const problem of report.mismatches.slice(0, 60)) log(`  - ${problem}`);
     return report.mismatches.length ? 1 : 0;
@@ -746,7 +1005,19 @@ async function main() {
       log(`  옛 파일 삭제: ${output.legacyFile}`);
     }
   }
-  const known = new Set(OUTPUTS.map((output) => output.file));
+  const flameFiles = buildFlameFiles(flameParsed, generatedAt);
+  for (const output of FLAME_OUTPUTS) {
+    const next = flameFiles.get(output.file);
+    const target = path.join(args.out, output.file);
+    const existing = fs.existsSync(target) ? readJson(target) : null;
+    const unchanged = existing && JSON.stringify(withoutTimestamp(existing)) === JSON.stringify(withoutTimestamp(next));
+    const blocks = Object.keys(next).filter((key) => key !== "_meta").length;
+    log(`  ${output.file}: 불꽃 ${blocks}종, ${existing ? (unchanged ? "같음" : "바뀜") : "새 파일"}`);
+    if (args.dryRun || unchanged) continue;
+    fs.writeFileSync(target, `${JSON.stringify(next, null, 2)}\n`);
+    written += 1;
+  }
+  const known = new Set([...OUTPUTS.map((output) => output.file), ...FLAME_OUTPUTS.map((output) => output.file), ...STATIC_FILES]);
   for (const name of fs.readdirSync(args.out)) {
     if (!known.has(name)) log(`  참고: 이 스크립트가 만들지 않는 파일이 있습니다: ${name}`);
   }
@@ -755,8 +1026,12 @@ async function main() {
 }
 
 module.exports = {
+  FLAME_OUTPUTS,
   OUTPUTS,
   PAGES,
+  buildFlameFiles,
+  parseFlamePage,
+  verifyFlameAgainstOfficial,
   buildOutputFiles,
   diffOutputFile,
   lineSums,

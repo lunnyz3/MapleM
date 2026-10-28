@@ -8,6 +8,7 @@ import { EmptyState } from "../../components/States.jsx";
 import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNumbers, slotKey, starRows, starforce } from "../../lib/character.js";
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
+import { itemInsight } from "../../lib/share.js";
 import { ItemShare, useKakaoEnabled } from "./Share.jsx";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
@@ -15,6 +16,23 @@ const TIP_HIDE_DELAY = 220;
 
 /** 공격력을 보여 주는 부위 */
 const ATTACK_SLOTS = new Set(["weapon", "subWeapon", "emblem"]);
+
+/**
+ * 장비 한 개의 계산 결과(줄별 마스터리 상승분 · 추가 옵션 상위 %). 계산 중이거나 못 하면 null.
+ * @param {any} item @param {any} profile
+ */
+function useItemInsight(item, profile) {
+  const [insight, setInsight] = useState(/** @type {any} */ (null));
+  useEffect(() => {
+    let alive = true;
+    setInsight(null);
+    itemInsight(item, profile).then((value) => alive && setInsight(value));
+    return () => {
+      alive = false;
+    };
+  }, [item]);
+  return insight;
+}
 
 /**
  * 스타포스 별: 5개씩 묶음, 한 줄 20개. 10강마다 별이 반짝인다.
@@ -43,10 +61,11 @@ function StarRow({ count }) {
 }
 
 /**
- * 옵션 묶음. grade 가 있으면 잠재 등급 아이콘과 등급 이름을 머리에 단다.
- * @param {{ label: string, options: any[], grade?: any, tone?: string }} props
+ * 옵션 묶음. grade 가 있으면 잠재 등급 아이콘과 등급 이름을, badge 가 있으면 머리 오른쪽에 단다.
+ * bonuses[i] 는 i 번째 줄의 마스터리 상승분("+4%")이다.
+ * @param {{ label: string, options: any[], grade?: any, tone?: string, bonuses?: string[], badge?: string }} props
  */
-function OptionBlock({ label, options, grade, tone }) {
+function OptionBlock({ label, options, grade, tone, bonuses = [], badge = "" }) {
   if (!Array.isArray(options) || !options.length) return null;
   return (
     <section class={`eq-opts${grade ? ` is-${grade.key}` : ""}${tone ? ` eq-opts--${tone}` : ""}`}>
@@ -54,12 +73,16 @@ function OptionBlock({ label, options, grade, tone }) {
         {grade ? <img class="eq-opts__tier" src={grade.icon} alt="" width={14} height={14} /> : null}
         <span>{label}</span>
         {grade ? <span class="eq-opts__grade">{grade.label}</span> : null}
+        {badge ? <span class="eq-opts__grade num">{badge}</span> : null}
       </h4>
       <ul>
         {options.map((option, index) => (
           <li key={index}>
             <span>{option.name}</span>
-            <strong class="num">{option.value}</strong>
+            <strong class="num">
+              {option.value}
+              {bonuses[index] ? <small class="eq-opts__bonus">{bonuses[index]}</small> : null}
+            </strong>
           </li>
         ))}
       </ul>
@@ -84,9 +107,9 @@ function ItemIcon({ item, size = 56 }) {
 
 /**
  * 장비 한 개의 자세한 정보(툴팁·시트 공용). 게임 툴팁처럼 어두운 판 위에 별·등급·옵션을 보여 준다.
- * @param {{ item: any, compact?: boolean }} props
+ * @param {{ item: any, profile?: any, compact?: boolean }} props
  */
-export function EquipDetail({ item, compact = false }) {
+export function EquipDetail({ item, profile = null, compact = false }) {
   const grade = gradeInfo(item.itemGrade);
   const star = starforce(item.starforceUpgrade);
   const emblem = emblemInfo(item.emblemInfo);
@@ -96,6 +119,8 @@ export function EquipDetail({ item, compact = false }) {
   const attack = ATTACK_SLOTS.has(key) && Number(item.combatPower) > 0 ? formatComma(item.combatPower) : "";
   const karma = Number(item.karmaScissorsRemaining);
   const expand = Number(item.remainingStarforceExpansion);
+  const insight = useItemInsight(item, profile);
+  const bonuses = insight?.bonuses || {};
 
   return (
     <article class={`eq-detail${compact ? " eq-detail--compact" : ""}${grade ? ` is-${grade.key}` : ""}`}>
@@ -129,9 +154,9 @@ export function EquipDetail({ item, compact = false }) {
 
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
-        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" />
-        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} />
-        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} />
+        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} />
+        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} />
+        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} />
         {emblem ? (
           <section class="eq-opts eq-opts--emblem">
             <h4 class="eq-opts__head">
@@ -355,7 +380,7 @@ export function Equipment({ data, world, mode, presetNo }) {
             <>
               <div ref={tipRef} class={`eq-tip eq-tip--${tipPos.side}`} role="tooltip" style={{ transform: `translate(${tipPos.x}px, ${tipPos.y}px)` }}>
                 <div class="eq-tip__inner" key={tip.item.itemName}>
-                  <EquipDetail item={tip.item} compact />
+                  <EquipDetail item={tip.item} profile={profile} compact />
                   <p class={`eq-tip__hint${kakao ? "" : " eq-tip__hint--plain"}`}>
                     {kakao ? <img src="/assets/icon-kakaotalk.png" alt="" width={20} height={20} /> : <Icon name="download" size={16} />}
                     {kakao ? "클릭하면 카카오톡 보내기 · 이미지 저장" : "클릭하면 이미지 저장 · 링크 복사"}
@@ -384,7 +409,7 @@ export function Equipment({ data, world, mode, presetNo }) {
       <Sheet open={Boolean(sheetItem)} title={sheetItem ? sheetItem.itemName || "장비" : "장비"} onClose={() => setSheetItem(null)}>
         {sheetItem ? (
           <ItemShare item={sheetItem} profile={profile} world={world}>
-            <EquipDetail item={sheetItem} />
+            <EquipDetail item={sheetItem} profile={profile} />
           </ItemShare>
         ) : null}
       </Sheet>

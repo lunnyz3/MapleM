@@ -127,7 +127,7 @@ export function ItemShareCard({ item, caption = "", profile, world }) {
       </header>
       {caption ? <p class="sc-bubble">{caption}</p> : null}
       <div class="sc-item__detail">
-        <EquipDetail item={item} />
+        <EquipDetail item={item} profile={profile} />
       </div>
       <CardFoot />
     </article>

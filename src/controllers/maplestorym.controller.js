@@ -4,6 +4,7 @@ const { normalizeWorldName } = require("../config/worlds");
 const { RequestLog } = require("../models/request-log.model");
 const { TtlLruCache } = require("../nexon/client");
 const { getActiveVcores } = require("../transform/vmatrix");
+const { fillPresetMasteryInfo } = require("../transform/equipment-mastery");
 const { buildCharacterStats } = require("../domain/stats");
 const { createGuildCollector } = require("../services/guild-collection.service");
 const {
@@ -1307,14 +1308,37 @@ function mapEquipmentItemForView(item) {
     additionalPotentialOption: toArray(item?.item_additional_potential_option).map(mapOptionEntry),
     potentialGrade: String(potentialGrade || "").trim(),
     additionalPotentialGrade: String(additionalPotentialGrade || "").trim(),
+    // 추가 옵션 등급: 2 = 강력한, 3 = 영원한(검은) 환생의 불꽃 (public/probability/equipment_mastery.json 의 flame_grade)
+    additionalOptionGrade: String(item?.item_additional_option_grade ?? "").trim(),
     soulInfo: {
       soulName: item?.soul_info?.soul_name || "",
       soulOption: item?.soul_info?.soul_option || ""
     },
     karmaScissorsRemaining,
     remainingStarforceExpansion,
-    emblemInfo: item?.emblem_info || null
+    emblemInfo: item?.emblem_info || null,
+    masteryInfo: mapMasteryInfoForView(item?.mastery_info)
   };
+}
+
+// 장비 마스터리: 레벨과 기본 옵션·잠재·추가 옵션·에디셔널 잠재에 넣은 포인트. 없으면 null.
+function mapMasteryInfoForView(info) {
+  if (!info || typeof info !== "object") {
+    return null;
+  }
+  const toPoint = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? number : 0;
+  };
+  const mastery = {
+    level: toPoint(info.mastery_level),
+    basicPoint: toPoint(info.base_option_point),
+    potentialPoint: toPoint(info.potential_option_point),
+    additionalPoint: toPoint(info.additional_option_point),
+    additionalPotentialPoint: toPoint(info.additional_potential_option_point)
+  };
+  const hasPoint = mastery.basicPoint + mastery.potentialPoint + mastery.additionalPoint + mastery.additionalPotentialPoint > 0;
+  return mastery.level > 0 || hasPoint ? mastery : null;
 }
 
 function mapCashEquipmentItemForView(item) {
@@ -1326,7 +1350,8 @@ function mapCashEquipmentItemForView(item) {
 }
 
 function extractEquipmentPresetResult(details, source, sourceTimestamp) {
-  const itemData = details?.itemEquipment?.data || {};
+  // 프리셋 장비는 API 가 mastery_info 를 비워 주므로 착용 목록의 같은 장비에서 옮겨 온다.
+  const itemData = fillPresetMasteryInfo(details?.itemEquipment?.data || {});
   const cashData = details?.cashitemEquipment?.data || {};
   const itemPresets = toArray(itemData.equipment_preset);
   const cashPresets = toArray(cashData.cash_equipment_preset);
