@@ -102,7 +102,6 @@ export function GrowthTab({ data, majorStats, attackType, linkSkills, className,
           <strong class="num">{summary.count}</strong>곳 중 <strong class="num">{summary.doneCount}</strong>곳 다 채움
         </p>
         <p class="growth-head__gain display num">{summary.gain > 0.5 ? `전투력 ${gainText(summary.gain, summary.ratio)}` : "모두 다 채웠어요"}</p>
-        <p class="growth-head__note">아래 영역을 모두 다 채웠을 때 보스 세팅 전투력이 얼마나 오르는지예요.</p>
       </section>
 
       {summary.rows.length ? (
@@ -140,7 +139,6 @@ export function GrowthTab({ data, majorStats, attackType, linkSkills, className,
         </section>
       ) : null}
       <CubeAdvice items={items} majorStats={majorStats} attackType={attackType} />
-      <p class="growth-note">스텔라코드처럼 넥슨 정보에 없는 값과 예상 딜은 넣지 않았어요. 칠흑은 완성도만 보여 줘요.</p>
     </div>
   );
 }

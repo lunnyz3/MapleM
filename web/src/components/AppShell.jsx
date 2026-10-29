@@ -1,4 +1,4 @@
-import { urls } from "../lib/game.js";
+import { CALC_VIEWS, RANKING_TYPES, urls } from "../lib/game.js";
 import { useTheme } from "../lib/theme.js";
 import { BrandMark } from "./Decor.jsx";
 import { Icon } from "./Icon.jsx";
@@ -10,13 +10,39 @@ import { ToastHost } from "./Toast.jsx";
  */
 
 /** 상단 메뉴. 새 화면이 없는 메뉴는 기존 화면으로 연결한다. */
+// 마우스를 올리거나 키보드로 들어가면 하위 메뉴가 열린다.
 const NAV = [
   { key: "home", label: "홈", href: urls.home },
-  { key: "ranking", label: "랭킹", href: urls.ranking("level") },
-  { key: "guild", label: "길드", href: urls.guildSearch },
+  {
+    key: "ranking",
+    label: "랭킹",
+    href: urls.ranking("level"),
+    children: [
+      ...RANKING_TYPES.filter((type) => type.subject !== "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) })),
+      { label: "아이템 랭킹", href: "/ranking?view=item" },
+      { label: "스펙 랭킹", href: "/ranking?view=spec" }
+    ]
+  },
+  {
+    key: "guild",
+    label: "길드",
+    href: urls.guildSearch,
+    children: [
+      { label: "길드 검색", href: urls.guildSearch },
+      ...RANKING_TYPES.filter((type) => type.subject === "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) }))
+    ]
+  },
   { key: "compare", label: "비교", href: urls.compare() },
-  { key: "stats", label: "통계", href: urls.stats },
-  { key: "calc", label: "계산기", href: urls.calc },
+  {
+    key: "stats",
+    label: "통계",
+    href: urls.stats,
+    children: [
+      { label: "직업별 전투력", href: "/stats" },
+      { label: "레벨 분포", href: "/stats?view=level" }
+    ]
+  },
+  { key: "calc", label: "계산기", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },
   { key: "bot", label: "카톡 봇", href: urls.bot, highlight: true }
 ];
 
@@ -89,10 +115,25 @@ export function AppShell({ current = "", children }) {
 
           <nav class="topnav" aria-label="주요 메뉴">
             {NAV.map((item) => (
-              <a key={item.key} class={`topnav__link${item.highlight ? " topnav__link--bot" : ""}`} href={item.href} aria-current={item.key === current ? "page" : undefined}>
-                {item.label}
-                {item.highlight ? <span class="topnav__free">무료</span> : null}
-              </a>
+              <div key={item.key} class={`topnav__item${item.children ? " has-menu" : ""}`}>
+                <a class={`topnav__link${item.highlight ? " topnav__link--bot" : ""}`} href={item.href} aria-current={item.key === current ? "page" : undefined}>
+                  {item.label}
+                  {item.highlight ? <span class="topnav__free">무료</span> : null}
+                </a>
+                {item.children ? (
+                  <div class="topnav__menu">
+                    <ul class={item.children.length > 8 ? "is-wide" : ""}>
+                      {item.children.map((child) => (
+                        <li key={child.href}>
+                          <a class="topnav__menu-link" href={child.href}>
+                            {child.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             ))}
           </nav>
 

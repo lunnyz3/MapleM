@@ -154,9 +154,7 @@ export function StarforceCalc() {
             />
           )}
         </div>
-        {accessory ? (
-          <p class="calc-note">장신구는 연마 표 확률을 쓰고, 실패하면 단계가 그대로예요.</p>
-        ) : (
+        {accessory ? null : (
           <div class="calc-checks">
             <Check label="하락 방지" checked={protectDrop} onChange={setProtectDrop} />
             <Check label="파괴 방지" checked={protectDestroy} onChange={setProtectDestroy} />
@@ -295,7 +293,6 @@ export function EmblemCalc() {
             </tbody>
           </table>
         </div>
-        <p class="calc-note">실패해도 레벨은 그대로이고, 시도마다 메소와 증표가 들어요.</p>
       </section>
 
       <section class="card calc-card calc-result">
@@ -386,7 +383,6 @@ export function PolishCalc() {
             </tbody>
           </table>
         </div>
-        <p class="calc-note">실패해도 단계는 그대로예요(하락·파괴 없음). 재료는 개수만 셉니다.</p>
       </section>
 
       <section class="card calc-card calc-result">
@@ -612,7 +608,6 @@ export function TransferCalc() {
             </div>
           ))}
         </dl>
-        <p class="calc-note">항목마다 주문서를 올림해서 더해요. 비용은 받는 장비 등급으로만 정해져요.</p>
       </section>
     </div>
   );
@@ -779,7 +774,6 @@ export function GuildAbilityCalc() {
           <Icon name="link" size={18} />
           단톡방용 정산 문구 복사
         </button>
-        <p class="calc-note">활성석은 스킬마다 올림(8차 골드 40 EXP, 나머지 블랙 30 EXP), 1인당은 다시 올림해요. GP = 골드 500 · 블랙 150.</p>
       </section>
     </div>
   );

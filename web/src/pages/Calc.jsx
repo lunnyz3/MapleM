@@ -12,7 +12,7 @@ import { Aurora, SplitText } from "../components/Motion.jsx";
 import { Segmented } from "../components/Tabs.jsx";
 import { loadCharacterPage } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, kstToday, shiftDate } from "../lib/format.js";
-import { DEFAULT_WORLD, WORLDS } from "../lib/game.js";
+import { CALC_VIEWS, DEFAULT_WORLD, WORLDS } from "../lib/game.js";
 import { daysFor, hexaCoreType, hexaStatExpectation, sumRange, symbolCost } from "../lib/hexaCalc.mjs";
 import { liberationPlan } from "../lib/liberation.mjs";
 import { EmblemCalc, GuildAbilityCalc, PolishCalc, StarforceCalc, TransferCalc } from "./calc/Enhance.jsx";
@@ -473,25 +473,13 @@ function Liberation({ liberated }) {
   );
 }
 
-const VIEWS = [
-  { value: "hexa", label: "HEXA 강화" },
-  { value: "stat", label: "HEXA 스탯" },
-  { value: "symbol", label: "심볼" },
-  { value: "liberation", label: "해방" },
-  { value: "starforce", label: "스타포스" },
-  { value: "emblem", label: "문장" },
-  { value: "polish", label: "장신구 연마" },
-  { value: "transfer", label: "전수" },
-  { value: "guild", label: "길드 어빌리티" },
-  { value: "gacha", label: "확률" },
-  { value: "itemdb", label: "아이템 DB" }
-];
+const VIEWS = CALC_VIEWS;
 // 캐릭터를 불러와 채우는 계산기(나머지는 캐릭터와 상관없다).
 const CHARACTER_VIEWS = ["hexa", "stat", "symbol", "liberation"];
 
 function readView() {
   const view = new URLSearchParams(window.location.search).get("view");
-  return VIEWS.some((item) => item.value === view) ? /** @type {string} */ (view) : "hexa";
+  return VIEWS.some((item) => item.value === view) ? /** @type {string} */ (view) : "liberation";
 }
 
 function readWho() {

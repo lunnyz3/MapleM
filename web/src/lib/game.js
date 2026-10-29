@@ -200,6 +200,21 @@ export function getRankingType(id) {
 }
 
 /** 화면 주소. 기존 화면은 /legacy 첫 화면만 남아 있다. */
+/** 계산기 화면 목록(계산기 탭과 상단 메뉴가 같이 쓴다). 해방이 첫 화면. */
+export const CALC_VIEWS = [
+  { value: "liberation", label: "해방" },
+  { value: "hexa", label: "HEXA 강화" },
+  { value: "stat", label: "HEXA 스탯" },
+  { value: "symbol", label: "심볼" },
+  { value: "starforce", label: "스타포스" },
+  { value: "emblem", label: "문장" },
+  { value: "polish", label: "장신구 연마" },
+  { value: "transfer", label: "전수" },
+  { value: "guild", label: "길드 어빌리티" },
+  { value: "gacha", label: "확률" },
+  { value: "itemdb", label: "아이템 DB" }
+];
+
 export const urls = {
   /** @param {string} world @param {string} name */
   character: (world, name) => `/character/${encodeURIComponent(world)}/${encodeURIComponent(name)}`,

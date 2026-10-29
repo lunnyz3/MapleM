@@ -368,9 +368,6 @@ function GrowthJournal({ journal, since }) {
           <Icon name="chevronDown" size={16} class={expanded ? "is-flipped" : ""} />
         </button>
       ) : null}
-      <p class="rec-journal__note">
-        사이트에서 조회하거나 매일 새벽 전투력 랭킹을 모을 때마다 그날 값이 남아요. 바뀐 장비는 템환산이 가장 높은 프리셋 기준이에요.
-      </p>
     </section>
   );
 }

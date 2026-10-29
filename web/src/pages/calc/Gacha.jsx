@@ -114,7 +114,6 @@ function StarChorus() {
             <dd class="num">{Number.isFinite(result.costEok) ? `${formatDecimal(result.costEok, 1)}억` : "-"}</dd>
           </div>
         </dl>
-        <p class="calc-note">재설정 1번에 세리온 {rules.starChorus.cerionPerReset}개.</p>
       </section>
     </div>
   );
@@ -199,7 +198,6 @@ function Sanctuary() {
             {unit} 이상까지 평균 기도 (한 번에 {pct(result.chance)})
           </span>
         </p>
-        <p class="calc-note">레벨의 모든 옵션·등급·값 중 하나를 확률대로 뽑아요. 확률 합이 100%가 아닌 레벨은 합으로 나눠요.</p>
       </section>
     </div>
   );
@@ -248,9 +246,6 @@ function MagnetPet() {
             <dd class="num">{times(result.diamonds)}</dd>
           </div>
         </dl>
-        <p class="calc-note">
-          1회 {formatComma(rules.magnetPet.costs.single)} 다이아, 11회 {formatComma(rules.magnetPet.costs.eleven)} 다이아.
-        </p>
       </section>
     </div>
   );

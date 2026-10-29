@@ -96,9 +96,6 @@ export function CubeAdvice({ items, majorStats, attackType }) {
           ))}
         </ol>
       ) : null}
-      <p class="growth-note">
-        보스 세팅 장비마다 {formatComma(SAMPLES)}번 굴려 본 값이에요(공식 확률표). 좋아진 경우만 바꾼다고 보고, 한 개당 기대 전투력 상승이 큰 순서예요.
-      </p>
     </section>
   );
 }

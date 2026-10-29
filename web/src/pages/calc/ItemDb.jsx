@@ -94,7 +94,6 @@ export function ItemDbCalc() {
             </tbody>
           </table>
         </div>
-        <p class="calc-note">{db._meta?.verification} 추가 옵션을 뺀 값이고, 표에 없는 단계는 모은 장비가 적은 단계예요.</p>
       </section>
     </div>
   );

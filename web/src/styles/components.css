@@ -98,6 +98,70 @@
   color: var(--primary-strong);
 }
 
+/* 하위 메뉴: 마우스를 올리거나 키보드로 들어가면 열린다(위쪽 여백이 마우스 이동 길을 잇는다). */
+.topnav__item {
+  position: relative;
+}
+
+.topnav__menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 60;
+  padding-top: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 6px);
+  transition:
+    opacity 140ms var(--ease),
+    transform 160ms var(--ease),
+    visibility 0s linear 160ms;
+}
+
+.topnav__item.has-menu:hover .topnav__menu,
+.topnav__item.has-menu:focus-within .topnav__menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+
+.topnav__menu ul {
+  display: grid;
+  min-width: 168px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  list-style: none;
+}
+
+.topnav__menu ul.is-wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 300px;
+}
+
+.topnav__menu-link {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.topnav__menu-link:hover,
+.topnav__menu-link:focus-visible {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
 .topbar__actions {
   display: flex;
   align-items: center;

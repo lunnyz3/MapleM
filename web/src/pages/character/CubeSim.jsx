@@ -228,10 +228,6 @@ export function CubeSim({ item, profile, majorStats, attackType, basePower = nul
           처음보다 좋아질 때까지
         </button>
       </div>
-      <p class="cubesim__note">
-        줄마다 넥슨 공식 확률표대로 뽑아요. 등급 상승은 블랙 큐브 2%, 레드·에디셔널 큐브 1%로 계산해요. 여러 번 돌릴 때 블랙 큐브는 전투력이 더 높은 쪽을
-        남겨요(최대 {formatComma(UNTIL_LIMIT)}번).
-      </p>
     </div>
   );
 }
