@@ -39,6 +39,7 @@ const NAV = [
     href: urls.stats,
     children: [
       { label: "직업별 전투력", href: "/stats" },
+      { label: "직업 메타", href: "/stats?view=meta" },
       { label: "레벨 분포", href: "/stats?view=level" }
     ]
   },

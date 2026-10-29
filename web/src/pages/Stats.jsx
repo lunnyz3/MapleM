@@ -1,5 +1,6 @@
-// 통계(/stats?view=class|level): 사이트가 모은 캐릭터(랭킹·길드 훑기·조회) 기준.
+// 통계(/stats?view=class|level|meta): 사이트가 모은 캐릭터(랭킹·길드 훑기·조회) 기준.
 // 직업별: 전투력 상위 N명의 직업 인원·평균/최고 전투력·평균 템환산·잠재·에디. 레벨: 레벨 분포와 직업 비율.
+// 직업 메타: 한 직업 전투력 상위 100명이 실제로 쓰는 무기 옵션·문장·소울·세트·장신구·스타포스.
 import "../styles/stats.css";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { Icon } from "../components/Icon.jsx";
@@ -38,8 +39,10 @@ function readQuery() {
   const world = String(params.get("world_name") || "");
   const top = String(params.get("top") || "1000");
   const minLevel = Number(params.get("min_level")) || 260;
+  const view = String(params.get("view") || "");
   return {
-    view: params.get("view") === "level" ? "level" : "class",
+    view: view === "level" || view === "meta" ? view : "class",
+    cls: String(params.get("class") || "").slice(0, 20),
     world: WORLDS.includes(world) ? world : "",
     top: TOPS.some((item) => item.value === top) ? top : "1000",
     minLevel: MIN_LEVELS.includes(minLevel) ? minLevel : 260
@@ -137,7 +140,9 @@ function ClassStats({ query, onQuery }) {
                 {rows.map((row) => (
                   <tr key={row.className}>
                     <th scope="row" class="stats-table__class">
-                      {row.className}
+                      <button type="button" class="stats-class-link" onClick={() => onQuery({ view: "meta", cls: row.className })}>
+                        {row.className}
+                      </button>
                       <span class="stats-bar" aria-hidden="true">
                         <span style={{ width: `${Math.max(2, (row.count / maxCount) * 100)}%` }} />
                       </span>
@@ -221,6 +226,145 @@ function LevelStats({ query, onQuery }) {
   );
 }
 
+const percent = (/** @type {number} */ share) => `${formatDecimal(share * 100, share < 0.1 ? 1 : 0)}%`;
+
+/** 비율 막대 목록(이름 위, 막대 아래). @param {{ rows: Array<{ label: string, share: number }>, tone?: string }} props */
+function ShareList({ rows, tone = "" }) {
+  if (!rows?.length) return <p class="stats-meta__empty">-</p>;
+  return (
+    <ol class="stats-meta__list">
+      {rows.map((row) => (
+        <li key={row.label}>
+          <span class="stats-meta__label">{row.label}</span>
+          <span class="stats-meta__value num">{percent(row.share)}</span>
+          <span class={`stats-bars__track${tone ? ` ${tone}` : ""}`} aria-hidden="true">
+            <span style={{ width: `${Math.max(1, row.share * 100)}%` }} />
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** @param {{ query: ReturnType<typeof readQuery>, onQuery: (patch: any) => void }} props */
+function JobMeta({ query, onQuery }) {
+  const params = new URLSearchParams();
+  if (query.cls) params.set("class", query.cls);
+  if (query.world) params.set("world_name", query.world);
+  const stats = useStats(`/api/v2/stats/job-meta?${params}`);
+  const data = stats.data;
+  const maxStar = Math.max(1, ...(data?.starforce || []).map((row) => row.avg || 0));
+
+  return (
+    <>
+      <div class="stats-filters stats-filters--pair card">
+        <WorldSelect world={query.world} onWorld={(world) => onQuery({ world })} />
+        <span class="select">
+          <select
+            aria-label="직업"
+            value={data?.className || query.cls}
+            onChange={(event) => onQuery({ cls: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}
+          >
+            {(data?.classes || (query.cls ? [{ className: query.cls }] : [])).map((row) => (
+              <option key={row.className} value={row.className}>
+                {row.className}
+              </option>
+            ))}
+          </select>
+          <Icon name="chevronDown" size={18} class="select__icon" />
+        </span>
+      </div>
+      {stats.status === "loading" ? <Skeleton height={520} radius={20} /> : null}
+      {stats.status === "error" ? <ErrorState title="통계를 불러오지 못했어요" description={stats.error?.message} onRetry={stats.retry} /> : null}
+      {stats.status === "ready" && !data.count ? <ErrorState title="모은 캐릭터가 없어요" /> : null}
+      {stats.status === "ready" && data.count ? (
+        <>
+          <div class="stats-cards">
+            <Reveal class="card stats-card">
+              <span class="stats-card__label">{data.className} 전투력 상위</span>
+              <strong class="display num">{formatComma(data.count)}명</strong>
+              <span class="stats-card__note num">{power(data.summary.minCombatPower)} 이상</span>
+            </Reveal>
+            <Reveal class="card stats-card" delay={60}>
+              <span class="stats-card__label">평균 전투력</span>
+              <strong class="display num">{power(data.summary.avgCombatPower)}</strong>
+              <span class="stats-card__note num">Lv.{formatDecimal(data.summary.avgLevel, 1)}</span>
+            </Reveal>
+            <Reveal class="card stats-card" delay={120}>
+              <span class="stats-card__label">평균 템환산</span>
+              <strong class="display num">{setScoreText(data.summary.avgItemScore || 0)}</strong>
+              <span class="stats-card__note">&nbsp;</span>
+            </Reveal>
+          </div>
+          <div class="stats-split stats-meta">
+            <Reveal class="card stats-panel">
+              <h2 class="stats-panel__title">무기</h2>
+              <div class="stats-meta__group">
+                <h3 class="stats-meta__sub">종류</h3>
+                <ShareList rows={data.weapon.items} />
+              </div>
+              <div class="stats-meta__group">
+                <h3 class="stats-meta__sub">잠재능력</h3>
+                <ShareList rows={data.weapon.potential} />
+              </div>
+              <div class="stats-meta__group">
+                <h3 class="stats-meta__sub">에디셔널</h3>
+                <ShareList rows={data.weapon.additional} />
+              </div>
+              <div class="stats-meta__group">
+                <h3 class="stats-meta__sub">추가옵션</h3>
+                <ShareList rows={data.weapon.flame} />
+              </div>
+            </Reveal>
+            <div class="stats-meta__col">
+              <Reveal class="card stats-panel" delay={60}>
+                <h2 class="stats-panel__title">문장 · 소울</h2>
+                <div class="stats-meta__group">
+                  <h3 class="stats-meta__sub">문장</h3>
+                  <ShareList rows={data.weapon.emblem} tone="is-mint" />
+                </div>
+                <div class="stats-meta__group">
+                  <h3 class="stats-meta__sub">소울</h3>
+                  <ShareList rows={data.weapon.soul} tone="is-mint" />
+                </div>
+              </Reveal>
+              <Reveal class="card stats-panel" delay={120}>
+                <h2 class="stats-panel__title">세트</h2>
+                <ShareList rows={data.sets} tone="is-mint" />
+              </Reveal>
+              <Reveal class="card stats-panel" delay={180}>
+                <h2 class="stats-panel__title">평균 스타포스</h2>
+                <ol class="stats-bars">
+                  {data.starforce.map((row) => (
+                    <li key={row.slot}>
+                      <span class="stats-bars__label">{row.slot}</span>
+                      <span class="stats-bars__track is-mint" aria-hidden="true">
+                        <span style={{ width: `${Math.max(1, (row.avg / maxStar) * 100)}%` }} />
+                      </span>
+                      <span class="stats-bars__value num">★{formatDecimal(row.avg, 1)}</span>
+                    </li>
+                  ))}
+                </ol>
+              </Reveal>
+            </div>
+            <Reveal class="card stats-panel stats-meta__wide">
+              <h2 class="stats-panel__title">장신구</h2>
+              <div class="stats-meta__grid">
+                {data.accessories.map((entry) => (
+                  <div key={entry.group} class="stats-meta__group">
+                    <h3 class="stats-meta__sub">{entry.group}</h3>
+                    <ShareList rows={entry.rows} />
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+}
+
 export function Stats() {
   const [query, setQuery] = useState(readQuery);
   useEffect(() => {
@@ -236,6 +380,7 @@ export function Stats() {
     if (next.world) params.set("world_name", next.world);
     if (next.view === "class" && next.top !== "1000") params.set("top", next.top);
     if (next.view === "level" && next.minLevel !== 260) params.set("min_level", String(next.minLevel));
+    if (next.view === "meta" && next.cls) params.set("class", next.cls);
     const url = `/stats${params.toString() ? `?${params}` : ""}`;
     if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState(null, "", url);
   };
@@ -260,11 +405,14 @@ export function Stats() {
           onChange={(view) => onQuery({ view })}
           options={[
             { value: "class", label: "직업별 전투력" },
+            { value: "meta", label: "직업 메타" },
             { value: "level", label: "레벨 분포" }
           ]}
         />
       </div>
-      {query.view === "class" ? <ClassStats query={query} onQuery={onQuery} /> : <LevelStats query={query} onQuery={onQuery} />}
+      {query.view === "class" ? <ClassStats query={query} onQuery={onQuery} /> : null}
+      {query.view === "meta" ? <JobMeta query={query} onQuery={onQuery} /> : null}
+      {query.view === "level" ? <LevelStats query={query} onQuery={onQuery} /> : null}
     </div>
   );
 }

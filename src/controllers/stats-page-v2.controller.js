@@ -1,8 +1,9 @@
 // v2 statistics over the collected characters.
 //   GET /api/v2/stats/classes?world_name=&top=1000  → { ok, top, total, classes: [...] }
 //   GET /api/v2/stats/levels?world_name=&min_level=260 → { ok, minLevel, total, levels: [...], classes: [...] }
+//   GET /api/v2/stats/job-meta?world_name=&class=     → { ok, className, classes, count, summary, weapon, sets, accessories, starforce }
 const { normalizeWorldName } = require("../config/worlds");
-const { classStats, levelStats } = require("../services/stats.service");
+const { classStats, levelStats, jobMeta } = require("../services/stats.service");
 
 /** "" for 전체, the canonical world name, or null (400 already sent). */
 function parseWorld(req, res) {
@@ -34,4 +35,6 @@ function handler(compute) {
 const getClassStats = handler((req, worldName) => classStats({ worldName, top: req.query.top }));
 const getLevelStats = handler((req, worldName) => levelStats({ worldName, minLevel: req.query.min_level }));
 
-module.exports = { getClassStats, getLevelStats };
+const getJobMeta = handler((req, worldName) => jobMeta({ worldName, className: String(req.query.class || "").trim().slice(0, 20) }));
+
+module.exports = { getClassStats, getLevelStats, getJobMeta };

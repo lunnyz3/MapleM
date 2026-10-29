@@ -22,6 +22,12 @@
   min-width: 150px;
 }
 
+.stats-filters--pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  justify-content: start;
+}
+
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -217,5 +223,95 @@
 
   .stats-bars li {
     grid-template-columns: 7em minmax(0, 1fr) 4em;
+  }
+}
+
+/* 직업 메타 */
+.stats-class-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stats-class-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.stats-meta__col {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.stats-meta__group + .stats-meta__group {
+  margin-top: var(--sp-4);
+}
+
+.stats-meta__sub {
+  margin: 0 0 8px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.stats-meta__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats-meta__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  font-size: var(--fs-14);
+}
+
+.stats-meta__list .stats-bars__track {
+  grid-column: 1 / -1;
+  height: 6px;
+}
+
+.stats-meta__label {
+  font-weight: 700;
+}
+
+.stats-meta__value {
+  font-weight: 800;
+}
+
+.stats-meta__empty {
+  margin: 0;
+  color: var(--text-subtle);
+}
+
+
+.stats-meta__wide {
+  grid-column: 1 / -1;
+}
+
+.stats-meta__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4) var(--sp-5);
+}
+
+.stats-meta__grid .stats-meta__group + .stats-meta__group {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .stats-meta__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stats-filters--pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

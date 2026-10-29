@@ -3,23 +3,27 @@
 // kept for ten minutes.
 const mongoose = require("mongoose");
 const { CharacterSpec } = require("../models/character-spec.model");
+const { EquipmentItem } = require("../models/equipment-item.model");
+const { jobMeta: buildJobMeta } = require("../domain/stats/job-meta");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const META_TTL_MS = 60 * 60 * 1000;
+const META_TOP = 100;
 const TIMEOUT_MS = 30000;
 const TOP_CHOICES = Object.freeze([100, 300, 500, 1000, 3000, 5000, 0]);
-const cache = new TtlLruCache({ maxEntries: 200, maxBytes: 4 * 1024 * 1024 });
+const cache = new TtlLruCache({ maxEntries: 200, maxBytes: 8 * 1024 * 1024 });
 
 function isMongoConnected() {
   return mongoose.connection.readyState === 1;
 }
 
-async function cached(key, compute) {
+async function cached(key, compute, ttl = CACHE_TTL_MS, bytes = 16 * 1024) {
   const hit = cache.get(key);
   if (hit) return hit;
   const value = await compute();
-  cache.set(key, value, CACHE_TTL_MS, 16 * 1024);
+  cache.set(key, value, ttl, bytes);
   return value;
 }
 
@@ -96,4 +100,76 @@ async function levelStats({ worldName = "", minLevel = 260 } = {}) {
   });
 }
 
-module.exports = { classStats, levelStats, TOP_CHOICES };
+/** Combat-power top 100 of every class in one pass: Map-like [{ className, count, top: [{ ocid, … }] }]. */
+async function topByClass(worldName) {
+  return cached(
+    `meta-top|${worldName}`,
+    async () => {
+      const match = { scoreVersion: SCORE_VERSION, combatPower: { $gt: 0 }, characterClass: { $ne: "" } };
+      if (worldName) match.worldName = worldName;
+      const rows = await CharacterSpec.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: "$characterClass",
+            count: { $sum: 1 },
+            top: {
+              $topN: {
+                n: META_TOP,
+                sortBy: { combatPower: -1 },
+                output: { ocid: "$ocid", combatPower: "$combatPower", itemScore: "$itemScore", characterLevel: "$characterLevel" }
+              }
+            }
+          }
+        }
+      ]).option({ maxTimeMS: TIMEOUT_MS, allowDiskUse: true });
+      return rows.filter((row) => row._id).map((row) => ({ className: row._id, count: row.count, top: row.top }));
+    },
+    META_TTL_MS,
+    1024 * 1024
+  );
+}
+
+const META_FIELDS = {
+  _id: 0,
+  ocid: 1,
+  slot: 1,
+  itemName: 1,
+  score: 1,
+  starforce: 1,
+  "item.item_name": 1,
+  "item.item_grade": 1,
+  "item.item_equipment_slot_name": 1,
+  "item.item_potential_option": 1,
+  "item.item_additional_potential_option": 1,
+  "item.item_additional_option": 1,
+  "item.soul_info": 1,
+  "item.emblem_info": 1
+};
+
+/**
+ * What the combat-power top 100 of one class wear (src/domain/stats/job-meta.js).
+ * → { className, classes: [{ className, count }], ...meta } (className "" = the most common class)
+ */
+async function jobMeta({ worldName = "", className = "" } = {}) {
+  if (!isMongoConnected()) return { className: "", classes: [], count: 0 };
+  const groups = await topByClass(worldName);
+  const classes = groups.map((group) => ({ className: group.className, count: group.count })).sort((a, b) => a.className.localeCompare(b.className, "ko"));
+  const group = groups.find((entry) => entry.className === className) || [...groups].sort((a, b) => b.count - a.count)[0];
+  if (!group) return { className: "", classes, count: 0 };
+  const meta = await cached(
+    `meta|${worldName}|${group.className}`,
+    async () => {
+      const ocids = group.top.map((entry) => entry.ocid);
+      const docs = await EquipmentItem.find({ ocid: { $in: ocids }, scoreVersion: SCORE_VERSION }, META_FIELDS).lean().maxTimeMS(TIMEOUT_MS);
+      const byOcid = new Map(ocids.map((ocid) => [ocid, []]));
+      for (const doc of docs) byOcid.get(doc.ocid)?.push(doc);
+      return buildJobMeta(group.top.map((spec) => ({ spec, items: byOcid.get(spec.ocid) || [] })));
+    },
+    META_TTL_MS,
+    64 * 1024
+  );
+  return { className: group.className, classes, ...meta };
+}
+
+module.exports = { classStats, levelStats, jobMeta, TOP_CHOICES };
