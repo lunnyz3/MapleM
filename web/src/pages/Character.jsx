@@ -581,6 +581,7 @@ export function Character({ world, name }) {
               majorStats={(mode === "current" && stats.majorStatsCurrent) || stats.majorStats}
               attackType={stats.profile.attackType}
               modeLabel={mode === "current" && stats.majorStatsCurrent ? "현재 착용" : "보스 세팅"}
+              hyperStats={presetByNo(data.tabs?.hyperStat, bossPresets.hyper)?.data?.hyperStatInfo || []}
               linkSkills={presetByNo(data.tabs?.skillLink, bossPresets.link)?.data?.linkSkillInfo || []}
               className={data.profile?.className || ""}
             />

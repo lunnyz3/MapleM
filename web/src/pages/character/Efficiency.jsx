@@ -7,7 +7,9 @@ import { EmptyState } from "../../components/States.jsx";
 import { Segmented } from "../../components/Tabs.jsx";
 import { EFFICIENCY_STATS, amountForRatio, combatPower, gainFor, totalsFromStats } from "../../lib/efficiency.js";
 import { recommendLinks } from "../../lib/linkRecommend.mjs";
-import { DEFAULT_BOSS_DEFENSE, DEFAULT_DOPING, DOPING, damageAmountForRatio, damageGain, withDoping } from "../../lib/damageModel.mjs";
+import { DEFAULT_BOSS_DEFENSE, DEFAULT_DOPING, DOPING, damageAmountForRatio, damageGain, damageScore, withDoping } from "../../lib/damageModel.mjs";
+import { recommendHyper } from "../../lib/hyperRecommend.mjs";
+import growthRules from "../../../../src/game-data/growth-report.json";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 
 /** @param {{ id: string, unit: string }} stat @param {number} value */
@@ -113,7 +115,53 @@ function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
 }
 
 /**
- * @param {{ majorStats: Record<string, any>, attackType: string, modeLabel: string, linkSkills?: any[], className?: string }} props
+ * 하이퍼 스탯 추천: 지금 전투 스탯에 쓴 포인트로 점수가 가장 높은 배분(전투력 또는 실전 딜).
+ * @param {{ totals: Record<string, number>, hyperStats: any[], attackType: string, damageMode: boolean, bossDefense: number }} props
+ */
+function HyperAdvice({ totals, hyperStats, attackType, damageMode, bossDefense }) {
+  const current = useMemo(() => Object.fromEntries((hyperStats || []).map((info) => [String(info?.statType || ""), Number(info?.statLevel) || 0])), [hyperStats]);
+  const result = useMemo(
+    () =>
+      recommendHyper({
+        totals,
+        current,
+        table: growthRules.hyper.stats,
+        attackType,
+        score: damageMode ? (t) => damageScore(t, bossDefense) : combatPower,
+        exclude: damageMode ? ["maxDamage"] : []
+      }),
+    [totals, current, attackType, damageMode, bossDefense]
+  );
+  if (!result || !result.budget) return null;
+  const changed = result.rows.some((row) => row.from !== row.to);
+  return (
+    <section class="sect eff-links">
+      <div class="eff-links__head">
+        <h3 class="eff-rank__title">하이퍼 스탯 추천</h3>
+      </div>
+      <p class="eff-links__summary">
+        전투 스탯 {result.budget}포인트 ·{" "}
+        <strong class={changed && result.ratio > 1 + 1e-9 ? "is-up" : ""}>
+          {changed && result.ratio > 1 + 1e-9 ? `${damageMode ? "실전 딜" : "전투력"} ${formatRatio(result.ratio)}` : "지금 배분이 가장 좋아요"}
+        </strong>
+      </p>
+      <ol class="eff-links__list">
+        {result.rows.map((row) => (
+          <li key={row.name} class={row.to !== row.from ? "is-new" : ""}>
+            <span class="eff-links__name">{row.name}</span>
+            <span class="eff-links__gain num">
+              Lv.{row.from}
+              {row.to !== row.from ? ` → Lv.${row.to}` : ""}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/**
+ * @param {{ majorStats: Record<string, any>, attackType: string, modeLabel: string, linkSkills?: any[], className?: string, hyperStats?: any[] }} props
  */
 // 실전 딜 모드: 최대 대미지는 빼고(딜 모델에 없다) 방어율 무시를 넣는다.
 const DAMAGE_STATS = [...EFFICIENCY_STATS.filter((stat) => stat.id !== "maxDamage"), { id: "ignoreDefense", label: "방어율 무시", unit: "%", step: 1 }];
@@ -122,7 +170,7 @@ const MODES = [
   { value: "damage", label: "실전 딜 기준" }
 ];
 
-export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = [], className = "" }) {
+export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = [], className = "", hyperStats = [] }) {
   const raw = useMemo(() => totalsFromStats(majorStats, attackType), [majorStats, attackType]);
   const [mode, setMode] = useState("power");
   const [bossDefense, setBossDefense] = useState(DEFAULT_BOSS_DEFENSE);
@@ -276,6 +324,7 @@ export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = 
         </ol>
       </section>
 
+      <HyperAdvice totals={totals} hyperStats={hyperStats} attackType={attackType} damageMode={damageMode} bossDefense={bossDefense} />
       <LinkAdvice majorStats={majorStats} attackType={attackType} linkSkills={linkSkills} className={className} />
     </div>
   );
