@@ -107,6 +107,16 @@ function weaponFamily(name) {
 
 const byValue = (a, b) => b.value - a.value || a.name.localeCompare(b.name, "ko");
 
+/** 사람마다 가장 높은 한 줄만(반지·목걸이는 한 사람이 여러 개를 낀다). */
+function bestPerCharacter(rows) {
+  const best = new Map();
+  for (const row of rows) {
+    const key = `${row.world}/${row.name}`;
+    if (!best.has(key) || row.value > best.get(key).value) best.set(key, row);
+  }
+  return [...best.values()];
+}
+
 /**
  * @param {Array<{ spec: { characterName?: string, worldName?: string, attackType?: string, combatPower: number, itemScore: number, characterLevel: number }, items: any[] }>} characters
  *   equipment docs as stored (slot, itemName, starforce, score, parts, item)
@@ -205,7 +215,7 @@ function jobMeta(characters) {
         items: bucket.items,
         maxedShare: bucket.items ? bucket.maxed / bucket.items : 0,
         avgFlame: bucket.items ? Math.round((bucket.ranking.reduce((sum, row) => sum + row.value, 0) / bucket.items) * 10) / 10 : 0,
-        ranking: bucket.ranking
+        ranking: bestPerCharacter(bucket.ranking)
           .filter((row) => row.value > 0)
           .sort(byValue)
           .slice(0, ACCESSORY_RANK_LIMIT)

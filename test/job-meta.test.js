@@ -83,9 +83,9 @@ test("직업 메타: 무기 순위와 장신구 10성 비율·추옵 순위", ()
     rings.ranking.map((row) => [row.name, row.itemName, row.starforce]),
     [
       ["나", "거대한 공포", 10],
-      ["가", "거대한 공포", 10],
-      ["가", "벤젼스 링", 5]
-    ]
+      ["가", "거대한 공포", 10]
+    ],
+    "순위는 사람마다 가장 높은 반지 하나"
   );
   assert.deepEqual(meta.weapon.soul, [{ label: "위대한 칼로스의 소울", share: 1 }]);
 });
