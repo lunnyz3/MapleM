@@ -393,6 +393,10 @@
 .calc-seg .segmented {
   flex: none;
 }
+
+.calc-seg--center {
+  justify-content: safe center;
+}
 .calc-note {
   margin: 0;
   color: var(--text-subtle);
