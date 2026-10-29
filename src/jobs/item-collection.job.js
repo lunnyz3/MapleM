@@ -6,6 +6,7 @@ const { getRankingCombatPower, getCharacterOcid, getCharacterByOcid } = require(
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
 const { CharacterSpec } = require("../models/character-spec.model");
+const { SCORE_VERSION } = require("../domain/items/score");
 const { createItemCollector } = require("../services/item-collection.service");
 
 const itemEquipmentPath = "/maplestorym/v1/character/item-equipment";
@@ -20,8 +21,9 @@ const collectorDeps = {
   },
   resolveOcid: async (characterName, worldName) => (await getCharacterOcid(characterName, worldName))?.data?.ocid || null,
   fetchItems: async (ocid) => (await getCharacterByOcid(itemEquipmentPath, ocid, { useCache: false }))?.data || null,
+  // Collected today with the current score rules (a rule change re-collects without --force).
   collectedSince: async (worldName, characterName, since) =>
-    Boolean(await CharacterSpec.exists({ worldName, characterName, checkedAt: { $gte: since } })),
+    Boolean(await CharacterSpec.exists({ worldName, characterName, checkedAt: { $gte: since }, scoreVersion: SCORE_VERSION })),
   record: async ({ row, ocid, itemData }) => {
     await recordCharacterItems({
       ocid,
