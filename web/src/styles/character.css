@@ -3064,3 +3064,89 @@ button.eq-slot:hover .eq-slot__img {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* 링크 스킬 추천 */
+.eff-links {
+  grid-column: 1 / -1;
+}
+
+.eff-links__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eff-links__head .eff-rank__title {
+  margin: 0;
+}
+
+.eff-links__summary {
+  margin: var(--sp-3) 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.eff-links__summary strong.is-up {
+  color: #13a37a;
+}
+
+.eff-links__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eff-links__list li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: var(--fs-14);
+}
+
+.eff-links__list li.is-new {
+  border-color: rgba(19, 163, 122, 0.45);
+  background: rgba(95, 227, 181, 0.08);
+}
+
+.eff-links__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.eff-links__name .num {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.eff-links__tag {
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: #13a37a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.eff-links__gain {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.eff-links__remove {
+  margin: var(--sp-3) 0 0;
+  color: #e0663f;
+  font-size: var(--fs-14);
+  font-weight: 700;
+}

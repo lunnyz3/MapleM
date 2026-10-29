@@ -11,7 +11,7 @@ import { Freshness } from "../components/Freshness.jsx";
 import { WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
-import { combatPowerOf, formatStat, formatStatDelta, groupBreakdown, isFlatStat, statOrder } from "../lib/character.js";
+import { combatPowerOf, formatStat, formatStatDelta, groupBreakdown, isFlatStat, presetByNo, statOrder } from "../lib/character.js";
 import { getJson } from "../lib/api.js";
 import { loadCharacterPage, loadManualInputs, postCharacterStats } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, toNumber } from "../lib/format.js";
@@ -551,6 +551,8 @@ export function Character({ world, name }) {
               majorStats={(mode === "current" && stats.majorStatsCurrent) || stats.majorStats}
               attackType={stats.profile.attackType}
               modeLabel={mode === "current" && stats.majorStatsCurrent ? "현재 착용" : "보스 세팅"}
+              linkSkills={presetByNo(data.tabs?.skillLink, bossPresets.link)?.data?.linkSkillInfo || []}
+              className={data.profile?.className || ""}
             />
           ) : null}
           {tab === "boss" ? <BossTab data={data} /> : null}
