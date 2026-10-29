@@ -18,6 +18,7 @@ import { liberationPlan } from "../lib/liberation.mjs";
 import { EmblemCalc, GuildAbilityCalc, PolishCalc, StarforceCalc, TransferCalc } from "./calc/Enhance.jsx";
 import { GachaCalc } from "./calc/Gacha.jsx";
 import { ItemDbCalc } from "./calc/ItemDb.jsx";
+import { SetCompareCalc } from "./calc/SetCompare.jsx";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
 const ARCANE = ["소멸의 여로", "츄츄 아일랜드", "레헬른", "아르카나", "모라스", "에스페라"];
@@ -475,7 +476,7 @@ function Liberation({ liberated }) {
 
 const VIEWS = CALC_VIEWS;
 // 캐릭터를 불러와 채우는 계산기(나머지는 캐릭터와 상관없다).
-const CHARACTER_VIEWS = ["hexa", "stat", "symbol", "liberation"];
+const CHARACTER_VIEWS = ["hexa", "stat", "symbol", "liberation", "set"];
 
 function readView() {
   const view = new URLSearchParams(window.location.search).get("view");
@@ -493,6 +494,7 @@ export function Calc() {
   const [cores, setCores] = useState(defaultCores);
   const [symbols, setSymbols] = useState(defaultSymbols);
   const [liberated, setLiberated] = useState(false);
+  const [character, setCharacter] = useState(/** @type {{ name: string, attackType: string, majorStats: Record<string, any> } | null} */ (null));
   const [load, setLoad] = useState(/** @type {{ status: "idle" | "loading" | "done" | "error", text?: string }} */ ({ status: "idle" }));
 
   const onView = (/** @type {string} */ next) => {
@@ -530,7 +532,14 @@ export function Calc() {
       setLiberated(presets.some((preset) => (preset?.data?.itemEquipment || []).some((item) => /제네시스/.test(String(item?.itemName || "")))));
       if (nextCores.length) setCores(nextCores);
       if (nextSymbols.length) setSymbols(nextSymbols);
-      setLoad({ status: "done", text: `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.` });
+      setCharacter({ name: data.profile?.name || name, attackType: data.profile?.attackType, majorStats: data.profile?.majorStats || {} });
+      setLoad({
+        status: "done",
+        text:
+          view === "set"
+            ? `${data.profile?.name || name}의 보스 세팅 세트를 채웠어요.`
+            : `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.`
+      });
       const params = new URLSearchParams(window.location.search);
       params.set("a", `${who.world}/${name}`);
       window.history.replaceState(null, "", `/calc?${params}`);
@@ -570,7 +579,7 @@ export function Calc() {
             autoComplete="off"
             spellcheck={false}
             aria-label="캐릭터 이름"
-            placeholder="캐릭터 이름 (지금 레벨 채우기)"
+            placeholder={view === "set" ? "캐릭터 이름 (지금 세트 채우기)" : "캐릭터 이름 (지금 레벨 채우기)"}
             value={who.name}
             onInput={(event) => setWho({ ...who, name: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
           />
@@ -591,6 +600,7 @@ export function Calc() {
       {view === "symbol" ? <Symbols rows={symbols} setRows={setSymbols} /> : null}
       {view === "liberation" ? <Liberation liberated={liberated} /> : null}
       {view === "starforce" ? <StarforceCalc /> : null}
+      {view === "set" ? <SetCompareCalc character={character} /> : null}
       {view === "emblem" ? <EmblemCalc /> : null}
       {view === "polish" ? <PolishCalc /> : null}
       {view === "transfer" ? <TransferCalc /> : null}

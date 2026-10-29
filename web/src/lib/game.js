@@ -207,6 +207,7 @@ export const CALC_VIEWS = [
   { value: "stat", label: "HEXA 스탯" },
   { value: "symbol", label: "심볼" },
   { value: "starforce", label: "스타포스" },
+  { value: "set", label: "세트 효과" },
   { value: "emblem", label: "문장" },
   { value: "polish", label: "장신구 연마" },
   { value: "transfer", label: "전수" },
