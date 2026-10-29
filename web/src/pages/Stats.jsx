@@ -1,8 +1,8 @@
 // 통계(/stats?view=class|level|meta): 사이트가 모은 캐릭터(랭킹·길드 훑기·조회) 기준.
 // 직업별: 전투력 상위 N명의 직업 인원·평균/최고 전투력·평균 템환산·잠재·에디. 레벨: 레벨 분포와 직업 비율.
-// 직업 메타: 한 직업 전투력 상위 100명이 실제로 쓰는 무기 옵션·문장·소울·세트·장신구·스타포스.
+// 직업 메타: 한 직업 전투력 상위 100명의 무기 잠재·에디(대미지 합)·추옵 점수 구간과 순위, 장신구 최대 강화 비율·추옵 순위, 문장·소울.
 import "../styles/stats.css";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, Reveal, SplitText } from "../components/Motion.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
@@ -10,7 +10,7 @@ import { ErrorState } from "../components/States.jsx";
 import { Segmented } from "../components/Tabs.jsx";
 import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
-import { WORLDS } from "../lib/game.js";
+import { WORLDS, urls } from "../lib/game.js";
 import { CollectedNote } from "../components/CollectedNote.jsx";
 import { setScoreText } from "../lib/itemScore.js";
 
@@ -246,6 +246,75 @@ function ShareList({ rows, tone = "" }) {
   );
 }
 
+const valueText = (/** @type {number} */ value, /** @type {string} */ unit) => `${formatDecimal(value, value % 1 ? (unit === "%" ? 2 : 1) : 0)}${unit}`;
+
+/**
+ * 묶음 머리에 마우스를 올리거나 누르면 순위가 펼쳐진다(높은 값부터).
+ * @param {{ title: string, rows: any[], unit: string, detail: (row: any) => string, children?: any }} props
+ */
+function RankHover({ title, rows, unit, detail, children }) {
+  const [open, setOpen] = useState(false);
+  // 마우스는 올리면 이미 열려 있으니 눌러도 닫지 않는다(터치·키보드는 누를 때마다 바꾼다).
+  const pointer = useRef("");
+  const mouse = (/** @type {PointerEvent} */ event) => event.pointerType === "mouse";
+  return (
+    <div
+      class={`meta-rank${open ? " is-open" : ""}`}
+      onPointerEnter={(event) => mouse(event) && setOpen(true)}
+      onPointerLeave={(event) => mouse(event) && setOpen(false)}
+      onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
+    >
+      <button
+        type="button"
+        class="meta-rank__head"
+        aria-expanded={open ? "true" : "false"}
+        onPointerDown={(event) => (pointer.current = event.pointerType)}
+        onClick={() => {
+          setOpen(pointer.current === "mouse" ? true : !open);
+          pointer.current = "";
+        }}
+      >
+        <span class="stats-meta__sub">{title}</span>
+        {rows.length ? (
+          <span class="meta-rank__hint">
+            <Icon name="trophy" size={14} />
+            순위
+          </span>
+        ) : null}
+      </button>
+      {children}
+      {open && rows.length ? (
+        <div class="meta-rank__panel">
+          <ol>
+            {rows.map((row, index) => (
+              <li key={`${row.world}-${row.name}-${index}`}>
+                <span class="meta-rank__no num">{index + 1}</span>
+                <a class="meta-rank__name" href={urls.character(row.world, row.name)}>
+                  {row.name}
+                  <span>{row.world}</span>
+                </a>
+                <strong class="meta-rank__value num">{valueText(row.value, unit)}</strong>
+                <span class="meta-rank__detail">{detail(row)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** "60% 이상 26%" 구간 목록 + 순위. @param {{ title: string, data: { buckets: Array<{ min: number, share: number }>, ranking: any[] }, unit: string }} props */
+function BucketSection({ title, data, unit }) {
+  return (
+    <div class="stats-meta__group">
+      <RankHover title={title} rows={data.ranking} unit={unit} detail={(row) => row.text}>
+        <ShareList rows={data.buckets.map((row) => ({ label: `${row.min}${unit} 이상`, share: row.share }))} />
+      </RankHover>
+    </div>
+  );
+}
+
 /** @param {{ query: ReturnType<typeof readQuery>, onQuery: (patch: any) => void }} props */
 function JobMeta({ query, onQuery }) {
   const params = new URLSearchParams();
@@ -253,7 +322,6 @@ function JobMeta({ query, onQuery }) {
   if (query.world) params.set("world_name", query.world);
   const stats = useStats(`/api/v2/stats/job-meta?${params}`);
   const data = stats.data;
-  const maxStar = Math.max(1, ...(data?.starforce || []).map((row) => row.avg || 0));
 
   return (
     <>
@@ -303,22 +371,29 @@ function JobMeta({ query, onQuery }) {
                 <h3 class="stats-meta__sub">종류</h3>
                 <ShareList rows={data.weapon.items} />
               </div>
-              <div class="stats-meta__group">
-                <h3 class="stats-meta__sub">잠재능력</h3>
-                <ShareList rows={data.weapon.potential} />
-              </div>
-              <div class="stats-meta__group">
-                <h3 class="stats-meta__sub">에디셔널</h3>
-                <ShareList rows={data.weapon.additional} />
-              </div>
-              <div class="stats-meta__group">
-                <h3 class="stats-meta__sub">추가옵션</h3>
-                <ShareList rows={data.weapon.flame} />
-              </div>
+              <BucketSection title={`잠재능력 · ${data.damageName}`} data={data.weapon.potential} unit="%" />
+              <BucketSection title={`에디셔널 · ${data.damageName}`} data={data.weapon.additional} unit="%" />
+              <BucketSection title="추가옵션 점수" data={data.weapon.flame} unit="점" />
             </Reveal>
-            <div class="stats-meta__col">
-              <Reveal class="card stats-panel" delay={60}>
-                <h2 class="stats-panel__title">문장 · 소울</h2>
+            <Reveal class="card stats-panel" delay={60}>
+              <h2 class="stats-panel__title">장신구</h2>
+              {data.accessories.map((entry) => (
+                <div key={entry.group} class="stats-meta__group">
+                  <RankHover
+                    title={entry.group}
+                    rows={entry.ranking}
+                    unit="점"
+                    detail={(row) => `${row.itemName} ★${row.starforce}${row.text ? ` · ${row.text}` : ""}`}
+                  >
+                    <ShareList rows={[{ label: `${entry.maxStar}성`, share: entry.maxedShare }]} tone="is-mint" />
+                    <p class="stats-meta__note num">추옵 평균 {formatDecimal(entry.avgFlame, 1)}점</p>
+                  </RankHover>
+                </div>
+              ))}
+            </Reveal>
+            <Reveal class="card stats-panel stats-meta__wide">
+              <h2 class="stats-panel__title">문장 · 소울</h2>
+              <div class="stats-meta__grid stats-meta__grid--two">
                 <div class="stats-meta__group">
                   <h3 class="stats-meta__sub">문장</h3>
                   <ShareList rows={data.weapon.emblem} tone="is-mint" />
@@ -327,35 +402,6 @@ function JobMeta({ query, onQuery }) {
                   <h3 class="stats-meta__sub">소울</h3>
                   <ShareList rows={data.weapon.soul} tone="is-mint" />
                 </div>
-              </Reveal>
-              <Reveal class="card stats-panel" delay={120}>
-                <h2 class="stats-panel__title">세트</h2>
-                <ShareList rows={data.sets} tone="is-mint" />
-              </Reveal>
-              <Reveal class="card stats-panel" delay={180}>
-                <h2 class="stats-panel__title">평균 스타포스</h2>
-                <ol class="stats-bars">
-                  {data.starforce.map((row) => (
-                    <li key={row.slot}>
-                      <span class="stats-bars__label">{row.slot}</span>
-                      <span class="stats-bars__track is-mint" aria-hidden="true">
-                        <span style={{ width: `${Math.max(1, (row.avg / maxStar) * 100)}%` }} />
-                      </span>
-                      <span class="stats-bars__value num">★{formatDecimal(row.avg, 1)}</span>
-                    </li>
-                  ))}
-                </ol>
-              </Reveal>
-            </div>
-            <Reveal class="card stats-panel stats-meta__wide">
-              <h2 class="stats-panel__title">장신구</h2>
-              <div class="stats-meta__grid">
-                {data.accessories.map((entry) => (
-                  <div key={entry.group} class="stats-meta__group">
-                    <h3 class="stats-meta__sub">{entry.group}</h3>
-                    <ShareList rows={entry.rows} />
-                  </div>
-                ))}
               </div>
             </Reveal>
           </div>

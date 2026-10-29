@@ -315,3 +315,130 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.stats-meta__grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stats-meta__note {
+  margin: 4px 0 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+/* 묶음 순위(마우스를 올리거나 누르면 펼친다) */
+.meta-rank {
+  position: relative;
+}
+
+.meta-rank__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.meta-rank__head .stats-meta__sub {
+  margin: 0;
+}
+
+.meta-rank__hint {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.meta-rank.is-open .meta-rank__hint,
+.meta-rank__head:hover .meta-rank__hint {
+  color: var(--primary);
+}
+
+.meta-rank__panel {
+  position: absolute;
+  top: 24px;
+  left: -8px;
+  right: -8px;
+  z-index: 30;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(20, 24, 60, 0.18);
+}
+
+.meta-rank__panel ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meta-rank__panel li {
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr) auto;
+  gap: 0 8px;
+  align-items: baseline;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-14);
+}
+
+.meta-rank__panel li:hover {
+  background: var(--surface-soft);
+}
+
+.meta-rank__no {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: right;
+}
+
+.meta-rank__name {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.meta-rank__name:hover {
+  color: var(--primary);
+}
+
+.meta-rank__name span {
+  margin-left: 6px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.meta-rank__value {
+  font-weight: 900;
+}
+
+.meta-rank__detail {
+  grid-column: 2 / -1;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+@media (max-width: 760px) {
+  .stats-meta__grid--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

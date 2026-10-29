@@ -2,24 +2,29 @@
 
 // Job meta (pure): what the strongest characters of one job actually wear. Input is each
 // character's collected equipment (every preset); the main setup is the best-scoring item per
-// equipment slot. Shares are the fraction of characters (0..1).
+// equipment slot. Shares are the fraction of characters (0..1). Option values are the API values
+// (equipment mastery included).
+//
+// Weapon: potential / additional potential = sum of the job's own damage % lines, flames = flame
+// score (the item score's flame part ÷ the best flame part of that slot × 100). Each has
+// "at least N" buckets and a ranking. Accessories: share at max starforce and a flame-score ranking.
 
-const itemSetData = require("../../game-data/item-sets.json");
-const { resolveSets } = require("./sources/sets");
+const scoreMax = require("../../game-data/item-score-max.json");
 
-const TOP_ROWS = 5;
-const ARMOR_SLOTS = ["무기", "모자", "상의", "하의", "한벌옷", "장갑", "신발", "망토", "어깨", "보조무기"];
-// Accessory groups: ring and pendant slots count together.
+const RANK_LIMIT = 100;
+const ACCESSORY_RANK_LIMIT = 50;
+const BUCKETS = 5;
+// Accessory groups: ring and pendant slots count together. maxStar: full enhancement.
 const ACCESSORY_GROUPS = [
-  ["반지", /^반지/],
-  ["목걸이", /^목걸이/],
-  ["귀고리", /^귀고리$/],
-  ["눈장식", /^눈장식$/],
-  ["얼굴장식", /^얼굴장식$/],
-  ["포켓", /^포켓$/],
-  ["벨트", /^벨트$/],
-  ["뱃지", /^뱃지$/],
-  ["엠블렘", /^엠블렘$/]
+  { group: "반지", pattern: /^반지/, slot: "반지", maxStar: 10 },
+  { group: "목걸이", pattern: /^목걸이/, slot: "목걸이", maxStar: 10 },
+  { group: "귀고리", pattern: /^귀고리$/, slot: "귀고리", maxStar: 10 },
+  { group: "눈장식", pattern: /^눈장식$/, slot: "눈장식", maxStar: 10 },
+  { group: "얼굴장식", pattern: /^얼굴장식$/, slot: "얼굴장식", maxStar: 10 },
+  { group: "포켓", pattern: /^포켓$/, slot: "포켓", maxStar: 10 },
+  { group: "벨트", pattern: /^벨트$/, slot: "벨트", maxStar: 15 },
+  { group: "뱃지", pattern: /^뱃지$/, slot: "뱃지", maxStar: 10 },
+  { group: "엠블렘", pattern: /^엠블렘$/, slot: "엠블렘", maxStar: 10 }
 ];
 
 function toArray(value) {
@@ -42,25 +47,39 @@ function mainSetup(docs) {
   return bySlot;
 }
 
-/** Option line label: attack lines with a % value get a "%" so they differ from flat attack. */
-function lineLabel(option) {
-  const name = String(option?.option_name || "").trim();
-  const value = String(option?.option_value || "");
-  return /공격력$/.test(name) && value.includes("%") ? `${name}%` : name;
+const numberOf = (text) => Number(String(text ?? "").replace(/[^0-9.\-]/g, "")) || 0;
+
+/** Sum of the lines named `name` (e.g. "물리 대미지"). */
+function lineSum(options, name) {
+  return toArray(options).reduce((sum, option) => sum + (String(option?.option_name || "").trim() === name ? numberOf(option.option_value) : 0), 0);
 }
 
-/** "물리 대미지 ×3", "최종 대미지 + 물리 공격력% ×2" (most lines first). */
-function comboLabel(options) {
-  const counts = new Map();
-  for (const option of toArray(options)) {
-    const label = lineLabel(option);
-    if (label) counts.set(label, (counts.get(label) || 0) + 1);
+/** "물리 공격력 3,051 · 최종 대미지 6%" */
+function linesText(options) {
+  return toArray(options)
+    .map((option) => `${String(option?.option_name || "").trim()} ${String(option?.option_value || "").trim()}`.trim())
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Flame score 0~100: the flame part of the item score ÷ the best flame part of that slot. */
+function flameScore(doc, slot) {
+  const best = Number(scoreMax.slots?.[slot]?.additional) || 0;
+  const part = Number(doc?.parts?.additional) || 0;
+  return best > 0 ? Math.round(Math.min(100, (part / best) * 100) * 10) / 10 : 0;
+}
+
+/** "At least N" buckets (multiples of step, from the highest value down) over every character. */
+function buckets(values, count, step) {
+  if (!count || !values.length) return [];
+  const top = Math.floor(Math.max(...values) / step) * step;
+  const rows = [];
+  for (let min = top; min > 0 && rows.length < BUCKETS; min -= step) {
+    const share = values.filter((value) => value >= min - 1e-9).length / count;
+    rows.push({ min, share });
+    if (share >= 0.95) break;
   }
-  if (!counts.size) return "";
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
-    .map(([label, count]) => (count > 1 ? `${label} ×${count}` : label))
-    .join(" + ");
+  return rows;
 }
 
 function tally() {
@@ -69,7 +88,7 @@ function tally() {
     add(label) {
       if (label) counts.set(label, (counts.get(label) || 0) + 1);
     },
-    rows(denominator, limit = TOP_ROWS) {
+    rows(denominator, limit = 5) {
       if (!denominator) return [];
       return [...counts.entries()]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
@@ -86,79 +105,83 @@ function weaponFamily(name) {
   return "그 밖의 무기";
 }
 
-/** "아케인 7 · 칠흑 6" — sets with an active tier (at least 2 pieces, or a 1-piece set table). */
-function setLabel(items) {
-  const parts = [];
-  for (const entry of resolveSets(items, itemSetData.sets).values()) {
-    const tiers = entry.set.tiers.map((tier) => tier.count);
-    // 효과는 가장 큰 단계까지만 붙는다(칠흑 9).
-    const count = Math.min(entry.members.length + entry.extra.length, Math.max(...tiers));
-    if (count >= 2 && count >= Math.min(...tiers)) parts.push([entry.set.label.replace(/ 세트/, "").replace(/ \(/, "("), count]);
-  }
-  return parts
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
-    .map(([label, count]) => `${label} ${count}`)
-    .join(" · ");
-}
+const byValue = (a, b) => b.value - a.value || a.name.localeCompare(b.name, "ko");
 
 /**
- * @param {Array<{ spec: { combatPower: number, itemScore: number, characterLevel: number }, items: any[] }>} characters
- *   equipment docs as stored (slot, itemName, starforce, score, item)
+ * @param {Array<{ spec: { characterName?: string, worldName?: string, attackType?: string, combatPower: number, itemScore: number, characterLevel: number }, items: any[] }>} characters
+ *   equipment docs as stored (slot, itemName, starforce, score, parts, item)
  */
 function jobMeta(characters) {
   const list = toArray(characters).filter((entry) => toArray(entry.items).length);
   const count = list.length;
-  const weapons = { item: tally(), potential: tally(), additional: tally(), flame: tally(), emblem: tally(), soul: tally() };
+  const magical = list.filter((entry) => entry.spec?.attackType === "magical").length > count / 2;
+  const damageName = magical ? "마법 대미지" : "물리 대미지";
+
+  const families = tally();
+  const emblems = tally();
+  const souls = tally();
   let weaponCount = 0;
   let soulCount = 0;
   let emblemCount = 0;
-  const sets = tally();
-  const accessories = new Map(ACCESSORY_GROUPS.map(([group]) => [group, { tally: tally(), holders: 0 }]));
-  const stars = new Map(ARMOR_SLOTS.map((slot) => [slot, { sum: 0, n: 0 }]));
+  const weaponRows = { potential: [], additional: [], flame: [] };
+  const accessories = new Map(ACCESSORY_GROUPS.map((entry) => [entry.group, { items: 0, maxed: 0, ranking: [] }]));
 
-  for (const { items } of list) {
+  for (const { spec, items } of list) {
+    const who = { name: String(spec?.characterName || ""), world: String(spec?.worldName || "") };
     const setup = mainSetup(items);
     const weapon = setup.get("무기");
     if (weapon) {
       weaponCount += 1;
       const raw = weapon.item || {};
-      weapons.item.add(weaponFamily(String(weapon.itemName || raw.item_name || "")));
-      weapons.potential.add(comboLabel(raw.item_potential_option));
-      weapons.additional.add(comboLabel(raw.item_additional_potential_option));
-      weapons.flame.add(comboLabel(raw.item_additional_option));
+      families.add(weaponFamily(String(weapon.itemName || raw.item_name || "")));
+      weaponRows.potential.push({
+        ...who,
+        value: Math.round(lineSum(raw.item_potential_option, damageName) * 100) / 100,
+        text: linesText(raw.item_potential_option)
+      });
+      weaponRows.additional.push({
+        ...who,
+        value: Math.round(lineSum(raw.item_additional_potential_option, damageName) * 100) / 100,
+        text: linesText(raw.item_additional_potential_option)
+      });
+      weaponRows.flame.push({ ...who, value: flameScore(weapon, "무기"), text: linesText(raw.item_additional_option) });
       if (raw.soul_info?.soul_name) {
         soulCount += 1;
-        weapons.soul.add(String(raw.soul_info.soul_name).trim());
+        souls.add(String(raw.soul_info.soul_name).trim());
       }
       if (raw.emblem_info?.emblem_name) {
         emblemCount += 1;
-        weapons.emblem.add(String(raw.emblem_info.emblem_name).trim());
+        emblems.add(String(raw.emblem_info.emblem_name).trim());
       }
-    }
-    sets.add(setLabel([...setup.values()].map((doc) => doc.item).filter(Boolean)));
-    for (const [group, pattern] of ACCESSORY_GROUPS) {
-      const names = new Set(
-        [...setup.entries()]
-          .filter(([slot]) => pattern.test(slot))
-          .map(([, doc]) => String(doc.itemName || "").trim())
-          .filter(Boolean)
-      );
-      const bucket = accessories.get(group);
-      if (names.size) bucket.holders += 1;
-      names.forEach((name) => bucket.tally.add(name));
     }
     for (const [slot, doc] of setup) {
-      const star = stars.get(slot);
-      if (star) {
-        star.sum += Number(doc.starforce) || 0;
-        star.n += 1;
-      }
+      const rule = ACCESSORY_GROUPS.find((entry) => entry.pattern.test(slot));
+      if (!rule) continue;
+      const bucket = accessories.get(rule.group);
+      bucket.items += 1;
+      if ((Number(doc.starforce) || 0) >= rule.maxStar) bucket.maxed += 1;
+      bucket.ranking.push({
+        ...who,
+        itemName: String(doc.itemName || "").trim(),
+        starforce: Number(doc.starforce) || 0,
+        value: flameScore(doc, rule.slot),
+        text: linesText(doc.item?.item_additional_option)
+      });
     }
   }
 
+  const section = (rows, step) => ({
+    buckets: buckets(
+      rows.map((row) => row.value),
+      weaponCount,
+      step
+    ),
+    ranking: [...rows].sort(byValue).slice(0, RANK_LIMIT)
+  });
   const average = (key) => (count ? list.reduce((sum, entry) => sum + (Number(entry.spec?.[key]) || 0), 0) / count : 0);
   return {
     count,
+    damageName,
     summary: {
       avgCombatPower: Math.round(average("combatPower")),
       minCombatPower: count ? Math.min(...list.map((entry) => Number(entry.spec?.combatPower) || 0)) : 0,
@@ -167,24 +190,28 @@ function jobMeta(characters) {
     },
     weapon: {
       count: weaponCount,
-      items: weapons.item.rows(weaponCount),
-      potential: weapons.potential.rows(weaponCount),
-      additional: weapons.additional.rows(weaponCount),
-      flame: weapons.flame.rows(weaponCount),
-      emblem: weapons.emblem.rows(emblemCount),
-      soul: weapons.soul.rows(soulCount)
+      items: families.rows(weaponCount),
+      potential: section(weaponRows.potential, 5),
+      additional: section(weaponRows.additional, 5),
+      flame: section(weaponRows.flame, 10),
+      emblem: emblems.rows(emblemCount),
+      soul: souls.rows(soulCount)
     },
-    sets: sets.rows(count),
-    accessories: ACCESSORY_GROUPS.map(([group]) => ({ group, rows: accessories.get(group).tally.rows(accessories.get(group).holders, 3) })).filter(
-      (entry) => entry.rows.length
-    ),
-    // 상의·하의처럼 일부만 쓰는 칸(30% 미만)은 뺀다.
-    starforce: ARMOR_SLOTS.map((slot) => ({
-      slot,
-      avg: stars.get(slot).n ? Math.round((stars.get(slot).sum / stars.get(slot).n) * 10) / 10 : null,
-      n: stars.get(slot).n
-    })).filter((entry) => entry.avg !== null && entry.n >= count * 0.3)
+    accessories: ACCESSORY_GROUPS.map(({ group, maxStar }) => {
+      const bucket = accessories.get(group);
+      return {
+        group,
+        maxStar,
+        items: bucket.items,
+        maxedShare: bucket.items ? bucket.maxed / bucket.items : 0,
+        avgFlame: bucket.items ? Math.round((bucket.ranking.reduce((sum, row) => sum + row.value, 0) / bucket.items) * 10) / 10 : 0,
+        ranking: bucket.ranking
+          .filter((row) => row.value > 0)
+          .sort(byValue)
+          .slice(0, ACCESSORY_RANK_LIMIT)
+      };
+    }).filter((entry) => entry.items)
   };
 }
 
-module.exports = { jobMeta, mainSetup, comboLabel, lineLabel };
+module.exports = { jobMeta, mainSetup, lineSum, flameScore, buckets };

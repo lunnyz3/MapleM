@@ -13,7 +13,7 @@ const META_TTL_MS = 60 * 60 * 1000;
 const META_TOP = 100;
 const TIMEOUT_MS = 30000;
 const TOP_CHOICES = Object.freeze([100, 300, 500, 1000, 3000, 5000, 0]);
-const cache = new TtlLruCache({ maxEntries: 200, maxBytes: 8 * 1024 * 1024 });
+const cache = new TtlLruCache({ maxEntries: 200, maxBytes: 16 * 1024 * 1024 });
 
 function isMongoConnected() {
   return mongoose.connection.readyState === 1;
@@ -117,7 +117,15 @@ async function topByClass(worldName) {
               $topN: {
                 n: META_TOP,
                 sortBy: { combatPower: -1 },
-                output: { ocid: "$ocid", combatPower: "$combatPower", itemScore: "$itemScore", characterLevel: "$characterLevel" }
+                output: {
+                  ocid: "$ocid",
+                  characterName: "$characterName",
+                  worldName: "$worldName",
+                  attackType: "$attackType",
+                  combatPower: "$combatPower",
+                  itemScore: "$itemScore",
+                  characterLevel: "$characterLevel"
+                }
               }
             }
           }
@@ -137,6 +145,7 @@ const META_FIELDS = {
   itemName: 1,
   score: 1,
   starforce: 1,
+  "parts.additional": 1,
   "item.item_name": 1,
   "item.item_grade": 1,
   "item.item_equipment_slot_name": 1,
@@ -167,7 +176,7 @@ async function jobMeta({ worldName = "", className = "" } = {}) {
       return buildJobMeta(group.top.map((spec) => ({ spec, items: byOcid.get(spec.ocid) || [] })));
     },
     META_TTL_MS,
-    64 * 1024
+    160 * 1024
   );
   return { className: group.className, classes, ...meta };
 }
