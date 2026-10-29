@@ -17,6 +17,7 @@ import { formatComma, formatDecimal, formatKoreanUnits, formatRelativeTime } fro
 import { WORLDS, urls } from "../../lib/game.js";
 import { EquipDetail } from "../character/Equipment.jsx";
 import { CollectedNote } from "../../components/CollectedNote.jsx";
+import { itemScoreText, setScoreText } from "../../lib/itemScore.js";
 
 /** 부위 순서(장비창 순). 서버에 있는 부위만 보여 준다. */
 /** 순위를 매기는 계열과 방어구 부위(무기는 무기 종류별). 서버 item-score.json 과 같다. */
@@ -35,8 +36,8 @@ const ARMOR_SLOTS = ["모자", "상의", "하의", "한벌옷", "어깨", "장�
 const WEAPON_TAB = "무기";
 
 export const SPEC_METRICS = [
-  { id: "itemScore", label: "템환산", format: (row) => formatComma(Math.round(row.itemScore)) },
-  { id: "itemScoreWithoutEmblem", label: "템환산 (문장 제외)", format: (row) => formatComma(Math.round(row.itemScoreWithoutEmblem)) },
+  { id: "itemScore", label: "템환산", format: (row) => `${setScoreText(row.itemScore)}점` },
+  { id: "itemScoreWithoutEmblem", label: "템환산 (문장 제외)", format: (row) => `${setScoreText(row.itemScoreWithoutEmblem, false)}점` },
   { id: "potential", label: "잠재", format: (row) => `${formatDecimal(row.potential, 2)}%` },
   { id: "additionalPotential", label: "에디", format: (row) => `${formatDecimal(row.additionalPotential, 2)}%` },
   { id: "maxDamage", label: "최대 대미지", format: (row) => formatKoreanUnits(row.maxDamage) },
@@ -266,14 +267,14 @@ export function ItemRanking({ query, onQuery }) {
                         <span class="crk-parts num">
                           {PART_LABELS.filter(([key]) => row.parts[key] && !(key === "emblem" && query.noEmblem)).map(([key, label]) => (
                             <span key={key} class={`crk-part is-${key}`}>
-                              {label} {formatComma(Math.round(row.parts[key]))}
+                              {label} {itemScoreText(row.slot, row.parts[key], !query.noEmblem)}
                             </span>
                           ))}
                         </span>
                       ) : null}
                     </span>
                     <span class="crk-score num">
-                      {formatComma(Math.round(row[scoreField]))}
+                      {itemScoreText(row.slot, row[scoreField], !query.noEmblem)}
                       <span class="crk-score__unit">점</span>
                     </span>
                   </button>

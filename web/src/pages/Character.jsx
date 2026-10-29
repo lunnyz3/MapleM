@@ -27,6 +27,7 @@ import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
 import { ProfileShareButton } from "./character/Share.jsx";
 import { RecordsSection } from "./character/Records.jsx";
+import { setScoreText } from "../lib/itemScore.js";
 
 /** @typedef {"boss" | "current"} StatMode */
 
@@ -73,7 +74,7 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
   const summary = useSpecSummary(world, name);
   const specChips = summary
     ? [
-        { key: "itemScore", label: "템환산", value: formatComma(Math.round(summary.spec.itemScore)) },
+        { key: "itemScore", label: "템환산", value: `${setScoreText(summary.spec.itemScore)}점` },
         { key: "potential", label: "잠재", value: `${formatDecimal(summary.spec.potential, 1)}%` },
         { key: "additionalPotential", label: "에디", value: `${formatDecimal(summary.spec.additionalPotential, 1)}%` }
       ].filter((chip) => Number(summary.spec[chip.key]) > 0)

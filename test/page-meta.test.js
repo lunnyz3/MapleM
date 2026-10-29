@@ -12,7 +12,8 @@ test("공유 미리보기: 캐릭터 주소는 이름·월드 제목과 저장�
     findSpec: async (world, name) => (world === "유니온" && name === "피카츄" ? { characterLevel: 298, characterClass: "아크메이지(썬,콜)", combatPower: 192215561, itemScore: 1226.5 } : null)
   });
   assert.equal(meta.title, "피카츄 · 유니온 · 메이플M 플러스");
-  assert.equal(meta.description, "유니온 · Lv.298 · 아크메이지(썬,콜) · 전투력 1억 9,221만 · 템환산 1,226.5");
+  const max = require("../src/game-data/item-score-max.json").fullSet.max;
+  assert.equal(meta.description, `유니온 · Lv.298 · 아크메이지(썬,콜) · 전투력 1억 9,221만 · 템환산 ${((1226.5 / max) * 100).toFixed(1)}점`);
 });
 
 test("공유 미리보기: 스펙을 모르거나 조회가 실패하면 기본 설명", async () => {

@@ -6,31 +6,33 @@ import { Segmented } from "../../components/Tabs.jsx";
 import { getJson } from "../../lib/api.js";
 import { formatComma, formatDateDot, formatDateTimeKst, formatDecimal, formatKoreanUnits, formatRelativeTime } from "../../lib/format.js";
 import { dayNumber, shortDate, smoothPath, useWidth } from "./Sections.jsx";
+import { itemScoreDiff, setScoreText, setScorePoints } from "../../lib/itemScore.js";
 
 /** @param {number} value */
 const power = (value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 });
-const score = (value) => formatDecimal(value, 1);
+// 템환산 합계는 한 벌 최대치 기준 100점(web/src/lib/itemScore.js)
+const score = (value) => setScoreText(value);
 const percent = (value) => `${formatDecimal(value, 1)}%`;
 
 const BEST = [
   { key: "combatPower", label: "최고 전투력", format: power },
   { key: "itemScore", label: "최고 템환산", format: score },
-  { key: "itemScoreWithoutEmblem", label: "템환산 (문장 제외)", format: score },
+  { key: "itemScoreWithoutEmblem", label: "템환산 (문장 제외)", format: (value) => setScoreText(value, false) },
   { key: "maxDamage", label: "최대 대미지", format: power },
   { key: "potential", label: "잠재 합", format: percent },
   { key: "additionalPotential", label: "에디 합", format: percent }
 ];
 
 const METRICS = [
-  { value: "combatPower", label: "전투력", format: power },
-  { value: "itemScore", label: "템환산", format: score }
+  { value: "combatPower", label: "전투력", format: power, read: (value) => value },
+  { value: "itemScore", label: "템환산", format: (value) => formatDecimal(value, 1), read: (value) => setScorePoints(value) }
 ];
 
 /** 눈금 글자: 1.85억 · 3,200만 · 1,226 */
 function axisLabel(value) {
   if (value >= 1e8) return `${formatDecimal(value / 1e8, 2)}억`;
   if (value >= 1e4) return `${formatComma(Math.round(value / 1e4))}만`;
-  return formatComma(Math.round(value));
+  return value >= 1000 ? formatComma(Math.round(value)) : formatDecimal(value, 1);
 }
 
 const PERIODS = [
@@ -132,7 +134,7 @@ function JournalChart({ rows, metric }) {
     .map((row) => ({
       date: row.date,
       day: dayNumber(row.date),
-      y: Number(row[metric.value])
+      y: metric.read(Number(row[metric.value]))
     }));
   const gradientId = `journal-${useId()}`;
 
@@ -279,7 +281,7 @@ function GearChange({ change }) {
       {Math.abs(diff) >= 0.05 ? (
         <strong class={`num rec-change__diff${diff > 0 ? " is-up" : " is-down"}`}>
           {diff > 0 ? "+" : "-"}
-          {formatDecimal(Math.abs(diff), 1)}
+          {formatDecimal(itemScoreDiff(change.slot, diff), 1)}
         </strong>
       ) : null}
     </li>

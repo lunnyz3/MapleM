@@ -13,6 +13,7 @@ import { loadCharacterPage } from "../lib/data.js";
 import { formatComma, formatKoreanUnits } from "../lib/format.js";
 import { DEFAULT_WORLD, WORLDS, urls } from "../lib/game.js";
 import { loadItemRanks } from "../lib/itemRanks.js";
+import { itemScoreText, setScoreText } from "../lib/itemScore.js";
 
 /** @typedef {{ world: string, name: string }} Who */
 
@@ -228,11 +229,11 @@ export function Compare() {
             <div class="cmp-heads__score">
               <span class="cmp-heads__label">템환산</span>
               <span class="cmp-heads__nums num">
-                <strong class={scoreDiff > 0 ? "is-win" : ""}>{formatComma(Math.round(a.total))}</strong>
+                <strong class={scoreDiff > 0 ? "is-win" : ""}>{setScoreText(a.total)}</strong>
                 <span class="cmp-heads__sep">:</span>
-                <strong class={scoreDiff < 0 ? "is-win" : ""}>{formatComma(Math.round(b.total))}</strong>
+                <strong class={scoreDiff < 0 ? "is-win" : ""}>{setScoreText(b.total)}</strong>
               </span>
-              <Diff value={scoreDiff} format={(n) => formatComma(Math.round(n))} />
+              <Diff value={scoreDiff} format={(n) => setScoreText(n)} />
             </div>
             <SideHead side={b} align="b" />
           </Reveal>
@@ -273,7 +274,7 @@ export function Compare() {
                     <ItemCell entry={left} align="a" win={diff > 0} />
                     <span class="cmp-item-row__mid">
                       <span class="cmp-item-row__slot">{label}</span>
-                      <Diff value={diff} format={(n) => formatComma(Math.round(n))} />
+                      <Diff value={diff} format={(n) => itemScoreText((left || right).item.slotName, n)} />
                     </span>
                     <ItemCell entry={right} align="b" win={diff < 0} />
                   </li>
@@ -302,7 +303,7 @@ function ItemCell({ entry, align, win }) {
         <span class="cmp-item__name">{item.itemName}</span>
         <span class="cmp-item__meta num">
           {star ? <span class="cmp-star">★{star}</span> : null}
-          <span class="cmp-item__score">{score === null ? "-" : `${formatComma(Math.round(score))}점`}</span>
+          <span class="cmp-item__score">{score === null ? "-" : `${itemScoreText(item.slotName, score)}점`}</span>
         </span>
       </span>
     </span>

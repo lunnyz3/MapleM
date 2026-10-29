@@ -16,6 +16,7 @@ import { ItemShare } from "./Share.jsx";
 import { useShareCaption } from "../../lib/shareSettings.js";
 import { WhatIf } from "./WhatIf.jsx";
 import { CubeSim } from "./CubeSim.jsx";
+import { itemScoreText } from "../../lib/itemScore.js";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -160,7 +161,7 @@ export function EquipDetail({ item, profile = null, compact = false }) {
       </header>
       {rank ? (
         <p class="eq-detail__rank num">
-          <span class="eq-detail__score">템환산 {formatComma(Math.round(rank.score))}</span>
+          <span class="eq-detail__score" title={`원점수 ${formatComma(Math.round(rank.score))}`}>템환산 {itemScoreText(item.slotName, rank.score)}점</span>
           {rankText(rank) ? (
             <span class="eq-detail__place">{rankText(rank)}</span>
           ) : null}

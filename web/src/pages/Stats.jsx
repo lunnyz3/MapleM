@@ -11,6 +11,7 @@ import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
 import { WORLDS } from "../lib/game.js";
 import { CollectedNote } from "../components/CollectedNote.jsx";
+import { setScoreText } from "../lib/itemScore.js";
 
 const TOPS = [
   { value: "100", label: "100명" },
@@ -27,7 +28,7 @@ const COLUMNS = [
   { key: "count", label: "인원", format: (row) => formatComma(row.count) },
   { key: "avgCombatPower", label: "평균 전투력", format: (row) => power(row.avgCombatPower) },
   { key: "maxCombatPower", label: "최고 전투력", format: (row) => power(row.maxCombatPower) },
-  { key: "avgItemScore", label: "평균 템환산", format: (row) => formatComma(Math.round(row.avgItemScore || 0)) },
+  { key: "avgItemScore", label: "평균 템환산", format: (row) => setScoreText(row.avgItemScore || 0) },
   { key: "avgPotential", label: "평균 잠재", format: (row) => `${formatDecimal(row.avgPotential, 0)}%` },
   { key: "avgAdditionalPotential", label: "평균 에디", format: (row) => `${formatDecimal(row.avgAdditionalPotential, 0)}%` }
 ];

@@ -20,6 +20,7 @@ import { WORLDS, urls } from "../lib/game.js";
 import { useInView } from "../lib/motion.js";
 import { copyText, sharePageUrl } from "../lib/share.js";
 import { addRecent, entryKey, toggleFavorite, useSaved } from "../lib/storage.js";
+import { setScoreText } from "../lib/itemScore.js";
 
 /** 길드 건물 5종(기존 화면과 같은 이름 규칙·그림) */
 const BUILDINGS = [
@@ -383,7 +384,7 @@ function PowerPanel({ guild }) {
                 <span class="gd-power__meta">
                   <span class="num">Lv.{spec?.characterLevel || member.level || "-"}</span>
                   {spec?.characterClass || member.job ? <span>{spec?.characterClass || member.job}</span> : null}
-                  {spec?.itemScore ? <span class="num">템환산 {formatComma(Math.round(spec.itemScore))}</span> : null}
+                  {spec?.itemScore ? <span class="num">템환산 {setScoreText(spec.itemScore)}점</span> : null}
                 </span>
               </span>
               <span class="gd-power__value num">{power ? formatKoreanUnits(power, { maxGroups: 2 }) : "기록 없음"}</span>

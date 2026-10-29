@@ -1,5 +1,7 @@
 // Title, description and share preview (og) tags for the web app's index.html. Link previews
 // (KakaoTalk, messengers, search engines) do not run scripts, so the server writes these per address.
+const scoreMax = require("../game-data/item-score-max.json");
+
 const SITE = "메이플M 플러스";
 const ORIGIN = "https://maplem.co.kr";
 const IMAGE = `${ORIGIN}/og.png`;
@@ -56,7 +58,7 @@ async function pageMeta(pathname, { findSpec } = {}) {
         spec.characterLevel ? `Lv.${spec.characterLevel}` : "",
         spec.characterClass || "",
         spec.combatPower ? `전투력 ${koreanUnits(spec.combatPower)}` : "",
-        spec.itemScore ? `템환산 ${Number(spec.itemScore).toLocaleString("ko-KR", { maximumFractionDigits: 1 })}` : ""
+        spec.itemScore && scoreMax.fullSet?.max ? `템환산 ${Math.min(100, (Number(spec.itemScore) / scoreMax.fullSet.max) * 100).toFixed(1)}점` : ""
       ].filter(Boolean);
       if (facts.length) description = `${world} · ${facts.join(" · ")}`;
     }
