@@ -71,3 +71,11 @@ test("바뀐 장비: 템환산 공식이 바뀐 날은 점수 차이를 변경�
   assert.equal(next.journal[1].changes, undefined);
   assert.equal(next.gear[0].score, 900);
 });
+
+test("성장 일지: 전투력은 그날 본 값 중 가장 높은 값(사냥 프리셋으로 바꿔도 낮아지지 않음)", () => {
+  let record = mergeRecord(null, { scoreVersion: 5, combatPower: 300 }, day("2026-10-01T01:00:00Z"));
+  record = mergeRecord(record, { scoreVersion: 5, combatPower: 120 }, day("2026-10-01T05:00:00Z"));
+  assert.equal(record.journal[0].combatPower, 300);
+  record = mergeRecord(record, { scoreVersion: 5, combatPower: 150 }, day("2026-10-02T05:00:00Z"));
+  assert.equal(record.journal[1].combatPower, 150, "다음 날은 그날 값");
+});

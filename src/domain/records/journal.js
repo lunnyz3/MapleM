@@ -2,7 +2,8 @@
 
 // Best records and growth journal per character (pure). Every lookup or collection gives a
 // snapshot; the record keeps the highest value seen for each metric (with when) and one journal
-// row per KST day with that day's numbers and the gear that changed since the previous snapshot.
+// row per KST day with that day's numbers (combat power: the day's highest) and the gear that
+// changed since the previous snapshot.
 
 const JOURNAL_DAYS = 180;
 const MAX_CHANGES_PER_DAY = 40;
@@ -89,6 +90,8 @@ function mergeRecord(previous, snapshot, now = new Date()) {
     const value = positive(snapshot[metric]) ?? today?.[metric] ?? null;
     if (value !== null) row[metric] = value;
   });
+  // 전투력은 그날 본 값 중 가장 높은 값(사냥 프리셋으로 바꿔 끼워도 그날 최고가 남는다).
+  if (positive(today?.combatPower) && positive(row.combatPower)) row.combatPower = Math.max(today.combatPower, row.combatPower);
   const merged = mergeChanges(today?.changes || [], changes);
   if (merged.length) row.changes = merged;
   journal.push(row);

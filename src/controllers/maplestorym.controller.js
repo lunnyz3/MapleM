@@ -30,6 +30,7 @@ const { observeCombatPower, rankingObservedAt } = require("../services/combat-po
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
 const { buildGrowthReport } = require("../domain/growth/report");
+const { bestRecentCombatPower } = require("../services/character-record.service");
 const { recordSearch } = require("../services/popular-search.service");
 const { resolveClientIp } = require("../middleware/rate-limit");
 
@@ -2266,7 +2267,8 @@ function buildPageData({
     createdAt: basic.character_date_create || null,
     lastLoginAt: basic.character_date_last_login || null,
     lastLogoutAt: basic.character_date_last_logout || null,
-    // Highest 전투력 observed in the last 24 hours ({ value, observedAt }).
+    // Highest 전투력 of the last 14 days ({ value, observedAt, recentBest? }): the growth journal's daily
+    // highs plus today's observations (switching to a hunting preset does not lower it).
     combatPower: combatPower || { value: readStatValue(stat, "전투력"), observedAt: null },
     overallRanking: overallRankingResult?.ranking ?? fallbackOverallRanking ?? null,
     overallRankingText:
@@ -2613,6 +2615,8 @@ async function getCharacterPageData(req, res) {
       }
     ]);
 
+    // 화면 전투력은 최근 2주 최고(성장 일지), 기록에는 지금 관측값을 남긴다(옛 최고가 계속 이어지지 않게).
+    const displayPower = await bestRecentCombatPower(ocid, combatPower).catch(() => combatPower);
     const pageData = buildPageData({
       characterName,
       worldNameInput,
@@ -2621,7 +2625,7 @@ async function getCharacterPageData(req, res) {
       details,
       fallbackDetails,
       overallRankingResult,
-      combatPower
+      combatPower: displayPower
     });
 
     pageData.meta.historyAvailable = historyAvailable;
