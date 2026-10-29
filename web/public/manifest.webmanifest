@@ -1,0 +1,16 @@
+{
+  "name": "메이플M 플러스",
+  "short_name": "메이플M 플러스",
+  "description": "메이플스토리M 캐릭터·길드 검색, 템환산, 랭킹, 계산기",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9ff",
+  "theme_color": "#EAF3FF",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
