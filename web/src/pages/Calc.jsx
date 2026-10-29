@@ -17,6 +17,7 @@ import { daysFor, hexaCoreType, hexaStatExpectation, sumRange, symbolCost } from
 import { liberationPlan } from "../lib/liberation.mjs";
 import { EmblemCalc, GuildAbilityCalc, PolishCalc, StarforceCalc, TransferCalc } from "./calc/Enhance.jsx";
 import { GachaCalc } from "./calc/Gacha.jsx";
+import { ItemDbCalc } from "./calc/ItemDb.jsx";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
 const ARCANE = ["소멸의 여로", "츄츄 아일랜드", "레헬른", "아르카나", "모라스", "에스페라"];
@@ -482,7 +483,8 @@ const VIEWS = [
   { value: "polish", label: "장신구 연마" },
   { value: "transfer", label: "전수" },
   { value: "guild", label: "길드 어빌리티" },
-  { value: "gacha", label: "확률" }
+  { value: "gacha", label: "확률" },
+  { value: "itemdb", label: "아이템 DB" }
 ];
 // 캐릭터를 불러와 채우는 계산기(나머지는 캐릭터와 상관없다).
 const CHARACTER_VIEWS = ["hexa", "stat", "symbol", "liberation"];
@@ -606,6 +608,7 @@ export function Calc() {
       {view === "transfer" ? <TransferCalc /> : null}
       {view === "guild" ? <GuildAbilityCalc /> : null}
       {view === "gacha" ? <GachaCalc /> : null}
+      {view === "itemdb" ? <ItemDbCalc /> : null}
     </div>
   );
 }

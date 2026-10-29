@@ -6,6 +6,9 @@ import { combatPower, totalsFromStats } from "../../lib/efficiency.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 import { optionCandidates } from "../../lib/share.js";
 import { applyLineChanges } from "../../lib/whatIf.mjs";
+import { deltaToTotals, addTotals } from "../../lib/growthReport.mjs";
+import { basicChange, currentSetTotals, setChange, setOfItem } from "../../lib/starforceWhatIf.mjs";
+import starforceSets from "../../../../src/game-data/starforce-sets.json";
 
 const SECTIONS = [
   { key: "additional", field: "additionalOption", label: "추가 옵션" },
@@ -31,9 +34,24 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
   const original = useMemo(() => Object.fromEntries(SECTIONS.map((section) => [section.key, linesOf(item?.[section.field])])), [item]);
   const [edited, setEdited] = useState(original);
   const [candidates, setCandidates] = useState(/** @type {any} */ (null));
+  // 스타포스: 아이템 DB(단계별 기본 옵션)에 이 아이템이 있을 때만
+  const currentStar = Number(item?.starforceUpgrade) || 0;
+  const [star, setStar] = useState(currentStar);
+  const [itemDb, setItemDb] = useState(/** @type {any} */ (null));
+  useEffect(() => {
+    let alive = true;
+    import("../../../../src/game-data/item-db.json").then((module) => alive && setItemDb(module.default || module), () => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const dbEntry = itemDb?.items?.[item?.itemName];
+  const starOptions = dbEntry?.stars?.[String(currentStar)] ? Object.keys(dbEntry.stars).map(Number).sort((a, b) => a - b) : [];
+  const starSet = useMemo(() => setOfItem(starforceSets, item), [item]);
 
   useEffect(() => {
     let alive = true;
+    setStar(currentStar);
     setEdited(original);
     optionCandidates(item).then((value) => alive && setCandidates(value || { potential: [], additionalPotential: [], additional: [] }));
     return () => {
@@ -46,15 +64,26 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
     if (!totals) return null;
     let next = totals;
     for (const section of SECTIONS) next = applyLineChanges(next, original[section.key], edited[section.key], attackType);
+    if (star !== currentStar && dbEntry) {
+      const basic = basicChange(dbEntry, currentStar, star);
+      if (basic) next = applyLineChanges(next, basic.before, basic.after, attackType);
+      const setTotal = starSet ? currentSetTotals(majorStats)[starSet.label] : undefined;
+      if (starSet && Number.isFinite(setTotal)) {
+        const delta = (star - currentStar) * (item?.slotName === "한벌옷" ? 2 : 1);
+        next = addTotals(next, deltaToTotals(setChange(starSet, setTotal, delta, starforceSets.cap), attackType));
+      }
+    }
     const before = combatPower(totals);
     const after = combatPower(next);
     return { ratio: before > 0 ? after / before : 1 };
-  }, [totals, original, edited, attackType]);
+  }, [totals, original, edited, attackType, star, dbEntry]);
 
   const setLine = (/** @type {string} */ section, /** @type {number} */ index, /** @type {{ name: string, value: string }} */ line) => {
     setEdited({ ...edited, [section]: edited[section].map((current, i) => (i === index ? line : current)) });
   };
-  const changed = SECTIONS.some((section) => JSON.stringify(edited[section.key]) !== JSON.stringify(original[section.key]));
+  const changed = star !== currentStar || SECTIONS.some((section) => JSON.stringify(edited[section.key]) !== JSON.stringify(original[section.key]));
+  const setTotal = starSet ? currentSetTotals(majorStats)[starSet.label] : undefined;
+  const basicPreview = star !== currentStar && dbEntry ? basicChange(dbEntry, currentStar, star) : null;
   const percent = result ? (result.ratio - 1) * 100 : 0;
   const gain = basePower && result ? basePower * (result.ratio - 1) : null;
 
@@ -68,7 +97,15 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
         </strong>
         {gain !== null && Math.abs(gain) >= 1 ? <span class="whatif__abs num">{gain >= 0 ? "+" : "-"}{formatKoreanUnits(Math.abs(Math.round(gain)), { maxGroups: Math.abs(gain) >= 1e8 ? 2 : 1 })}</span> : null}
         <span class="whatif__actions">
-          <button type="button" class="btn btn--ghost btn--sm" disabled={!changed} onClick={() => setEdited(original)}>
+          <button
+            type="button"
+            class="btn btn--ghost btn--sm"
+            disabled={!changed}
+            onClick={() => {
+              setEdited(original);
+              setStar(currentStar);
+            }}
+          >
             <Icon name="refresh" size={16} />
             되돌리기
           </button>
@@ -77,6 +114,35 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
           </button>
         </span>
       </div>
+
+      {starOptions.length > 1 ? (
+        <section class="whatif__section">
+          <h4 class="whatif__title">스타포스</h4>
+          <div class="whatif__line">
+            <span class="select select--sm">
+              <select aria-label="스타포스" value={star} onChange={(event) => setStar(Number(/** @type {HTMLSelectElement} */ (event.currentTarget).value))}>
+                {starOptions.map((value) => (
+                  <option key={value} value={value}>
+                    ★{value}
+                    {value === currentStar ? " (지금)" : ""}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={16} class="select__icon" />
+            </span>
+            <span class="whatif__range num">
+              {basicPreview
+                ? basicPreview.after
+                    .map((line, index) => `${line.name} ${formatComma(Number(basicPreview.before[index].value))} → ${formatComma(Number(line.value))}`)
+                    .join(" · ")
+                : "기본 옵션 그대로"}
+              {starSet && Number.isFinite(setTotal) && star !== currentStar
+                ? ` · ${starSet.label} 세트 ${formatComma(setTotal)}성 → ${formatComma(setTotal + (star - currentStar) * (item?.slotName === "한벌옷" ? 2 : 1))}성`
+                : ""}
+            </span>
+          </div>
+        </section>
+      ) : null}
 
       {!candidates ? <p class="whatif__loading">옵션 표를 불러오는 중…</p> : null}
       {candidates
