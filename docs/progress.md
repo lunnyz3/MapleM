@@ -123,6 +123,12 @@
 - 봇 페이지: 남색 머리판·"무료" 표시, 실제 캐릭터 예시 삭제.
 - 길드 전체 훑기 끝: 149,587명 중 145,319명 저장(실패 4,268), 1시간 18분. equipment_items 343만 건(1.6GB + 색인 0.44GB), character_specs 14만 건.
 
+### 16. 통계·링크 스킬 추천·장비 교체 체험 — `f436210` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- `/stats`: 전투력 상위 N명(100~5,000, 전체) 직업별 인원·비율·평균/최고 전투력·평균 템환산·잠재·에디, 레벨 분포. 수집된 character_specs 기준, 10분 기억(`src/services/stats.service.js`, `/api/v2/stats/classes`·`/levels`).
+- 스탯 효율 탭 "링크 스킬 추천": 본인 링크를 뺀 보스 세팅 스탯에서 지금 칸 수만큼 전투력을 가장 많이 올리는 링크를 차례로 고른다(`web/src/lib/linkRecommend.mjs`). 육성 수준 Lv.2·Lv.3·최대, 지금 가진 레벨보다 낮게는 추천하지 않음. 여러 직업이 같은 링크를 주면 한 칸.
+- 장비 시트 "옵션 바꿔 보기": 잠재·에디는 그 장비 공식 표의 옵션·수치, 추가 옵션은 불꽃 범위 안에서 바꾸면 보스 세팅 전투력 증감(%·절대값)을 바로 보여 준다(`WhatIf.jsx`, `whatIf.mjs`).
+- 운영 확인: 통계 두 화면·모바일 넘침 없음, 링크 추천 15칸 +3.26%, 체험에서 잠재 값을 낮추면 -0.116%.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
