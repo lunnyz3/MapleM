@@ -174,6 +174,9 @@
 - `scripts/data/build-item-db.js`: 제네시스·아케인셰이드 수집 장비 중 기본 옵션 마스터리 0인 6.6만 개로 아이템 76종의 스타포스 단계별 기본 옵션(추옵 뺀 값, 최빈값, 같은 값 3개 이상) → `src/game-data/item-db.json`.
 - 계산기 › 아이템 DB, 옵션 바꿔 보기 › 스타포스(기본 옵션 차이 + 스타포스 세트 합 구간 변화, 한벌옷은 2배). 예: 피카츄 완드 ★35→36 전투력 +1.27%.
 
+### 24. 스탯 효율 실전 딜 모드 — `5f45152` (화면만, 2026-10-29, 운영자 승인)
+- 운영자 질문 "최종 1% = 보공 6%가 맞나": 전투력 공식에서 보공은 0.3 × (1 + 보공)로만 들어가 약하다. 공개 계산 도구의 "대미지 모드"를 옮겨 전환 추가: 딜 = 깡공 × (공% + 스킬 퍼뎀 400% × (1 + 보공)) × (1 + 대미지) × (1.2 + 치피) × (1 + 최종) × (1 − 보스 방어율 × (1 − 방무)), 방무는 곱으로 합산, 최대 대미지 제외, 도핑 10종(기본 5종·맥피). `web/src/lib/damageModel.mjs`. 피카츄: 최종 1% = 보공 2.14%·방무 1.64%.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
