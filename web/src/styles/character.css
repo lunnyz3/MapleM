@@ -4089,3 +4089,7 @@ button.eq-slot:hover .eq-slot__img {
   background: var(--primary-soft);
   color: var(--primary);
 }
+
+.whatif__soul {
+  grid-column: 1 / -1;
+}

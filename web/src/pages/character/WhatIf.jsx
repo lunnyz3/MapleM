@@ -9,6 +9,9 @@ import { applyLineChanges } from "../../lib/whatIf.mjs";
 import { deltaToTotals, addTotals } from "../../lib/growthReport.mjs";
 import { basicChange, currentSetTotals, setChange, setOfItem } from "../../lib/starforceWhatIf.mjs";
 import starforceSets from "../../../../src/game-data/starforce-sets.json";
+import soulEmblem from "../../../../src/game-data/soul-emblem.json";
+import { emblemKinds, emblemLines, soulChoices, splitLine } from "../../lib/soulEmblem.mjs";
+import { emblemInfo } from "../../lib/character.js";
 
 const SECTIONS = [
   { key: "additional", field: "additionalOption", label: "추가 옵션" },
@@ -48,10 +51,28 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
   const dbEntry = itemDb?.items?.[item?.itemName];
   const starOptions = dbEntry?.stars?.[String(currentStar)] ? Object.keys(dbEntry.stars).map(Number).sort((a, b) => a - b) : [];
   const starSet = useMemo(() => setOfItem(starforceSets, item), [item]);
+  // 문장(있는 장비만): 종류·레벨, 소울(있는 장비만): 보스·옵션
+  const emblem = useMemo(() => emblemInfo(item?.emblemInfo), [item]);
+  const [emblemKind, setEmblemKind] = useState(emblem?.name || "");
+  const [emblemLevel, setEmblemLevel] = useState(emblem?.level || 1);
+  const soulLine = useMemo(() => splitLine(item?.soulInfo?.soulOption), [item]);
+  const souls = useMemo(() => soulChoices(soulEmblem, item?.slotName === "무기", attackType), [item, attackType]);
+  const [soulPick, setSoulPick] = useState("");
+  const emblemChanged = Boolean(emblem) && (emblemKind !== emblem.name || emblemLevel !== emblem.level);
+  const emblemBefore = emblem ? emblem.options.filter((line) => line.value) : [];
+  const emblemAfter = emblemChanged ? emblemLines(soulEmblem, emblemKind, emblemLevel) : emblemBefore;
+  const soulAfter = (() => {
+    const [boss, index] = soulPick.split("|");
+    const line = souls.find((choice) => choice.boss === boss)?.lines[Number(index)];
+    return line ? [line] : soulLine ? [soulLine] : [];
+  })();
 
   useEffect(() => {
     let alive = true;
     setStar(currentStar);
+    setEmblemKind(emblem?.name || "");
+    setEmblemLevel(emblem?.level || 1);
+    setSoulPick("");
     setEdited(original);
     optionCandidates(item).then((value) => alive && setCandidates(value || { potential: [], additionalPotential: [], additional: [] }));
     return () => {
@@ -64,6 +85,8 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
     if (!totals) return null;
     let next = totals;
     for (const section of SECTIONS) next = applyLineChanges(next, original[section.key], edited[section.key], attackType);
+    if (emblemChanged) next = applyLineChanges(next, emblemBefore, emblemAfter, attackType);
+    if (soulPick && soulLine) next = applyLineChanges(next, [soulLine], soulAfter, attackType);
     if (star !== currentStar && dbEntry) {
       const basic = basicChange(dbEntry, currentStar, star);
       if (basic) next = applyLineChanges(next, basic.before, basic.after, attackType);
@@ -76,12 +99,12 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
     const before = combatPower(totals);
     const after = combatPower(next);
     return { ratio: before > 0 ? after / before : 1 };
-  }, [totals, original, edited, attackType, star, dbEntry]);
+  }, [totals, original, edited, attackType, star, dbEntry, emblemKind, emblemLevel, soulPick]);
 
   const setLine = (/** @type {string} */ section, /** @type {number} */ index, /** @type {{ name: string, value: string }} */ line) => {
     setEdited({ ...edited, [section]: edited[section].map((current, i) => (i === index ? line : current)) });
   };
-  const changed = star !== currentStar || SECTIONS.some((section) => JSON.stringify(edited[section.key]) !== JSON.stringify(original[section.key]));
+  const changed = star !== currentStar || emblemChanged || Boolean(soulPick) || SECTIONS.some((section) => JSON.stringify(edited[section.key]) !== JSON.stringify(original[section.key]));
   const setTotal = starSet ? currentSetTotals(majorStats)[starSet.label] : undefined;
   const basicPreview = star !== currentStar && dbEntry ? basicChange(dbEntry, currentStar, star) : null;
   const percent = result ? (result.ratio - 1) * 100 : 0;
@@ -104,6 +127,9 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
             onClick={() => {
               setEdited(original);
               setStar(currentStar);
+              setEmblemKind(emblem?.name || "");
+              setEmblemLevel(emblem?.level || 1);
+              setSoulPick("");
             }}
           >
             <Icon name="refresh" size={16} />
@@ -139,6 +165,60 @@ export function WhatIf({ item, majorStats, attackType, basePower = null, onClose
               {starSet && Number.isFinite(setTotal) && star !== currentStar
                 ? ` · ${starSet.label} 세트 ${formatComma(setTotal)}성 → ${formatComma(setTotal + (star - currentStar) * (item?.slotName === "한벌옷" ? 2 : 1))}성`
                 : ""}
+            </span>
+          </div>
+        </section>
+      ) : null}
+
+      {emblem ? (
+        <section class="whatif__section">
+          <h4 class="whatif__title">문장</h4>
+          <div class="whatif__line">
+            <span class="select select--sm">
+              <select aria-label="문장 종류" value={emblemKind} onChange={(event) => setEmblemKind(/** @type {HTMLSelectElement} */ (event.currentTarget).value)}>
+                {emblemKinds(soulEmblem).map((kind) => (
+                  <option key={kind.name} value={kind.name}>
+                    {kind.name}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={16} class="select__icon" />
+            </span>
+            <span class="select select--sm whatif__value">
+              <select aria-label="문장 레벨" value={emblemLevel} onChange={(event) => setEmblemLevel(Number(/** @type {HTMLSelectElement} */ (event.currentTarget).value))}>
+                {soulEmblem.emblem.maxDamageByLevel.map((_, index) => (
+                  <option key={index} value={index + 1}>
+                    Lv.{index + 1}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={16} class="select__icon" />
+            </span>
+            <span class="whatif__range num">{emblemAfter.map((line) => `${line.name} ${line.value.endsWith("%") ? line.value : formatComma(Number(String(line.value).replace(/,/g, "")))}`).join(" · ")}</span>
+          </div>
+        </section>
+      ) : null}
+
+      {soulLine ? (
+        <section class="whatif__section">
+          <h4 class="whatif__title">소울</h4>
+          <div class="whatif__line">
+            <span class="select select--sm whatif__soul">
+              <select aria-label="소울" value={soulPick} onChange={(event) => setSoulPick(/** @type {HTMLSelectElement} */ (event.currentTarget).value)}>
+                <option value="">
+                  지금: {soulLine.name} {soulLine.value}
+                </option>
+                {souls.map((choice) => (
+                  <optgroup key={choice.boss} label={choice.boss}>
+                    {choice.lines.map((line, index) => (
+                      <option key={index} value={`${choice.boss}|${index}`}>
+                        {choice.boss} · {line.name} {line.value.endsWith("%") ? line.value : formatComma(Number(line.value))}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <Icon name="chevronDown" size={16} class="select__icon" />
             </span>
           </div>
         </section>

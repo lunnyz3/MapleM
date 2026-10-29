@@ -1,0 +1,332 @@
+{
+  "_meta": {
+    "description": "문장 레벨별 옵션과 소울 보스별 옵션 값. 옵션 바꿔 보기에서 문장·소울을 바꿀 때 쓴다.",
+    "updatedAt": "2026-10-29",
+    "verification": "2026-10 공개 시뮬레이터 표를 옮겼다. 넥슨 응답과 대조: 압도의 문장 Lv.8 = 최대 대미지 59,500,000·보스 공격력 10%, 보조 장비 반반 소울 최종 대미지 4.5%(15% × 0.3)·최대 대미지 450,000.",
+    "notes": [
+      "문장: 레벨마다 최대 대미지(maxDamageByLevel)와 종류별 스탯 %(percentByLevel).",
+      "소울: 무기는 기준값 그대로(최종 대미지·보스 공격력·대미지·치명타 피해, 최대 대미지는 weaponMaxDamage), 보조 장비는 최종 대미지 = 기준 × 0.3(subFinalDamage 가 있으면 그 값), 최대 대미지 = subMaxDamage. fixed 는 그 옵션 하나만 있다."
+    ]
+  },
+  "emblem": {
+    "maxDamageByLevel": [
+      1500000,
+      2000000,
+      3750000,
+      5250000,
+      10500000,
+      21000000,
+      38080000,
+      59500000,
+      85000000,
+      119000000
+    ],
+    "percentByLevel": [
+      1.5,
+      2,
+      2.5,
+      3,
+      4,
+      5.5,
+      7.5,
+      10,
+      12,
+      15
+    ],
+    "statByEmblem": {
+      "신성한 문장": "마법 공격력",
+      "강대한 문장": "물리 공격력",
+      "무자비한 문장": "치명타 피해",
+      "압도의 문장": "보스 공격력",
+      "기민한 문장": "보스 방어력"
+    }
+  },
+  "soul": {
+    "bosses": {
+      "자쿰": {
+        "weapon": {
+          "base": 5,
+          "subMaxDamage": 150000,
+          "weaponMaxDamage": 500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 5,
+          "subMaxDamage": 150000,
+          "weaponMaxDamage": 500000,
+          "weaponType": false
+        }
+      },
+      "핑크빈": {
+        "weapon": {
+          "base": 7,
+          "subMaxDamage": 210000,
+          "weaponMaxDamage": 700000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 7,
+          "subMaxDamage": 210000,
+          "weaponMaxDamage": 700000,
+          "weaponType": false
+        }
+      },
+      "시그너스": {
+        "weapon": {
+          "base": 10,
+          "subMaxDamage": 300000,
+          "weaponMaxDamage": 1000000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 10,
+          "subMaxDamage": 300000,
+          "weaponMaxDamage": 1000000,
+          "weaponType": false
+        }
+      },
+      "반 레온": {
+        "weapon": {
+          "base": 13,
+          "subMaxDamage": 390000,
+          "weaponMaxDamage": 1300000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 13,
+          "subMaxDamage": 390000,
+          "weaponMaxDamage": 1300000,
+          "weaponType": false
+        }
+      },
+      "반반": {
+        "weapon": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": false
+        }
+      },
+      "피에르": {
+        "weapon": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": false
+        }
+      },
+      "블러디퀸": {
+        "weapon": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": false
+        }
+      },
+      "벨룸": {
+        "weapon": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": false
+        }
+      },
+      "힐라": {
+        "weapon": {
+          "base": 15,
+          "subMaxDamage": 450000,
+          "weaponMaxDamage": 1500000,
+          "weaponType": true
+        }
+      },
+      "매그너스": {
+        "weapon": {
+          "base": 17,
+          "subMaxDamage": 510000,
+          "weaponMaxDamage": 1700000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 17,
+          "subMaxDamage": 510000,
+          "weaponMaxDamage": 1700000,
+          "weaponType": false
+        }
+      },
+      "아카이럼": {
+        "weapon": {
+          "base": 19,
+          "subMaxDamage": 570000,
+          "weaponMaxDamage": 1900000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 19,
+          "subMaxDamage": 570000,
+          "weaponMaxDamage": 1900000,
+          "weaponType": false
+        }
+      },
+      "스우": {
+        "weapon": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        }
+      },
+      "데미안": {
+        "weapon": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        }
+      },
+      "루시드": {
+        "weapon": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 20,
+          "subMaxDamage": 800000,
+          "weaponMaxDamage": 2500000,
+          "weaponType": true
+        }
+      },
+      "윌": {
+        "weapon": {
+          "base": 21,
+          "subMaxDamage": 1000000,
+          "weaponMaxDamage": 3500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 21,
+          "subMaxDamage": 1000000,
+          "weaponMaxDamage": 3500000,
+          "weaponType": false
+        }
+      },
+      "진 힐라": {
+        "weapon": {
+          "base": 22,
+          "subMaxDamage": 1200000,
+          "weaponMaxDamage": 4500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 22,
+          "subMaxDamage": 1200000,
+          "weaponMaxDamage": 4500000,
+          "weaponType": false
+        }
+      },
+      "카이": {
+        "weapon": {
+          "base": 0,
+          "subMaxDamage": 0,
+          "weaponMaxDamage": 0,
+          "weaponType": true,
+          "fixed": {
+            "name": "최종 대미지",
+            "value": 22
+          }
+        },
+        "sub": {
+          "base": 0,
+          "subMaxDamage": 0,
+          "weaponMaxDamage": 0,
+          "weaponType": false,
+          "fixed": {
+            "name": "최종 대미지",
+            "value": 6.6
+          }
+        }
+      },
+      "듄켈": {
+        "weapon": {
+          "base": 23,
+          "subMaxDamage": 1500000,
+          "weaponMaxDamage": 6500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 23,
+          "subMaxDamage": 1500000,
+          "weaponMaxDamage": 6500000,
+          "weaponType": false
+        }
+      },
+      "칼로스": {
+        "weapon": {
+          "base": 24,
+          "subMaxDamage": 1800000,
+          "weaponMaxDamage": 8500000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 24,
+          "subMaxDamage": 1800000,
+          "weaponMaxDamage": 8500000,
+          "weaponType": false
+        }
+      },
+      "카링": {
+        "weapon": {
+          "base": 25,
+          "subMaxDamage": 15750000,
+          "weaponMaxDamage": 15750000,
+          "weaponType": true
+        },
+        "sub": {
+          "base": 25,
+          "subMaxDamage": 15750000,
+          "weaponMaxDamage": 15750000,
+          "weaponType": false,
+          "subFinalDamage": 7.5
+        }
+      }
+    },
+    "subFinalFactor": 0.3
+  }
+}
