@@ -1,10 +1,15 @@
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
+const mongoose = require("mongoose");
 const { apiRouter } = require("./routes/api.routes");
 const { v2Router } = require("./routes/v2.routes");
 const { initShareImageCleanupJob } = require("./controllers/share.controller");
 const { createRateLimiter } = require("./middleware/rate-limit");
 const { securityHeaders } = require("./middleware/security-headers");
+const { pageMeta, renderIndex } = require("./web/page-meta");
+const { CharacterSpec } = require("./models/character-spec.model");
+const { normalizeWorldName } = require("./config/worlds");
 
 const minute = 60 * 1000;
 // Per-IP limits, generous for real use: one ranking page loads 50 thumbnails.
@@ -31,17 +36,31 @@ function setWebCacheHeaders(res, filePath) {
   res.setHeader("Cache-Control", filePath.startsWith(webAssetsDir) ? "public, max-age=31536000, immutable" : "no-cache");
 }
 
-function sendWebPage(req, res) {
+// 공유 미리보기 설명에 쓸 저장된 스펙(레벨·직업·전투력·템환산). 화면 응답을 늦추지 않게 짧게 기다린다.
+async function findSpecForMeta(world, name) {
+  const worldName = normalizeWorldName(world);
+  if (!worldName.ok || mongoose.connection.readyState !== 1) return null;
+  return CharacterSpec.findOne({ worldName: worldName.worldNameCanonical, characterName: name })
+    .select({ _id: 0, characterLevel: 1, characterClass: 1, combatPower: 1, itemScore: 1 })
+    .maxTimeMS(300)
+    .lean();
+}
+
+async function sendWebPage(req, res) {
   // 확장자가 있는 요청이 여기까지 오면 없는 파일이다. HTML로 대체하지 않는다.
   if (path.extname(req.path)) {
     return res.status(404).type("text/plain").send("Not found");
   }
+  let html;
+  try {
+    html = await fs.promises.readFile(path.join(webDir, "index.html"), "utf8");
+  } catch {
+    return res.status(404).type("text/plain").send("Web is not built. Run `npm run build:web`.");
+  }
+  // 제목·설명·공유 미리보기(og) 태그는 주소마다 서버가 채운다(미리보기 수집기는 스크립트를 돌리지 않는다).
+  const meta = await pageMeta(req.path, { findSpec: findSpecForMeta });
   res.set("Cache-Control", "no-cache");
-  return res.sendFile("index.html", { root: webDir }, (error) => {
-    if (error && !res.headersSent) {
-      res.status(404).type("text/plain").send("Web is not built. Run `npm run build:web`.");
-    }
-  });
+  return res.type("html").send(renderIndex(html, meta));
 }
 
 // 예전 미리보기 주소(/preview/...)와 기존 화면 파일 주소는 새 주소로 옮긴다(공유된 링크 유지).
