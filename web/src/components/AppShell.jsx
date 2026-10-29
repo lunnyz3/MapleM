@@ -15,6 +15,7 @@ const NAV = [
   { key: "ranking", label: "랭킹", href: urls.ranking("level") },
   { key: "guild", label: "길드", href: urls.guildSearch },
   { key: "compare", label: "비교", href: urls.compare() },
+  { key: "stats", label: "통계", href: urls.stats },
   { key: "calc", label: "계산기", href: urls.calc },
   { key: "bot", label: "카톡 봇", href: urls.bot, highlight: true }
 ];
