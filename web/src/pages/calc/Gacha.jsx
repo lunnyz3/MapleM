@@ -114,7 +114,7 @@ function StarChorus() {
             <dd class="num">{Number.isFinite(result.costEok) ? `${formatDecimal(result.costEok, 1)}억` : "-"}</dd>
           </div>
         </dl>
-        <p class="calc-note">재설정 1번에 세리온 {rules.starChorus.cerionPerReset}개. 평균 = 1 ÷ 목표 이상 확률.</p>
+        <p class="calc-note">재설정 1번에 세리온 {rules.starChorus.cerionPerReset}개.</p>
       </section>
     </div>
   );

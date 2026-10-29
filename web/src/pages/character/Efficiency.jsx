@@ -186,11 +186,8 @@ export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = 
                 );
               })}
             </div>
-            <p class="eff-mode__note">딜 = 깡공 × (공격력% + 스킬 퍼뎀 400% × (1 + 보공)) × (1 + 대미지) × (1.2 + 치피) × (1 + 최종) × (1 − 보스 방어율 × (1 − 방무)), 도핑 포함.</p>
           </div>
-        ) : (
-          <p class="eff-mode__note">전투력 = 깡공 × (공격력% + 0.3 × (1 + 보공)) × (1 + 대미지) × (1.2 + 치피) × (1 + 최종) × (최대 대미지 ÷ 1억)^0.2. 방무는 들어가지 않아요.</p>
-        )}
+        ) : null}
       </section>
       <section class="eff-calc sect">
         <div class="eff-calc__inputs">

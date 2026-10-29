@@ -191,9 +191,6 @@ export function StarforceCalc() {
             </tbody>
           </table>
         </div>
-        {accessory ? null : (
-          <p class="calc-note">성공 확률에 기본 +{rules.starforce.bonusSuccess}%p와 럭키데이를 더하고, 남는 확률은 유지·하락·파괴에 원래 비율대로 나눴어요.</p>
-        )}
       </section>
 
       <section class="card calc-card calc-result">
@@ -298,7 +295,7 @@ export function EmblemCalc() {
             </tbody>
           </table>
         </div>
-        <p class="calc-note">실패해도 레벨은 그대로이고, 시도마다 메소와 증표가 들어요. 평균 시도 = 1 ÷ 성공 확률.</p>
+        <p class="calc-note">실패해도 레벨은 그대로이고, 시도마다 메소와 증표가 들어요.</p>
       </section>
 
       <section class="card calc-card calc-result">
