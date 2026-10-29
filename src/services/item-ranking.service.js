@@ -160,7 +160,7 @@ async function groupTotal(slot, family) {
 
 /**
  * Ranks of one character's stored items inside their group:
- * { [fingerprint]: { rank, total, label, score, scoreWithoutEmblem } }.
+ * { [fingerprint]: { rank, total, label, slot, family, score, scoreWithoutEmblem, parts } }.
  */
 async function rankCharacterItems(ocid) {
   const key = String(ocid || "").trim();
@@ -185,6 +185,8 @@ async function rankCharacterItems(ocid) {
           rank: ranked ? above + 1 : null,
           total: ranked ? Math.max(total, above + 1) : null,
           label: item.label,
+          slot: item.slot,
+          family: item.family || "",
           score: item.score,
           scoreWithoutEmblem: item.scoreWithoutEmblem,
           parts: item.parts || null
@@ -465,10 +467,24 @@ const NON_WEAPON_SLOTS = new Set([
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
- * @param {{ slot: string, family?: string, worldName?: string, name?: string, minStar?: number, conditions?: Array<{ section: string, option: string, min: number }>, page?: number }} query
+ * @param {{ slot: string, family?: string, worldName?: string, name?: string, exactName?: boolean, minStar?: number,
+ *   conditions?: Array<{ section: string, option: string, min: number }>, above?: number, nearest?: boolean, notOcid?: string, page?: number }} query
+ *   above: 이 점수보다 높은 장비만, nearest: 그중 점수가 가까운 것부터(나보다 좋은 장비), notOcid: 이 캐릭터 장비는 뺀다
  * → { rows, page, pageSize, hasMore, partial }  partial: 시간이 다 돼 찾은 만큼만
  */
-async function searchItems({ slot, family = "", worldName = "", name = "", minStar = 0, conditions = [], page = 1 } = {}) {
+async function searchItems({
+  slot,
+  family = "",
+  worldName = "",
+  name = "",
+  exactName = false,
+  minStar = 0,
+  conditions = [],
+  above = null,
+  nearest = false,
+  notOcid = "",
+  page = 1
+} = {}) {
   const current = Math.min(SEARCH_MAX_PAGE, Math.max(1, Math.floor(Number(page) || 1)));
   const empty = { rows: [], page: current, pageSize: SEARCH_PAGE_SIZE, hasMore: false, partial: false };
   if (!slot || !isMongoConnected()) return empty;
@@ -476,7 +492,10 @@ async function searchItems({ slot, family = "", worldName = "", name = "", minSt
   const filter = { slot, family: { $in: [...new Set(families)] }, scoreVersion: SCORE_VERSION };
   if (worldName) filter.worldName = worldName;
   const cleanName = String(name || "").trim().slice(0, 30);
-  if (cleanName) filter.itemName = { $regex: escapeRegex(cleanName) };
+  if (cleanName) filter.itemName = exactName ? cleanName : { $regex: escapeRegex(cleanName) };
+  const floor = Number(above);
+  if (above !== null && Number.isFinite(floor)) filter.score = { $gt: floor };
+  if (notOcid) filter.ocid = { $ne: notOcid };
   const star = Math.floor(Number(minStar));
   if (star > 0 && star <= 40) filter.starforce = { $gte: star };
   const exprs = conditions.map((entry) => ({ $gte: [optionSum(CONDITION_SECTIONS[entry.section], entry.option), entry.min] }));
@@ -484,7 +503,7 @@ async function searchItems({ slot, family = "", worldName = "", name = "", minSt
   // 색인을 정해 준다(조건이 있으면 계획 고르기에서 시간이 다 된다).
   const hint = worldName ? { worldName: 1, slot: 1, family: 1, scoreVersion: 1, score: -1 } : { slot: 1, family: 1, scoreVersion: 1, score: -1 };
   const cursor = EquipmentItem.find(filter)
-    .sort({ score: -1 })
+    .sort({ score: nearest ? 1 : -1 })
     .hint(hint)
     .skip((current - 1) * SEARCH_PAGE_SIZE)
     .limit(SEARCH_PAGE_SIZE + 1)

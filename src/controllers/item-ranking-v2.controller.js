@@ -6,6 +6,7 @@
 //   GET /api/v2/item-search/slots?slot=                  → { ok, slots: [{ slot, weapon }], families: [] }
 //   GET /api/v2/item-search?slot=&family=&world_name=&name=&star=&c=&page=
 //       c = "potential:물리 대미지:50|additional:최종 대미지:6" (묶음:옵션:값 합 이상, 최대 3개) → { ok, rows, page, hasMore, partial }
+//       나보다 좋은 장비: above=점수(이보다 높은 것만) &order=near(가까운 것부터) &exact=1(name 과 같은 이름만) &not=ocid(이 캐릭터 장비 빼기)
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
 //   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
@@ -133,7 +134,11 @@ async function getItemSearch(req, res) {
       family: text(req.query.family, 80),
       worldName,
       name: text(req.query.name, 30),
+      exactName: req.query.exact === "1",
       minStar: req.query.star,
+      above: req.query.above === undefined || req.query.above === "" ? null : Number(req.query.above),
+      nearest: req.query.order === "near",
+      notOcid: /^[0-9a-f]{20,100}$/i.test(text(req.query.not, 100)) ? text(req.query.not, 100) : "",
       conditions: parseSearchConditions(text(req.query.c, 200)),
       page: req.query.page
     });

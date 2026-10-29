@@ -4517,3 +4517,118 @@ a.jobtop__leader {
   }
 }
 
+/* 나보다 좋은 장비 */
+.better {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.better__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.better__head > .btn {
+  margin-left: auto;
+}
+
+.better__note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.better__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.better__row {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.better__row.is-open {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.better__main {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.better__main img {
+  border-radius: 8px;
+}
+
+.better__text {
+  display: grid;
+  min-width: 0;
+}
+
+.better__text strong,
+.better__text span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.better__text span {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.better__nums {
+  display: grid;
+  justify-items: end;
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.better__nums strong {
+  font-size: var(--fs-16);
+  font-weight: 900;
+}
+
+.better__nums strong.is-up {
+  color: var(--success);
+}
+
+.better__nums strong.is-down {
+  color: var(--danger);
+}
+
+.better__nums span {
+  color: var(--text-subtle);
+  font-weight: 700;
+}
+
+.better__detail {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.better__detail > .btn {
+  justify-self: start;
+}
+
+.better__more {
+  justify-self: center;
+}
+

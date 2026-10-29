@@ -17,6 +17,7 @@ import { useShareCaption } from "../../lib/shareSettings.js";
 import { WhatIf } from "./WhatIf.jsx";
 import { Luck } from "./Luck.jsx";
 import { JobTop } from "./JobTop.jsx";
+import { BetterItems } from "./BetterItems.jsx";
 import { combatPowerOf } from "../../lib/character.js";
 import { CubeSim } from "./CubeSim.jsx";
 import { itemScoreText } from "../../lib/itemScore.js";
@@ -302,9 +303,11 @@ export function Equipment({ data, world, mode, presetNo }) {
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
   const [captionOn, setCaptionOn] = useShareCaption();
   // 장비 시트에서 "옵션 넣어 보기"를 눌렀는지(다른 장비를 열면 닫는다).
-  // 장비 시트 안의 체험: "" | "whatif"(옵션 넣어 보기) | "cube"(큐브 돌려 보기)
+  // 장비 시트 안의 체험: "" | "whatif"(옵션 넣어 보기) | "cube"(큐브 돌려 보기) | "better"(더 좋은 장비)
   const [trial, setTrial] = useState("");
   useEffect(() => setTrial(""), [sheetItem]);
+  // 나보다 좋은 장비: 시트에 연 장비의 부위·계열·점수
+  const sheetRank = useItemRank(sheetItem?.fingerprint);
   useEffect(() => {
     loadItemRanks(data.ocid);
   }, [data.ocid]);
@@ -522,6 +525,16 @@ export function Equipment({ data, world, mode, presetNo }) {
             onClose={() => setTrial("")}
           />
         ) : null}
+        {sheetItem && trial === "better" ? (
+          <BetterItems
+            item={sheetItem}
+            rank={sheetRank}
+            ocid={data.ocid}
+            majorStats={data.profile?.majorStats || {}}
+            attackType={data.profile?.attackType || "physical"}
+            onClose={() => setTrial("")}
+          />
+        ) : null}
         {sheetItem && trial === "whatif" ? (
           <WhatIf
             item={sheetItem}
@@ -541,6 +554,10 @@ export function Equipment({ data, world, mode, presetNo }) {
               <button type="button" class="btn btn--secondary btn--sm eq-cube-open" onClick={() => setTrial("cube")}>
                 <Icon name="refresh" size={16} />
                 큐브 돌려 보기
+              </button>
+              <button type="button" class="btn btn--secondary btn--sm eq-better-open" onClick={() => setTrial("better")}>
+                <Icon name="trophy" size={16} />
+                더 좋은 장비
               </button>
             </span>
             <EquipDetail item={sheetItem} profile={profile} />
