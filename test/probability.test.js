@@ -154,7 +154,12 @@ test("확률 파일 이름은 <부위>_[additional_]potential_prob.json · <묶�
   assert.deepEqual(files, [...cubeFiles, ...flameFiles, "equipment_mastery.json"].sort());
 
   const { SLOT_PROBABILITY_CONFIG, FLAME_FILE_BY_SLOT } = await importItemShare();
-  const referenced = Object.values(SLOT_PROBABILITY_CONFIG).flatMap((config) => [config.potentialFile, config.additionalFile]);
+  // 장신구는 잠재·에디 공식 표가 없어(null) 추가 옵션 표만 쓴다.
+  assert.equal(SLOT_PROBABILITY_CONFIG.accessory.potentialFile, null);
+  assert.equal(FLAME_FILE_BY_SLOT.accessory, "accessory_flame_prob.json");
+  const referenced = Object.values(SLOT_PROBABILITY_CONFIG)
+    .flatMap((config) => [config.potentialFile, config.additionalFile])
+    .filter(Boolean);
   assert.equal(referenced.length, 24);
   for (const file of referenced) assert.ok(files.includes(file), `item-share.js 가 없는 파일을 참조: ${file}`);
   assert.equal(SLOT_PROBABILITY_CONFIG.gloves.potentialFile, "gloves_potential_prob.json");

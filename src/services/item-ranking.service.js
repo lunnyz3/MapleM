@@ -165,21 +165,25 @@ async function groupTotal(slot, family) {
 async function rankCharacterItems(ocid) {
   const key = String(ocid || "").trim();
   if (!key || !isMongoConnected()) return {};
-  const items = await EquipmentItem.find({ ocid: key, family: { $ne: "" }, scoreVersion: SCORE_VERSION })
+  // 점수는 모든 장비, 순위는 순위를 매기는 계열(제네시스·아케인셰이드)만.
+  const items = await EquipmentItem.find({ ocid: key, scoreVersion: SCORE_VERSION })
     .select({ fingerprint: 1, slot: 1, family: 1, label: 1, score: 1, scoreWithoutEmblem: 1, parts: 1, _id: 0 })
     .maxTimeMS(DB_TIMEOUT_MS)
     .lean();
   const entries = await Promise.all(
     items.map(async (item) => {
-      const [above, total] = await Promise.all([
-        EquipmentItem.countDocuments({ slot: item.slot, family: item.family, scoreVersion: SCORE_VERSION, score: { $gt: item.score } }).maxTimeMS(DB_TIMEOUT_MS),
-        groupTotal(item.slot, item.family)
-      ]);
+      const ranked = Boolean(item.family);
+      const [above, total] = ranked
+        ? await Promise.all([
+            EquipmentItem.countDocuments({ slot: item.slot, family: item.family, scoreVersion: SCORE_VERSION, score: { $gt: item.score } }).maxTimeMS(DB_TIMEOUT_MS),
+            groupTotal(item.slot, item.family)
+          ])
+        : [null, null];
       return [
         item.fingerprint,
         {
-          rank: above + 1,
-          total: Math.max(total, above + 1),
+          rank: ranked ? above + 1 : null,
+          total: ranked ? Math.max(total, above + 1) : null,
           label: item.label,
           score: item.score,
           scoreWithoutEmblem: item.scoreWithoutEmblem,

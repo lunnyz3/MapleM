@@ -32,7 +32,11 @@ const SLOT_KIND = Object.freeze({
   SHOULDER: "shoulder",
   CAPE: "cape",
   BELT: "belt",
+  ACCESSORY: "accessory",
 });
+
+// 장신구(잠재·에디 공식 표는 없고 추가 옵션 표만 있다): 반지·목걸이·귀고리·눈장식·얼굴장식·포켓
+const ACCESSORY_LABELS = Object.freeze(["\ubc18\uc9c0", "\ubaa9\uac78\uc774", "\uadc0\uace0\ub9ac", "\ub208\uc7a5\uc2dd", "\uc5bc\uad74\uc7a5\uc2dd", "\ud3ec\ucf13"]);
 
 const LABEL = Object.freeze({
   WEAPON: "\uBB34\uAE30",
@@ -57,6 +61,11 @@ const LABEL = Object.freeze({
 });
 
 const SLOT_PROBABILITY_CONFIG = Object.freeze({
+  [SLOT_KIND.ACCESSORY]: {
+    potentialFile: null,
+    additionalFile: null,
+    keyLabel: "",
+  },
   [SLOT_KIND.WEAPON]: {
     potentialFile: "weapon_potential_prob.json",
     additionalFile: "weapon_additional_potential_prob.json",
@@ -506,6 +515,9 @@ function classifyProbabilitySlot(item) {
     return SLOT_KIND.BELT;
   }
 
+  if (ACCESSORY_LABELS.some((label) => normalized.includes(normalizeForMatch(label)))) {
+    return SLOT_KIND.ACCESSORY;
+  }
   return "";
 }
 
@@ -849,6 +861,7 @@ const VALUE_EPSILON = 1e-6;
 
 // Additional-option (flame) files: the official page groups weapons/sub weapons/emblems and armor.
 const FLAME_FILE_BY_SLOT = Object.freeze({
+  [SLOT_KIND.ACCESSORY]: "accessory_flame_prob.json",
   [SLOT_KIND.WEAPON]: "weapon_flame_prob.json",
   [SLOT_KIND.SUB_WEAPON]: "weapon_flame_prob.json",
   [SLOT_KIND.EMBLEM]: "weapon_flame_prob.json",
