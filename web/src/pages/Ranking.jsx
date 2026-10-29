@@ -13,6 +13,7 @@ import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { ItemRanking, SPEC_METRICS, SpecRanking } from "./ranking/Collected.jsx";
+import { HallRecords } from "./HallOfFame.jsx";
 import { RANKING_PAGE_SIZE, findCharacterRank, loadRankingPage } from "../lib/data.js";
 import { formatComma, formatDateDot, formatKoreanUnits, kstToday, shiftDate, toNumber } from "../lib/format.js";
 import { DEFAULT_WORLD, RANKING_DATE_FLOOR, RANKING_TYPES, WORLDS, getRankingType, urls } from "../lib/game.js";
@@ -369,18 +370,21 @@ function RankingSkeleton({ count = 8 }) {
   );
 }
 
-/** @typedef {"official" | "item" | "spec"} View */
+/** @typedef {"official" | "item" | "spec" | "hall"} View */
 
 const VIEW_OPTIONS = [
   { value: "official", label: "공식 랭킹" },
   { value: "item", label: "아이템" },
-  { value: "spec", label: "스펙" }
+  { value: "spec", label: "스펙" },
+  { value: "hall", label: "명예의 전당" }
 ];
 
 /** @returns {View} */
 function readView() {
+  // 예전 주소 /hall 도 명예의 전당으로 연다.
+  if (/\/hall\/?$/.test(window.location.pathname)) return "hall";
   const view = new URLSearchParams(window.location.search).get("view");
-  return view === "item" || view === "spec" ? view : "official";
+  return view === "item" || view === "spec" || view === "hall" ? view : "official";
 }
 
 /** @param {{ view: View, onView: (view: View) => void }} props */
@@ -477,11 +481,36 @@ export function Ranking() {
   }, []);
   const onView = (/** @type {View} */ next) => {
     if (next === view) return;
-    const url = next === "official" ? "/ranking" : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
+    const url = next === "official" ? "/ranking" : next === "hall" ? urls.hall : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
     window.history.pushState(null, "", url);
     setView(next);
   };
-  return view === "official" ? <OfficialRanking onView={onView} /> : <CollectedRanking key={view} view={view} onView={onView} />;
+  if (view === "official") return <OfficialRanking onView={onView} />;
+  if (view === "hall") return <HallRanking onView={onView} />;
+  return <CollectedRanking key={view} view={view} onView={onView} />;
+}
+
+/** @param {{ onView: (view: View) => void }} props */
+function HallRanking({ onView }) {
+  useEffect(() => {
+    document.title = "명예의 전당 · 메이플M 플러스";
+  }, []);
+  return (
+    <div class="rk">
+      <header class="page-head page-head--rank tone-gold">
+        <Aurora tone="dusk" />
+        <Particles count={14} />
+        <span class="page-head__icon" aria-hidden="true">
+          <Icon name="crown" size={28} />
+        </span>
+        <h1 class="page-head__title display">
+          <SplitText text="명예의 전당" />
+        </h1>
+      </header>
+      <ViewSwitch view="hall" onView={onView} />
+      <HallRecords />
+    </div>
+  );
 }
 
 /** @param {{ onView: (view: View) => void }} props */

@@ -1,10 +1,11 @@
-// 명예의 전당(/hall): 사이트가 모은 캐릭터·장비 중 기록 — 전투력, 템환산, 무기 잠재·에디 대미지, 무기·장신구 추옵,
-// 최종 대미지 추옵 한 줄, 무기 템환산. 기록마다 위 10명(캐릭터마다 한 줄, 같은 값은 같은 순위).
+// 명예의 전당(랭킹 › 명예의 전당, /ranking?view=hall · /hall): 사이트가 모은 캐릭터·장비 중 기록 — 전투력, 템환산,
+// 무기 잠재·에디 대미지, 무기·장신구 추옵, 최종 대미지 추옵(한 장비 합), 무기 템환산. 기록마다 위 10명(캐릭터마다 한 줄,
+// 같은 값은 같은 순위). 머리와 랭킹 종류 전환은 Ranking.jsx 가 그린다.
 import "../styles/hall.css";
 import { useEffect, useState } from "preact/hooks";
 import { CollectedNote } from "../components/CollectedNote.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, Reveal, SplitText } from "../components/Motion.jsx";
+import { Reveal } from "../components/Motion.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
 import { ErrorState } from "../components/States.jsx";
 import { getJson, toApiError } from "../lib/api.js";
@@ -63,7 +64,8 @@ function RecordCard({ record, delay }) {
   );
 }
 
-export function HallOfFame() {
+/** 기록 카드 목록(랭킹 화면의 "명예의 전당" 보기). */
+export function HallRecords() {
   const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", data?: any, error?: any }} */ ({ status: "loading" }));
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -84,16 +86,7 @@ export function HallOfFame() {
   const records = (state.data?.records || []).filter((record) => record.rows.length);
 
   return (
-    <div class="hall">
-      <header class="page-head page-head--rank tone-sky">
-        <Aurora tone="dusk" />
-        <span class="page-head__icon" aria-hidden="true">
-          <Icon name="crown" size={28} />
-        </span>
-        <h1 class="page-head__title display">
-          <SplitText text="명예의 전당" />
-        </h1>
-      </header>
+    <>
       <CollectedNote />
       {state.status === "loading" ? <Skeleton height={640} radius={20} /> : null}
       {state.status === "error" ? (
@@ -106,6 +99,6 @@ export function HallOfFame() {
           ))}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

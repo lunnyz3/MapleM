@@ -119,6 +119,15 @@ const ICONS = {
     </>
   ),
   x: <path d="M6.75 6.75l10.5 10.5M17.25 6.75 6.75 17.25" />,
+  menu: <path d="M4.75 7h14.5M4.75 12h14.5M4.75 17h14.5" />,
+  chart: (
+    <>
+      <path d="M4.75 19.25h14.5" />
+      <rect x="6" y="11" width="3" height="5.75" rx="1" />
+      <rect x="10.5" y="6.5" width="3" height="10.25" rx="1" />
+      <rect x="15" y="9" width="3" height="7.75" rx="1" />
+    </>
+  ),
   chevronDown: <path d="m6.75 9.5 5.25 5.25 5.25-5.25" />,
   chevronRight: <path d="m9.5 6.75 5.25 5.25-5.25 5.25" />,
   arrowRight: (

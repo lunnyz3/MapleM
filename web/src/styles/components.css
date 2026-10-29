@@ -234,6 +234,16 @@
     text-decoration: none;
   }
 
+  button.tabbar__item {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-12);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
   .tabbar__item:active {
     background: var(--surface-soft);
   }
@@ -249,6 +259,129 @@
     background: var(--primary-soft);
     box-sizing: content-box;
   }
+}
+
+/* 모바일 전체 메뉴(하단 탭바 "전체") */
+.allmenu {
+  display: grid;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-2);
+}
+
+.allmenu__group {
+  display: grid;
+  gap: 8px;
+}
+
+.allmenu__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.allmenu__title {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.allmenu__title .icon {
+  color: var(--primary);
+}
+
+.allmenu__more {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.allmenu__links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.allmenu__link {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  word-break: keep-all;
+}
+
+.allmenu__link:active {
+  background: var(--surface-soft);
+}
+
+.allmenu__link--saved {
+  flex-direction: column;
+  gap: 0;
+}
+
+.allmenu__link--saved .icon {
+  color: var(--danger);
+}
+
+.allmenu__link--saved span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.allmenu__link--saved small {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.allmenu__empty {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-14);
+}
+
+.allmenu__singles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.allmenu__single {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.allmenu__single .icon {
+  color: var(--primary);
+}
+
+.allmenu__single.is-bot {
+  background: linear-gradient(120deg, rgba(255, 211, 110, 0.35), var(--surface-soft));
 }
 
 /* 푸터: 데이터 출처 한 줄 */

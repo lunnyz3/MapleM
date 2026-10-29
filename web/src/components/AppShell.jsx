@@ -1,12 +1,15 @@
+import { useState } from "preact/hooks";
 import { CALC_VIEWS, RANKING_TYPES, urls } from "../lib/game.js";
+import { entryKey, useSaved } from "../lib/storage.js";
 import { useTheme } from "../lib/theme.js";
 import { BrandMark } from "./Decor.jsx";
 import { Icon } from "./Icon.jsx";
 import { requestSearchFocus } from "./SearchBox.jsx";
+import { Sheet } from "./Sheet.jsx";
 import { ToastHost } from "./Toast.jsx";
 
 /**
- * @typedef {"home" | "ranking" | "guild" | "my" | ""} NavKey
+ * @typedef {"home" | "ranking" | "guild" | "compare" | "stats" | "calc" | "bot" | "my" | ""} NavKey
  */
 
 /** 상단 메뉴. 새 화면이 없는 메뉴는 기존 화면으로 연결한다. */
@@ -16,6 +19,7 @@ const NAV = [
   {
     key: "ranking",
     label: "랭킹",
+    icon: "trophy",
     href: urls.ranking("level"),
     children: [
       ...RANKING_TYPES.filter((type) => type.subject !== "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) })),
@@ -27,16 +31,18 @@ const NAV = [
   {
     key: "guild",
     label: "길드",
+    icon: "flag",
     href: urls.guildSearch,
     children: [
       { label: "길드 검색", href: urls.guildSearch },
       ...RANKING_TYPES.filter((type) => type.subject === "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) }))
     ]
   },
-  { key: "compare", label: "비교", href: urls.compare() },
+  { key: "compare", label: "비교", icon: "swords", href: urls.compare() },
   {
     key: "stats",
     label: "통계",
+    icon: "chart",
     href: urls.stats,
     children: [
       { label: "직업별 전투력", href: "/stats" },
@@ -44,18 +50,92 @@ const NAV = [
       { label: "레벨 분포", href: "/stats?view=level" }
     ]
   },
-  { key: "calc", label: "계산기", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },
-  { key: "bot", label: "카톡 봇", href: urls.bot, highlight: true }
+  { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },
+  { key: "bot", label: "카톡 봇", icon: "chat", href: urls.bot, highlight: true }
 ];
 
-/** 모바일 하단 탭바 */
+/** 모바일 하단 탭바(마지막 "전체"는 모든 메뉴를 담은 시트를 연다) */
 const TABS = [
   { key: "home", label: "홈", icon: "home", href: urls.home },
   { key: "ranking", label: "랭킹", icon: "trophy", href: urls.ranking("level") },
-  { key: "guild", label: "길드", icon: "flag", href: urls.guildSearch },
-  { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc },
-  { key: "my", label: "내 캐릭터", icon: "heart", href: `${urls.home}#my` }
+  { key: "stats", label: "통계", icon: "chart", href: urls.stats },
+  { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc }
 ];
+const TAB_KEYS = new Set(TABS.map((tab) => tab.key));
+
+/** 즐겨찾기·최근 본 캐릭터(길드) 주소 */
+const savedHref = (/** @type {{ kind: string, world: string, name: string }} */ entry) =>
+  entry.kind === "guild" ? urls.guild(entry.world, entry.name) : urls.character(entry.world, entry.name);
+
+/**
+ * 모바일 전체 메뉴: 내 캐릭터(즐겨찾기 먼저, 최근 본 순) + 상단 메뉴 전체(하위 메뉴 포함).
+ * @param {{ open: boolean, onClose: () => void }} props
+ */
+function AllMenu({ open, onClose }) {
+  const { recent, favorites } = useSaved();
+  const seen = new Set();
+  const mine = [...favorites.map((entry) => ({ ...entry, favorite: true })), ...recent]
+    .filter((entry) => !seen.has(entryKey(entry)) && seen.add(entryKey(entry)))
+    .slice(0, 6);
+  const groups = NAV.filter((item) => item.children);
+  const singles = NAV.filter((item) => !item.children && item.key !== "home");
+  return (
+    <Sheet open={open} title="전체 메뉴" onClose={onClose} class="allmenu-sheet">
+      <div class="allmenu">
+        <section class="allmenu__group">
+          <div class="allmenu__head">
+            <span class="allmenu__title">
+              <Icon name="heart" size={18} />
+              내 캐릭터
+            </span>
+            <a class="allmenu__more" href={`${urls.home}#my`} onClick={onClose}>
+              전체 보기
+            </a>
+          </div>
+          {mine.length ? (
+            <div class="allmenu__links">
+              {mine.map((entry) => (
+                <a key={entryKey(entry)} class="allmenu__link allmenu__link--saved" href={savedHref(entry)} onClick={onClose}>
+                  {entry.favorite ? <Icon name="heart" size={14} filled /> : null}
+                  <span>{entry.name}</span>
+                  <small>{entry.world}</small>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p class="allmenu__empty">즐겨찾기하거나 검색한 캐릭터가 여기에 나와요.</p>
+          )}
+        </section>
+        {groups.map((item) => (
+          <section key={item.key} class="allmenu__group">
+            <div class="allmenu__head">
+              <a class="allmenu__title" href={item.href} onClick={onClose}>
+                <Icon name={item.icon} size={18} />
+                {item.label}
+              </a>
+            </div>
+            <div class="allmenu__links">
+              {item.children.map((child) => (
+                <a key={child.href} class="allmenu__link" href={child.href} onClick={onClose}>
+                  {child.label}
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+        <div class="allmenu__singles">
+          {singles.map((item) => (
+            <a key={item.key} class={`allmenu__single${item.highlight ? " is-bot" : ""}`} href={item.href} onClick={onClose}>
+              <Icon name={item.icon} size={20} />
+              {item.label}
+              {item.highlight ? <span class="topnav__free">무료</span> : null}
+            </a>
+          ))}
+        </div>
+      </div>
+    </Sheet>
+  );
+}
 
 function ThemeToggle() {
   const [theme, toggle] = useTheme();
@@ -100,6 +180,7 @@ function SiteFooter() {
  * @param {{ current?: NavKey, children?: any }} props
  */
 export function AppShell({ current = "", children }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div class="shell">
       <a class="skip-link" href="#main">
@@ -159,11 +240,23 @@ export function AppShell({ current = "", children }) {
       <nav class="tabbar" aria-label="하단 메뉴">
         {TABS.map((tab) => (
           <a key={tab.key} class="tabbar__item" href={tab.href} aria-current={tab.key === current ? "page" : undefined}>
-            <Icon name={tab.icon} size={22} filled={tab.key === current && tab.icon === "heart"} />
+            <Icon name={tab.icon} size={22} />
             <span>{tab.label}</span>
           </a>
         ))}
+        <button
+          type="button"
+          class="tabbar__item"
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen ? "true" : "false"}
+          aria-current={menuOpen || (current && !TAB_KEYS.has(current)) ? "page" : undefined}
+          onClick={() => setMenuOpen(true)}
+        >
+          <Icon name="menu" size={22} />
+          <span>전체</span>
+        </button>
       </nav>
+      <AllMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }
