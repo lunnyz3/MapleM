@@ -426,6 +426,11 @@
   overflow-x: auto;
 }
 
+.calc-table--nowrap th,
+.calc-table--nowrap td {
+  white-space: nowrap;
+}
+
 .calc-table tr.is-muted td {
   color: var(--text-subtle);
   opacity: 0.6;

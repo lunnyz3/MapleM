@@ -5,7 +5,17 @@ import { useMemo, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
 import { Segmented } from "../../components/Tabs.jsx";
 import { toast } from "../../components/Toast.jsx";
-import { emblemCost, guildAbilityCost, polishTable, simulateStarforce, starforceExpectation, starforceOdds, transferCost } from "../../lib/enhanceCalc.mjs";
+import {
+  emblemCost,
+  guildAbilityCost,
+  polishLuck,
+  polishTable,
+  simulatePolish,
+  simulateStarforce,
+  starforceExpectation,
+  starforceOdds,
+  transferCost
+} from "../../lib/enhanceCalc.mjs";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 import { copyText } from "../../lib/share.js";
 
@@ -326,10 +336,29 @@ const MVP_LABELS = {
 };
 
 export function PolishCalc() {
-  const [track, setTrack] = useState(/** @type {"other" | "belt"} */ ("other"));
+  const [track, setTrack] = useState(/** @type {"other" | "badge" | "belt"} */ ("other"));
   const [mvp, setMvp] = useState("일반");
-  const rows = useMemo(() => polishTable(rules, track, rules.polish.mvpDiscount[mvp] || 0), [track, mvp]);
-  const last = rows[rows.length - 1];
+  const [from, setFrom] = useState(0);
+  const [to, setTo] = useState(10);
+  const [runs, setRuns] = useState(/** @type {any[]} */ ([]));
+  const discount = rules.polish.mvpDiscount[mvp] || 0;
+  const rows = useMemo(() => polishTable(rules, track, discount), [track, mvp]);
+  const maxLevel = rows.length;
+  const goal = Math.min(Math.max(to, from + 1), maxLevel);
+  const counted = rows.filter((row) => row.level > from && row.level <= goal);
+  const total = counted.reduce((sum, row) => ({ meso: sum.meso + row.meso, material: sum.material + row.material }), { meso: 0, material: 0 });
+  const pickTrack = (/** @type {"other" | "badge" | "belt"} */ next) => {
+    const levels = rules.polish.tracks[next].probability.length;
+    setTrack(next);
+    setFrom(Math.min(from, levels - 1));
+    setTo(levels);
+    setRuns([]);
+  };
+  const roll = () => {
+    const run = simulatePolish(rules, track, from, goal, discount);
+    const luck = polishLuck(rules, track, from, goal, run.material);
+    setRuns([{ ...run, luck, goal, id: Date.now() + Math.random() }, ...runs].slice(0, 6));
+  };
 
   return (
     <div class="calc-grid">
@@ -340,25 +369,48 @@ export function PolishCalc() {
             name="polish-track"
             legend="장비"
             value={track}
-            onChange={(next) => setTrack(/** @type {"other" | "belt"} */ (next))}
+            onChange={(next) => pickTrack(/** @type {"other" | "badge" | "belt"} */ (next))}
             options={[
               { value: "other", label: "루컨마·마깃안·마도서·미트라" },
+              { value: "badge", label: "창세의 뱃지" },
               { value: "belt", label: "몽환의 벨트" }
             ]}
           />
         </div>
-        <SelectField
-          id="polish-mvp"
-          label="MVP 할인"
-          value={mvp}
-          options={Object.entries(MVP_LABELS).map(([value, label]) => ({
-            value,
-            label
-          }))}
-          onChange={setMvp}
-        />
+        <div class="calc-income">
+          <SelectField
+            id="polish-from"
+            label="지금"
+            value={from}
+            options={range(0, maxLevel - 1).map((level) => ({ value: level, label: `Lv.${level}` }))}
+            onChange={(value) => {
+              setFrom(Number(value));
+              setRuns([]);
+            }}
+          />
+          <SelectField
+            id="polish-to"
+            label="목표"
+            value={goal}
+            options={range(from + 1, maxLevel).map((level) => ({ value: level, label: `Lv.${level}` }))}
+            onChange={(value) => {
+              setTo(Number(value));
+              setRuns([]);
+            }}
+          />
+          <SelectField
+            id="polish-mvp"
+            label="MVP 할인"
+            value={mvp}
+            options={Object.entries(MVP_LABELS).map(([value, label]) => ({
+              value,
+              label
+            }))}
+            onChange={setMvp}
+          />
+        </div>
         <div class="calc-table-wrap">
-          <table class="calc-table">
+          <table class="calc-table calc-table--nowrap">
             <thead>
               <tr>
                 <th scope="col">단계</th>
@@ -371,7 +423,7 @@ export function PolishCalc() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.level}>
+                <tr key={row.level} class={row.level > from && row.level <= goal ? "" : "is-muted"}>
                   <td class="num">Lv.{row.level}</td>
                   <td class="num">{pct(row.probability * 100)}</td>
                   <td class="num">{meso(row.cost)}</td>
@@ -388,15 +440,32 @@ export function PolishCalc() {
       <section class="card calc-card calc-result">
         <h2 class="calc-card__title">결과</h2>
         <p class="calc-big display num">
-          {meso(last.mesoSum)}
-          <span class="calc-big__note">Lv.{last.level}까지 평균 메소</span>
+          {meso(total.meso)}
+          <span class="calc-big__note">
+            Lv.{from} → Lv.{goal} 평균 메소
+          </span>
         </p>
         <dl class="calc-sum">
           <div>
             <dt>평균 재료</dt>
-            <dd class="num">{formatDecimal(last.materialSum, 1)}개</dd>
+            <dd class="num">{formatDecimal(total.material, 1)}개</dd>
           </div>
         </dl>
+        <button type="button" class="btn btn--primary" onClick={roll}>
+          <Icon name="sparkle" size={18} />한 번 돌려 보기
+        </button>
+        {runs.length ? (
+          <ol class="calc-runs">
+            {runs.map((run) => (
+              <li key={run.id} class={run.luck <= 0.5 ? "is-good" : "is-bad"}>
+                <strong class="num">상위 {pct(Math.max(run.luck, 0.001) * 100, run.luck < 0.01 ? 1 : 0)}</strong>
+                <span class="num">
+                  {formatComma(run.tries)}회 · 재료 {formatComma(run.material)}개 · {meso(run.meso)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : null}
       </section>
     </div>
   );

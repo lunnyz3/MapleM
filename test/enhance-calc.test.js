@@ -82,3 +82,18 @@ test("스타포스: 장신구(최대 10성)는 연마 표 확률, 실패하면 �
   const { starforceOdds } = await load();
   assert.deepEqual(starforceOdds(rules, 0, { accessory: true, lucky: 10 }), { success: 70, stay: 30, drop: 0, destroy: 0 });
 });
+
+test("장신구 연마 돌려 보기: 성공할 때까지 시도, 내 운은 같은 목표를 돌려 재료를 덜 쓴 비율", async () => {
+  const { simulatePolish, polishLuck } = await load();
+  const always = () => 0;
+  assert.deepEqual(simulatePolish(rules, "badge", 0, 3, 0, always), { tries: 3, material: 3, meso: 4800000 + 6720000 + 9408000 });
+  // 미트라(기타)는 Lv.5부터 2개
+  assert.equal(simulatePolish(rules, "other", 4, 6, 0, always).material, 1 + 2);
+  assert.equal(rules.polish.tracks.badge.probability.length, 10);
+  assert.equal(polishLuck(rules, "badge", 0, 1, 1, 200, always), 1, "한 번에 성공하면 모두 1개");
+  let seed = 7;
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const lucky = polishLuck(rules, "badge", 0, 10, 60, 500, random);
+  const unlucky = polishLuck(rules, "badge", 0, 10, 600, 500, random);
+  assert.ok(lucky < 0.2 && unlucky > 0.9, `${lucky} ${unlucky}`);
+});

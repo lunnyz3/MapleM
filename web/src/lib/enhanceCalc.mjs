@@ -126,7 +126,7 @@ export function emblemCost(rules, { markPriceMan, krwPerEok, lv1PriceEok, target
 
 /**
  * 장신구 연마: 단계마다 1회 비용(MVP 할인), 기대 메소·재료, 누적.
- * @param {"other" | "belt"} track @param {number} discount 0~1
+ * @param {"other" | "badge" | "belt"} track @param {number} discount 0~1
  */
 export function polishTable(rules, track, discount = 0) {
   const data = rules.polish.tracks[track];
@@ -140,6 +140,34 @@ export function polishTable(rules, track, discount = 0) {
     materialSum += material;
     return { level: index + 1, probability, cost, meso, material, materialPerTry: data.materialPerTry[index], mesoSum, materialSum };
   });
+}
+
+/**
+ * 장신구 연마 한 번 돌려 보기: Lv.from → Lv.to 까지 성공할 때까지 시도(실패해도 단계 유지).
+ * @returns {{ tries: number, material: number, meso: number }}
+ */
+export function simulatePolish(rules, track, from, to, discount = 0, random = Math.random) {
+  const data = rules.polish.tracks[track];
+  let tries = 0;
+  let material = 0;
+  let meso = 0;
+  for (let level = from; level < to; ) {
+    tries += 1;
+    material += data.materialPerTry[level];
+    meso += Math.floor(data.meso[level] * (1 - discount));
+    if (random() < data.probability[level]) level += 1;
+  }
+  return { tries, material, meso };
+}
+
+/**
+ * 내 운: 같은 목표를 samples 번 돌려 재료를 내 재료 이하로 쓴 비율(작을수록 운이 좋다 = 상위 %).
+ * @returns {number} 0~1
+ */
+export function polishLuck(rules, track, from, to, material, samples = 2000, random = Math.random) {
+  let atMost = 0;
+  for (let index = 0; index < samples; index += 1) if (simulatePolish(rules, track, from, to, 0, random).material <= material) atMost += 1;
+  return atMost / samples;
 }
 
 /**
