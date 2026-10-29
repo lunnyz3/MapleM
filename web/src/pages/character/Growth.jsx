@@ -1,4 +1,4 @@
-// 내실 탭: 영역마다 완성도와 "다 채우면 전투력 +얼마". 영역 표·스탯 차이는 서버(tabs.growth), 전투력 계산과
+// 내실 탭: 영역마다 완성도와 "최대로 키우면 전투력 +얼마". 영역 표·스탯 차이는 서버(tabs.growth), 전투력 계산과
 // 링크 영역(전투력 기준 링크 추천, 최대 레벨)은 화면에서 한다. 맨 위 합계는 모든 영역을 한꺼번에 넣은 값.
 import { useMemo } from "preact/hooks";
 import linkData from "../../../../src/game-data/link-skills.json";
@@ -99,9 +99,9 @@ export function GrowthTab({ data, majorStats, attackType, linkSkills, className,
     <div class="growth">
       <section class="growth-head">
         <p class="growth-head__count">
-          <strong class="num">{summary.count}</strong>곳 중 <strong class="num">{summary.doneCount}</strong>곳 다 채움
+          <strong class="num">{summary.doneCount}</strong> / {summary.count} 항목 최대
         </p>
-        <p class="growth-head__gain display num">{summary.gain > 0.5 ? `전투력 ${gainText(summary.gain, summary.ratio)}` : "모두 다 채웠어요"}</p>
+        <p class="growth-head__gain display num">{summary.gain > 0.5 ? `최대로 키우면 전투력 ${gainText(summary.gain, summary.ratio)}` : "모든 항목이 최대예요"}</p>
       </section>
 
       {summary.rows.length ? (
@@ -126,8 +126,8 @@ export function GrowthTab({ data, majorStats, attackType, linkSkills, className,
       ) : null}
 
       {summary.done.length ? (
-        <section class="growth-done" aria-label="다 채운 곳">
-          <h3 class="sub-title">다 채운 곳</h3>
+        <section class="growth-done" aria-label="최대 달성">
+          <h3 class="sub-title">최대 달성</h3>
           <ul class="growth-done__list">
             {summary.done.map((row) => (
               <li key={row.id} class="badge">

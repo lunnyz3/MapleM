@@ -301,8 +301,8 @@ export function Equipment({ data, world, mode, presetNo }) {
   // 공유 문구가 장비 순위를 찾을 수 있게 ocid 를 함께 넘긴다.
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
   const [captionOn, setCaptionOn] = useShareCaption();
-  // 장비 시트에서 "옵션 바꿔 보기"를 눌렀는지(다른 장비를 열면 닫는다).
-  // 장비 시트 안의 체험: "" | "whatif"(옵션 바꿔 보기) | "cube"(큐브 돌려 보기)
+  // 장비 시트에서 "옵션 넣어 보기"를 눌렀는지(다른 장비를 열면 닫는다).
+  // 장비 시트 안의 체험: "" | "whatif"(옵션 넣어 보기) | "cube"(큐브 돌려 보기)
   const [trial, setTrial] = useState("");
   useEffect(() => setTrial(""), [sheetItem]);
   useEffect(() => {
@@ -536,7 +536,7 @@ export function Equipment({ data, world, mode, presetNo }) {
             <span class="eq-trials">
               <button type="button" class="btn btn--secondary btn--sm eq-whatif-open" onClick={() => setTrial("whatif")}>
                 <Icon name="sparkle" size={16} />
-                옵션 바꿔 보기
+                옵션 넣어 보기
               </button>
               <button type="button" class="btn btn--secondary btn--sm eq-cube-open" onClick={() => setTrial("cube")}>
                 <Icon name="refresh" size={16} />

@@ -1,4 +1,4 @@
-// 기록 탭: 캐릭터 정보(생성일·최근 접속) · 최고 기록 · 성장 일지(날짜별 전투력·템환산과 바뀐 장비).
+// 기록 탭: 캐릭터 정보(생성일·최근 접속) · 최고 기록 · 날짜별 기록(날짜별 전투력·템환산과 바뀐 장비).
 // 최고 기록과 일지는 사이트 조회·매일 수집 때마다 서버가 남긴 값(/api/v2/character-record).
 import { useEffect, useId, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
@@ -308,7 +308,7 @@ function GrowthJournal({ journal, since }) {
     <section class="sect rec-journal">
       <div class="rec-journal__head">
         <h3 class="sub-title">
-          성장 일지
+          날짜별 기록
           {since ? <span class="sub-title__note">{formatDateDot(since)}부터</span> : null}
         </h3>
         <div class="rec-journal__controls">
