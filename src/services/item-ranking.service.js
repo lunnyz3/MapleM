@@ -233,11 +233,37 @@ async function countItemGroups({ slot, worldName }) {
 }
 
 /** One page of the item ranking. `sort` is "score" (문장 포함) or "scoreWithoutEmblem". Only ranked families. */
-async function listItemRanking({ slot, family, worldName, sort = "score", page = 1 } = {}) {
+// 조건 검색에 쓰는 옵션 묶음 → 넥슨 응답 필드, 고를 수 있는 옵션 이름
+const CONDITION_SECTIONS = Object.freeze({
+  potential: "item_potential_option",
+  additionalPotential: "item_additional_potential_option",
+  additional: "item_additional_option"
+});
+const CONDITION_OPTIONS = Object.freeze(["보스 공격력", "물리 대미지", "마법 대미지", "최종 대미지", "방어율 무시", "치명타 피해", "물리 공격력", "마법 공격력", "최대 대미지"]);
+
+/**
+ * 조건(스타포스 이상, 잠재·에디·추옵에 그 옵션이 몇 줄 이상)을 Mongo 조건으로. 쓸 수 없는 값은 버린다.
+ * @param {{ minStar?: number, section?: string, option?: string, lines?: number }} condition
+ */
+function conditionFilter({ minStar, section, option, lines } = {}) {
+  const filter = {};
+  const star = Math.floor(Number(minStar));
+  if (star > 0 && star <= 40) filter.starforce = { $gte: star };
+  const field = CONDITION_SECTIONS[section];
+  const count = Math.max(1, Math.min(3, Math.floor(Number(lines)) || 1));
+  if (field && CONDITION_OPTIONS.includes(option)) {
+    filter.$expr = {
+      $gte: [{ $size: { $filter: { input: { $ifNull: [`$item.${field}`, []] }, cond: { $eq: ["$$this.option_name", option] } } } }, count]
+    };
+  }
+  return filter;
+}
+
+async function listItemRanking({ slot, family, worldName, sort = "score", page = 1, condition = {} } = {}) {
   const field = sort === "scoreWithoutEmblem" ? "scoreWithoutEmblem" : "score";
   const current = pageOf(page);
   if (!slot || !isMongoConnected()) return { rows: [], total: 0, page: current, pageSize: PAGE_SIZE, sort: field };
-  const filter = { slot, family: family || { $ne: "" }, scoreVersion: SCORE_VERSION };
+  const filter = { slot, family: family || { $ne: "" }, scoreVersion: SCORE_VERSION, ...conditionFilter(condition) };
   if (worldName) filter.worldName = worldName;
   const [rows, total] = await Promise.all([
     EquipmentItem.find(filter)
@@ -342,6 +368,8 @@ async function collectionSummary() {
 }
 
 module.exports = {
+  conditionFilter,
+  CONDITION_OPTIONS,
   collectionSummary,
   rankSpec,
   findSpecs,

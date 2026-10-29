@@ -403,6 +403,10 @@ function readCollectedQuery() {
     world: WORLDS.includes(worldParam) ? worldParam : "",
     page: Math.max(1, Math.min(500, Math.floor(Number(params.get("page")) || 1))),
     noEmblem: params.get("emblem") === "without",
+    star: Math.max(0, Math.min(40, Math.floor(Number(params.get("star")) || 0))),
+    section: String(params.get("section") || "").slice(0, 30),
+    option: String(params.get("option") || "").slice(0, 20),
+    lines: Math.max(1, Math.min(3, Math.floor(Number(params.get("lines")) || 1))),
     metric: SPEC_METRICS.some((entry) => entry.id === metric) ? metric : SPEC_METRICS[0].id
   };
 }
@@ -414,6 +418,12 @@ function collectedUrl(view, query) {
     params.set("slot", query.slot);
     if (query.family) params.set("family", query.family);
     if (query.noEmblem) params.set("emblem", "without");
+    if (query.star) params.set("star", String(query.star));
+    if (query.section && query.option) {
+      params.set("section", query.section);
+      params.set("option", query.option);
+      if (query.lines > 1) params.set("lines", String(query.lines));
+    }
   } else {
     params.set("metric", query.metric);
   }

@@ -258,3 +258,19 @@
   background: var(--gold-bg, rgba(245, 165, 36, 0.16));
   color: var(--gold-ink, #8a5a00);
 }
+
+/* 아이템 랭킹 조건 */
+.crk-conds {
+  align-items: center;
+}
+
+.crk-conds__label {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.crk-conds .select {
+  width: auto;
+  min-width: 7.5em;
+}

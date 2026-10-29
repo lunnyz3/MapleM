@@ -229,3 +229,15 @@ test("변경 이력: 시간순 기록에서 닉네임·길드·직업이 바뀐 
     ["name:가>나", "guild:A>B", "class:비숍>아크메이지(썬,콜)"]
   );
 });
+
+test("아이템 랭킹 조건: 스타포스 이상과 잠재·에디·추옵 옵션 줄 수, 모르는 값은 버린다", () => {
+  const { conditionFilter } = require("../src/services/item-ranking.service");
+  assert.deepEqual(conditionFilter({}), {});
+  assert.deepEqual(conditionFilter({ minStar: "35" }), { starforce: { $gte: 35 } });
+  const filter = conditionFilter({ section: "potential", option: "보스 공격력", lines: "3" });
+  assert.deepEqual(filter.$expr.$gte[1], 3);
+  assert.equal(filter.$expr.$gte[0].$size.$filter.input.$ifNull[0], "$item.item_potential_option");
+  assert.deepEqual(conditionFilter({ section: "potential", option: "$where" }), {}, "목록에 없는 옵션");
+  assert.deepEqual(conditionFilter({ section: "x", option: "보스 공격력" }), {});
+  assert.deepEqual(conditionFilter({ minStar: "999" }), {});
+});

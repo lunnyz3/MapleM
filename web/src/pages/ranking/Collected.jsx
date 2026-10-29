@@ -150,8 +150,68 @@ function Owner({ row }) {
   );
 }
 
+const CONDITION_SECTIONS = [
+  { value: "", label: "옵션 조건 없음" },
+  { value: "potential", label: "잠재능력" },
+  { value: "additionalPotential", label: "에디셔널" },
+  { value: "additional", label: "추가 옵션" }
+];
+const CONDITION_OPTIONS = ["보스 공격력", "물리 대미지", "마법 대미지", "최종 대미지", "방어율 무시", "치명타 피해", "물리 공격력", "마법 공격력", "최대 대미지"];
+
+/** @param {{ label: string, value: string | number, options: Array<{ value: string | number, label: string }>, onChange: (value: string) => void, disabled?: boolean }} props */
+function MiniSelect({ label, value, options, onChange, disabled = false }) {
+  return (
+    <span class="select select--sm">
+      <select aria-label={label} value={value} disabled={disabled} onChange={(event) => onChange(/** @type {HTMLSelectElement} */ (event.currentTarget).value)}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <Icon name="chevronDown" size={16} class="select__icon" />
+    </span>
+  );
+}
+
 /**
- * @typedef {{ slot: string, family: string, world: string, page: number, noEmblem: boolean }} ItemQuery
+ * 조건: 스타포스 이상, 잠재·에디·추옵에 그 옵션이 몇 줄 이상.
+ * @param {{ query: ItemQuery, onQuery: (patch: Partial<ItemQuery>) => void }} props
+ */
+function ConditionRow({ query, onQuery }) {
+  const on = Boolean(query.section);
+  return (
+    <div class="crk-filters__row crk-conds" role="group" aria-label="조건">
+      <span class="crk-conds__label">조건</span>
+      <MiniSelect
+        label="스타포스"
+        value={query.star || 0}
+        options={[0, 25, 30, 35].map((value) => ({ value, label: value ? `★${value} 이상` : "스타포스 전체" }))}
+        onChange={(value) => onQuery({ star: Number(value), page: 1 })}
+      />
+      <MiniSelect
+        label="옵션 묶음"
+        value={query.section || ""}
+        options={CONDITION_SECTIONS}
+        onChange={(value) => onQuery({ section: value, option: value ? query.option || CONDITION_OPTIONS[0] : "", page: 1 })}
+      />
+      {on ? (
+        <>
+          <MiniSelect label="옵션" value={query.option || CONDITION_OPTIONS[0]} options={CONDITION_OPTIONS.map((value) => ({ value, label: value }))} onChange={(value) => onQuery({ option: value, page: 1 })} />
+          <MiniSelect
+            label="줄 수"
+            value={query.lines || 1}
+            options={[1, 2, 3].map((value) => ({ value, label: `${value}줄 이상` }))}
+            onChange={(value) => onQuery({ lines: Number(value), page: 1 })}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * @typedef {{ slot: string, family: string, world: string, page: number, noEmblem: boolean, star: number, section: string, option: string, lines: number }} ItemQuery
  * @param {{ query: ItemQuery, onQuery: (patch: Partial<ItemQuery>) => void }} props
  */
 export function ItemRanking({ query, onQuery }) {
@@ -177,6 +237,12 @@ export function ItemRanking({ query, onQuery }) {
   const listParams = new URLSearchParams({ slot, family, page: String(query.page) });
   if (query.world) listParams.set("world_name", query.world);
   if (query.noEmblem) listParams.set("sort", "scoreWithoutEmblem");
+  if (query.star) listParams.set("star", String(query.star));
+  if (query.section && query.option) {
+    listParams.set("section", query.section);
+    listParams.set("option", query.option);
+    listParams.set("lines", String(query.lines || 1));
+  }
   // 계열 개수를 받은 뒤에 목록을 불러온다(없는 계열을 먼저 부르지 않게).
   const listUrl = slot && familyState.status !== "loading" ? `/api/v2/item-ranking?${listParams}` : "";
   const list = useJson(listUrl, listUrl);
@@ -218,6 +284,7 @@ export function ItemRanking({ query, onQuery }) {
             ]}
           />
         </div>
+        <ConditionRow query={query} onQuery={onQuery} />
         {isWeapon && weaponTypes.length ? (
           <div class="crk-chips" role="group" aria-label="무기 종류">
             {weaponTypes.map((entry) => (

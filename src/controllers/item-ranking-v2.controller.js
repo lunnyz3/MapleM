@@ -1,7 +1,8 @@
 // v2 item and spec ranking API (data collected from lookups and the daily ranking collection).
 //   GET /api/v2/item-ranks?ocid=                         → { ok, ranks: { [fingerprint]: { rank, total, label, score, scoreWithoutEmblem } } }
 //   GET /api/v2/item-ranking/groups?slot=&world_name=    → { ok, slots: [{ slot, count }], families: [{ family, count }] }
-//   GET /api/v2/item-ranking?slot=&family=&world_name=&sort=&page=
+//   GET /api/v2/item-ranking?slot=&family=&world_name=&sort=&page=&star=&section=&option=&lines=
+//       조건: star = 스타포스 이상, section(potential|additionalPotential|additional)에 option 이 lines 줄 이상
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
 //   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
@@ -86,7 +87,8 @@ async function getItemRanking(req, res) {
       family: text(req.query.family, 80),
       worldName,
       sort: text(req.query.sort),
-      page: req.query.page
+      page: req.query.page,
+      condition: { minStar: req.query.star, section: text(req.query.section), option: text(req.query.option), lines: req.query.lines }
     });
     res.set("Cache-Control", "public, max-age=120");
     return res.json({
