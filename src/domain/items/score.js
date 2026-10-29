@@ -2,13 +2,12 @@
 
 // Item score (템환산): a weighted sum of an item's option values (weights per stat, scaled so a
 // reference item is 500 points). Physical and magical are scored separately and the larger one
-// is kept. Equipment mastery bonuses are taken off first (masteryLines from mastery.js), so the
-// score ranks what was rolled. Rules and weights live in src/game-data/item-score.json.
+// is kept. Values are taken as Nexon reports them, equipment mastery bonuses included (operator
+// decision 2026-10-29). Rules and weights live in src/game-data/item-score.json.
 
 const scoreRules = require("../../game-data/item-score.json");
 const { parseOption, parseStatText } = require("../stats/text");
 const { isMagicJob } = require("../stats/sources/character");
-const { withoutMastery } = require("./mastery");
 
 const WEIGHTS = scoreRules.weights;
 
@@ -33,13 +32,20 @@ function parseLines(list) {
 }
 
 /**
- * Parsed option lines per part: base options (they already include the additional option of the
- * same stat; liberation weapons add 최종 대미지 +10 here), additional options of stats the base
- * options do not have, potentials, soul and emblem.
+ * Parsed option lines per part: base options, additional options, potentials, soul and emblem.
+ * Nexon's base option values already include the additional option of the same stat, so that
+ * amount moves from the base part to the additional part (the total stays the same).
+ * Liberation weapons add 최종 대미지 +10 to the base part.
  */
 function scoredParts(item) {
-  const basic = parseLines(item?.item_basic_option);
-  const basicKeys = new Set(basic.map((entry) => entry.key));
+  const additional = parseLines(item?.item_additional_option);
+  const additionalByKey = new Map();
+  additional.forEach((entry) => {
+    if (Number.isFinite(entry.value)) additionalByKey.set(entry.key, (additionalByKey.get(entry.key) || 0) + entry.value);
+  });
+  const basic = parseLines(item?.item_basic_option).map((entry) =>
+    additionalByKey.has(entry.key) ? { ...entry, value: Math.max(0, entry.value - additionalByKey.get(entry.key)) } : entry
+  );
   const name = String(item?.item_name || "");
   if (scoreRules.liberation.nameIncludes.some((keyword) => name.includes(keyword))) {
     basic.push({ key: "finalDamage", value: scoreRules.liberation.finalDamage });
@@ -48,7 +54,7 @@ function scoredParts(item) {
   const emblem = item?.emblem_info?.emblem_option;
   return {
     basic,
-    additional: parseLines(item?.item_additional_option).filter((entry) => !basicKeys.has(entry.key)),
+    additional,
     potential: parseLines(item?.item_potential_option),
     additionalPotential: parseLines(item?.item_additional_potential_option),
     soul: soul ? parseStatText(soul) : [],
@@ -76,8 +82,8 @@ function round1(value) {
  * @returns {{ score: number, scoreWithoutEmblem: number, hasEmblem: boolean,
  *   parts: { basic: number, additional: number, potential: number, additionalPotential: number, soul: number, emblem: number } }}
  */
-function scoreItem(item, masteryLines = null) {
-  const parts = scoredParts(withoutMastery(item, masteryLines));
+function scoreItem(item) {
+  const parts = scoredParts(item);
   const all = Object.values(parts).flat();
   const side = sideScore(all, "magical") > sideScore(all, "physical") ? "magical" : "physical";
   const points = Object.fromEntries(Object.entries(parts).map(([key, lines]) => [key, round1(sideScore(lines, side))]));

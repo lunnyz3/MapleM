@@ -7,7 +7,6 @@ const crypto = require("crypto");
 const { fillPresetMasteryInfo } = require("../../transform/equipment-mastery");
 const { parseOption } = require("../stats/text");
 const { scoreItem, itemGroup, attackTypeOfItems } = require("./score");
-const { masteryBonusLines } = require("./mastery");
 
 function toArray(value) {
   return Array.isArray(value) ? value : [];
@@ -83,15 +82,8 @@ async function collectCharacterItems(itemData) {
   worn.forEach((item) => add(item, true));
   const presetSets = presets.map((preset) => ({ no: preset.no, items: preset.items, fingerprints: preset.items.map((item) => add(item, false)) }));
   for (const entry of byFingerprint.values()) {
-    let masteryLines = null;
-    try {
-      masteryLines = await masteryBonusLines(entry.item, { attackType, className: data.character_class });
-    } catch {
-      // Unknown split: score the displayed values.
-      masteryLines = null;
-    }
     const group = itemGroup(entry.item);
-    Object.assign(entry, { slot: group.slot, family: group.family, label: group.label, ...scoreItem(entry.item, masteryLines) });
+    Object.assign(entry, { slot: group.slot, family: group.family, label: group.label, ...scoreItem(entry.item) });
   }
   if (!presetSets.length && worn.length) {
     presetSets.push({ no: Number(data.use_preset_no) || 1, items: worn, fingerprints: worn.map(itemFingerprint) });

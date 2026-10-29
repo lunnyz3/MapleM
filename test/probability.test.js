@@ -452,7 +452,7 @@ test("마스터리 표: 공식 출처·확인일·줄당 최대 2개, 근거 없
   for (const url of urls) assert.match(url, /^https:\/\/(?:maplestorym\.nexon\.com|m\.nexon\.com|openapi\.nexon\.com)\//, url);
   assert.equal(table.max_bonus_per_line, 2);
   assert.deepEqual(table.cube, { 레전더리: { percent: 2 }, 유니크: { percent: 1.5 } });
-  assert.deepEqual(table.flame["강력한 환생의 불꽃"], { 치명타확률: 1.5, "최대 HP": 450, "방어율 무시": 1.2 });
+  assert.deepEqual(table.flame["강력한 환생의 불꽃"], { 치명타확률: 1.5, "최대 HP": 450, "방어율 무시": [1.2, 1.0], 물리공격력: 450, 마법공격력: 450, "최종 대미지 증가": 1.5 });
   assert.deepEqual(Object.keys(table.flame_grade), ["2", "3"]);
   for (const flame of Object.keys(table.flame)) {
     for (const option of Object.keys(table.flame[flame])) {
@@ -532,6 +532,32 @@ test("마스터리: 보너스가 줄 수보다 적으면 공식 표에 맞는 �
   const combat = { "마법공격력": ITEM_SCORE_WEIGHTS.attack, "마법대미지": ITEM_SCORE_WEIGHTS.damagePercent, "최종대미지": ITEM_SCORE_WEIGHTS.finalDamage, "방어율무시": ITEM_SCORE_WEIGHTS.ignoreDefense };
   close(result.additionalOptionProbability, flameTopOracle(block, "200", (name) => combat[name] || 0, 5.43 * ITEM_SCORE_WEIGHTS.ignoreDefense), "추가 옵션");
   near(result.additionalOptionPercent, result.additionalOptionProbability * 100, "추가 옵션 %");
+});
+
+test("마스터리: 무기 공격력 추옵 보너스(강력 +450·영원 +600/개)를 빼고 계산해 터무니없는 상위 % 가 나오지 않는다", async () => {
+  const { resolveTopPercentBreakdown } = await importItemShare();
+  // 수집 장비: 아케인셰이드 ESP리미터 강력한 불꽃 마법 공격력 2,212·2,208, 추가 옵션 보너스 4
+  const limiter = {
+    itemName: "아케인셰이드 ESP리미터",
+    slotName: "무기",
+    pageName: "ESP리미터",
+    equipmentLevel: 200,
+    potentialGrade: "",
+    additionalPotentialGrade: "",
+    additionalOptionGrade: "2",
+    potentialOption: [],
+    additionalPotentialOption: [],
+    additionalOption: [{ name: "마법 공격력", value: "2,212" }, { name: "마법 공격력", value: "2,208" }],
+    masteryInfo: { level: 6, basicPoint: 2, potentialPoint: 0, additionalPoint: 4, additionalPotentialPoint: 0 },
+  };
+  const result = await resolveTopPercentBreakdown(limiter, MAGICAL);
+  assert.deepEqual(lineTexts(result.mastery.additional), ["+900", "+900"]);
+  assert.ok(result.additionalOptionProbability > 1e-4, String(result.additionalOptionProbability));
+  // 영원한 불꽃 최종 대미지는 +2%p 와 +1.5%p 가 섞여 있다: 9.0% 보너스 2 → 6.0%(+3.0)
+  const staff = { ...limiter, additionalOptionGrade: "3", additionalOption: [{ name: "최종 대미지", value: "9.00%" }], masteryInfo: { ...limiter.masteryInfo, additionalPoint: 2 } };
+  const mixed = await resolveTopPercentBreakdown(staff, MAGICAL);
+  assert.deepEqual(lineTexts(mixed.mastery.additional), ["+3%"]);
+  assert.ok(mixed.additionalOptionProbability > 1e-4, String(mixed.additionalOptionProbability));
 });
 
 test("마스터리 포인트가 0이면(정보가 있고 기본 옵션에만 넣음) 옵션 값을 그대로 쓴다", async () => {

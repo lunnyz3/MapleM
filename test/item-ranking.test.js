@@ -38,12 +38,15 @@ test("템환산: 스타포스가 다르면(기본 옵션이 다르면) 점수가
   assert.ok(scoreItem(at36).score > scoreItem(at35).score);
 });
 
-test("템환산: 추가 옵션은 같은 스탯이 기본 옵션에 없을 때만 더한다(기본 옵션에 이미 들어 있음)", () => {
+test("템환산: 기본 옵션에 들어 있는 같은 스탯 추가 옵션은 추옵 점수로 옮긴다(합계는 같다)", () => {
   const item = ring({
     item_basic_option: [option("마법 공격력", "1000")],
     item_additional_option: [option("마법 공격력", "300"), option("보스 공격력", "10%")]
   });
-  close(scoreItem(item).score, 1000 * weights.attack + 10 * weights.bossDamage);
+  const result = scoreItem(item);
+  close(result.score, 1000 * weights.attack + 10 * weights.bossDamage);
+  close(result.parts.basic, 700 * weights.attack);
+  close(result.parts.additional, 300 * weights.attack + 10 * weights.bossDamage);
 });
 
 test("템환산: 물리·마법 중 큰 쪽, 제네시스는 최종 대미지 +10, 문장은 문장 포함 점수에만", () => {
@@ -68,20 +71,13 @@ test("템환산: 항목별 점수(기본·추옵·잠재·에디·소울·문장
   assert.equal(result.parts.basic, 0); // 어깨 기본 옵션은 방어력뿐
 });
 
-test("템환산: 장비 마스터리로 오른 값은 빼고 센다(정보가 없어도 확률표로 추정)", async () => {
-  const { masteryBonusLines } = require("../src/domain/items/mastery");
+test("템환산: 장비 마스터리로 오른 값도 넥슨이 준 그대로 센다", () => {
   const data = fixture("유니온-피카츄");
   const shoulder = data.item_equipment.find((item) => item.item_name === "아케인셰이드 메이지숄더");
-  const known = await masteryBonusLines(shoulder, { attackType: "magical", className: data.character_class });
-  assert.deepEqual(known.item_additional_potential_option, [4, 4, 4]);
-  // 정보가 없으면 표에 없는 값만, 표에 들어갈 만큼만 뺀다(장갑 22.70/19.76/22.70 → 18.70/15.76/18.70).
-  const gloves = data.item_equipment.find((item) => item.item_name === "아케인셰이드 메이지글러브");
-  const inferred = await masteryBonusLines({ ...gloves, mastery_info: null }, { attackType: "magical", className: data.character_class });
-  assert.deepEqual(inferred.item_potential_option, [4, 4, 4]);
-  // 마법 대미지 12% 만큼(3줄 × 4%) 낮아진다.
-  close(scoreItem(shoulder).score - scoreItem(shoulder, known).score, 12 * weights.damagePercent);
-  // 마스터리가 없는 장비 종류는 아무것도 불러오지 않는다.
-  assert.equal(await masteryBonusLines(ring({}), {}), null);
+  const plain = { ...shoulder, mastery_info: null };
+  assert.equal(scoreItem(shoulder).score, scoreItem(plain).score);
+  const lines = shoulder.item_additional_potential_option.map((entry) => Number(String(entry.option_value).replace(/[^0-9.]/g, "")));
+  assert.ok(lines.some((value) => value > 0));
 });
 
 test("순위 묶음: 제네시스·아케인셰이드만, 무기는 무기 종류별·방어구는 부위별", () => {

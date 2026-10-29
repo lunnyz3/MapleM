@@ -1332,28 +1332,37 @@ async function resolveFlameSource(item, slotKind, profileContext, masteryTable) 
     twoOptionChance: parseProbabilityPercent(block.two_option_chance) / 100,
   };
   const increments = masteryTable?.flame?.[flameName] || {};
+  // 상승량은 숫자 하나 또는 여러 개(같은 옵션에 서로 다른 상승량이 섞여 관찰된 경우).
   const incrementByKey = new Map(
-    Object.entries(increments).map(([name, value]) => [flameOptionKey(name), Number(value)]),
+    Object.entries(increments).map(([name, value]) => [
+      flameOptionKey(name),
+      [].concat(value).map(Number).filter((step) => Number.isFinite(step) && step > 0),
+    ]),
   );
+  const maxPerLine = Number(masteryTable?.max_bonus_per_line) || DEFAULT_MAX_BONUS_PER_LINE;
   const lineSpecs = lines.map((line) => {
     const key = flameOptionKey(line.name);
     const option = block.options.find((entry) => flameOptionKey(entry.option) === key) || null;
-    const increment = incrementByKey.get(key);
     const range = option?.ranges?.[levelKey];
     const min = parseFlameNumber(range?.min);
     const max = parseFlameNumber(range?.max);
-    return {
-      ...line,
-      option,
-      increment: Number.isFinite(increment) && increment > 0 ? increment : null,
-      fits: (value) =>
-        min === null || max === null || !Number.isFinite(value)
-          ? null
-          : value >= min - VALUE_EPSILON && value <= max + VALUE_EPSILON,
-    };
+    const fits = (value) =>
+      min === null || max === null || !Number.isFinite(value)
+        ? null
+        : value >= min - VALUE_EPSILON && value <= max + VALUE_EPSILON;
+    // 상승량이 여럿이면 이 줄 값을 표 범위에 넣을 수 있는 첫 상승량을 쓴다.
+    const steps = incrementByKey.get(key) || [];
+    const increment =
+      steps.find((step) =>
+        Array.from({ length: maxPerLine }, (_, index) => index + 1).some(
+          (count) => fits(roundValue(line.value - count * step)) === true,
+        ),
+      ) ??
+      steps[0] ??
+      null;
+    return { ...line, option, increment, fits };
   });
   const validNames = flameValidNames(item, profileContext, lines);
-  const maxPerLine = Number(masteryTable?.max_bonus_per_line) || DEFAULT_MAX_BONUS_PER_LINE;
   const probabilityFor = (split) =>
     validNames.size ? computeFlameTopProbability(context, block, lineSpecs, validNames, split) : null;
   const choice = chooseBonusSplit(lineSpecs, points, maxPerLine, probabilityFor);
