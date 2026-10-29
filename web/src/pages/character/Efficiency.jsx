@@ -45,10 +45,10 @@ const LINK_LEVELS = [
 ];
 
 /**
- * 링크 스킬 추천(전투력 기준): 지금 칸 수만큼, 고른 육성 수준에서 전투력을 가장 많이 올리는 조합.
- * @param {{ majorStats: Record<string, any>, attackType: string, linkSkills: any[], className: string }} props
+ * 링크 스킬 추천: 지금 칸 수만큼, 고른 육성 수준에서 전투력(또는 실전 딜)을 가장 많이 올리는 조합.
+ * @param {{ majorStats: Record<string, any>, attackType: string, linkSkills: any[], className: string, damageMode?: boolean, bossDefense?: number, doping?: string[] }} props
  */
-function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
+function LinkAdvice({ majorStats, attackType, linkSkills, className, damageMode = false, bossDefense = DEFAULT_BOSS_DEFENSE, doping = [] }) {
   const [level, setLevel] = useState("3");
   const own = linkData.selfLinks.find((link) => link.classes.some((name) => String(className).replace(/\s+/g, "") === name.replace(/\s+/g, "")));
   // 여러 직업이 같은 링크를 전수하면 한 칸에 겹쳐 들어간다: 칸 수는 이름 기준, 레벨은 합.
@@ -61,9 +61,12 @@ function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
   const current = [...ownedLevels.entries()].map(([skillName, skillLevel]) => ({ skillName, skillLevel }));
   const slots = Math.max(1, current.length);
   const result = useMemo(() => {
-    const base = totalsFromStats(withoutLinks(majorStats), attackType);
-    const now = totalsFromStats(majorStats, attackType);
-    if (!base || !now) return null;
+    const rawBase = totalsFromStats(withoutLinks(majorStats), attackType);
+    const rawNow = totalsFromStats(majorStats, attackType);
+    if (!rawBase || !rawNow) return null;
+    const base = damageMode ? withDoping(rawBase, doping) : rawBase;
+    const now = damageMode ? withDoping(rawNow, doping) : rawNow;
+    const score = damageMode ? (/** @type {any} */ t) => damageScore(t, bossDefense) : combatPower;
     const advice = recommendLinks({
       base,
       links: linkData.selfLinks,
@@ -72,10 +75,10 @@ function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
       level: level === "max" ? "max" : Number(level),
       exclude: own ? [own.name] : [],
       owned: Object.fromEntries(ownedLevels),
-      combatPower
+      combatPower: score
     });
-    return { ...advice, nowPower: combatPower(now) };
-  }, [majorStats, attackType, slots, level, own?.name, linkSkills]);
+    return { ...advice, nowPower: score(now) };
+  }, [majorStats, attackType, slots, level, own?.name, linkSkills, damageMode, bossDefense, doping]);
   if (!result || !current.length) return null;
   const currentNames = new Set(current.map((skill) => skill.skillName));
   const pickedNames = new Set(result.picks.map((pick) => pick.name));
@@ -91,7 +94,7 @@ function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
       <p class="eff-links__summary">
         지금 {slots}칸 기준 ·{" "}
         <strong class={change > 1e-9 ? "is-up" : ""}>
-          {change > 1e-9 ? `전투력 ${formatRatio(1 + change)}` : "지금 조합이 가장 좋아요"}
+          {change > 1e-9 ? `${damageMode ? "실전 딜" : "전투력"} ${formatRatio(1 + change)}` : "지금 조합이 가장 좋아요"}
         </strong>
       </p>
       <ol class="eff-links__list">
@@ -325,7 +328,15 @@ export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = 
       </section>
 
       <HyperAdvice totals={totals} hyperStats={hyperStats} attackType={attackType} damageMode={damageMode} bossDefense={bossDefense} />
-      <LinkAdvice majorStats={majorStats} attackType={attackType} linkSkills={linkSkills} className={className} />
+      <LinkAdvice
+        majorStats={majorStats}
+        attackType={attackType}
+        linkSkills={linkSkills}
+        className={className}
+        damageMode={damageMode}
+        bossDefense={bossDefense}
+        doping={doping}
+      />
     </div>
   );
 }
