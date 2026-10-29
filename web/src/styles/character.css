@@ -3150,3 +3150,95 @@ button.eq-slot:hover .eq-slot__img {
   font-size: var(--fs-14);
   font-weight: 700;
 }
+
+/* 장비 교체 체험 */
+.eq-whatif-open {
+  justify-self: start;
+  margin-bottom: var(--sp-3);
+}
+
+.whatif {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.whatif__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  box-shadow: 0 6px 16px rgba(35, 36, 63, 0.08);
+}
+
+.whatif__bar strong {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 900;
+}
+
+.whatif__bar.is-up strong {
+  color: #13a37a;
+}
+
+.whatif__bar.is-down strong {
+  color: #e0663f;
+}
+
+.whatif__label {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.whatif__abs {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.whatif__actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.whatif__loading {
+  margin: 0;
+  color: var(--text-subtle);
+}
+
+.whatif__section {
+  display: grid;
+  gap: 6px;
+}
+
+.whatif__title {
+  margin: 0;
+  font-size: var(--fs-14);
+  font-weight: 800;
+}
+
+.whatif__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5em;
+  gap: 6px;
+  align-items: center;
+}
+
+.whatif__line .select select,
+.whatif__line .input {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: var(--fs-14);
+}
+
+.whatif__range {
+  grid-column: 1 / -1;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}

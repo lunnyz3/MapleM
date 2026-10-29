@@ -14,6 +14,7 @@ import { loadItemRanks, rankText, useItemRank } from "../../lib/itemRanks.js";
 import { itemInsight } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
 import { useShareCaption } from "../../lib/shareSettings.js";
+import { WhatIf } from "./WhatIf.jsx";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -224,6 +225,9 @@ export function Equipment({ data, world, mode, presetNo }) {
   // 공유 문구가 장비 순위를 찾을 수 있게 ocid 를 함께 넘긴다.
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
   const [captionOn, setCaptionOn] = useShareCaption();
+  // 장비 시트에서 "옵션 바꿔 보기"를 눌렀는지(다른 장비를 열면 닫는다).
+  const [whatIf, setWhatIf] = useState(false);
+  useEffect(() => setWhatIf(false), [sheetItem]);
   useEffect(() => {
     loadItemRanks(data.ocid);
   }, [data.ocid]);
@@ -427,8 +431,21 @@ export function Equipment({ data, world, mode, presetNo }) {
         : null}
 
       <Sheet open={Boolean(sheetItem)} title={sheetItem ? sheetItem.itemName || "장비" : "장비"} onClose={() => setSheetItem(null)}>
-        {sheetItem ? (
+        {sheetItem && whatIf ? (
+          <WhatIf
+            item={sheetItem}
+            majorStats={data.profile?.majorStats || {}}
+            attackType={data.profile?.attackType || "physical"}
+            basePower={Number(data.profile?.statSetting?.combatPower?.boss) || null}
+            onClose={() => setWhatIf(false)}
+          />
+        ) : null}
+        {sheetItem && !whatIf ? (
           <ItemShare item={sheetItem} profile={profile} world={world}>
+            <button type="button" class="btn btn--secondary btn--sm eq-whatif-open" onClick={() => setWhatIf(true)}>
+              <Icon name="sparkle" size={16} />
+              옵션 바꿔 보기
+            </button>
             <EquipDetail item={sheetItem} profile={profile} />
           </ItemShare>
         ) : null}

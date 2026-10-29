@@ -557,3 +557,17 @@ export async function topPercentCaption(item, profile) {
     return "";
   }
 }
+
+/**
+ * 장비 교체 체험용 옵션 후보(공식 확률표): { potential: [[{ option, value }] …줄], additionalPotential, additional: [{ option, min, max, step, percent }] }.
+ * 표를 불러오지 못하면 null.
+ * @param {any} item
+ */
+export async function optionCandidates(item) {
+  try {
+    const module = await import("../../../public/js/features/item-share.js");
+    return await module.resolveOptionCandidates(item);
+  } catch {
+    return null;
+  }
+}

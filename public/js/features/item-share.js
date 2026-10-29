@@ -1367,6 +1367,61 @@ async function resolveFlameSource(item, slotKind, profileContext, masteryTable) 
   };
 }
 
+// 장비 교체 체험용: 이 장비에 붙을 수 있는 옵션 후보(공식 확률표). 잠재·에디는 줄마다 [{ option, value }],
+// 추가 옵션은 불꽃 표의 옵션별 범위 [{ option, min, max, step }]. 표를 못 찾으면 그 부분은 빈 배열.
+async function resolveOptionCandidates(item) {
+  const slotKind = classifyProbabilitySlot(item);
+  const config = SLOT_PROBABILITY_CONFIG[slotKind];
+  const result = { potential: [], additionalPotential: [], additional: [] };
+  if (!config) {
+    return result;
+  }
+  const cubeLines = async (sourceType, section) => {
+    const rows = normalizeOptionRows(item?.[SECTION_SOURCE[section].optionsKey]);
+    const context = await loadCubeContext(item, sourceType, config, slotKind, rows);
+    if (!context) return [];
+    const count = Math.max(1, readOptionLines(item, section).length);
+    return Array.from({ length: count }, (_, index) => {
+      const seen = new Set();
+      return lineRowsFor(context.gradeBucket, index)
+        .map((row) => ({ option: String(row?.option || "").trim(), value: String(row?.value || "").trim() }))
+        .filter((row) => {
+          const key = row.option + "|" + row.value;
+          if (!row.option || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    });
+  };
+  const flameOptions = async () => {
+    const fileName = FLAME_FILE_BY_SLOT[slotKind];
+    const masteryTable = (await loadProbabilityTable(MASTERY_FILE)) || {};
+    const flameName = resolveFlameName(item, masteryTable);
+    if (!fileName || !flameName) return [];
+    const block = (await loadProbabilityTable(fileName))?.[flameName];
+    const levelKey = block ? resolveFlameLevelKey(block, item, slotKind) : null;
+    if (!levelKey) return [];
+    return (block.options || [])
+      .map((option) => {
+        const range = option?.ranges?.[levelKey];
+        return {
+          option: String(option?.option || "").trim(),
+          min: parseFlameNumber(range?.min),
+          max: parseFlameNumber(range?.max),
+          step: parseFlameNumber(option?.step),
+          percent: String(range?.min || "").includes("%") || String(option?.step || "").includes("%"),
+        };
+      })
+      .filter((option) => option.option && option.min !== null && option.max !== null && option.step);
+  };
+  const [potential, additionalPotential, additional] = await Promise.all([
+    cubeLines("potential", "potential"),
+    cubeLines("additional", "additionalPotential"),
+    flameOptions(),
+  ]);
+  return { potential, additionalPotential, additional };
+}
+
 async function resolveTopPercentBreakdown(item, profileContext = null) {
   const slotKind = classifyProbabilitySlot(item);
   const config = SLOT_PROBABILITY_CONFIG[slotKind];
@@ -1433,6 +1488,7 @@ async function resolveTopPercent(item, profileContext = null) {
 
 export {
   captionFromBreakdown,
+  resolveOptionCandidates,
   FLAME_SCORE_WEIGHTS,
   FLAME_FILE_BY_SLOT,
   SLOT_PROBABILITY_CONFIG,
