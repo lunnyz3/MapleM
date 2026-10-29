@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const { CharacterSpec } = require("../models/character-spec.model");
 const { EquipmentItem } = require("../models/equipment-item.model");
 const { jobMeta: buildJobMeta } = require("../domain/stats/job-meta");
+const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
 
@@ -181,4 +182,76 @@ async function jobMeta({ worldName = "", className = "" } = {}) {
   return { className: group.className, classes, ...meta };
 }
 
-module.exports = { classStats, levelStats, jobMeta, TOP_CHOICES };
+// ---------------- 명예의 전당 ----------------
+
+const HALL_TTL_MS = 6 * 60 * 60 * 1000;
+const HALL_TIMEOUT_MS = 60000;
+const RECORD_FAMILIES = ["제네시스", "아케인셰이드"];
+// 무기가 아닌 slot 값(그 밖의 slot 값은 무기 종류)
+const NON_WEAPON = ["모자", "상의", "하의", "한벌옷", "어깨", "장갑", "신발", "망토", ...ACCESSORY_SLOTS, "보조무기", "훈장", "칭호", "기계 심장"];
+const OTHER_WEAPONS_PER_SLOT = 300;
+const ACCESSORIES_PER_SLOT = 3000;
+const HALL_ITEM_FIELDS = {
+  _id: 0,
+  ocid: 1,
+  characterName: 1,
+  worldName: 1,
+  characterClass: 1,
+  slot: 1,
+  itemName: 1,
+  starforce: 1,
+  score: 1,
+  "parts.additional": 1,
+  "item.item_potential_option": 1,
+  "item.item_additional_potential_option": 1,
+  "item.item_additional_option": 1
+};
+const HALL_SPEC_FIELDS = { _id: 0, ocid: 1, characterName: 1, worldName: 1, characterClass: 1, combatPower: 1, itemScore: 1 };
+let hall = { value: null, at: 0, pending: null };
+
+/**
+ * Candidates through indexes (a full scan of every item takes minutes): every Genesis/Arcane weapon,
+ * the top other weapons per weapon type and the top accessories per slot by item score.
+ */
+async function computeHallOfFame() {
+  const weaponSlots = (await EquipmentItem.distinct("slot", { scoreVersion: SCORE_VERSION, family: { $in: RECORD_FAMILIES } })).filter(
+    (slot) => !NON_WEAPON.includes(slot)
+  );
+  const byScore = (filter, limit) => EquipmentItem.find(filter, HALL_ITEM_FIELDS).sort({ score: -1 }).limit(limit).lean().maxTimeMS(HALL_TIMEOUT_MS);
+  const [topWeapons, otherWeapons, accessories, powerSpecs, scoreSpecs] = await Promise.all([
+    EquipmentItem.find({ scoreVersion: SCORE_VERSION, family: { $in: RECORD_FAMILIES }, slot: { $in: weaponSlots } }, HALL_ITEM_FIELDS)
+      .lean()
+      .maxTimeMS(HALL_TIMEOUT_MS),
+    Promise.all(weaponSlots.map((slot) => byScore({ slot, family: "", scoreVersion: SCORE_VERSION }, OTHER_WEAPONS_PER_SLOT))).then((lists) => lists.flat()),
+    Promise.all(ACCESSORY_SLOTS.map((slot) => byScore({ slot, family: "", scoreVersion: SCORE_VERSION }, ACCESSORIES_PER_SLOT))).then((lists) => lists.flat()),
+    CharacterSpec.find({ scoreVersion: SCORE_VERSION }, HALL_SPEC_FIELDS).sort({ combatPower: -1 }).limit(30).lean().maxTimeMS(TIMEOUT_MS),
+    CharacterSpec.find({ scoreVersion: SCORE_VERSION }, HALL_SPEC_FIELDS).sort({ itemScore: -1 }).limit(30).lean().maxTimeMS(TIMEOUT_MS)
+  ]);
+  return {
+    updatedAt: new Date().toISOString(),
+    records: buildHallOfFame({ weapons: [...topWeapons, ...otherWeapons], accessories, powerSpecs, scoreSpecs })
+  };
+}
+
+/** DB-wide records, kept six hours; an old result is served while a new one is computed. */
+async function hallOfFame() {
+  if (!isMongoConnected()) return { updatedAt: null, records: [] };
+  const fresh = hall.value && Date.now() - hall.at < HALL_TTL_MS;
+  if (!fresh && !hall.pending) {
+    hall.pending = computeHallOfFame().then(
+      (value) => {
+        hall = { value, at: Date.now(), pending: null };
+        return value;
+      },
+      (error) => {
+        hall.pending = null;
+        throw error;
+      }
+    );
+    // 이전 결과를 돌려주는 동안의 실패는 다음 요청이 다시 시도한다.
+    if (hall.value) hall.pending.catch((error) => console.error("[stats] hall of fame failed:", error?.message || error));
+  }
+  return hall.value || hall.pending;
+}
+
+module.exports = { classStats, levelStats, jobMeta, hallOfFame, TOP_CHOICES };

@@ -10,7 +10,8 @@ const DEFAULT_DESCRIPTION = "메이플스토리M 캐릭터·길드 검색, 장�
 const STATIC_PAGES = {
   "/": { title: SITE, description: DEFAULT_DESCRIPTION },
   "/ranking": { title: "랭킹", description: "메이플스토리M 전투력·레벨 공식 랭킹과 템환산·잠재·에디 스펙 랭킹, 제네시스·아케인셰이드 아이템 랭킹." },
-  "/stats": { title: "통계", description: "메이플스토리M 전투력 상위 캐릭터의 직업별 인원·평균 전투력·템환산, 직업별 상위 100명의 무기 옵션·문장·소울·세트, 레벨 분포." },
+  "/stats": { title: "통계", description: "메이플스토리M 전투력 상위 캐릭터의 직업별 인원·평균 전투력·템환산, 직업별 상위 100명의 무기 잠재·에디·추옵과 장신구, 레벨 분포." },
+  "/hall": { title: "명예의 전당", description: "메이플스토리M 전투력·템환산·무기 잠재·추옵·최종 대미지 추옵 최고 기록 보유자." },
   "/calc": { title: "계산기", description: "메이플스토리M HEXA 강화 기간, HEXA 스탯 기댓값, 심볼 비용, 무기 해방 날짜 계산기." },
   "/compare": { title: "캐릭터 비교", description: "메이플스토리M 두 캐릭터의 전투력·스탯·장비 템환산 비교." },
   "/guild": { title: "길드", description: "메이플스토리M 길드 검색과 길드원 전투력 순위." },

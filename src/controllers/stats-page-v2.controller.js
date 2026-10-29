@@ -1,9 +1,10 @@
 // v2 statistics over the collected characters.
 //   GET /api/v2/stats/classes?world_name=&top=1000  → { ok, top, total, classes: [...] }
 //   GET /api/v2/stats/levels?world_name=&min_level=260 → { ok, minLevel, total, levels: [...], classes: [...] }
-//   GET /api/v2/stats/job-meta?world_name=&class=     → { ok, className, classes, count, summary, weapon, sets, accessories, starforce }
+//   GET /api/v2/stats/job-meta?world_name=&class=     → { ok, className, classes, count, damageName, summary, weapon, accessories }
+//   GET /api/v2/stats/hall-of-fame                     → { ok, updatedAt, records: [{ key, title, unit, rows }] }
 const { normalizeWorldName } = require("../config/worlds");
-const { classStats, levelStats, jobMeta } = require("../services/stats.service");
+const { classStats, levelStats, jobMeta, hallOfFame } = require("../services/stats.service");
 
 /** "" for 전체, the canonical world name, or null (400 already sent). */
 function parseWorld(req, res) {
@@ -37,4 +38,6 @@ const getLevelStats = handler((req, worldName) => levelStats({ worldName, minLev
 
 const getJobMeta = handler((req, worldName) => jobMeta({ worldName, className: String(req.query.class || "").trim().slice(0, 20) }));
 
-module.exports = { getClassStats, getLevelStats, getJobMeta };
+const getHallOfFame = handler(() => hallOfFame());
+
+module.exports = { getClassStats, getLevelStats, getJobMeta, getHallOfFame };

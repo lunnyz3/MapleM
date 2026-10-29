@@ -1,0 +1,145 @@
+/* 명예의 전당(/hall) */
+.hall {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.hall-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.hall-card {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.hall-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-16);
+}
+
+.hall-champ {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 196, 64, 0.55);
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(255, 211, 110, 0.28), var(--surface-soft));
+  color: var(--text);
+  text-decoration: none;
+}
+
+.hall-champ:hover {
+  border-color: #ffb02e;
+}
+
+.hall-champ__crown {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffd36e;
+  color: #6b4500;
+}
+
+.hall-champ__who {
+  display: grid;
+  min-width: 0;
+}
+
+.hall-champ__who strong {
+  overflow: hidden;
+  font-size: var(--fs-16);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hall-champ__who span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.hall-champ__value {
+  font-size: clamp(20px, 2.6vw, 26px);
+}
+
+.hall-champ__detail {
+  grid-column: 2 / -1;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.hall-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hall-list li {
+  display: grid;
+  grid-template-columns: 1.8em minmax(0, 1fr) auto;
+  gap: 0 10px;
+  align-items: baseline;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-14);
+}
+
+.hall-list li:hover {
+  background: var(--surface-soft);
+}
+
+.hall-list__rank {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: right;
+}
+
+.hall-list__name {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.hall-list__name:hover {
+  color: var(--primary);
+}
+
+.hall-list__name span {
+  margin-left: 6px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+.hall-list__value {
+  font-weight: 900;
+}
+
+.hall-list__detail {
+  grid-column: 2 / -1;
+  overflow: hidden;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 760px) {
+  .hall-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
