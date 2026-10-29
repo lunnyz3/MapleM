@@ -48,3 +48,59 @@ export function writeManual(world, name, values) {
     // 저장 실패는 무시하고 메모리 값으로 계속한다.
   }
 }
+
+const SHARE_PARAM = "m";
+const MAX_SHARED = 30;
+
+/**
+ * 공유 링크에 담을 글자: { id: 값 } → "id:값,id:값". 값이 없으면 "".
+ * @param {Record<string, number>} values
+ */
+export function encodeManual(values) {
+  return Object.entries(values || {})
+    .filter(([id, value]) => /^[\w.-]{1,64}$/.test(id) && Number.isFinite(Number(value)))
+    .slice(0, MAX_SHARED)
+    .map(([id, value]) => `${id}:${Number(value)}`)
+    .join(",");
+}
+
+/**
+ * 링크의 글자 → { id: 값 }. 형식이 틀린 항목은 버린다.
+ * @param {string | null | undefined} text
+ * @returns {Record<string, number>}
+ */
+export function decodeManual(text) {
+  /** @type {Record<string, number>} */
+  const values = {};
+  for (const part of String(text || "").split(",").slice(0, MAX_SHARED)) {
+    const match = /^([\w.-]{1,64}):(-?\d+(?:\.\d+)?)$/.exec(part.trim());
+    if (match && Math.abs(Number(match[2])) < 1e12) values[match[1]] = Number(match[2]);
+  }
+  return values;
+}
+
+/**
+ * 캐릭터 주소 + 직접 입력값(있을 때 ?m=).
+ * @param {string} path @param {Record<string, number>} values
+ */
+export function withManual(path, values) {
+  const encoded = encodeManual(values);
+  return encoded ? `${path}?${new URLSearchParams({ [SHARE_PARAM]: encoded })}` : path;
+}
+
+/**
+ * 지금 주소에 담긴 직접 입력값을 읽고 주소에서는 지운다(새로 고침해도 다시 덮어쓰지 않게). 없으면 null.
+ * @returns {Record<string, number> | null}
+ */
+export function takeManualFromUrl() {
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(SHARE_PARAM)) return null;
+    const values = decodeManual(url.searchParams.get(SHARE_PARAM));
+    url.searchParams.delete(SHARE_PARAM);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    return Object.keys(values).length ? values : null;
+  } catch {
+    return null;
+  }
+}

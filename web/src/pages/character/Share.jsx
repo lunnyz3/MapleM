@@ -24,6 +24,7 @@ import {
   webShare
 } from "../../lib/share.js";
 import { useShareCaption } from "../../lib/shareSettings.js";
+import { readManual, withManual } from "../../lib/manual.js";
 import { EquipDetail } from "./Equipment.jsx";
 
 /** 카드 안 다른 출처 이미지(넥슨)는 CORS 로 받아야 캡처에 찍힌다. */
@@ -304,7 +305,8 @@ function ProfileSharePanel({ profile, world }) {
     getBlob,
     fileName: shareFileName(`${world}-${name}`, "profile"),
     meta: { itemName: name, worldName: world, characterName: name },
-    path: urls.character(world, name),
+    // 직접 입력값이 있으면 링크에 담아 받는 사람도 같은 전투력을 본다.
+    path: withManual(urls.character(world, name), readManual(world, name)),
     title: `${world} ${name}`,
     description: [world, profile.jobName || profile.className, profile.level ? `Lv.${profile.level}` : ""].filter(Boolean).join(" · "),
     buttonTitle: "캐릭터 구경하기"

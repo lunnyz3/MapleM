@@ -16,7 +16,8 @@ import { getJson } from "../lib/api.js";
 import { loadCharacterPage, loadManualInputs, postCharacterStats } from "../lib/data.js";
 import { formatComma, formatDecimal, formatKoreanUnits, toNumber } from "../lib/format.js";
 import { WORLDS, urls } from "../lib/game.js";
-import { readManual, writeManual } from "../lib/manual.js";
+import { readManual, takeManualFromUrl, writeManual } from "../lib/manual.js";
+import { toast } from "../components/Toast.jsx";
 import { addRecent, entryKey, isFavorite, toggleFavorite, useSaved } from "../lib/storage.js";
 import { Equipment } from "./character/Equipment.jsx";
 import { EfficiencyTab } from "./character/Efficiency.jsx";
@@ -395,7 +396,16 @@ export function Character({ world, name }) {
   });
   // 직접 입력: 정의 목록 · 저장값 · 다시 계산한 스탯
   const [manualDefs, setManualDefs] = useState(/** @type {{ status: "loading" } | { status: "ready", items: any[] } | { status: "unavailable" }} */ ({ status: "loading" }));
-  const [manualValues, setManualValues] = useState(() => readManual(world, name));
+  // 공유 링크(?m=)에 담긴 직접 입력값이 있으면 그 값을 저장하고 쓴다.
+  const [sharedManual] = useState(() => takeManualFromUrl());
+  const [manualValues, setManualValues] = useState(() => {
+    if (!sharedManual) return readManual(world, name);
+    writeManual(world, name, sharedManual);
+    return sharedManual;
+  });
+  useEffect(() => {
+    if (sharedManual) toast(`링크에 담긴 직접 입력값 ${Object.keys(sharedManual).length}개를 적용했어요`, "success");
+  }, []);
   const [manualResult, setManualResult] = useState(/** @type {{ status: "idle" | "applying" | "applied" | "error", data?: any, error?: string, at?: number }} */ ({ status: "idle" }));
   const autoApplied = useRef(false);
   const validWorld = WORLDS.includes(world);
