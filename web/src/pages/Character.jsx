@@ -24,6 +24,7 @@ import { BossTab } from "./character/Bosses.jsx";
 import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
 import { ProfileShareButton } from "./character/Share.jsx";
+import { RecordsSection } from "./character/Records.jsx";
 
 /** @typedef {"boss" | "current"} StatMode */
 
@@ -353,7 +354,7 @@ const TAB_ITEMS = [
   { id: "hexa", label: "HEXA/V", icon: "bolt" },
   { id: "union", label: "유니온", icon: "union" },
   { id: "guild", label: "길드", icon: "flag" },
-  { id: "exp", label: "경험치", icon: "clock" }
+  { id: "exp", label: "기록", icon: "clock" }
 ];
 
 function CharacterSkeleton() {
@@ -560,7 +561,11 @@ export function Character({ world, name }) {
           {tab === "hexa" ? <HexaTab data={data} /> : null}
           {tab === "union" ? <UnionTab data={data} /> : null}
           {tab === "guild" ? <GuildTab data={data} world={world} /> : null}
-          {tab === "exp" ? <ExpTab data={data} /> : null}
+          {tab === "exp" ? (
+            <ExpTab data={data}>
+              <RecordsSection ocid={data.ocid} profile={data.profile} />
+            </ExpTab>
+          ) : null}
         </TabPanel>
       </section>
     </div>

@@ -8,6 +8,7 @@ const { CharacterSpec } = require("../models/character-spec.model");
 const { collectCharacterItems } = require("../domain/items/collect");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
+const { recordSnapshot } = require("./character-record.service");
 
 const DB_TIMEOUT_MS = 3000;
 const PAGE_SIZE = 20;
@@ -125,6 +126,24 @@ async function recordCharacterItems({
   if (changes.length) {
     await CharacterSpec.updateOne({ ocid: key }, { $push: { history: { $each: changes, $slice: -50 } } });
   }
+  // Best-effort: the items and spec above are already stored.
+  await recordSnapshot({
+    ocid: key,
+    worldName: owner.worldName,
+    characterName: owner.characterName,
+    snapshot: {
+      scoreVersion: SCORE_VERSION,
+      combatPower: spec.combatPower,
+      itemScore: spec.itemScore,
+      itemScoreWithoutEmblem: spec.itemScoreWithoutEmblem,
+      potential: spec.potential,
+      additionalPotential: spec.additionalPotential,
+      maxDamage: spec.maxDamage,
+      level: owner.characterLevel,
+      gear: best.gear || []
+    },
+    now
+  }).catch((error) => console.error("[character-record] save failed:", error?.message || error));
   return collected;
 }
 

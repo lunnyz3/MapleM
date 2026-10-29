@@ -1,4 +1,4 @@
-// 캐릭터 상세 탭: 스탯(하이퍼·링크) · 심볼(+쥬얼) · HEXA/V · 유니온 · 길드 · 경험치 그래프.
+// 캐릭터 상세 탭: 스탯(하이퍼·링크) · 심볼(+쥬얼) · HEXA/V · 유니온 · 길드 · 기록(경험치 그래프·변경 이력).
 import { useEffect, useId, useMemo, useRef, useState } from "preact/hooks";
 import { Avatar } from "../../components/Avatar.jsx";
 import { Icon, LEAF_PATH, LEAF_STEM_PATH, SPARKLE_PATH } from "../../components/Icon.jsx";
@@ -529,7 +529,7 @@ export function GuildTab({ data, world}) {
  * 요소의 실제 너비(px). 글자가 늘어나지 않게 SVG 를 실제 크기로 그린다.
  * @param {import("preact").RefObject<HTMLElement>} ref
  */
-function useWidth(ref) {
+export function useWidth(ref) {
   const [width, setWidth] = useState(0);
   useEffect(() => {
     const element = ref.current;
@@ -548,7 +548,7 @@ function useWidth(ref) {
  * 단조 3차 보간(Fritsch–Carlson) 경로: 값이 튀어 오르지 않는 부드러운 선.
  * @param {Array<{ x: number, y: number }>} pts
  */
-function smoothPath(pts) {
+export function smoothPath(pts) {
   if (!pts.length) return "";
   if (pts.length === 1) return `M${pts[0].x} ${pts[0].y}`;
   const n = pts.length;
@@ -600,10 +600,10 @@ function tickLabel(y) {
 }
 
 /** @param {string} date */
-const dayNumber = (date) => Math.round(Date.parse(`${date}T00:00:00Z`) / 86400000);
+export const dayNumber = (date) => Math.round(Date.parse(`${date}T00:00:00Z`) / 86400000);
 
 /** @param {string} date "2026-10-03" → "10.03" */
-const shortDate = (date) => date.slice(5).replace("-", ".");
+export const shortDate = (date) => date.slice(5).replace("-", ".");
 
 /**
  * 성장 그래프: 레벨 진행(부드러운 선 + 그라데이션 영역) 위, 하루 증가량 막대 아래.
@@ -935,7 +935,8 @@ function ChangeHistory({ ocid }) {
   );
 }
 
-export function ExpTab({ data }) {
+/** @param {{ data: any, children?: any }} props children: 변경 이력 앞에 넣을 기록(최고 기록·성장 일지) */
+export function ExpTab({ data, children }) {
   const ocid = data.ocid;
   const [state, setState] = useState(/** @type {{ status: "loading" } | { status: "ready", daily: any[] } | { status: "error", error: any }} */ ({ status: "loading" }));
   const [attempt, setAttempt] = useState(0);
@@ -1006,6 +1007,7 @@ export function ExpTab({ data }) {
       {state.status === "error" ? <ErrorState compact title="성장 기록을 불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} /> : null}
       {state.status === "ready" && daily.length >= 2 ? <TrendChart points={daily} /> : null}
       {state.status === "ready" && daily.length < 2 ? <ExpEmpty /> : null}
+      {children}
       <ChangeHistory ocid={ocid} />
     </div>
   );

@@ -6,6 +6,7 @@
 //   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
+//   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
 const { normalizeWorldName } = require("../config/worlds");
 const {
   rankCharacterItems,
@@ -19,6 +20,7 @@ const {
 
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
+const { findRecord } = require("../services/character-record.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -161,4 +163,27 @@ async function getCharacterHistory(req, res) {
   }
 }
 
-module.exports = { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs, getSpecSummary, getCharacterHistory };
+async function getCharacterRecord(req, res) {
+  const ocid = text(req.query.ocid, 100);
+  if (!/^[0-9a-f]{20,100}$/i.test(ocid)) {
+    return res.status(400).json({ ok: false, message: "ocid is required" });
+  }
+  try {
+    const record = await findRecord(ocid);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, record });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+module.exports = {
+  getItemRanks,
+  getItemRankingGroups,
+  getItemRanking,
+  getSpecRanking,
+  postSpecs,
+  getSpecSummary,
+  getCharacterHistory,
+  getCharacterRecord
+};

@@ -2242,6 +2242,10 @@ function buildPageData({
     expRate: expRateValue,
     currentExp: parseNumericValue(expRaw),
     ranking: basic.ranking || stat.ranking || "-",
+    // ISO times from character/basic; logged in now when the last login is after the last logout.
+    createdAt: basic.character_date_create || null,
+    lastLoginAt: basic.character_date_last_login || null,
+    lastLogoutAt: basic.character_date_last_logout || null,
     // Highest 전투력 observed in the last 24 hours ({ value, observedAt }).
     combatPower: combatPower || { value: readStatValue(stat, "전투력"), observedAt: null },
     overallRanking: overallRankingResult?.ranking ?? fallbackOverallRanking ?? null,

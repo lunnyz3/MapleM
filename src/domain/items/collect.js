@@ -107,7 +107,14 @@ async function collectCharacterItems(itemData) {
         score: Math.round(score * 10) / 10,
         scoreWithoutEmblem: Math.round(entries.reduce((sum, entry) => sum + entry.scoreWithoutEmblem, 0) * 10) / 10,
         potential: potentialSum(entries, "item_potential_option", attackType),
-        additionalPotential: potentialSum(entries, "item_additional_potential_option", attackType)
+        additionalPotential: potentialSum(entries, "item_additional_potential_option", attackType),
+        // Per-slot items of this preset, for the growth journal's changed-gear diff.
+        gear: entries.map((entry) => ({
+          slot: String(entry.item?.item_equipment_slot_name || entry.slot || ""),
+          name: String(entry.item?.item_name || ""),
+          starforce: Number(entry.item?.starforce_upgrade) || 0,
+          score: entry.score
+        }))
       };
     }
   });

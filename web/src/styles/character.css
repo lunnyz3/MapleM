@@ -1080,7 +1080,7 @@
 
 .symbol-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 
@@ -1178,7 +1178,7 @@
 
 .hexa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
 }
 
@@ -3241,4 +3241,230 @@ button.eq-slot:hover .eq-slot__img {
   grid-column: 1 / -1;
   color: var(--text-subtle);
   font-size: var(--fs-12);
+}
+
+/* 기록 탭: 캐릭터 정보 · 최고 기록 · 성장 일지 */
+.rec-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  list-style: none;
+  font-size: var(--fs-14);
+}
+
+.rec-facts li {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.rec-facts__label {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.rec-facts__sub {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.rec-facts__online {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--success);
+}
+
+.rec-facts__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.rec-best {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rec-best li {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--gold-bg, var(--sky-bg)), transparent 62%),
+    var(--surface);
+}
+
+.rec-best__label {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.rec-best__value {
+  font-size: var(--fs-18);
+  font-weight: 900;
+}
+
+.rec-best__date {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.rec-journal__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.rec-journal__head .sub-title {
+  margin: 0;
+}
+
+.rec-journal__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rec-journal__chart {
+  margin-bottom: 12px;
+}
+
+.rec-journal__line {
+  stroke-width: 2.5;
+}
+
+.rec-journal__empty,
+.rec-journal__note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.rec-journal__empty {
+  padding: 18px 0;
+  text-align: center;
+}
+
+.rec-journal__note {
+  margin-top: 10px;
+}
+
+.rec-days {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rec-day {
+  display: grid;
+  gap: 8px;
+  padding: 12px 2px;
+}
+
+.rec-day + .rec-day {
+  border-top: 1px solid var(--border);
+}
+
+.rec-day__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+  font-size: var(--fs-14);
+}
+
+.rec-day__date {
+  min-width: 6.5em;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.rec-day__level {
+  font-weight: 800;
+}
+
+.rec-day__metrics {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.rec-day__metric em {
+  margin-left: 6px;
+  font-size: var(--fs-12);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.rec-day__metric em.is-up,
+.rec-change__diff.is-up {
+  color: var(--success);
+}
+
+.rec-day__metric em.is-down,
+.rec-change__diff.is-down {
+  color: var(--danger);
+}
+
+.rec-change {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 0 calc(6.5em + 14px);
+  list-style: none;
+  font-size: var(--fs-14);
+}
+
+.rec-change li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.rec-change__text {
+  color: var(--text-muted);
+}
+
+.rec-change__diff {
+  font-size: var(--fs-12);
+}
+
+.rec-days__more {
+  margin-top: 6px;
+}
+
+.rec-days__more .is-flipped {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 560px) {
+  .rec-change {
+    padding-left: 0;
+  }
+
+  .rec-day__metrics {
+    flex-basis: 100%;
+  }
 }
