@@ -29,6 +29,8 @@ const {
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
+const { recordSearch } = require("../services/popular-search.service");
+const { resolveClientIp } = require("../middleware/rate-limit");
 
 const characterDetailEndpoints = [
   { key: "basic", path: "/maplestorym/v1/character/basic" },
@@ -2623,6 +2625,12 @@ async function getCharacterPageData(req, res) {
     });
     pageData.meta.aggregateSaved = aggregateSaved;
     pageData.meta.guildCollection = enqueueRelatedGuild(details, worldNameCanonical, details?.basic?.data?.character_name || characterName, aggregateSaved);
+    recordSearch({
+      visitor: resolveClientIp(req),
+      worldName: worldNameCanonical,
+      characterName: pageData.profile?.name || characterName,
+      characterClass: pageData.profile?.className === "-" ? "" : pageData.profile?.className
+    });
 
     return res.json(pageData);
   } catch (error) {

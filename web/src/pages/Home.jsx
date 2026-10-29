@@ -1,4 +1,4 @@
-// 새 메인: 검색 · 내 캐릭터(즐겨찾기·최근 검색) · 랭킹 미리보기 · 랭킹 바로가기 · 소식(넥슨 공지·패치 노트·이벤트).
+// 새 메인: 검색 · 내 캐릭터(즐겨찾기·최근 검색) · 랭킹 미리보기 · 랭킹 바로가기 · 소식(넥슨 공지·패치 노트·이벤트) · 인기 검색.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
 import { Card } from "../components/Card.jsx";
@@ -387,6 +387,46 @@ function NewsCard() {
   );
 }
 
+/** 오늘·어제 사이트에서 많이 열어 본 캐릭터 10명. */
+function PopularCard() {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", items?: any[] }} */ ({ status: "loading" }));
+  useEffect(() => {
+    let alive = true;
+    getJson("/api/v2/popular").then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", items: body.items || [] } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const items = state.items || [];
+  return (
+    <Card class="popular-card" title="인기 검색" icon="sparkle" tone="peach">
+      {state.status === "loading" ? <SkeletonList rows={5} /> : null}
+      {state.status === "error" ? <EmptyState compact title="인기 검색을 불러오지 못했어요" /> : null}
+      {state.status === "ready" && !items.length ? <EmptyState compact title="아직 검색 기록이 없어요" /> : null}
+      {items.length ? (
+        <ol class="popular-list stagger-in">
+          {items.map((item, index) => (
+            <li key={`${item.worldName}/${item.characterName}`} style={{ "--stagger": index }}>
+              <a class="popular-row" href={urls.character(item.worldName, item.characterName)}>
+                <span class={`popular-row__rank num${index < 3 ? " is-top" : ""}`}>{index + 1}</span>
+                <Avatar world={item.worldName} name={item.characterName} size={32} lazy />
+                <span class="popular-row__name">{item.characterName}</span>
+                <span class="popular-row__meta">
+                  <WorldIcon world={item.worldName} size={14} />
+                  {item.characterClass || item.worldName}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+    </Card>
+  );
+}
+
 export function Home() {
   return (
     <div class="home">
@@ -398,6 +438,7 @@ export function Home() {
         <RankingPreview />
         <RankingShortcuts />
         <NewsCard />
+        <PopularCard />
       </div>
     </div>
   );
