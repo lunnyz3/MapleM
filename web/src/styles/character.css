@@ -4035,3 +4035,57 @@ button.eq-slot:hover .eq-slot__img {
     animation: none;
   }
 }
+
+/* 스탯 효율 기준(전투력 / 실전 딜) */
+.eff-mode {
+  display: grid;
+  gap: 10px;
+}
+
+.eff-mode__opts {
+  display: grid;
+  gap: 10px;
+}
+
+.eff-mode__def {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.eff-mode__def .input {
+  width: 7em;
+}
+
+.eff-mode__doping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.eff-mode__note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  line-height: 1.55;
+}
+
+.eff-dope {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.eff-dope.is-active {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
+  background: var(--primary-soft);
+  color: var(--primary);
+}

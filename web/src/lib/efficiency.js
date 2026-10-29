@@ -39,7 +39,9 @@ export function totalsFromStats(majorStats, attackType) {
     boss: read("bossDamage"),
     critical: read("criticalDamage"),
     finalDamage: read("finalDamage"),
-    maxDamage: read("maxDamage")
+    maxDamage: read("maxDamage"),
+    // 전투력 공식에는 없고 실전 딜 모드(damageModel.mjs)에서만 쓴다.
+    ignoreDefense: read("ignoreDefense")
   };
   return totals.attack > 0 ? totals : null;
 }

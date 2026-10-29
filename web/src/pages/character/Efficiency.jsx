@@ -1,5 +1,5 @@
-// 스탯 효율 탭: 기준 스탯을 고르고 수치를 넣으면 오르는 전투력과, 같은 효과를 내는 다른 스탯의 양.
-// 아래에는 "1씩 올리면" 전투력이 얼마나 오르는지 효율 순으로 보여 준다.
+// 스탯 효율 탭: 기준 스탯을 고르고 수치를 넣으면 오르는 전투력(또는 실전 딜)과, 같은 효과를 내는 다른 스탯의 양.
+// 아래에는 "1씩 올리면" 얼마나 오르는지 효율 순으로 보여 준다. 모드: 전투력 공식 / 실전 딜(damageModel.mjs).
 import { useMemo, useState } from "preact/hooks";
 import linkData from "../../../../src/game-data/link-skills.json";
 import { Icon } from "../../components/Icon.jsx";
@@ -7,6 +7,7 @@ import { EmptyState } from "../../components/States.jsx";
 import { Segmented } from "../../components/Tabs.jsx";
 import { EFFICIENCY_STATS, amountForRatio, combatPower, gainFor, totalsFromStats } from "../../lib/efficiency.js";
 import { recommendLinks } from "../../lib/linkRecommend.mjs";
+import { DEFAULT_BOSS_DEFENSE, DEFAULT_DOPING, DOPING, damageAmountForRatio, damageGain, withDoping } from "../../lib/damageModel.mjs";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 
 /** @param {{ id: string, unit: string }} stat @param {number} value */
@@ -114,28 +115,83 @@ function LinkAdvice({ majorStats, attackType, linkSkills, className }) {
 /**
  * @param {{ majorStats: Record<string, any>, attackType: string, modeLabel: string, linkSkills?: any[], className?: string }} props
  */
+// 실전 딜 모드: 최대 대미지는 빼고(딜 모델에 없다) 방어율 무시를 넣는다.
+const DAMAGE_STATS = [...EFFICIENCY_STATS.filter((stat) => stat.id !== "maxDamage"), { id: "ignoreDefense", label: "방어율 무시", unit: "%", step: 1 }];
+const MODES = [
+  { value: "power", label: "전투력 기준" },
+  { value: "damage", label: "실전 딜 기준" }
+];
+
 export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = [], className = "" }) {
-  const totals = useMemo(() => totalsFromStats(majorStats, attackType), [majorStats, attackType]);
+  const raw = useMemo(() => totalsFromStats(majorStats, attackType), [majorStats, attackType]);
+  const [mode, setMode] = useState("power");
+  const [bossDefense, setBossDefense] = useState(DEFAULT_BOSS_DEFENSE);
+  const [doping, setDoping] = useState(DEFAULT_DOPING);
+  const damageMode = mode === "damage";
+  const stats = damageMode ? DAMAGE_STATS : EFFICIENCY_STATS;
+  const totals = useMemo(() => (raw && damageMode ? withDoping(raw, doping) : raw), [raw, damageMode, doping]);
+  const gainOf = (/** @type {any} */ t, /** @type {string} */ id, /** @type {number} */ value) =>
+    damageMode ? { ...damageGain(t, id, value, bossDefense), gain: 0 } : gainFor(t, id, value);
+  const amountOf = (/** @type {any} */ t, /** @type {string} */ id, /** @type {number} */ ratio) =>
+    damageMode ? damageAmountForRatio(t, id, ratio, bossDefense) : amountForRatio(t, id, ratio);
   const [baseId, setBaseId] = useState("finalDamage");
-  const base = EFFICIENCY_STATS.find((stat) => stat.id === baseId) || EFFICIENCY_STATS[0];
+  const base = stats.find((stat) => stat.id === baseId) || stats[0];
   const [amountText, setAmountText] = useState(String(base.step));
   const amount = Number(amountText);
 
   const perStep = useMemo(() => {
     if (!totals) return [];
-    return EFFICIENCY_STATS.map((stat) => ({ stat, ...gainFor(totals, stat.id, stat.step) })).sort((a, b) => b.ratio - a.ratio);
-  }, [totals]);
+    return stats.map((stat) => ({ stat, ...gainOf(totals, stat.id, stat.step) })).sort((a, b) => b.ratio - a.ratio);
+  }, [totals, mode, bossDefense]);
 
   if (!totals) return <EmptyState compact title="스탯 정보가 없어 계산할 수 없어요" />;
 
-  const result = Number.isFinite(amount) && amount > 0 ? gainFor(totals, base.id, amount) : null;
-  const equivalents = result
-    ? EFFICIENCY_STATS.filter((stat) => stat.id !== base.id).map((stat) => ({ stat, amount: amountForRatio(totals, stat.id, result.ratio) }))
-    : [];
+  const result = Number.isFinite(amount) && amount > 0 ? gainOf(totals, base.id, amount) : null;
+  const equivalents = result ? stats.filter((stat) => stat.id !== base.id).map((stat) => ({ stat, amount: amountOf(totals, stat.id, result.ratio) })) : [];
   const bestRatio = perStep[0]?.ratio || 1;
 
   return (
     <div class="eff">
+      <section class="eff-mode sect">
+        <Segmented name="eff-mode" legend="효율 기준" value={mode} onChange={setMode} options={MODES} />
+        {damageMode ? (
+          <div class="eff-mode__opts">
+            <label class="eff-mode__def">
+              <span>보스 방어율</span>
+              <input
+                class="input input--sm num"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={300}
+                step={0.01}
+                value={bossDefense}
+                onInput={(event) => setBossDefense(Math.max(0, Number(/** @type {HTMLInputElement} */ (event.currentTarget).value) || 0))}
+              />
+              <span>%</span>
+            </label>
+            <div class="eff-mode__doping" role="group" aria-label="도핑">
+              {DOPING.map((item) => {
+                const on = doping.includes(item.key);
+                return (
+                  <button
+                    type="button"
+                    key={item.key}
+                    class={`eff-dope${on ? " is-active" : ""}`}
+                    aria-pressed={on ? "true" : "false"}
+                    onClick={() => setDoping(on ? doping.filter((key) => key !== item.key) : [...doping, item.key])}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
+            </div>
+            <p class="eff-mode__note">딜 = 깡공 × (공격력% + 스킬 퍼뎀 400% × (1 + 보공)) × (1 + 대미지) × (1.2 + 치피) × (1 + 최종) × (1 − 보스 방어율 × (1 − 방무)), 도핑 포함.</p>
+          </div>
+        ) : (
+          <p class="eff-mode__note">전투력 = 깡공 × (공격력% + 0.3 × (1 + 보공)) × (1 + 대미지) × (1.2 + 치피) × (1 + 최종) × (최대 대미지 ÷ 1억)^0.2. 방무는 들어가지 않아요.</p>
+        )}
+      </section>
       <section class="eff-calc sect">
         <div class="eff-calc__inputs">
           <div class="field">
@@ -147,13 +203,13 @@ export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = 
                 id="eff-base"
                 value={base.id}
                 onChange={(event) => {
-                  const next = EFFICIENCY_STATS.find((stat) => stat.id === /** @type {HTMLSelectElement} */ (event.currentTarget).value);
+                  const next = stats.find((stat) => stat.id === /** @type {HTMLSelectElement} */ (event.currentTarget).value);
                   if (!next) return;
                   setBaseId(next.id);
                   setAmountText(String(next.step));
                 }}
               >
-                {EFFICIENCY_STATS.map((stat) => (
+                {stats.map((stat) => (
                   <option key={stat.id} value={stat.id}>
                     {stat.label}
                   </option>
@@ -186,8 +242,8 @@ export function EfficiencyTab({ majorStats, attackType, modeLabel, linkSkills = 
               {base.label} +{formatAmount(base, amount).replace(/^\+/, "")}
             </p>
             <p class="eff-result__gain display num">
-              전투력 +{formatKoreanUnits(Math.round(result.gain))}
-              <span class="eff-result__ratio">{formatRatio(result.ratio)}</span>
+              {damageMode ? `실전 딜 ${formatRatio(result.ratio)}` : `전투력 +${formatKoreanUnits(Math.round(result.gain))}`}
+              {damageMode ? null : <span class="eff-result__ratio">{formatRatio(result.ratio)}</span>}
             </p>
           </div>
         ) : null}
