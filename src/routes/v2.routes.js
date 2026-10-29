@@ -5,7 +5,19 @@ const { getNotices } = require("../controllers/notices-v2.controller");
 const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
-const { getItemRanks, getItemRankingGroups, getItemRanking, getSpecRanking, postSpecs, getSpecSummary, getCharacterHistory, getCharacterRecord, getCollectionSummary } = require("../controllers/item-ranking-v2.controller");
+const {
+  getItemRanks,
+  getItemRankingGroups,
+  getItemRanking,
+  getItemSearch,
+  getItemSearchSlots,
+  getSpecRanking,
+  postSpecs,
+  getSpecSummary,
+  getCharacterHistory,
+  getCharacterRecord,
+  getCollectionSummary
+} = require("../controllers/item-ranking-v2.controller");
 
 const router = express.Router();
 
@@ -15,6 +27,8 @@ router.get("/ranking/:type", getRankingV2);
 router.get("/item-ranks", getItemRanks);
 router.get("/item-ranking/groups", getItemRankingGroups);
 router.get("/item-ranking", getItemRanking);
+router.get("/item-search/slots", getItemSearchSlots);
+router.get("/item-search", getItemSearch);
 router.get("/spec-ranking", getSpecRanking);
 router.post("/specs", postSpecs);
 router.get("/spec-summary", getSpecSummary);

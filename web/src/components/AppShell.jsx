@@ -25,6 +25,7 @@ const NAV = [
       ...RANKING_TYPES.filter((type) => type.subject !== "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) })),
       { label: "아이템 랭킹", href: "/ranking?view=item" },
       { label: "스펙 랭킹", href: "/ranking?view=spec" },
+      { label: "장비 검색", href: urls.itemSearch },
       { label: "명예의 전당", href: urls.hall }
     ]
   },

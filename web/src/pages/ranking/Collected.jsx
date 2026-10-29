@@ -50,7 +50,7 @@ export const SPEC_METRICS = [
  * @param {string} key  바뀌면 다시 불러온다
  * @returns {{ status: "loading" | "ready" | "error", data?: T, error?: any, retry: () => void }}
  */
-function useJson(url, key) {
+export function useJson(url, key) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState(/** @type {{ key: string, status: "loading" | "ready" | "error", data?: any, error?: any }} */ ({ key: "", status: "loading" }));
   const fullKey = `${key}|${attempt}`;
@@ -75,7 +75,7 @@ function useJson(url, key) {
 }
 
 /** @param {{ count?: number }} props */
-function ListSkeleton({ count = 8 }) {
+export function ListSkeleton({ count = 8 }) {
   return (
     <div class="rk-skeleton" aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
@@ -118,7 +118,7 @@ function SimplePager({ page, total, pageSize, onPage }) {
 /**
  * @param {{ world: string, onWorld: (world: string) => void, id: string }} props
  */
-function WorldSelect({ world, onWorld, id }) {
+export function WorldSelect({ world, onWorld, id }) {
   return (
     <div class="field">
       <label class="field__label" for={id}>
@@ -161,16 +161,89 @@ function Owner({ row }) {
   );
 }
 
-const CONDITION_SECTIONS = [
+/**
+ * 장비 목록(아이템 랭킹·장비 검색): 줄을 누르면 장비 시트.
+ * @param {{ rows: any[], noEmblem?: boolean, scoreField?: string, onOpen: (row: any) => void }} props
+ */
+export function ItemRows({ rows, noEmblem = false, scoreField = "score", onOpen }) {
+  return (
+    <ol class="crk-list">
+      {rows.map((row) => {
+        const item = row.item || {};
+        const grade = gradeInfo(item.itemGrade);
+        const star = starforce(item.starforceUpgrade);
+        return (
+          <li key={`${row.rank}-${item.fingerprint}`}>
+            <button type="button" class="crk-row" onClick={() => onOpen(row)}>
+              <RankBadge rank={row.rank} size={34} />
+              <span class={`crk-icon${grade ? ` is-${grade.key}` : ""}`}>
+                {item.itemIcon ? <img src={item.itemIcon} alt="" width={36} height={36} loading="lazy" /> : <Icon name="medal" size={22} />}
+              </span>
+              <span class="crk-row__text">
+                <span class="crk-row__name">
+                  {item.itemName}
+                  {star ? <span class="crk-star num">★{star}</span> : null}
+                </span>
+                <span class="crk-row__meta">
+                  <OwnerText row={row} />
+                  <span class="crk-row__time">{formatRelativeTime(Date.parse(row.checkedAt))}</span>
+                </span>
+                {row.parts ? (
+                  <span class="crk-parts num">
+                    {PART_LABELS.filter(([key]) => row.parts[key] && !(key === "emblem" && noEmblem)).map(([key, label]) => (
+                      <span key={key} class={`crk-part is-${key}`}>
+                        {label} {itemScoreText(row.slot, row.parts[key], !noEmblem)}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
+              </span>
+              <span class="crk-score num">
+                {itemScoreText(row.slot, row[scoreField], !noEmblem)}
+                <span class="crk-score__unit">점</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** 장비 시트: 주인(캐릭터로 가는 링크)과 장비 상세. @param {{ row: any, onClose: () => void }} props */
+export function ItemSheet({ row, onClose }) {
+  return (
+    <Sheet open={Boolean(row)} title={row?.item?.itemName || "장비"} onClose={onClose}>
+      {row ? (
+        <div class="crk-sheet">
+          <Owner row={row} />
+          <EquipDetail item={row.item} profile={{ attackType: row.attackType, className: row.characterClass, jobName: row.characterClass }} />
+        </div>
+      ) : null}
+    </Sheet>
+  );
+}
+
+export const CONDITION_SECTIONS = [
   { value: "", label: "옵션 조건 없음" },
   { value: "potential", label: "잠재능력" },
   { value: "additionalPotential", label: "에디셔널" },
   { value: "additional", label: "추가 옵션" }
 ];
-const CONDITION_OPTIONS = ["보스 공격력", "물리 대미지", "마법 대미지", "최종 대미지", "방어율 무시", "치명타 피해", "물리 공격력", "마법 공격력", "최대 대미지"];
+export const CONDITION_OPTIONS = [
+  "보스 공격력",
+  "물리 대미지",
+  "마법 대미지",
+  "최종 대미지",
+  "방어율 무시",
+  "치명타 피해",
+  "물리 공격력",
+  "마법 공격력",
+  "최대 대미지"
+];
 
 /** @param {{ label: string, value: string | number, options: Array<{ value: string | number, label: string }>, onChange: (value: string) => void, disabled?: boolean }} props */
-function MiniSelect({ label, value, options, onChange, disabled = false }) {
+export function MiniSelect({ label, value, options, onChange, disabled = false }) {
   return (
     <span class="select select--sm">
       <select aria-label={label} value={value} disabled={disabled} onChange={(event) => onChange(/** @type {HTMLSelectElement} */ (event.currentTarget).value)}>
@@ -340,64 +413,13 @@ export function ItemRanking({ query, onQuery }) {
             <EmptyState title="아직 모은 장비가 없어요" />
           )
         ) : null}
-        {list.status === "ready" && rows.length ? (
-          <ol class="crk-list">
-            {rows.map((row) => {
-              const item = row.item || {};
-              const grade = gradeInfo(item.itemGrade);
-              const star = starforce(item.starforceUpgrade);
-              return (
-                <li key={`${row.rank}-${item.fingerprint}`}>
-                  <button type="button" class="crk-row" onClick={() => setOpened(row)}>
-                    <RankBadge rank={row.rank} size={34} />
-                    <span class={`crk-icon${grade ? ` is-${grade.key}` : ""}`}>
-                      {item.itemIcon ? <img src={item.itemIcon} alt="" width={36} height={36} loading="lazy" /> : <Icon name="medal" size={22} />}
-                    </span>
-                    <span class="crk-row__text">
-                      <span class="crk-row__name">
-                        {item.itemName}
-                        {star ? <span class="crk-star num">★{star}</span> : null}
-                      </span>
-                      <span class="crk-row__meta">
-                        <OwnerText row={row} />
-                        <span class="crk-row__time">{formatRelativeTime(Date.parse(row.checkedAt))}</span>
-                      </span>
-                      {row.parts ? (
-                        <span class="crk-parts num">
-                          {PART_LABELS.filter(([key]) => row.parts[key] && !(key === "emblem" && query.noEmblem)).map(([key, label]) => (
-                            <span key={key} class={`crk-part is-${key}`}>
-                              {label} {itemScoreText(row.slot, row.parts[key], !query.noEmblem)}
-                            </span>
-                          ))}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span class="crk-score num">
-                      {itemScoreText(row.slot, row[scoreField], !query.noEmblem)}
-                      <span class="crk-score__unit">점</span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        ) : null}
+        {list.status === "ready" && rows.length ? <ItemRows rows={rows} noEmblem={query.noEmblem} scoreField={scoreField} onOpen={setOpened} /> : null}
       </div>
       {list.status === "ready" ? (
         <SimplePager page={list.data.page} total={list.data.total} pageSize={list.data.pageSize} onPage={(page) => onQuery({ page })} />
       ) : null}
 
-      <Sheet open={Boolean(opened)} title={opened?.item?.itemName || "장비"} onClose={() => setOpened(null)}>
-        {opened ? (
-          <div class="crk-sheet">
-            <Owner row={opened} />
-            <EquipDetail
-              item={opened.item}
-              profile={{ attackType: opened.attackType, className: opened.characterClass, jobName: opened.characterClass }}
-            />
-          </div>
-        ) : null}
-      </Sheet>
+      <ItemSheet row={opened} onClose={() => setOpened(null)} />
     </>
   );
 }

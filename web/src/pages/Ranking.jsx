@@ -14,6 +14,7 @@ import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { ItemRanking, SPEC_METRICS, SpecRanking } from "./ranking/Collected.jsx";
 import { HallRecords } from "./HallOfFame.jsx";
+import { ItemSearch } from "./ranking/ItemSearch.jsx";
 import { RANKING_PAGE_SIZE, findCharacterRank, loadRankingPage } from "../lib/data.js";
 import { formatComma, formatDateDot, formatKoreanUnits, kstToday, shiftDate, toNumber } from "../lib/format.js";
 import { DEFAULT_WORLD, RANKING_DATE_FLOOR, RANKING_TYPES, WORLDS, getRankingType, urls } from "../lib/game.js";
@@ -370,12 +371,13 @@ function RankingSkeleton({ count = 8 }) {
   );
 }
 
-/** @typedef {"official" | "item" | "spec" | "hall"} View */
+/** @typedef {"official" | "item" | "spec" | "search" | "hall"} View */
 
 const VIEW_OPTIONS = [
   { value: "official", label: "공식 랭킹" },
   { value: "item", label: "아이템" },
   { value: "spec", label: "스펙" },
+  { value: "search", label: "장비 검색" },
   { value: "hall", label: "명예의 전당" }
 ];
 
@@ -384,7 +386,7 @@ function readView() {
   // 예전 주소 /hall 도 명예의 전당으로 연다.
   if (/\/hall\/?$/.test(window.location.pathname)) return "hall";
   const view = new URLSearchParams(window.location.search).get("view");
-  return view === "item" || view === "spec" || view === "hall" ? view : "official";
+  return view === "item" || view === "spec" || view === "search" || view === "hall" ? view : "official";
 }
 
 /** @param {{ view: View, onView: (view: View) => void }} props */
@@ -481,13 +483,44 @@ export function Ranking() {
   }, []);
   const onView = (/** @type {View} */ next) => {
     if (next === view) return;
-    const url = next === "official" ? "/ranking" : next === "hall" ? urls.hall : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
+    const url =
+      next === "official"
+        ? "/ranking"
+        : next === "hall"
+          ? urls.hall
+          : next === "search"
+            ? urls.itemSearch
+            : collectedUrl(next, { ...readCollectedQuery(), page: 1, family: "" });
     window.history.pushState(null, "", url);
     setView(next);
   };
   if (view === "official") return <OfficialRanking onView={onView} />;
   if (view === "hall") return <HallRanking onView={onView} />;
+  if (view === "search") return <SearchRanking onView={onView} />;
   return <CollectedRanking key={view} view={view} onView={onView} />;
+}
+
+/** @param {{ onView: (view: View) => void }} props */
+function SearchRanking({ onView }) {
+  useEffect(() => {
+    document.title = "장비 검색 · 메이플M 플러스";
+  }, []);
+  return (
+    <div class="rk">
+      <header class="page-head page-head--rank tone-gold">
+        <Aurora tone="sky" />
+        <Particles count={14} />
+        <span class="page-head__icon" aria-hidden="true">
+          <Icon name="search" size={28} />
+        </span>
+        <h1 class="page-head__title display">
+          <SplitText text="장비 검색" />
+        </h1>
+      </header>
+      <ViewSwitch view="search" onView={onView} />
+      <ItemSearch />
+    </div>
+  );
 }
 
 /** @param {{ onView: (view: View) => void }} props */

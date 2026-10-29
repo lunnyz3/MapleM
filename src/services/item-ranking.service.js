@@ -379,7 +379,144 @@ async function collectionSummary() {
   return summary;
 }
 
+// ---------------- 장비 검색 ----------------
+// 부위(필수)와 계열·이름·월드·스타포스 이상·옵션 값 합 조건(최대 3개)으로 모은 장비를 템환산 순으로 찾는다.
+// 조건은 색인을 못 써서 점수 순으로 훑는다: 셀 수는 없어서 다음 쪽이 있는지만 알리고, 시간이 다 되면 찾은 만큼만 준다.
+
+const SEARCH_PAGE_SIZE = 20;
+const SEARCH_MAX_PAGE = 25;
+const SEARCH_TIME_MS = 6000;
+const SEARCH_MAX_CONDITIONS = 3;
+const SEARCH_OPTIONS = Object.freeze([...CONDITION_OPTIONS, "치명타 확률"]);
+const searchCache = new TtlLruCache({ maxEntries: 400, maxBytes: 2 * 1024 * 1024 });
+const SEARCH_LIST_TTL_MS = 60 * 60 * 1000;
+
+/** 옵션 줄 중 이름이 option 인 줄 값의 합("20.22%", "3,051" → 숫자). */
+function optionSum(field, option) {
+  return {
+    $sum: {
+      $map: {
+        input: { $filter: { input: { $ifNull: [`$item.${field}`, []] }, cond: { $eq: ["$$this.option_name", option] } } },
+        in: {
+          $convert: {
+            input: { $replaceAll: { input: { $replaceAll: { input: { $toString: "$$this.option_value" }, find: "%", replacement: "" } }, find: ",", replacement: "" } },
+            to: "double",
+            onError: 0,
+            onNull: 0
+          }
+        }
+      }
+    }
+  };
+}
+
+/** 조건 글("potential:물리 대미지:50|additional:최종 대미지:6") → [{ section, option, min }] (맞지 않는 것은 뺀다) */
+function parseSearchConditions(raw) {
+  return String(raw || "")
+    .split("|")
+    .map((part) => {
+      const [section, option, min] = part.split(":");
+      const value = Number(min);
+      return { section, option, min: value };
+    })
+    .filter((entry) => CONDITION_SECTIONS[entry.section] && SEARCH_OPTIONS.includes(entry.option) && Number.isFinite(entry.min) && entry.min > 0 && entry.min < 1e11)
+    .slice(0, SEARCH_MAX_CONDITIONS);
+}
+
+async function cachedList(key, compute) {
+  const hit = searchCache.get(key);
+  if (hit) return hit;
+  const value = await compute();
+  searchCache.set(key, value, SEARCH_LIST_TTL_MS, 16 * 1024);
+  return value;
+}
+
+/** 검색할 수 있는 부위(장비가 있는 slot 값)와 그 부위의 계열. */
+async function searchSlots(slot = "") {
+  if (!isMongoConnected()) return { slots: [], families: [] };
+  const [slots, families] = await Promise.all([
+    cachedList("slots", () => EquipmentItem.distinct("slot", { scoreVersion: SCORE_VERSION }).maxTimeMS(GROUPS_TIMEOUT_MS)),
+    slot ? cachedList(`families|${slot}`, () => EquipmentItem.distinct("family", { slot, scoreVersion: SCORE_VERSION }).maxTimeMS(GROUPS_TIMEOUT_MS)) : []
+  ]);
+  return {
+    slots: slots.filter(Boolean).map((name) => ({ slot: name, weapon: !NON_WEAPON_SLOTS.has(name) })),
+    families: families.filter(Boolean)
+  };
+}
+
+// 무기가 아닌 slot 값(그 밖의 slot 값은 무기 종류)
+const NON_WEAPON_SLOTS = new Set([
+  ...ARMOR_SLOTS,
+  "귀고리",
+  "눈장식",
+  "얼굴장식",
+  "목걸이",
+  "반지",
+  "뱃지",
+  "벨트",
+  "보조무기",
+  "엠블렘",
+  "포켓",
+  "훈장",
+  "칭호",
+  "기계 심장"
+]);
+
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * @param {{ slot: string, family?: string, worldName?: string, name?: string, minStar?: number, conditions?: Array<{ section: string, option: string, min: number }>, page?: number }} query
+ * → { rows, page, pageSize, hasMore, partial }  partial: 시간이 다 돼 찾은 만큼만
+ */
+async function searchItems({ slot, family = "", worldName = "", name = "", minStar = 0, conditions = [], page = 1 } = {}) {
+  const current = Math.min(SEARCH_MAX_PAGE, Math.max(1, Math.floor(Number(page) || 1)));
+  const empty = { rows: [], page: current, pageSize: SEARCH_PAGE_SIZE, hasMore: false, partial: false };
+  if (!slot || !isMongoConnected()) return empty;
+  const families = family ? [family] : (await searchSlots(slot)).families.concat("");
+  const filter = { slot, family: { $in: [...new Set(families)] }, scoreVersion: SCORE_VERSION };
+  if (worldName) filter.worldName = worldName;
+  const cleanName = String(name || "").trim().slice(0, 30);
+  if (cleanName) filter.itemName = { $regex: escapeRegex(cleanName) };
+  const star = Math.floor(Number(minStar));
+  if (star > 0 && star <= 40) filter.starforce = { $gte: star };
+  const exprs = conditions.map((entry) => ({ $gte: [optionSum(CONDITION_SECTIONS[entry.section], entry.option), entry.min] }));
+  if (exprs.length) filter.$expr = exprs.length === 1 ? exprs[0] : { $and: exprs };
+  // 색인을 정해 준다(조건이 있으면 계획 고르기에서 시간이 다 된다).
+  const hint = worldName ? { worldName: 1, slot: 1, family: 1, scoreVersion: 1, score: -1 } : { slot: 1, family: 1, scoreVersion: 1, score: -1 };
+  const cursor = EquipmentItem.find(filter)
+    .sort({ score: -1 })
+    .hint(hint)
+    .skip((current - 1) * SEARCH_PAGE_SIZE)
+    .limit(SEARCH_PAGE_SIZE + 1)
+    .select({ ocid: 0, _id: 0, fingerprint: 0 })
+    .batchSize(5)
+    .maxTimeMS(SEARCH_TIME_MS)
+    .lean()
+    .cursor();
+  const rows = [];
+  let partial = false;
+  try {
+    for await (const doc of cursor) rows.push(doc);
+  } catch (error) {
+    if (error?.code !== 50 && !/time limit|MaxTimeMSExpired/i.test(String(error?.message))) throw error;
+    partial = true;
+  } finally {
+    await cursor.close().catch(() => {});
+  }
+  return {
+    rows: rows.slice(0, SEARCH_PAGE_SIZE).map((row, index) => ({ rank: (current - 1) * SEARCH_PAGE_SIZE + index + 1, ...row })),
+    page: current,
+    pageSize: SEARCH_PAGE_SIZE,
+    hasMore: !partial && rows.length > SEARCH_PAGE_SIZE,
+    partial
+  };
+}
+
 module.exports = {
+  searchItems,
+  searchSlots,
+  parseSearchConditions,
+  SEARCH_OPTIONS,
   conditionFilter,
   CONDITION_OPTIONS,
   collectionSummary,

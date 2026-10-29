@@ -344,3 +344,105 @@ a.crk-owner:hover .crk-owner__name {
   }
 }
 
+
+/* 장비 검색 */
+.crk-search {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.crk-search__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.crk-search__name {
+  grid-column: 1 / -1;
+}
+
+.crk-search__conds {
+  display: grid;
+  gap: 8px;
+}
+
+.crk-search__cond {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 7.5em auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.crk-search__cond .select {
+  min-width: 0;
+}
+
+.crk-search__min {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.crk-search__min .input {
+  min-width: 0;
+  text-align: right;
+}
+
+.crk-search__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.crk-search__actions .btn--primary {
+  margin-left: auto;
+}
+
+.crk-search__partial {
+  margin: 0 0 8px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+@media (max-width: 719px) {
+  .crk-search__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 조건 한 줄: 묶음·옵션 / 값·빼기 */
+  .crk-search__cond {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .crk-search__cond > .icon-btn {
+    justify-self: end;
+  }
+
+  .crk-search__actions .btn--primary {
+    flex: 1 0 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  /* 랭킹 종류 5개: 세 칸 격자 */
+  .crk-switch .segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .crk-switch .segmented__option {
+    padding: 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}

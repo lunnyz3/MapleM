@@ -3,6 +3,9 @@
 //   GET /api/v2/item-ranking/groups?slot=&world_name=    → { ok, slots: [{ slot, count }], families: [{ family, count }] }
 //   GET /api/v2/item-ranking?slot=&family=&world_name=&sort=&page=&star=&section=&option=&lines=
 //       조건: star = 스타포스 이상, section(potential|additionalPotential|additional)에 option 이 lines 줄 이상
+//   GET /api/v2/item-search/slots?slot=                  → { ok, slots: [{ slot, weapon }], families: [] }
+//   GET /api/v2/item-search?slot=&family=&world_name=&name=&star=&c=&page=
+//       c = "potential:물리 대미지:50|additional:최종 대미지:6" (묶음:옵션:값 합 이상, 최대 3개) → { ok, rows, page, hasMore, partial }
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
 //   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
@@ -18,6 +21,9 @@ const {
   findSpecs,
   rankSpec,
   collectionSummary,
+  searchItems,
+  searchSlots,
+  parseSearchConditions,
   SPEC_METRICS
 } = require("../services/item-ranking.service");
 
@@ -99,6 +105,40 @@ async function getItemRanking(req, res) {
       ...result,
       rows: result.rows.map(({ item, ...row }) => ({ ...row, item: mapEquipmentItemForView(item) }))
     });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+async function getItemSearchSlots(req, res) {
+  try {
+    const result = await searchSlots(text(req.query.slot));
+    res.set("Cache-Control", "public, max-age=600");
+    return res.json({ ok: true, ...result });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+async function getItemSearch(req, res) {
+  const worldName = parseWorld(req, res);
+  if (worldName === null) return undefined;
+  const slot = text(req.query.slot);
+  if (!slot) {
+    return res.status(400).json({ ok: false, message: "slot is required" });
+  }
+  try {
+    const result = await searchItems({
+      slot,
+      family: text(req.query.family, 80),
+      worldName,
+      name: text(req.query.name, 30),
+      minStar: req.query.star,
+      conditions: parseSearchConditions(text(req.query.c, 200)),
+      page: req.query.page
+    });
+    res.set("Cache-Control", "public, max-age=120");
+    return res.json({ ok: true, slot, ...result, rows: result.rows.map(({ item, ...row }) => ({ ...row, item: mapEquipmentItemForView(item) })) });
   } catch (error) {
     return fail(res, error);
   }
@@ -192,6 +232,8 @@ async function getCollectionSummary(req, res) {
 }
 
 module.exports = {
+  getItemSearch,
+  getItemSearchSlots,
   getCollectionSummary,
   getItemRanks,
   getItemRankingGroups,
