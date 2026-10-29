@@ -1,13 +1,14 @@
-// Popular searches: character pages opened on the site, counted once per visitor per character
-// per hour (the visitor key lives only in memory) and summed over today and yesterday (KST).
+// Popular searches: character and guild pages opened on the site, counted once per visitor per
+// name per hour (the visitor key lives only in memory) and summed over today and yesterday (KST).
 const mongoose = require("mongoose");
-const { SearchCount } = require("../models/search-count.model");
+const { SearchCount, GuildSearchCount } = require("../models/search-count.model");
 const { TtlLruCache } = require("../nexon/client");
 
 const DB_TIMEOUT_MS = 3000;
 const LIST_TTL_MS = 2 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
-const listCache = new TtlLruCache({ maxEntries: 4, maxBytes: 64 * 1024 });
+const listCache = new TtlLruCache({ maxEntries: 8, maxBytes: 64 * 1024 });
+const MODELS = { character: SearchCount, guild: GuildSearchCount };
 
 function kstDay(now) {
   return new Date(now.getTime() + 9 * HOUR_MS).toISOString().slice(0, 10);
@@ -37,13 +38,14 @@ function createVisitDeduper({ maxKeys = 50000 } = {}) {
 const firstVisit = createVisitDeduper();
 
 /** Best-effort: never throws. */
-async function recordSearch({ visitor, worldName, characterName, characterClass = "", now = new Date() }) {
+async function recordSearch({ kind = "character", visitor, worldName, characterName, characterClass = "", now = new Date() }) {
   const world = String(worldName || "").trim();
   const name = String(characterName || "").trim();
-  if (!world || !name || mongoose.connection.readyState !== 1) return false;
-  if (!firstVisit(String(visitor || "unknown"), world, name, now)) return false;
+  const Model = MODELS[kind];
+  if (!Model || !world || !name || mongoose.connection.readyState !== 1) return false;
+  if (!firstVisit(`${kind}:${String(visitor || "unknown")}`, world, name, now)) return false;
   try {
-    await SearchCount.updateOne(
+    await Model.updateOne(
       { day: kstDay(now), worldName: world, characterName: name },
       { $inc: { count: 1 }, $set: { lastAt: now, ...(characterClass ? { characterClass: String(characterClass) } : {}) } },
       { upsert: true }
@@ -56,13 +58,14 @@ async function recordSearch({ visitor, worldName, characterName, characterClass 
 }
 
 /** Top characters by lookups today + yesterday: [{ worldName, characterName, characterClass, count }]. */
-async function popularSearches({ limit = 10, now = new Date() } = {}) {
-  if (mongoose.connection.readyState !== 1) return [];
-  const cacheKey = String(limit);
+async function popularSearches({ kind = "character", limit = 10, now = new Date() } = {}) {
+  const Model = MODELS[kind];
+  if (!Model || mongoose.connection.readyState !== 1) return [];
+  const cacheKey = `${kind}:${limit}`;
   const cached = listCache.get(cacheKey);
   if (cached !== undefined) return cached;
   const days = [kstDay(now), kstDay(new Date(now.getTime() - 24 * HOUR_MS))];
-  const rows = await SearchCount.aggregate([
+  const rows = await Model.aggregate([
     { $match: { day: { $in: days } } },
     {
       $group: {

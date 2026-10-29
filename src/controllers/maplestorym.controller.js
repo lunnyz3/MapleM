@@ -3060,6 +3060,13 @@ async function getGuildBasicController(req, res) {
       success: true,
       responseBody: result.data
     });
+    recordSearch({
+      kind: "guild",
+      visitor: resolveClientIp(req),
+      worldName: result.data?.world_name,
+      characterName: result.data?.guild_name,
+      characterClass: result.data?.guild_level ? `Lv.${result.data.guild_level}` : ""
+    });
 
     return res.json({
       ok: true,

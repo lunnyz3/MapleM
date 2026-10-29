@@ -387,42 +387,52 @@ function NewsCard() {
   );
 }
 
-/** 오늘·어제 사이트에서 많이 열어 본 캐릭터 10명. */
+const POPULAR_TABS = [
+  { id: "items", label: "캐릭터" },
+  { id: "guilds", label: "길드" }
+];
+
+/** 오늘·어제 사이트에서 많이 열어 본 캐릭터·길드 10개. */
 function PopularCard() {
-  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", items?: any[] }} */ ({ status: "loading" }));
+  const [tab, setTab] = useState("items");
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", data?: any }} */ ({ status: "loading" }));
   useEffect(() => {
     let alive = true;
     getJson("/api/v2/popular").then(
-      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", items: body.items || [] } : { status: "error" }),
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", data: body } : { status: "error" }),
       () => alive && setState({ status: "error" })
     );
     return () => {
       alive = false;
     };
   }, []);
-  const items = state.items || [];
+  const items = state.status === "ready" ? state.data?.[tab] || [] : [];
+  const guild = tab === "guilds";
   return (
     <Card class="popular-card" title="인기 검색" icon="sparkle" tone="peach">
-      {state.status === "loading" ? <SkeletonList rows={5} /> : null}
-      {state.status === "error" ? <EmptyState compact title="인기 검색을 불러오지 못했어요" /> : null}
-      {state.status === "ready" && !items.length ? <EmptyState compact title="아직 검색 기록이 없어요" /> : null}
-      {items.length ? (
-        <ol class="popular-list stagger-in">
-          {items.map((item, index) => (
-            <li key={`${item.worldName}/${item.characterName}`} style={{ "--stagger": index }}>
-              <a class="popular-row" href={urls.character(item.worldName, item.characterName)}>
-                <span class={`popular-row__rank num${index < 3 ? " is-top" : ""}`}>{index + 1}</span>
-                <Avatar world={item.worldName} name={item.characterName} size={32} lazy />
-                <span class="popular-row__name">{item.characterName}</span>
-                <span class="popular-row__meta">
-                  <WorldIcon world={item.worldName} size={14} />
-                  {item.characterClass || item.worldName}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      ) : null}
+      <Tabs idBase="popular" label="인기 검색 종류" value={tab} onChange={setTab} items={POPULAR_TABS} />
+      <TabPanel idBase="popular" value={tab} busy={state.status === "loading"} class="news-card__panel">
+        {state.status === "loading" ? <SkeletonList rows={5} /> : null}
+        {state.status === "error" ? <EmptyState compact title="인기 검색을 불러오지 못했어요" /> : null}
+        {state.status === "ready" && !items.length ? <EmptyState compact title="아직 검색 기록이 없어요" /> : null}
+        {items.length ? (
+          <ol class="popular-list stagger-in">
+            {items.map((item, index) => (
+              <li key={`${item.worldName}/${item.characterName}`} style={{ "--stagger": index }}>
+                <a class="popular-row" href={guild ? urls.guild(item.worldName, item.characterName) : urls.character(item.worldName, item.characterName)}>
+                  <span class={`popular-row__rank num${index < 3 ? " is-top" : ""}`}>{index + 1}</span>
+                  <Avatar kind={guild ? "guild" : "character"} world={item.worldName} name={item.characterName} size={32} lazy />
+                  <span class="popular-row__name">{item.characterName}</span>
+                  <span class="popular-row__meta">
+                    <WorldIcon world={item.worldName} size={14} />
+                    {item.characterClass || item.worldName}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </TabPanel>
     </Card>
   );
 }
