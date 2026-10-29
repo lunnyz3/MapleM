@@ -129,6 +129,13 @@
 - 장비 시트 "옵션 바꿔 보기": 잠재·에디는 그 장비 공식 표의 옵션·수치, 추가 옵션은 불꽃 범위 안에서 바꾸면 보스 세팅 전투력 증감(%·절대값)을 바로 보여 준다(`WhatIf.jsx`, `whatIf.mjs`).
 - 운영 확인: 통계 두 화면·모바일 넘침 없음, 링크 추천 15칸 +3.26%, 체험에서 잠재 값을 낮추면 -0.116%.
 
+### 17. 최고 기록·성장 일지·공유 미리보기 — `1ffca4c` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 캐릭터 "경험치" 탭 → "기록": 생성일(D+N)·최근 접속(로그인이 로그아웃보다 나중이면 "접속 중"), 최고 기록(전투력·템환산 2종·최대 대미지·잠재 합·에디 합, 언제), 성장 일지(한국 날짜별 전투력·템환산·레벨 그래프와 목록, 템환산이 가장 높은 프리셋에서 바뀐 장비).
+- 저장: 새 컬렉션 `character_records`(캐릭터당 문서 하나, TTL 없음, 일지는 최근 180일). 사이트 조회·매일 04시 수집·훑기 때마다 `recordCharacterItems` 끝에서 갱신(실패해도 장비·스펙 저장은 그대로). 순수 계산 `src/domain/records/journal.js`, 테스트 `test/character-record.test.js`. 템환산 공식 버전이 바뀌면 템환산 기록과 장비 비교만 다시 시작.
+- 공유 미리보기: 서버가 주소마다 제목·설명·canonical·og/twitter 태그를 index.html 에 넣는다(`src/web/page-meta.js`). 캐릭터 주소는 저장된 스펙(레벨·직업·전투력·템환산)을 설명에 쓴다(DB 300ms 제한). 공유 이미지 `web/public/og.png`(1200×630).
+- 미리보기 시절의 `noindex, nofollow` 제거: 검색 노출 허용(운영자 승인).
+- 운영 확인: 피카츄 조회 → 기록 생성, 기록 탭 데스크톱·모바일 넘침 없음, og 설명 "유니온 · Lv.298 · 아크메이지(썬,콜) · 전투력 1억 9,221만 · 템환산 1,226.5".
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
