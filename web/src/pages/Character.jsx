@@ -552,6 +552,7 @@ export function Character({ world, name }) {
           <ManualPanel
             storageKey={`${world}.${name}`}
             attackType={stats.profile.attackType}
+            majorStats={stats.majorStats}
             defs={manualDefs}
             values={manualValues}
             result={manualResult}

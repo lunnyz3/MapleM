@@ -3,8 +3,9 @@
 import board from "../../../../src/game-data/stella.json";
 import { useMemo, useState } from "preact/hooks";
 import { Icon, SPARKLE_PATH } from "../../components/Icon.jsx";
-import { formatComma, formatKoreanUnits } from "../../lib/format.js";
-import { boardTotals, canOpen, nodeValue, toManualValues, toggle } from "../../lib/stella.mjs";
+import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
+import { boardTotals, canOpen, nextStars, nodeValue, toManualValues, toggle } from "../../lib/stella.mjs";
+import { combatPower, totalsFromStats } from "../../lib/efficiency.js";
 
 const COLS = 9;
 const ROWS = 5;
@@ -36,11 +37,18 @@ function statLabel(stat, attackType) {
 const valueLabel = (stat, value) => (stat === "최대 대미지" ? `+${formatKoreanUnits(value, { maxGroups: 1 })}` : `+${value}%`);
 
 /**
- * @param {{ storageKey: string, attackType: string, onApply: (values: Record<string, number>) => void, onClose: () => void }} props
+ * @param {{ storageKey: string, attackType: string, majorStats?: Record<string, any>, onApply: (values: Record<string, number>) => void, onClose: () => void }} props
  */
-export function StellaBoard({ storageKey, attackType, onApply, onClose }) {
+export function StellaBoard({ storageKey, attackType, majorStats = {}, onApply, onClose }) {
   const [state, setState] = useState(() => readStella(storageKey));
   const { totals, cost } = useMemo(() => boardTotals(board.nodes, state.open, state.picks, board.ranges), [state]);
+  // 다음에 열면 좋은 별(세리온 1개당 전투력 상승 순, 위 3개)
+  const statTotals = useMemo(() => totalsFromStats(majorStats, attackType), [majorStats, attackType]);
+  const picks = useMemo(
+    () => (statTotals ? nextStars(board.nodes, state.open, state.picks, board.ranges, statTotals, combatPower).slice(0, 3) : []),
+    [state, statTotals]
+  );
+  const pickRank = new Map(picks.map((item, index) => [item.id, index + 1]));
   const byId = useMemo(() => new Map(board.nodes.map((node) => [node.id, node])), []);
   // 가장자리 여백(좌우 3%, 위 7%·아래 12%: 범위 별 값 고르기가 아래에 붙는다)
   const pos = (node) => ({ x: 3 + ((node.col + 0.5) / COLS) * 94, y: 7 + ((node.row + 0.5) / ROWS) * 81 });
@@ -70,7 +78,7 @@ export function StellaBoard({ storageKey, attackType, onApply, onClose }) {
             return (
               <div
                 key={node.id}
-                class={`stella__node${open ? " is-open" : ready ? " is-ready" : ""}${node.range ? " is-range" : ""}`}
+                class={`stella__node${open ? " is-open" : ready ? " is-ready" : ""}${node.range ? " is-range" : ""}${pickRank.has(node.id) ? " is-pick" : ""}`}
                 style={{ left: `${x}%`, top: `${y}%` }}
               >
                 <button
@@ -84,6 +92,7 @@ export function StellaBoard({ storageKey, attackType, onApply, onClose }) {
                   <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                     <path d={SPARKLE_PATH} />
                   </svg>
+                  {pickRank.has(node.id) ? <span class="stella__rank num">{pickRank.get(node.id)}</span> : null}
                 </button>
                 <span class="stella__label">
                   {label}
@@ -120,6 +129,25 @@ export function StellaBoard({ storageKey, attackType, onApply, onClose }) {
             </li>
           ))}
         </ul>
+        {picks.length ? (
+          <ol class="stella__next">
+            {picks.map((item, index) => {
+              const node = byId.get(item.id);
+              return (
+                <li key={item.id}>
+                  <span class="stella__rank num">{index + 1}</span>
+                  <span>
+                    {statLabel(node.stat, attackType)}{" "}
+                    {node.range ? valueLabel(node.stat, nodeValue(node, state.picks, board.ranges)) : valueLabel(node.stat, node.value)}
+                  </span>
+                  <strong class="num">
+                    전투력 +{formatDecimal(item.gain * 100, item.gain < 0.001 ? 3 : 2)}% · 세리온 {node.cost}개
+                  </strong>
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
         <p class="stella__meta num">
           열린 별 {state.open.size}/{board.nodes.length} · 세리온 {formatComma(cost)}개
         </p>

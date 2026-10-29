@@ -53,7 +53,7 @@ function valueText(def, value) {
  *   attackType?: string
  * }} props  storageKey: 스타코러스 별자리판 상태를 기억할 캐릭터 키
  */
-export function ManualPanel({ defs, values, result, onApply, powerBefore = null, powerAfter = null, storageKey = "", attackType = "physical" }) {
+export function ManualPanel({ defs, values, result, onApply, powerBefore = null, powerAfter = null, storageKey = "", attackType = "physical", majorStats = {} }) {
   const [draft, setDraft] = useState(/** @type {Record<string, string>} */ ({}));
   const [boardOpen, setBoardOpen] = useState(false);
   const items = defs.status === "ready" ? defs.items : [];
@@ -285,6 +285,7 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
           <StellaBoard
             storageKey={storageKey || "default"}
             attackType={attackType}
+            majorStats={majorStats}
             onClose={() => setBoardOpen(false)}
             onApply={(boardValues) => {
               const next = { ...draft };

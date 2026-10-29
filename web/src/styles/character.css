@@ -4093,3 +4093,53 @@ button.eq-slot:hover .eq-slot__img {
 .whatif__soul {
   grid-column: 1 / -1;
 }
+
+/* 다음에 열면 좋은 별 */
+.stella__star {
+  position: relative;
+}
+
+.stella__rank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ffd36e;
+  color: #23243f;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.stella__star .stella__rank {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+}
+
+.stella__node.is-pick .stella__star {
+  border-color: #ffd36e;
+}
+
+.stella__next {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-14);
+}
+
+.stella__next li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.stella__next strong {
+  margin-left: auto;
+  color: var(--success);
+  font-size: var(--fs-12);
+}

@@ -34,3 +34,11 @@ test("별자리판: 모두 열면 직접 입력 최대치, 범위 별은 고른 
   const low = boardTotals(board.nodes, new Set(["start"]), {}, board.ranges).totals;
   assert.equal(low["최대 대미지"], 30000000);
 });
+
+test("별자리판: 지금 열 수 있는 별을 세리온 1개당 전투력 상승 순으로", async () => {
+  const { nextStars } = await load();
+  const score = (t) => (1 + (t.finalDamage || 0) / 100) * (1 + (t.damage || 0) / 100) * Math.pow((t.maxDamage || 1e8) / 1e8, 0.2);
+  const list = nextStars(board.nodes, new Set(["start"]), {}, board.ranges, { finalDamage: 100, damage: 500, maxDamage: 2e9 }, score);
+  assert.deepEqual(list.map((item) => item.id).sort(), ["atk-a1", "md-1", "pd-b1"].sort(), "시작 별 다음에 열 수 있는 별만");
+  assert.ok(list[0].perCost >= list[list.length - 1].perCost);
+});

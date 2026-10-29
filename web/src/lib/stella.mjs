@@ -59,3 +59,26 @@ export function boardTotals(nodes, open, picks, ranges) {
 export function toManualValues(totals, manualIds) {
   return Object.fromEntries(Object.entries(manualIds).map(([stat, id]) => [id, Math.round((totals[stat] || 0) * 100) / 100]));
 }
+
+/** 별 스탯 → 효율 계산 키(efficiency.js Totals). */
+const STAT_KEYS = { "물리 대미지": "damage", "물리 공격력%": "attackPercent", "최대 대미지": "maxDamage", "최종 대미지": "finalDamage", "치명타 피해": "critical", "보스 공격력": "boss" };
+
+/**
+ * 지금 열 수 있는 별마다 전투력 상승과 세리온 1개당 상승(큰 순). 범위 별은 고른 값(안 골랐으면 가장 작은 값).
+ * @param {any[]} nodes @param {Set<string>} open @param {Record<string, number>} picks @param {Record<string, number[]>} ranges
+ * @param {Record<string, number>} totals @param {(totals: Record<string, number>) => number} score
+ * @returns {Array<{ id: string, gain: number, perCost: number }>}
+ */
+export function nextStars(nodes, open, picks, ranges, totals, score) {
+  const before = score(totals);
+  if (!(before > 0)) return [];
+  return nodes
+    .filter((node) => !open.has(node.id) && canOpen(nodes, open, node.id))
+    .map((node) => {
+      const key = STAT_KEYS[node.stat];
+      const after = key ? score({ ...totals, [key]: (totals[key] || 0) + nodeValue(node, picks, ranges) }) : before;
+      const gain = after / before - 1;
+      return { id: node.id, gain, perCost: node.cost > 0 ? gain / node.cost : gain };
+    })
+    .sort((a, b) => b.perCost - a.perCost);
+}
