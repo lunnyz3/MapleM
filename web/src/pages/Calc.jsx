@@ -1,5 +1,6 @@
-// 계산기(/calc?view=hexa|stat|symbol|liberation&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 ·
-// 심볼 비용 · 해방 날짜. 캐릭터를 불러오면 지금 레벨을 채운다(HEXA 코어·심볼, 제네시스 무기면 해방 완료).
+// 계산기(/calc?view=…&a=월드/이름): HEXA 강화 기간 · HEXA 스탯 기댓값 · 심볼 비용 · 해방 날짜 ·
+// 스타포스 · 문장 · 장신구 연마 · 장비 전수 · 길드 어빌리티(강화 계산기는 calc/Enhance.jsx).
+// 캐릭터를 불러오면 지금 레벨을 채운다(HEXA 코어·심볼, 제네시스 무기면 해방 완료).
 import "../styles/calc.css";
 import hexa from "../../../src/game-data/hexa.json";
 import symbolCosts from "../../../src/game-data/symbol-costs.json";
@@ -13,6 +14,7 @@ import { formatComma, formatDecimal, formatKoreanUnits, kstToday, shiftDate } fr
 import { DEFAULT_WORLD, WORLDS } from "../lib/game.js";
 import { daysFor, hexaCoreType, hexaStatExpectation, sumRange, symbolCost } from "../lib/hexaCalc.mjs";
 import { liberationPlan } from "../lib/liberation.mjs";
+import { EmblemCalc, GuildAbilityCalc, PolishCalc, StarforceCalc, TransferCalc } from "./calc/Enhance.jsx";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
 const ARCANE = ["소멸의 여로", "츄츄 아일랜드", "레헬른", "아르카나", "모라스", "에스페라"];
@@ -472,8 +474,15 @@ const VIEWS = [
   { value: "hexa", label: "HEXA 강화" },
   { value: "stat", label: "HEXA 스탯" },
   { value: "symbol", label: "심볼" },
-  { value: "liberation", label: "해방" }
+  { value: "liberation", label: "해방" },
+  { value: "starforce", label: "스타포스" },
+  { value: "emblem", label: "문장" },
+  { value: "polish", label: "장신구 연마" },
+  { value: "transfer", label: "전수" },
+  { value: "guild", label: "길드 어빌리티" }
 ];
+// 캐릭터를 불러와 채우는 계산기(나머지는 캐릭터와 상관없다).
+const CHARACTER_VIEWS = ["hexa", "stat", "symbol", "liberation"];
 
 function readView() {
   const view = new URLSearchParams(window.location.search).get("view");
@@ -549,34 +558,36 @@ export function Calc() {
         </h1>
       </header>
 
-      <form class="card calc-who" onSubmit={onLoad} aria-label="캐릭터 불러오기">
-        <span class="select">
-          <select aria-label="월드" value={who.world} onChange={(event) => setWho({ ...who, world: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}>
-            {WORLDS.map((world) => (
-              <option key={world} value={world}>
-                {world}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevronDown" size={18} class="select__icon" />
-        </span>
-        <input
-          class="input"
-          type="text"
-          maxLength={24}
-          autoComplete="off"
-          spellcheck={false}
-          aria-label="캐릭터 이름"
-          placeholder="캐릭터 이름 (지금 레벨 채우기)"
-          value={who.name}
-          onInput={(event) => setWho({ ...who, name: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
-        />
-        <button type="submit" class="btn btn--primary" disabled={load.status === "loading" || !who.name.trim()}>
-          <Icon name="download" size={18} />
-          {load.status === "loading" ? "불러오는 중" : "불러오기"}
-        </button>
-        {load.text ? <p class={`calc-who__msg is-${load.status}`}>{load.text}</p> : null}
-      </form>
+      {CHARACTER_VIEWS.includes(view) ? (
+        <form class="card calc-who" onSubmit={onLoad} aria-label="캐릭터 불러오기">
+          <span class="select">
+            <select aria-label="월드" value={who.world} onChange={(event) => setWho({ ...who, world: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}>
+              {WORLDS.map((world) => (
+                <option key={world} value={world}>
+                  {world}
+                </option>
+              ))}
+            </select>
+            <Icon name="chevronDown" size={18} class="select__icon" />
+          </span>
+          <input
+            class="input"
+            type="text"
+            maxLength={24}
+            autoComplete="off"
+            spellcheck={false}
+            aria-label="캐릭터 이름"
+            placeholder="캐릭터 이름 (지금 레벨 채우기)"
+            value={who.name}
+            onInput={(event) => setWho({ ...who, name: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
+          />
+          <button type="submit" class="btn btn--primary" disabled={load.status === "loading" || !who.name.trim()}>
+            <Icon name="download" size={18} />
+            {load.status === "loading" ? "불러오는 중" : "불러오기"}
+          </button>
+          {load.text ? <p class={`calc-who__msg is-${load.status}`}>{load.text}</p> : null}
+        </form>
+      ) : null}
 
       <div class="calc-switch">
         <Segmented name="calc-view" legend="계산기 종류" value={view} onChange={onView} options={VIEWS} />
@@ -586,6 +597,11 @@ export function Calc() {
       {view === "stat" ? <HexaStat /> : null}
       {view === "symbol" ? <Symbols rows={symbols} setRows={setSymbols} /> : null}
       {view === "liberation" ? <Liberation liberated={liberated} /> : null}
+      {view === "starforce" ? <StarforceCalc /> : null}
+      {view === "emblem" ? <EmblemCalc /> : null}
+      {view === "polish" ? <PolishCalc /> : null}
+      {view === "transfer" ? <TransferCalc /> : null}
+      {view === "guild" ? <GuildAbilityCalc /> : null}
     </div>
   );
 }

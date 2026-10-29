@@ -6,7 +6,17 @@
 
 .calc-switch {
   display: flex;
-  justify-content: center;
+  justify-content: safe center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.calc-switch::-webkit-scrollbar {
+  display: none;
+}
+
+.calc-switch .segmented {
+  flex: none;
 }
 
 .calc-who {
@@ -371,4 +381,171 @@
   .calc-rows--boss {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ================= 강화 계산기 ================= */
+.calc-seg {
+  display: flex;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.calc-seg .segmented {
+  flex: none;
+}
+.calc-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.calc-checks,
+.calc-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.calc-presets {
+  gap: 8px;
+}
+
+.calc-presets--end {
+  align-self: end;
+}
+
+.calc-table-wrap {
+  overflow-x: auto;
+}
+
+.calc-table tr.is-muted td {
+  color: var(--text-subtle);
+  opacity: 0.6;
+}
+
+.calc-runs {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calc-runs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: var(--fs-14);
+  animation: calc-run-in 260ms var(--ease-spring) both;
+}
+
+.calc-runs li.is-good strong {
+  color: var(--success);
+}
+
+.calc-runs li.is-bad strong {
+  color: var(--danger);
+}
+
+.calc-runs li span {
+  color: var(--text-muted);
+}
+
+@keyframes calc-run-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.calc-transfer {
+  display: grid;
+  gap: 10px;
+}
+
+.calc-transfer-row {
+  display: grid;
+  grid-template-columns: 7.2em minmax(0, 1fr) 5em;
+  gap: 8px;
+  align-items: center;
+}
+
+.calc-transfer-row .calc-check {
+  white-space: nowrap;
+}
+
+.calc-transfer-row .input {
+  width: 100%;
+}
+
+.calc-transfer-row .is-off {
+  opacity: 0.5;
+}
+
+.calc-transfer-unit {
+  color: var(--text-subtle);
+  font-size: var(--fs-14);
+}
+
+.calc-guild {
+  display: grid;
+  gap: 14px;
+}
+
+.calc-guild__tier {
+  display: grid;
+  gap: 6px;
+}
+
+.calc-guild__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-14);
+}
+
+.calc-guild__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6em auto 6em;
+  gap: 8px;
+  align-items: center;
+}
+
+.calc-guild__name {
+  display: grid;
+  min-width: 0;
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.calc-guild__name small {
+  overflow: hidden;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calc-buffs {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-14);
+}
+
+.calc-buffs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calc-buffs span {
+  color: var(--text-muted);
 }
