@@ -11,6 +11,8 @@ const { TtlLruCache } = require("../nexon/client");
 const { recordSnapshot } = require("./character-record.service");
 
 const DB_TIMEOUT_MS = 3000;
+const CONDITION_TIMEOUT_MS = 10000;
+const CONDITION_COUNT_LIMIT = 5000;
 const PAGE_SIZE = 20;
 const MAX_PAGE = 500;
 const groupTotalCache = new TtlLruCache({ maxEntries: 2000, maxBytes: 1024 * 1024 });
@@ -263,21 +265,27 @@ async function listItemRanking({ slot, family, worldName, sort = "score", page =
   const field = sort === "scoreWithoutEmblem" ? "scoreWithoutEmblem" : "score";
   const current = pageOf(page);
   if (!slot || !isMongoConnected()) return { rows: [], total: 0, page: current, pageSize: PAGE_SIZE, sort: field };
-  const filter = { slot, family: family || { $ne: "" }, scoreVersion: SCORE_VERSION, ...conditionFilter(condition) };
+  const conditions = conditionFilter(condition);
+  const filter = { slot, family: family || { $ne: "" }, scoreVersion: SCORE_VERSION, ...conditions };
   if (worldName) filter.worldName = worldName;
+  // 조건은 색인을 못 써서 묶음을 훑는다: 시간을 더 주고 개수는 상한까지만 센다.
+  const filtered = Object.keys(conditions).length > 0;
+  const timeout = filtered ? CONDITION_TIMEOUT_MS : DB_TIMEOUT_MS;
   const [rows, total] = await Promise.all([
+    // 점수만으로 정렬해야 색인 순서를 그대로 쓴다(동점 정렬을 더하면 묶음 전체를 읽어 메모리에서 정렬한다).
     EquipmentItem.find(filter)
-      .sort({ [field]: -1, checkedAt: -1 })
+      .sort({ [field]: -1 })
       .skip((current - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .select({ ocid: 0, _id: 0, fingerprint: 0 })
-      .maxTimeMS(DB_TIMEOUT_MS)
+      .maxTimeMS(timeout)
       .lean(),
-    EquipmentItem.countDocuments(filter).maxTimeMS(DB_TIMEOUT_MS)
+    EquipmentItem.countDocuments(filter, filtered ? { limit: CONDITION_COUNT_LIMIT } : {}).maxTimeMS(timeout)
   ]);
   return {
     rows: rows.map((row, index) => ({ rank: (current - 1) * PAGE_SIZE + index + 1, ...row })),
     total,
+    totalCapped: filtered && total >= CONDITION_COUNT_LIMIT,
     page: current,
     pageSize: PAGE_SIZE,
     sort: field
@@ -294,7 +302,7 @@ async function listSpecRanking({ metric = "itemScore", worldName, characterClass
   if (characterClass) filter.characterClass = characterClass;
   const [rows, total] = await Promise.all([
     CharacterSpec.find(filter)
-      .sort({ [definition.field]: -1, checkedAt: -1 })
+      .sort({ [definition.field]: -1 })
       .skip((current - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .select({ ocid: 0, _id: 0 })
