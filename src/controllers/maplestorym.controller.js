@@ -29,6 +29,7 @@ const {
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
+const { buildGrowthReport } = require("../domain/growth/report");
 const { recordSearch } = require("../services/popular-search.service");
 const { resolveClientIp } = require("../middleware/rate-limit");
 
@@ -222,6 +223,23 @@ function buildCharacterStatsSafely(details) {
   } catch (error) {
     console.error("[stats] stat engine failed:", error?.message || error);
     return { majorStats: {}, majorStatsCurrent: {}, statSetting: null, majorStatOrder: [] };
+  }
+}
+
+// 내실 리포트(영역별 완성도와 다 채우면 바뀌는 보스 세팅 스탯). 실패해도 화면은 그대로 나온다.
+function buildGrowthReportSafely(details, characterStats, basic) {
+  try {
+    if (!characterStats?.statSetting) return null;
+    return buildGrowthReport(details, {
+      majorStats: characterStats.majorStats,
+      attackType: characterStats.statSetting.attackType,
+      characterLevel: basic.character_level,
+      characterName: basic.character_name,
+      selection: characterStats.statSetting.selection
+    });
+  } catch (error) {
+    console.error("[growth] report failed:", error?.message || error);
+    return null;
   }
 }
 
@@ -2276,6 +2294,7 @@ function buildPageData({
     profile,
     tabs: {
       equipment: equipmentTab,
+      growth: buildGrowthReportSafely(details, characterStats, basic),
       exp: {
         currentExp: parseNumericValue(expRaw),
         currentExpRate: parseNumericValue(expRateRaw),

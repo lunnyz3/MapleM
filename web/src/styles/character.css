@@ -3468,3 +3468,139 @@ button.eq-slot:hover .eq-slot__img {
     flex-basis: 100%;
   }
 }
+
+/* 내실 탭 */
+.growth {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.growth-head {
+  display: grid;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background:
+    radial-gradient(90% 120% at 100% 0%, var(--gold-bg), transparent 60%),
+    linear-gradient(120deg, var(--primary-soft), var(--surface-soft));
+}
+
+.growth-head p {
+  margin: 0;
+}
+
+.growth-head__count {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.growth-head__gain {
+  font-size: clamp(22px, 3.4vw, 30px);
+  font-weight: 900;
+}
+
+.growth-head__note,
+.growth-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.growth-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.growth-row {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  animation: growth-in 420ms var(--ease-spring) both;
+  animation-delay: calc(var(--stagger, 0) * 40ms);
+}
+
+@keyframes growth-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.growth-row__top,
+.growth-row__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.growth-row__label {
+  font-size: var(--fs-16);
+}
+
+.growth-row__gain {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.growth-row__gain.is-up {
+  color: var(--success);
+}
+
+.growth-row__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.growth-row__bar > span {
+  display: block;
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--sky-500), var(--lavender-500));
+  transform-origin: left;
+  animation: bar-grow 900ms var(--ease-spring) both;
+}
+
+.growth-row__bottom {
+  justify-content: flex-start;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.growth-row__amount {
+  color: var(--text-muted);
+}
+
+.growth-done__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.growth-done__list .badge {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .growth-row,
+  .growth-row__bar > span {
+    animation: none;
+  }
+}

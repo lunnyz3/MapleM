@@ -23,7 +23,7 @@ function formatRatio(ratio) {
 }
 
 /** 주요 스탯에서 장착 링크(본인 링크 제외)의 기여를 뺀 값. */
-function withoutLinks(majorStats) {
+export function withoutLinks(majorStats) {
   /** @type {Record<string, any>} */
   const copy = {};
   for (const [key, stat] of Object.entries(majorStats || {})) {
