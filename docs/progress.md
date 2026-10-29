@@ -136,6 +136,17 @@
 - 미리보기 시절의 `noindex, nofollow` 제거: 검색 노출 허용(운영자 승인).
 - 운영 확인: 피카츄 조회 → 기록 생성, 기록 탭 데스크톱·모바일 넘침 없음, og 설명 "유니온 · Lv.298 · 아크메이지(썬,콜) · 전투력 1억 9,221만 · 템환산 1,226.5".
 
+### 18. 템환산 v5·추옵 상위 % 마스터리·인기 검색·PWA·직접 입력 링크 — `f40a9cd` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 운영자 지시: 템환산은 넥슨이 준 값(장비 마스터리 포함) 그대로. 기본 옵션에 들어 있는 같은 스탯 추옵은 추옵 항목으로 옮김(합계 같음) → 공격력 추옵이 "기본"에 묻혀 추옵 0점으로 보이던 문제 해결. `item-score.json` version 5, `src/domain/items/mastery.js` 삭제.
+- 추옵 상위 0.0000068%: 무기 공격력 추옵의 마스터리 상승(강력 +450·영원 +600/개)이 표에 없어 표 최댓값(1,352)보다 큰 값을 그대로 확률 계산했다. 수집 장비 분포로 상승량을 확인해 `public/probability/equipment_mastery.json` 에 추가(강력 공격력 450·최종 1.5, 영원 마법공격력 600, 영원 최종 [2, 1.5], 방무 보조 1.0). 4천 개 표본에서 1e-6 미만이 14 → 4.
+- 저장 점수 다시 계산: `scripts/data/rescore-items.js --write`(넥슨 호출 없음, 343만 건) → `collect-items-now.js`(1만 명) → `sweep-characters.js`(나머지). 오늘 이미 모았어도 점수 버전이 다르면 다시 모으도록 `collectedSince` 에 scoreVersion 조건.
+- 인기 검색(홈, `search_counts` 3일), PWA 매니페스트·아이콘, 프로필 링크에 직접 입력값(`?m=`).
+
+### 19. 강화 계산기·내실 리포트 — `c89e12e` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 계산기 탭 5개: 스타포스(기대 횟수·파괴 확률은 연립방정식으로 정확히, 한 번 돌려 보기), 문장 강화, 장신구 연마, 장비 전수, 길드 어빌리티 정산(복사). 표 `src/game-data/enhance.json`, 계산 `web/src/lib/enhanceCalc.mjs`. 테스트가 공개 계산기 값(437.2억·277.38억, 238장 21.38억·175장 15.75억, 82,750 EXP·19,900 GP)을 재현.
+- 캐릭터 › 내실: 서버가 영역별 완성도와 다 채웠을 때 보스 세팅 스탯 차이를 계산(`src/domain/growth/report.js`, 표 `src/game-data/growth-report.json`, page-data `tabs.growth`), 화면이 같은 전투력 공식으로 상승량·합계를 낸다(`web/src/lib/growthReport.mjs`). 링크 영역은 전투력 기준 링크 추천(최대 레벨). 하이퍼·쥬얼·장비는 보스 세팅이 고른 프리셋 기준. 디올 심볼 59,970/61,837·치피 +2, HEXA 47,181 재현.
+- 남은 차이: 레벨 기본 공격력 표(우리 Lv.300 20,340, 공개 도구 20,358 추정값), 아케인 심볼 Lv.19→20 개수(우리 1,391, 공개 도구 1,359).
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
