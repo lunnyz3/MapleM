@@ -1431,6 +1431,66 @@ async function resolveOptionCandidates(item) {
   return { potential, additionalPotential, additional };
 }
 
+// 큐브·불꽃 시뮬레이터용: 이 장비의 등급별 줄 표(공식 확률 p, 0~100)와 지금 불꽃의 옵션 표.
+// potential/additionalPotential: { grade, lineCount, grades: { 등급: [first, second, third] } }
+// flame: { flameName, twoOptionChance(0~1), options: [{ option, p, min, max, step, percent }] }
+async function resolveRollTables(item) {
+  const slotKind = classifyProbabilitySlot(item);
+  const config = SLOT_PROBABILITY_CONFIG[slotKind];
+  const result = { potential: null, additionalPotential: null, flame: null };
+  if (!config) {
+    return result;
+  }
+  const cube = async (sourceType, section) => {
+    const rows = normalizeOptionRows(item?.[SECTION_SOURCE[section].optionsKey]);
+    const context = await loadCubeContext(item, sourceType, config, slotKind, rows);
+    if (!context) return null;
+    const tableByGrade = (await loadProbabilityTable(context.fileName))?.[context.tableKey] || {};
+    const grades = {};
+    for (const [grade, bucket] of Object.entries(tableByGrade)) {
+      grades[grade] = LINE_BUCKET_KEYS.map((_, index) =>
+        lineRowsFor(bucket, index)
+          .map((row) => ({
+            option: String(row?.option || "").trim(),
+            value: String(row?.value || "").trim(),
+            p: parseProbabilityPercent(row?.p),
+          }))
+          .filter((row) => row.option && row.p > 0),
+      );
+    }
+    return { grade: context.gradeKey, lineCount: Math.max(1, readOptionLines(item, section).length), grades };
+  };
+  const flame = async () => {
+    const fileName = FLAME_FILE_BY_SLOT[slotKind];
+    const masteryTable = (await loadProbabilityTable(MASTERY_FILE)) || {};
+    const flameName = resolveFlameName(item, masteryTable);
+    if (!fileName || !flameName) return null;
+    const block = (await loadProbabilityTable(fileName))?.[flameName];
+    const levelKey = block ? resolveFlameLevelKey(block, item, slotKind) : null;
+    if (!levelKey) return null;
+    const options = (block.options || [])
+      .map((option) => {
+        const range = option?.ranges?.[levelKey];
+        return {
+          option: String(option?.option || "").trim(),
+          p: parseProbabilityPercent(option?.p),
+          min: parseFlameNumber(range?.min),
+          max: parseFlameNumber(range?.max),
+          step: parseFlameNumber(option?.step),
+          percent: String(range?.min || "").includes("%") || String(option?.step || "").includes("%"),
+        };
+      })
+      .filter((option) => option.option && option.p > 0 && option.min !== null && option.max !== null && option.step);
+    return { flameName, twoOptionChance: parseProbabilityPercent(block.two_option_chance) / 100, options };
+  };
+  const [potential, additionalPotential, flameTable] = await Promise.all([
+    cube("potential", "potential"),
+    cube("additional", "additionalPotential"),
+    flame(),
+  ]);
+  return { potential, additionalPotential, flame: flameTable };
+}
+
 async function resolveTopPercentBreakdown(item, profileContext = null) {
   const slotKind = classifyProbabilitySlot(item);
   const config = SLOT_PROBABILITY_CONFIG[slotKind];
@@ -1498,6 +1558,7 @@ async function resolveTopPercent(item, profileContext = null) {
 export {
   captionFromBreakdown,
   resolveOptionCandidates,
+  resolveRollTables,
   FLAME_SCORE_WEIGHTS,
   FLAME_FILE_BY_SLOT,
   SLOT_PROBABILITY_CONFIG,

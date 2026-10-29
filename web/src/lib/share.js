@@ -563,6 +563,28 @@ export async function topPercentCaption(item, profile) {
  * 표를 불러오지 못하면 null.
  * @param {any} item
  */
+/** 큐브·불꽃 시뮬레이터용 줄 표(공식 확률 포함). 표를 못 찾으면 null. @param {any} item */
+export async function rollTables(item) {
+  try {
+    const module = await import("../../../public/js/features/item-share.js");
+    return await module.resolveRollTables(item);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 시뮬레이션한 옵션 줄의 상위 %("0.057%"). 바꾼 부분만 덮어쓴 장비로 계산한다.
+ * @param {any} item @param {any} profile @param {"potential" | "additionalPotential" | "additional"} section
+ */
+export async function simulatedTop(item, profile, section) {
+  const result = await itemBreakdown(item, profile);
+  const breakdown = result?.breakdown;
+  if (!breakdown) return "";
+  if (section === "additional") return result.module.formatAdditionalOptionPercent(breakdown.additionalOptionPercent) || "";
+  return toPercentText(result.module, section === "potential" ? breakdown.potentialProbability : breakdown.additionalProbability) || "";
+}
+
 export async function optionCandidates(item) {
   try {
     const module = await import("../../../public/js/features/item-share.js");

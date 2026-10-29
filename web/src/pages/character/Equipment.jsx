@@ -15,6 +15,7 @@ import { itemInsight } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
 import { useShareCaption } from "../../lib/shareSettings.js";
 import { WhatIf } from "./WhatIf.jsx";
+import { CubeSim } from "./CubeSim.jsx";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -226,8 +227,9 @@ export function Equipment({ data, world, mode, presetNo }) {
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
   const [captionOn, setCaptionOn] = useShareCaption();
   // 장비 시트에서 "옵션 바꿔 보기"를 눌렀는지(다른 장비를 열면 닫는다).
-  const [whatIf, setWhatIf] = useState(false);
-  useEffect(() => setWhatIf(false), [sheetItem]);
+  // 장비 시트 안의 체험: "" | "whatif"(옵션 바꿔 보기) | "cube"(큐브 돌려 보기)
+  const [trial, setTrial] = useState("");
+  useEffect(() => setTrial(""), [sheetItem]);
   useEffect(() => {
     loadItemRanks(data.ocid);
   }, [data.ocid]);
@@ -431,21 +433,37 @@ export function Equipment({ data, world, mode, presetNo }) {
         : null}
 
       <Sheet open={Boolean(sheetItem)} title={sheetItem ? sheetItem.itemName || "장비" : "장비"} onClose={() => setSheetItem(null)}>
-        {sheetItem && whatIf ? (
+        {sheetItem && trial === "cube" ? (
+          <CubeSim
+            item={sheetItem}
+            profile={profile}
+            majorStats={data.profile?.majorStats || {}}
+            attackType={data.profile?.attackType || "physical"}
+            basePower={Number(data.profile?.statSetting?.combatPower?.boss) || null}
+            onClose={() => setTrial("")}
+          />
+        ) : null}
+        {sheetItem && trial === "whatif" ? (
           <WhatIf
             item={sheetItem}
             majorStats={data.profile?.majorStats || {}}
             attackType={data.profile?.attackType || "physical"}
             basePower={Number(data.profile?.statSetting?.combatPower?.boss) || null}
-            onClose={() => setWhatIf(false)}
+            onClose={() => setTrial("")}
           />
         ) : null}
-        {sheetItem && !whatIf ? (
+        {sheetItem && !trial ? (
           <ItemShare item={sheetItem} profile={profile} world={world}>
-            <button type="button" class="btn btn--secondary btn--sm eq-whatif-open" onClick={() => setWhatIf(true)}>
-              <Icon name="sparkle" size={16} />
-              옵션 바꿔 보기
-            </button>
+            <span class="eq-trials">
+              <button type="button" class="btn btn--secondary btn--sm eq-whatif-open" onClick={() => setTrial("whatif")}>
+                <Icon name="sparkle" size={16} />
+                옵션 바꿔 보기
+              </button>
+              <button type="button" class="btn btn--secondary btn--sm eq-cube-open" onClick={() => setTrial("cube")}>
+                <Icon name="refresh" size={16} />
+                큐브 돌려 보기
+              </button>
+            </span>
             <EquipDetail item={sheetItem} profile={profile} />
           </ItemShare>
         ) : null}

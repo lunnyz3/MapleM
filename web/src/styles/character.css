@@ -3604,3 +3604,81 @@ button.eq-slot:hover .eq-slot__img {
     animation: none;
   }
 }
+
+/* 큐브 돌려 보기 */
+.eq-trials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cubesim__now,
+.cubesim__pending {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.cubesim__pending {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--primary-soft);
+  animation: growth-in 260ms var(--ease-spring) both;
+}
+
+.cubesim__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.cubesim__head .whatif__title,
+.cubesim__pending .whatif__title {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+}
+
+.cubesim__stat {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.cubesim__lines {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-14);
+}
+
+.cubesim__lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cubesim__up {
+  color: var(--success);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.cubesim__choose,
+.cubesim__rolls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cubesim__note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
