@@ -7,6 +7,7 @@
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
 //   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
+//   GET /api/v2/collection-summary                        → { ok, characters } (모은 캐릭터 수)
 const { normalizeWorldName } = require("../config/worlds");
 const {
   rankCharacterItems,
@@ -15,6 +16,7 @@ const {
   listSpecRanking,
   findSpecs,
   rankSpec,
+  collectionSummary,
   SPEC_METRICS
 } = require("../services/item-ranking.service");
 
@@ -177,7 +179,18 @@ async function getCharacterRecord(req, res) {
   }
 }
 
+async function getCollectionSummary(req, res) {
+  try {
+    const summary = await collectionSummary();
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json({ ok: true, ...summary });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 module.exports = {
+  getCollectionSummary,
   getItemRanks,
   getItemRankingGroups,
   getItemRanking,

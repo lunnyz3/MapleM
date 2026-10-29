@@ -10,6 +10,7 @@ import { Segmented } from "../components/Tabs.jsx";
 import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
 import { WORLDS } from "../lib/game.js";
+import { CollectedNote } from "../components/CollectedNote.jsx";
 
 const TOPS = [
   { value: "100", label: "100명" },
@@ -249,6 +250,7 @@ export function Stats() {
           <SplitText text="통계" />
         </h1>
       </header>
+      <CollectedNote />
       <div class="stats-switch">
         <Segmented
           name="stats-view"

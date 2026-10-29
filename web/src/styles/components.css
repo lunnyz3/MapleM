@@ -1281,3 +1281,24 @@ a.stat-tile:hover .stat-tile__go {
   font-weight: 900;
   line-height: 16px;
 }
+
+/* 자체 수집 기준 안내 */
+.collected-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: 1.55;
+}
+
+.collected-note svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--text-subtle);
+}

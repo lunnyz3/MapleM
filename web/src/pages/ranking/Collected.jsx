@@ -16,6 +16,7 @@ import { gradeInfo, starforce } from "../../lib/character.js";
 import { formatComma, formatDecimal, formatKoreanUnits, formatRelativeTime } from "../../lib/format.js";
 import { WORLDS, urls } from "../../lib/game.js";
 import { EquipDetail } from "../character/Equipment.jsx";
+import { CollectedNote } from "../../components/CollectedNote.jsx";
 
 /** 부위 순서(장비창 순). 서버에 있는 부위만 보여 준다. */
 /** 순위를 매기는 계열과 방어구 부위(무기는 무기 종류별). 서버 item-score.json 과 같다. */
@@ -194,6 +195,7 @@ export function ItemRanking({ query, onQuery }) {
         items={topItems}
       />
 
+      <CollectedNote />
       <section class="rk-filters card crk-filters" aria-label="아이템 랭킹 조건">
         <div class="crk-filters__row">
           <WorldSelect id="crk-item-world" world={query.world} onWorld={(world) => onQuery({ world, page: 1 })} />
@@ -322,6 +324,7 @@ export function SpecRanking({ query, onQuery }) {
         onChange={(id) => onQuery({ metric: id, page: 1 })}
         items={SPEC_METRICS.map((entry) => ({ id: entry.id, label: entry.label }))}
       />
+      <CollectedNote />
       <section class="rk-filters card crk-filters" aria-label="스펙 랭킹 조건">
         <div class="crk-filters__row">
           <WorldSelect id="crk-spec-world" world={query.world} onWorld={(world) => onQuery({ world, page: 1 })} />

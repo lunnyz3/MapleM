@@ -328,7 +328,21 @@ async function rankSpec(worldName, characterName) {
   return { spec, ranks };
 }
 
+const summaryCache = new TtlLruCache({ maxEntries: 2, maxBytes: 4 * 1024 });
+
+/** 모은 캐릭터 수(지금 점수 규칙으로 저장된 스펙). 10분 기억. */
+async function collectionSummary() {
+  if (!isMongoConnected()) return { characters: 0 };
+  const cached = summaryCache.get("summary");
+  if (cached !== undefined) return cached;
+  const characters = await CharacterSpec.countDocuments({ scoreVersion: SCORE_VERSION }).maxTimeMS(DB_TIMEOUT_MS);
+  const summary = { characters };
+  summaryCache.set("summary", summary, GROUP_TOTAL_TTL_MS, 64);
+  return summary;
+}
+
 module.exports = {
+  collectionSummary,
   rankSpec,
   findSpecs,
   recordCharacterItems,
