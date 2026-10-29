@@ -809,3 +809,17 @@
     font-size: var(--fs-14);
   }
 }
+
+/* 길드 첫 화면: 전장·지하수로 상위 길드 */
+.gd-tops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .gd-tops {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

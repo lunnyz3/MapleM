@@ -205,7 +205,7 @@ function RankingShortcuts() {
 /**
  * @param {{ type: import("../lib/game.js").RankingType, row: Record<string, any>, index: number }} props
  */
-function RankRow({ type, row, index }) {
+export function RankRow({ type, row, index }) {
   const isGuild = type.subject === "guild";
   const name = String((isGuild ? row.guild_name : row.character_name) || "-");
   const world = String(row.world_name || "");
@@ -238,7 +238,7 @@ function RankRow({ type, row, index }) {
  * @param {string} typeId
  * @returns {[LoadState, () => void]}
  */
-function useRanking(typeId) {
+export function useRanking(typeId) {
   // 상태에 랭킹 종류를 함께 저장해, 탭을 바꾼 직후 이전 탭의 행이 새 종류로 그려지지 않게 한다.
   const [saved, setSaved] = useState(/** @type {{ typeId: string, state: LoadState }} */ ({ typeId, state: { status: "loading" } }));
   const [attempt, setAttempt] = useState(0);

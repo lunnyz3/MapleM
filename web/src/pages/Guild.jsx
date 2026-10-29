@@ -16,7 +16,8 @@ import { toast } from "../components/Toast.jsx";
 import { getJson, loadCharacterImage, peekCharacterClass } from "../lib/api.js";
 import { loadGuild } from "../lib/data.js";
 import { formatComma, formatDateDot, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
-import { WORLDS, urls } from "../lib/game.js";
+import { WORLDS, getRankingType, urls } from "../lib/game.js";
+import { RankRow, useRanking } from "./Home.jsx";
 import { useInView } from "../lib/motion.js";
 import { copyText, sharePageUrl } from "../lib/share.js";
 import { addRecent, entryKey, toggleFavorite, useSaved } from "../lib/storage.js";
@@ -481,6 +482,75 @@ function GuildSkeleton() {
 }
 
 /** 길드 검색 화면(/guild): 검색창 + 즐겨찾기·최근 본 길드. */
+/** 길드 랭킹(전장·지하수로) 상위 길드. */
+function GuildRankingCard({ typeId }) {
+  const type = getRankingType(typeId);
+  const [state, retry] = useRanking(typeId);
+  const rows = state.status === "ready" ? state.result.rows : [];
+  return (
+    <Card
+      class="gd-top"
+      title={`${type.short} 상위 길드`}
+      icon={type.icon}
+      tone={type.tone}
+      action={
+        <a class="text-link" href={urls.ranking(type.id)}>
+          전체 보기
+          <Icon name="chevronRight" size={18} />
+        </a>
+      }
+    >
+      {state.status === "loading" ? <SkeletonList rows={5} /> : null}
+      {state.status === "error" ? <ErrorState compact title="랭킹을 불러오지 못했어요" onRetry={retry} /> : null}
+      {rows.length ? (
+        <ol class="rank-list stagger-in" aria-label={`${type.label} 상위 길드`}>
+          {rows.map((row, index) => (
+            <RankRow key={`${row.ranking}-${row.guild_name}`} type={type} row={row} index={index} />
+          ))}
+        </ol>
+      ) : null}
+      {state.status === "ready" && !rows.length ? <EmptyState compact title="최근 집계된 랭킹이 없어요" /> : null}
+    </Card>
+  );
+}
+
+/** 오늘·어제 사이트에서 많이 본 길드. 기록이 없으면 그리지 않는다. */
+function PopularGuilds() {
+  const [items, setItems] = useState(/** @type {any[]} */ ([]));
+  useEffect(() => {
+    let alive = true;
+    getJson("/api/v2/popular").then(
+      ({ response, body }) => alive && response.ok && body?.ok && setItems(Array.isArray(body.guilds) ? body.guilds : []),
+      () => {}
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!items.length) return null;
+  return (
+    <Card title="많이 본 길드" icon="sparkle" tone="peach">
+      <ul class="gd-saved stagger-in">
+        {items.map((item, index) => (
+          <li key={`${item.worldName}/${item.characterName}`} style={{ "--stagger": index }}>
+            <a class="gd-saved__link spotlight" href={urls.guild(item.worldName, item.characterName)} {...spotlightHandlers()}>
+              <Avatar kind="guild" world={item.worldName} name={item.characterName} size={44} />
+              <span class="gd-saved__text">
+                <span class="gd-saved__name">{item.characterName}</span>
+                <span class="gd-saved__meta">
+                  <WorldIcon world={item.worldName} />
+                  {item.characterClass ? <span>{item.characterClass}</span> : null}
+                </span>
+              </span>
+              <Icon name="chevronRight" size={18} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 function GuildSearch() {
   const saved = useSaved();
   const seen = new Set();
@@ -528,6 +598,11 @@ function GuildSearch() {
           </ul>
         </Card>
       ) : null}
+      <div class="gd-tops">
+        <GuildRankingCard typeId="sharenian-battlefield" />
+        <GuildRankingCard typeId="sharenian-waterway" />
+      </div>
+      <PopularGuilds />
     </div>
   );
 }
