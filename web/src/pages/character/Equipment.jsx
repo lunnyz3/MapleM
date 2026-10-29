@@ -11,12 +11,14 @@ import { SLOT_LAYOUT, emblemInfo, gradeInfo, potentialInfo, presetByNo, presetNu
 import { formatComma } from "../../lib/format.js";
 import { hasFinePointer } from "../../lib/motion.js";
 import { loadItemRanks, rankText, useItemRank } from "../../lib/itemRanks.js";
-import { itemInsight } from "../../lib/share.js";
+import { itemInsight, rollTables } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
 import { useShareCaption } from "../../lib/shareSettings.js";
 import { WhatIf } from "./WhatIf.jsx";
 import { CubeSim } from "./CubeSim.jsx";
 import { itemScoreText } from "../../lib/itemScore.js";
+import { cubeSectionScore, flameSectionScore, scoreTier } from "../../lib/sectionScore.mjs";
+import scoreRules from "../../../../src/game-data/item-score.json";
 
 /** 장비에서 툴팁으로 마우스를 옮기는 동안 툴팁을 유지하는 시간(ms) */
 const TIP_HIDE_DELAY = 220;
@@ -39,6 +41,73 @@ function useItemInsight(item, profile) {
     };
   }, [item]);
   return insight;
+}
+
+/** 마스터리 상승분을 뺀 줄(굴린 값). */
+function rolledLines(options, bonuses = []) {
+  return (Array.isArray(options) ? options : []).map((option, index) => {
+    const text = String(option?.value ?? "");
+    const bonus = Number(bonuses[index]) || 0;
+    if (!bonus) return { name: option?.name, value: text };
+    const value = Math.max(0, Math.round((Number(text.replace(/[^0-9.]/g, "")) - bonus) * 100) / 100);
+    return { name: option?.name, value: text.includes("%") ? `${value}%` : String(value) };
+  });
+}
+
+/**
+ * 옵션 묶음 점수(잠재·에디·추옵): 그 등급에서 받을 수 있는 가장 좋은 줄을 100점으로, 실전 딜 가중치로 센다.
+ * @returns {{ potential?: number, additionalPotential?: number, additional?: number }}
+ */
+function useSectionScores(item, profile, insight) {
+  const [scores, setScores] = useState(/** @type {Record<string, number>} */ ({}));
+  useEffect(() => {
+    let alive = true;
+    setScores({});
+    if (!insight) return undefined;
+    rollTables(item).then((tables) => {
+      if (!alive || !tables) return;
+      const weights = scoreRules.weights;
+      const side = profile?.attackType === "magical" ? "magical" : "physical";
+      const next = {};
+      for (const [key, field] of [
+        ["potential", "potentialOption"],
+        ["additionalPotential", "additionalPotentialOption"]
+      ]) {
+        const table = tables[key];
+        const result = table ? cubeSectionScore({ weights, side, lines: rolledLines(item?.[field], insight.bonusValues?.[key]), bucket: table.grades[table.grade] }) : null;
+        if (result) next[key] = result;
+      }
+      if (tables.flame) {
+        const result = flameSectionScore({ weights, side, lines: rolledLines(item?.additionalOption, insight.bonusValues?.additional), options: tables.flame.options });
+        if (result) next.additional = result;
+      }
+      setScores(next);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [item, insight]);
+  return scores;
+}
+
+/** 묶음 점수 표시: 가로 막대 + 숫자(우리 디자인). @param {{ score?: { score: number, basis: string } }} props */
+function SectionScore({ score: result }) {
+  const score = result?.score;
+  if (!Number.isFinite(score)) return null;
+  const value = Math.round(score);
+  const title =
+    result.basis === "value"
+      ? "이 부위에는 딜 옵션이 없어, 줄마다 그 옵션 최고 수치 대비로 본 점수(마스터리 제외)"
+      : "그 등급에서 받을 수 있는 가장 좋은 줄을 100점으로 본 점수(실전 딜 가중치, 마스터리 제외)";
+  return (
+    <span class={`opt-score is-${scoreTier(score)}`} title={title}>
+      <span class="opt-score__bar" aria-hidden="true">
+        <span style={{ "--w": `${Math.max(4, value)}%` }} />
+      </span>
+      <b class="num">{value}</b>
+      <span class="sr-only">점</span>
+    </span>
+  );
 }
 
 /**
@@ -72,7 +141,7 @@ function StarRow({ count }) {
  * bonuses[i] 는 i 번째 줄의 마스터리 상승분("+4%")이다.
  * @param {{ label: string, options: any[], grade?: any, tone?: string, bonuses?: string[], badge?: string }} props
  */
-function OptionBlock({ label, options, grade, tone, bonuses = [], badge = "" }) {
+function OptionBlock({ label, options, grade, tone, bonuses = [], badge = "", score }) {
   if (!Array.isArray(options) || !options.length) return null;
   return (
     <section class={`eq-opts${grade ? ` is-${grade.key}` : ""}${tone ? ` eq-opts--${tone}` : ""}`}>
@@ -81,6 +150,7 @@ function OptionBlock({ label, options, grade, tone, bonuses = [], badge = "" }) 
         <span>{label}</span>
         {grade ? <span class="eq-opts__grade">{grade.label}</span> : null}
         {badge ? <span class="eq-opts__grade num">{badge}</span> : null}
+        <SectionScore score={score} />
       </h4>
       <ul>
         {options.map((option, index) => (
@@ -127,6 +197,7 @@ export function EquipDetail({ item, profile = null, compact = false }) {
   const karma = Number(item.karmaScissorsRemaining);
   const expand = Number(item.remainingStarforceExpansion);
   const insight = useItemInsight(item, profile);
+  const sectionScores = useSectionScores(item, profile, insight);
   const bonuses = insight?.bonuses || {};
   const rank = useItemRank(item.fingerprint);
 
@@ -170,9 +241,9 @@ export function EquipDetail({ item, profile = null, compact = false }) {
 
       <div class="eq-detail__body">
         <OptionBlock label="기본 옵션" options={item.basicOption} />
-        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} />
-        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialTop ? `상위 ${insight.potentialTop}` : ""} />
-        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialTop ? `상위 ${insight.additionalPotentialTop}` : ""} />
+        <OptionBlock label="추가 옵션" options={item.additionalOption} tone="add" bonuses={bonuses.additional} badge={insight?.additionalOptionTop ? `상위 ${insight.additionalOptionTop}` : ""} score={sectionScores.additional} />
+        <OptionBlock label="잠재능력" options={item.potentialOption} grade={potential} bonuses={bonuses.potential} badge={insight?.potentialTop ? `상위 ${insight.potentialTop}` : ""} score={sectionScores.potential} />
+        <OptionBlock label="에디셔널 잠재능력" options={item.additionalPotentialOption} grade={additional} bonuses={bonuses.additionalPotential} badge={insight?.additionalPotentialTop ? `상위 ${insight.additionalPotentialTop}` : ""} score={sectionScores.additionalPotential} />
         {emblem ? (
           <section class="eq-opts eq-opts--emblem">
             <h4 class="eq-opts__head">

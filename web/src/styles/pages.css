@@ -266,6 +266,12 @@
   overflow: hidden;
 }
 
+/* 넓은 내용(스타코러스 별자리판 등) */
+.sheet.sheet--wide {
+  width: min(1040px, calc(100vw - 32px));
+  max-height: min(92vh, 900px);
+}
+
 .sheet::backdrop {
   background: var(--scrim);
   -webkit-backdrop-filter: blur(2px);

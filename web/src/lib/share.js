@@ -528,7 +528,14 @@ export async function itemInsight(item, profile) {
   const breakdown = result?.breakdown;
   if (!breakdown) return null;
   const texts = (/** @type {any} */ section) => (Array.isArray(section?.lines) ? section.lines.map((line) => line?.text || "") : []);
+  const values = (/** @type {any} */ section) => (Array.isArray(section?.lines) ? section.lines.map((line) => Number(line?.bonus) || 0) : []);
   return {
+    // 줄별 마스터리 상승분 숫자(묶음 점수에서 굴린 값만 세려고 뺀다)
+    bonusValues: {
+      potential: values(breakdown.mastery?.potential),
+      additionalPotential: values(breakdown.mastery?.additionalPotential),
+      additional: values(breakdown.mastery?.additional)
+    },
     bonuses: {
       potential: texts(breakdown.mastery?.potential),
       additionalPotential: texts(breakdown.mastery?.additionalPotential),

@@ -29,10 +29,7 @@ export function CollectedNote({ class: className = "" }) {
   return (
     <p class={`collected-note ${className}`}>
       <Icon name="info" size={16} />
-      <span>
-        메이플M 전체 캐릭터가 아니라 이 사이트가 모은 캐릭터{count ? ` ${formatComma(count)}명` : ""} 기준이에요. 매일 전투력 상위 1만 명, 길드원, 사이트에서 조회한 캐릭터를
-        모아요(넥슨 API는 전체 캐릭터 목록을 주지 않아요).
-      </span>
+      <span>현재 DB에 저장된 캐릭터{count ? ` ${formatComma(count)}명` : ""} 기준이에요.</span>
     </p>
   );
 }

@@ -348,8 +348,8 @@ function StatsPanel({ stats, mode, onMode }) {
   );
 }
 
+// 장비는 탭이 아니라 프로필 바로 아래에 늘 보인다(운영자 요청 2026-10-29).
 const TAB_ITEMS = [
-  { id: "equipment", label: "장비", icon: "medal" },
   { id: "stats", label: "스탯", icon: "sparkle" },
   { id: "efficiency", label: "스탯 효율", icon: "bolt" },
   { id: "growth", label: "내실", icon: "trophy" },
@@ -395,7 +395,7 @@ export function Character({ world, name }) {
   const [mode, setMode] = useState(/** @type {StatMode} */ ("boss"));
   const [tab, setTab] = useState(() => {
     const hash = window.location.hash.replace("#", "");
-    return TAB_ITEMS.some((item) => item.id === hash) ? hash : "equipment";
+    return TAB_ITEMS.some((item) => item.id === hash) ? hash : "stats";
   });
   // 직접 입력: 정의 목록 · 저장값 · 다시 계산한 스탯
   const [manualDefs, setManualDefs] = useState(/** @type {{ status: "loading" } | { status: "ready", items: any[] } | { status: "unavailable" }} */ ({ status: "loading" }));
@@ -485,7 +485,7 @@ export function Character({ world, name }) {
   useEffect(() => {
     if (state.status !== "ready") return;
     const next = `#${tab}`;
-    if (window.location.hash !== next) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${tab === "equipment" ? "" : next}`);
+    if (window.location.hash !== next) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${tab === "stats" ? "" : next}`);
   }, [tab, state.status]);
 
   if (!validWorld || !name) {
@@ -537,7 +537,12 @@ export function Character({ world, name }) {
 
   return (
     <div class="ch">
-      <ProfileHeader data={data} world={world} onRefresh={refresh} refreshing={refreshing} refreshLocked={refreshLocked} />
+      <div class="ch-top">
+        <ProfileHeader data={data} world={world} onRefresh={refresh} refreshing={refreshing} refreshLocked={refreshLocked} />
+        <Reveal as="section" class="ch-equip card" aria-label="장비">
+          <Equipment data={data} world={world} mode={mode} presetNo={bossPresets.equipment} />
+        </Reveal>
+      </div>
 
       <div class="ch-stats-row">
         <Reveal class="ch-stats-row__main">
@@ -545,6 +550,8 @@ export function Character({ world, name }) {
         </Reveal>
         <Reveal class="ch-stats-row__side" delay={80}>
           <ManualPanel
+            storageKey={`${world}.${name}`}
+            attackType={stats.profile.attackType}
             defs={manualDefs}
             values={manualValues}
             result={manualResult}
@@ -558,7 +565,6 @@ export function Character({ world, name }) {
       <section class="ch-tabs" aria-label="상세 정보">
         <Tabs idBase="ch" label="상세 정보" scrollable value={tab} onChange={setTab} items={TAB_ITEMS} />
         <TabPanel idBase="ch" value={tab} class="ch-tabs__panel">
-          {tab === "equipment" ? <Equipment data={data} world={world} mode={mode} presetNo={bossPresets.equipment} /> : null}
           {tab === "stats" ? <StatsTab data={data} presets={bossPresets} /> : null}
           {tab === "growth" ? (
             <GrowthTab

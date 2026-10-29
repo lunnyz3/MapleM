@@ -1,0 +1,427 @@
+{
+  "_meta": {
+    "description": "스타코러스 별자리판: 별 32개(열 0~8, 줄 0~4), 스탯·값·비용(세리온), 먼저 열어야 하는 별(needs, 그중 하나). 범위 별(range)은 값을 고른다.",
+    "updatedAt": "2026-10-29",
+    "verification": "2026-10 공개 계산 도구의 별자리판 표를 옮겼다. 스탯별 합의 최대가 직접 입력 최대치(공격력%·대미지 36, 보공·치피 28, 최종 40, 최대 대미지 5.5억)와 같다.",
+    "notes": [
+      "\"물리\" 스탯은 마법 직업이면 마법으로 본다.",
+      "범위 별의 값 확률(ranges odds, %)은 참고용이다."
+    ]
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "col": 0,
+      "row": 2,
+      "stat": "최대 대미지",
+      "range": true,
+      "cost": 1,
+      "needs": []
+    },
+    {
+      "id": "pd-a1",
+      "col": 1,
+      "row": 0,
+      "stat": "물리 대미지",
+      "value": 5,
+      "cost": 12,
+      "needs": [
+        "pd-b1"
+      ]
+    },
+    {
+      "id": "pd-a2",
+      "col": 2,
+      "row": 0,
+      "stat": "물리 대미지",
+      "value": 6,
+      "cost": 12,
+      "needs": [
+        "pd-a1"
+      ]
+    },
+    {
+      "id": "pd-a3",
+      "col": 3,
+      "row": 0,
+      "stat": "물리 대미지",
+      "value": 7,
+      "cost": 12,
+      "needs": [
+        "pd-a2"
+      ]
+    },
+    {
+      "id": "pd-b1",
+      "col": 1,
+      "row": 1,
+      "stat": "물리 대미지",
+      "value": 5,
+      "cost": 12,
+      "needs": [
+        "start"
+      ]
+    },
+    {
+      "id": "pd-b2",
+      "col": 2,
+      "row": 1,
+      "stat": "물리 대미지",
+      "value": 6,
+      "cost": 12,
+      "needs": [
+        "pd-b1"
+      ]
+    },
+    {
+      "id": "pd-b3",
+      "col": 3,
+      "row": 1,
+      "stat": "물리 대미지",
+      "value": 7,
+      "cost": 12,
+      "needs": [
+        "pd-b2"
+      ]
+    },
+    {
+      "id": "md-1",
+      "col": 1,
+      "row": 2,
+      "stat": "최대 대미지",
+      "value": 30000000,
+      "cost": 12,
+      "needs": [
+        "start"
+      ]
+    },
+    {
+      "id": "md-2",
+      "col": 2,
+      "row": 2,
+      "stat": "최대 대미지",
+      "value": 30000000,
+      "cost": 12,
+      "needs": [
+        "md-1"
+      ]
+    },
+    {
+      "id": "md-3",
+      "col": 3,
+      "row": 2,
+      "stat": "최대 대미지",
+      "value": 30000000,
+      "cost": 12,
+      "needs": [
+        "md-2"
+      ]
+    },
+    {
+      "id": "atk-a1",
+      "col": 1,
+      "row": 3,
+      "stat": "물리 공격력%",
+      "value": 5,
+      "cost": 12,
+      "needs": [
+        "start"
+      ]
+    },
+    {
+      "id": "atk-a2",
+      "col": 2,
+      "row": 3,
+      "stat": "물리 공격력%",
+      "value": 6,
+      "cost": 12,
+      "needs": [
+        "atk-a1"
+      ]
+    },
+    {
+      "id": "atk-a3",
+      "col": 3,
+      "row": 3,
+      "stat": "물리 공격력%",
+      "value": 7,
+      "cost": 12,
+      "needs": [
+        "atk-a2"
+      ]
+    },
+    {
+      "id": "atk-b1",
+      "col": 1,
+      "row": 4,
+      "stat": "물리 공격력%",
+      "value": 5,
+      "cost": 12,
+      "needs": [
+        "atk-a1"
+      ]
+    },
+    {
+      "id": "atk-b2",
+      "col": 2,
+      "row": 4,
+      "stat": "물리 공격력%",
+      "value": 6,
+      "cost": 12,
+      "needs": [
+        "atk-b1"
+      ]
+    },
+    {
+      "id": "atk-b3",
+      "col": 3,
+      "row": 4,
+      "stat": "물리 공격력%",
+      "value": 7,
+      "cost": 12,
+      "needs": [
+        "atk-b2"
+      ]
+    },
+    {
+      "id": "fd-top",
+      "col": 4,
+      "row": 0,
+      "stat": "최종 대미지",
+      "range": true,
+      "cost": 50,
+      "needs": [
+        "pd-a3"
+      ]
+    },
+    {
+      "id": "md-mid",
+      "col": 4,
+      "row": 2,
+      "stat": "최대 대미지",
+      "range": true,
+      "cost": 50,
+      "needs": [
+        "md-3",
+        "pd-b3",
+        "atk-a3"
+      ]
+    },
+    {
+      "id": "fd-bot",
+      "col": 4,
+      "row": 4,
+      "stat": "최종 대미지",
+      "range": true,
+      "cost": 50,
+      "needs": [
+        "atk-b3"
+      ]
+    },
+    {
+      "id": "cd-1",
+      "col": 5,
+      "row": 0,
+      "stat": "치명타 피해",
+      "value": 5,
+      "cost": 25,
+      "needs": [
+        "fd-top"
+      ]
+    },
+    {
+      "id": "cd-2",
+      "col": 6,
+      "row": 0,
+      "stat": "치명타 피해",
+      "value": 6,
+      "cost": 25,
+      "needs": [
+        "cd-1"
+      ]
+    },
+    {
+      "id": "cd-3",
+      "col": 7,
+      "row": 0,
+      "stat": "치명타 피해",
+      "value": 10,
+      "cost": 25,
+      "needs": [
+        "cd-2"
+      ]
+    },
+    {
+      "id": "cd-4",
+      "col": 6,
+      "row": 1,
+      "stat": "치명타 피해",
+      "value": 7,
+      "cost": 25,
+      "needs": [
+        "cd-2"
+      ]
+    },
+    {
+      "id": "md-4",
+      "col": 5,
+      "row": 2,
+      "stat": "최대 대미지",
+      "value": 50000000,
+      "cost": 25,
+      "needs": [
+        "md-mid"
+      ]
+    },
+    {
+      "id": "md-5",
+      "col": 6,
+      "row": 2,
+      "stat": "최대 대미지",
+      "value": 50000000,
+      "cost": 25,
+      "needs": [
+        "md-4"
+      ]
+    },
+    {
+      "id": "boss-1",
+      "col": 5,
+      "row": 4,
+      "stat": "보스 공격력",
+      "value": 5,
+      "cost": 25,
+      "needs": [
+        "fd-bot"
+      ]
+    },
+    {
+      "id": "boss-2",
+      "col": 6,
+      "row": 4,
+      "stat": "보스 공격력",
+      "value": 6,
+      "cost": 25,
+      "needs": [
+        "boss-1"
+      ]
+    },
+    {
+      "id": "boss-3",
+      "col": 7,
+      "row": 4,
+      "stat": "보스 공격력",
+      "value": 10,
+      "cost": 25,
+      "needs": [
+        "boss-2"
+      ]
+    },
+    {
+      "id": "boss-4",
+      "col": 6,
+      "row": 3,
+      "stat": "보스 공격력",
+      "value": 7,
+      "cost": 25,
+      "needs": [
+        "boss-2"
+      ]
+    },
+    {
+      "id": "md-end",
+      "col": 7,
+      "row": 2,
+      "stat": "최대 대미지",
+      "range": true,
+      "cost": 50,
+      "needs": [
+        "md-5",
+        "cd-4",
+        "boss-4"
+      ]
+    },
+    {
+      "id": "fd-e1",
+      "col": 8,
+      "row": 1,
+      "stat": "최종 대미지",
+      "value": 10,
+      "cost": 40,
+      "needs": [
+        "md-end"
+      ]
+    },
+    {
+      "id": "fd-e2",
+      "col": 8,
+      "row": 3,
+      "stat": "최종 대미지",
+      "value": 10,
+      "cost": 40,
+      "needs": [
+        "md-end"
+      ]
+    }
+  ],
+  "ranges": {
+    "최대 대미지": [
+      30000000,
+      50000000,
+      60000000,
+      70000000,
+      75000000,
+      80000000,
+      85000000,
+      90000000,
+      100000000,
+      120000000
+    ],
+    "최종 대미지": [
+      5.5,
+      6,
+      6.5,
+      7,
+      7.5,
+      8,
+      8.5,
+      9,
+      9.5,
+      10
+    ]
+  },
+  "odds": {
+    "최대 대미지": [
+      19,
+      18,
+      16,
+      12,
+      10,
+      9,
+      8,
+      5,
+      2,
+      1
+    ],
+    "최종 대미지": [
+      19,
+      18,
+      16,
+      12,
+      10,
+      9,
+      8,
+      5,
+      2,
+      1
+    ]
+  },
+  "manualIds": {
+    "물리 대미지": "starcorusDamage",
+    "물리 공격력%": "starcorusAttackPercent",
+    "최대 대미지": "starcorusMaxDamage",
+    "최종 대미지": "starcorusFinalDamage",
+    "치명타 피해": "starcorusCriticalDamage",
+    "보스 공격력": "starcorusBossDamage"
+  }
+}

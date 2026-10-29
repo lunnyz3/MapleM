@@ -7,6 +7,8 @@ import { Icon } from "../../components/Icon.jsx";
 import { Magnetic } from "../../components/Motion.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
 import { formatComma, formatDecimal, formatKoreanUnits, formatRelativeTime } from "../../lib/format.js";
+import { Sheet } from "../../components/Sheet.jsx";
+import { StellaBoard } from "./StellaBoard.jsx";
 
 /** @typedef {import("../../lib/data.js").ManualInputDef} ManualInputDef */
 
@@ -46,11 +48,14 @@ function valueText(def, value) {
  *   result: { status: "idle" | "applying" | "applied" | "error", data?: any, error?: string, at?: number },
  *   onApply: (values: Record<string, number>) => void,
  *   powerBefore?: number | null,
- *   powerAfter?: number | null
- * }} props
+ *   powerAfter?: number | null,
+ *   storageKey?: string,
+ *   attackType?: string
+ * }} props  storageKey: 스타코러스 별자리판 상태를 기억할 캐릭터 키
  */
-export function ManualPanel({ defs, values, result, onApply, powerBefore = null, powerAfter = null }) {
+export function ManualPanel({ defs, values, result, onApply, powerBefore = null, powerAfter = null, storageKey = "", attackType = "physical" }) {
   const [draft, setDraft] = useState(/** @type {Record<string, string>} */ ({}));
+  const [boardOpen, setBoardOpen] = useState(false);
   const items = defs.status === "ready" ? defs.items : [];
   const byId = useMemo(() => new Map(items.map((def) => [def.id, def])), [items]);
 
@@ -77,11 +82,11 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
   }, [defs, items]);
 
   /** 기본값과 같은 칸은 보내지 않는다(입력 안 한 것과 같다). */
-  const collect = () => {
+  const collect = (source = draft) => {
     /** @type {Record<string, number>} */
     const out = {};
     for (const def of items) {
-      const raw = String(draft[def.id] ?? "").trim();
+      const raw = String(source[def.id] ?? "").trim();
       if (raw === "") continue;
       const number = Number(raw);
       if (!Number.isFinite(number)) continue;
@@ -143,6 +148,12 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
                     <Icon name="chevronDown" size={18} class="manual-group__chev" />
                   </summary>
                   <div class="manual-group__body">
+                    {group.id === "starcorus" ? (
+                      <button type="button" class="btn btn--secondary btn--sm manual-stella-open" onClick={() => setBoardOpen(true)}>
+                        <Icon name="sparkle" size={16} />
+                        별자리판으로 고르기
+                      </button>
+                    ) : null}
                     {group.list.map((def) => {
                       const unit = UNIT_TEXT[/** @type {keyof typeof UNIT_TEXT} */ (def.unit)] ?? "";
                       const id = `manual-${def.id}`;
@@ -269,6 +280,22 @@ export function ManualPanel({ defs, values, result, onApply, powerBefore = null,
           </div>
         </form>
       ) : null}
+      <Sheet open={boardOpen} title="스타코러스 별자리판" class="sheet--wide" onClose={() => setBoardOpen(false)}>
+        {boardOpen ? (
+          <StellaBoard
+            storageKey={storageKey || "default"}
+            attackType={attackType}
+            onClose={() => setBoardOpen(false)}
+            onApply={(boardValues) => {
+              const next = { ...draft };
+              for (const [id, value] of Object.entries(boardValues)) next[id] = value ? String(value) : "";
+              setDraft(next);
+              setBoardOpen(false);
+              onApply(collect(next));
+            }}
+          />
+        ) : null}
+      </Sheet>
     </Card>
   );
 }
