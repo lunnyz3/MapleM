@@ -31,3 +31,18 @@ test("자석펫: 같은 이름 항목은 합친다(원더 블랙 3.32 × 3 = 9.9
   assert.ok(Math.abs(black.chance - 0.0996) < 1e-9);
   assert.ok(Math.abs(black.diamonds - black.draws * (2500 / 11)) < 1e-9);
 });
+
+test("돌려 보기: 목표까지 횟수(기하분포), 그 안에 끝날 확률, 가중치 뽑기", async () => {
+  const { triesUntil, luckOf, drawOne, sanctuaryEntries } = await import("../web/src/lib/gachaCalc.mjs");
+  assert.equal(triesUntil(1), 1);
+  assert.equal(triesUntil(0), Infinity);
+  assert.equal(triesUntil(0.5, () => 0), 1, "random 0 이면 첫 번에");
+  assert.equal(triesUntil(0.5, () => 0.8), 3, "1-0.8=0.2 → log0.2/log0.5 = 2.32 → 3");
+  assert.equal(luckOf(0.5, 1), 0.5);
+  assert.ok(Math.abs(luckOf(0.1, 10) - (1 - 0.9 ** 10)) < 1e-12);
+  const entries = [{ id: "a", p: 1 }, { id: "b", p: 3 }];
+  assert.equal(drawOne(entries, () => 0.2).id, "a");
+  assert.equal(drawOne(entries, () => 0.3).id, "b");
+  const flat = sanctuaryEntries({ 공격력: { rare: [["1%", 2], ["2%", 3]] }, 방어력: { normal: [["5", 5]] } });
+  assert.deepEqual(flat.map((row) => [row.option, row.grade, row.value, row.p]), [["공격력", "rare", "1%", 2], ["공격력", "rare", "2%", 3], ["방어력", "normal", "5", 5]]);
+});

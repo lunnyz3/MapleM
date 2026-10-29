@@ -458,7 +458,7 @@ export function PolishCalc() {
           <ol class="calc-runs">
             {runs.map((run) => (
               <li key={run.id} class={run.luck <= 0.5 ? "is-good" : "is-bad"}>
-                <strong class="num">상위 {pct(Math.max(run.luck, 0.001) * 100, run.luck < 0.01 ? 1 : 0)}</strong>
+                <strong class="num">상위 {pct(Math.max(run.luck, 0.001) * 100, run.luck < 0.01 || run.luck > 0.99 ? 1 : 0)}</strong>
                 <span class="num">
                   {formatComma(run.tries)}회 · 재료 {formatComma(run.material)}개 · {meso(run.meso)}
                 </span>

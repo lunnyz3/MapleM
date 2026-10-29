@@ -52,3 +52,37 @@ export function magnetPetOdds(table, name) {
   const draws = chance > 0 ? 1 / chance : Infinity;
   return { chance, draws, diamonds: draws * (table.costs.eleven / 11) };
 }
+
+/** 목표가 나올 때까지 돌린 횟수 하나(기하분포 표본). @param {number} chance 한 번에 나올 확률 */
+export function triesUntil(chance, random = Math.random) {
+  if (!(chance > 0)) return Infinity;
+  if (chance >= 1) return 1;
+  return Math.max(1, Math.ceil(Math.log(1 - random()) / Math.log(1 - chance)));
+}
+
+/** tries 번 안에 끝날 확률(작을수록 운이 좋다 = 상위 %). */
+export function luckOf(chance, tries) {
+  return chance > 0 ? 1 - Math.pow(1 - chance, tries) : 1;
+}
+
+/**
+ * 확률 가중치로 하나 뽑는다. @template T @param {Array<T & { p: number }>} entries @returns {T}
+ */
+export function drawOne(entries, random = Math.random) {
+  const total = entries.reduce((sum, entry) => sum + entry.p, 0);
+  let roll = random() * total;
+  for (const entry of entries) {
+    roll -= entry.p;
+    if (roll < 0) return entry;
+  }
+  return entries[entries.length - 1];
+}
+
+/** 빛의 성소 레벨 표 → 뽑기 항목 [{ option, grade, value, p }]. */
+export function sanctuaryEntries(level) {
+  const out = [];
+  for (const [option, grades] of Object.entries(level || {})) {
+    for (const [grade, rows] of Object.entries(grades)) for (const [value, p] of rows) out.push({ option, grade, value, p });
+  }
+  return out;
+}

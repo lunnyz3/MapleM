@@ -3,7 +3,7 @@ import rules from "../../../../src/game-data/gacha.json";
 import { useMemo, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
 import { Segmented } from "../../components/Tabs.jsx";
-import { magnetPetOdds, sanctuaryOdds, sanctuaryValues, starChorusOdds } from "../../lib/gachaCalc.mjs";
+import { drawOne, luckOf, magnetPetOdds, sanctuaryEntries, sanctuaryOdds, sanctuaryValues, starChorusOdds, triesUntil } from "../../lib/gachaCalc.mjs";
 import { formatComma, formatDecimal } from "../../lib/format.js";
 
 const pct = (/** @type {number} */ chance) => `${formatDecimal(chance * 100, chance < 0.001 ? 4 : chance < 0.01 ? 3 : 2)}%`;
@@ -27,6 +27,58 @@ function SelectField({ id, label, value, options, onChange }) {
         <Icon name="chevronDown" size={18} class="select__icon" />
       </span>
     </div>
+  );
+}
+
+/**
+ * 돌려 보기: 한 번(또는 묶음) 돌리기와 목표가 나올 때까지 돌리기(그 횟수 안에 끝날 확률 = 상위 %). 최근 6개.
+ * @param {{ chance: number, unit: string, batch?: number, draw: () => { label: string, hit: boolean }, cost: (tries: number) => string }} props
+ */
+function RollPanel({ chance, unit, batch = 1, draw, cost }) {
+  const [runs, setRuns] = useState(/** @type {any[]} */ ([]));
+  const push = (run) => setRuns([{ ...run, id: Date.now() + Math.random() }, ...runs].slice(0, 6));
+  return (
+    <>
+      <div class="calc-roll">
+        <button type="button" class="btn btn--secondary" onClick={() => push({ kind: "draw", items: Array.from({ length: batch }, () => draw()) })}>
+          {batch > 1 ? `${batch}회 ${unit}` : `한 번 ${unit}`}
+        </button>
+        <button
+          type="button"
+          class="btn btn--primary"
+          disabled={!(chance > 0)}
+          onClick={() => {
+            const tries = triesUntil(chance);
+            push({ kind: "goal", tries, luck: luckOf(chance, tries) });
+          }}
+        >
+          <Icon name="sparkle" size={18} />
+          목표까지 돌려 보기
+        </button>
+      </div>
+      {runs.length ? (
+        <ol class="calc-runs">
+          {runs.map((run) =>
+            run.kind === "goal" ? (
+              <li key={run.id} class={run.luck <= 0.5 ? "is-good" : "is-bad"}>
+                <strong class="num">상위 {formatDecimal(Math.max(run.luck, 0.001) * 100, run.luck < 0.01 || run.luck > 0.99 ? 1 : 0)}%</strong>
+                <span class="num">
+                  {formatComma(run.tries)}번{cost(run.tries) ? ` · ${cost(run.tries)}` : ""}
+                </span>
+              </li>
+            ) : (
+              <li key={run.id} class={`calc-runs__draw${run.items.some((item) => item.hit) ? " is-good" : ""}`}>
+                {run.items.map((item, index) => (
+                  <span key={index} class={item.hit ? "is-hit" : ""}>
+                    {item.label}
+                  </span>
+                ))}
+              </li>
+            )
+          )}
+        </ol>
+      ) : null}
+    </>
   );
 }
 
@@ -114,6 +166,18 @@ function StarChorus() {
             <dd class="num">{Number.isFinite(result.costEok) ? `${formatDecimal(result.costEok, 1)}억` : "-"}</dd>
           </div>
         </dl>
+        <RollPanel
+          key={`${mode}-${goal}`}
+          chance={result.chance}
+          unit="재설정"
+          draw={() => {
+            const row = drawOne(rows);
+            return { label: row.label, hit: row.value >= goal };
+          }}
+          cost={(tries) =>
+            `세리온 ${formatComma(tries * rules.starChorus.cerionPerReset)}개 · ${formatDecimal(tries * rules.starChorus.cerionPerReset * price, 1)}억`
+          }
+        />
       </section>
     </div>
   );
@@ -133,6 +197,7 @@ function Sanctuary() {
   const goal = target !== null && values.includes(target) ? target : values[values.length - 1];
   const result = sanctuaryOdds(table, name, goal);
   const unit = String(Object.values(table[name] || {})[0]?.[0]?.[0] || "").includes("%") ? "%" : "";
+  const entries = useMemo(() => sanctuaryEntries(table), [table]);
   return (
     <div class="calc-grid">
       <section class="card calc-card">
@@ -198,6 +263,19 @@ function Sanctuary() {
             {unit} 이상까지 평균 기도 (한 번에 {pct(result.chance)})
           </span>
         </p>
+        <RollPanel
+          key={`${level}-${name}-${goal}`}
+          chance={result.chance}
+          unit="기도"
+          draw={() => {
+            const entry = drawOne(entries);
+            return {
+              label: `${entry.option} ${entry.value}`,
+              hit: entry.option === name && Number(String(entry.value).replace(/[^0-9.]/g, "")) >= goal - 1e-9
+            };
+          }}
+          cost={() => ""}
+        />
       </section>
     </div>
   );
@@ -246,6 +324,17 @@ function MagnetPet() {
             <dd class="num">{times(result.diamonds)}</dd>
           </div>
         </dl>
+        <RollPanel
+          key={name}
+          chance={result.chance}
+          unit="뽑기"
+          batch={11}
+          draw={() => {
+            const item = drawOne(rules.magnetPet.items);
+            return { label: item.name, hit: item.name === name };
+          }}
+          cost={(tries) => `다이아 ${formatComma(Math.ceil(tries / 11) * rules.magnetPet.costs.eleven)}`}
+        />
       </section>
     </div>
   );
