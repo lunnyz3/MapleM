@@ -512,6 +512,17 @@ function itemBreakdown(item, profile) {
   return pending;
 }
 
+/**
+ * 장비의 잠재·에디·추옵이 지금만큼 좋게 나올 확률(0–1, 계산할 수 없으면 null). 표가 없는 장비는 null.
+ * @param {any} item @param {any} profile
+ * @returns {Promise<{ potential: number | null, additional: number | null, flame: number | null } | null>}
+ */
+export async function itemChances(item, profile) {
+  const breakdown = (await itemBreakdown(item, profile))?.breakdown;
+  if (!breakdown) return null;
+  return { potential: breakdown.potentialProbability, additional: breakdown.additionalProbability, flame: breakdown.additionalOptionProbability };
+}
+
 /** @param {any} module @param {number | null | undefined} probability fraction (0–1) */
 function toPercentText(module, probability) {
   const value = Number(probability);

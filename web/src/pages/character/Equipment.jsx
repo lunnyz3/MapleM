@@ -15,6 +15,8 @@ import { itemInsight, rollTables } from "../../lib/share.js";
 import { ItemShare } from "./Share.jsx";
 import { useShareCaption } from "../../lib/shareSettings.js";
 import { WhatIf } from "./WhatIf.jsx";
+import { Luck } from "./Luck.jsx";
+import { combatPowerOf } from "../../lib/character.js";
 import { CubeSim } from "./CubeSim.jsx";
 import { itemScoreText } from "../../lib/itemScore.js";
 import { cubeSectionScore, flameSectionScore, scoreTier } from "../../lib/sectionScore.mjs";
@@ -430,6 +432,7 @@ export function Equipment({ data, world, mode, presetNo }) {
             );
           })}
         </div>
+        <Luck items={items} profile={profile} power={combatPowerOf(data.profile?.combatPower).value} />
         <label class="eq-caption-switch">
           <input
             type="checkbox"

@@ -4143,3 +4143,146 @@ button.eq-slot:hover .eq-slot__img {
   color: var(--success);
   font-size: var(--fs-12);
 }
+
+/* 장비 운빨 */
+.eq-luck {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.eq-luck strong {
+  color: var(--text);
+}
+
+.eq-luck:hover {
+  border-color: var(--primary);
+}
+
+.eq-luck.is-lucky {
+  border-color: #ffd36e;
+  background: linear-gradient(120deg, rgba(255, 211, 110, 0.22), var(--surface));
+}
+
+.luck {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.luck__head {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px;
+}
+
+.luck__big {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, var(--primary-soft), var(--surface-soft));
+}
+
+.luck__big span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.luck__big strong {
+  font-size: clamp(20px, 3vw, 26px);
+}
+
+.luck__big.is-sub {
+  background: var(--surface-soft);
+}
+
+.luck__big.is-sub strong {
+  font-size: clamp(16px, 2.4vw, 20px);
+}
+
+.luck__list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.luck__list li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.luck__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.luck__name {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--fs-14);
+}
+
+.luck__name strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.luck__parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.luck__parts .is-rare {
+  color: var(--success);
+  font-weight: 800;
+}
+
+.luck__points {
+  font-weight: 900;
+}
+
+.luck__bar {
+  grid-column: 2 / -1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+}
+
+.luck__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffb02e, #ffd36e);
+}
+
+@media (max-width: 560px) {
+  .luck__head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .luck__head > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
