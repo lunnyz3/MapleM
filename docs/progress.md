@@ -152,6 +152,13 @@
 - 내실 탭 "큐브·불꽃 어디에 쓸까": 보스 세팅 장비마다 2,000번 굴려 좋아질 확률·평균 개수·좋아지면 평균 상승, 1개당 기대 상승 순(정의는 우리 것: 경쟁 도구의 '목표까지 평균 개수' 정의는 조사 자료에 없다).
 - 점수 다시 계산 결과: equipment_items v4 0건(325만 건 갱신, 나머지는 도중에 바뀌거나 지워짐). 서버를 다시 켤 때 돌아가는 매일 수집이 버전 조건으로 1만 명을 v5로 다시 모았다(9,387명). 나머지 약 13만 명은 sweep 진행 중.
 
+### 21. 수집 기준 안내·템환산 100점·확률 계산기·인기 길드 — `162e434` + `pm2 restart maplem` (2026-10-29, 운영자 승인)
+- 아이템·스펙 랭킹·통계에 "메이플M 전체가 아니라 모은 캐릭터 N명 기준" 안내(`/api/v2/collection-summary`). 넥슨 API에는 전체 캐릭터 목록이 없다(이름을 알아야 조회, 목록은 랭킹 상위 1만 명·길드원뿐).
+- 템환산 100점(운영자 결정): 장비 = 원점수 ÷ 그 부위 최고 장비를 최대로 맞춘 점수 × 100(무기는 종류와 상관없이 하나, 670.2), 캐릭터 합계 = ÷ 한 벌 최대치(2,442.9). 기준표는 수집 장비 345만 개의 부위·항목별 최댓값(`scripts/data/build-score-max.js` → `src/game-data/item-score-max.json`, 다시 만들면 갱신). 가중치는 maplemworlds 그대로라 순위는 그대로.
+- 계산기 › 확률: 스타코러스 재설정·빛의 성소 기도·자석펫 원더베리(`src/game-data/gacha.json`, `web/src/lib/gachaCalc.mjs`).
+- 홈 인기 검색에 길드 탭(`guild_search_counts`, 길드 화면 조회 때 기록).
+- 경쟁 사이트 공식 출처: maplemworlds 템환산은 공개 JS(`index-*.js`)에 상수로 들어 있었다. maplemtool 아이템 점수는 서버(`POST api/items/score`)가 계산해 JS에 공식이 없다.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
