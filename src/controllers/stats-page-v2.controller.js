@@ -2,9 +2,10 @@
 //   GET /api/v2/stats/classes?world_name=&top=1000  → { ok, top, total, classes: [...] }
 //   GET /api/v2/stats/levels?world_name=&min_level=260 → { ok, minLevel, total, levels: [...], classes: [...] }
 //   GET /api/v2/stats/job-meta?world_name=&class=     → { ok, className, classes, count, damageName, summary, weapon, accessories }
-//   GET /api/v2/stats/hall-of-fame                     → { ok, updatedAt, records: [{ key, title, unit, rows }] }
+//   GET /api/v2/stats/hall-of-fame                     → { ok, updatedAt, records: [{ key, title, unit, rows, leaders }] }
+//   GET /api/v2/stats/job-top?class=&ocid=             → { ok, className, me, leader, average } (칸별 템환산 원점수)
 const { normalizeWorldName } = require("../config/worlds");
-const { classStats, levelStats, jobMeta, hallOfFame } = require("../services/stats.service");
+const { classStats, levelStats, jobMeta, jobTop, hallOfFame } = require("../services/stats.service");
 
 /** "" for 전체, the canonical world name, or null (400 already sent). */
 function parseWorld(req, res) {
@@ -39,5 +40,8 @@ const getLevelStats = handler((req, worldName) => levelStats({ worldName, minLev
 const getJobMeta = handler((req, worldName) => jobMeta({ worldName, className: String(req.query.class || "").trim().slice(0, 20) }));
 
 const getHallOfFame = handler(() => hallOfFame());
+const getJobTop = handler((req) =>
+  jobTop({ className: String(req.query.class || "").trim().slice(0, 20), ocid: String(req.query.ocid || "").trim().slice(0, 80) })
+);
 
-module.exports = { getClassStats, getLevelStats, getJobMeta, getHallOfFame };
+module.exports = { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame };

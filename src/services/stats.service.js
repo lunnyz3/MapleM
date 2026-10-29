@@ -4,7 +4,7 @@
 const mongoose = require("mongoose");
 const { CharacterSpec } = require("../models/character-spec.model");
 const { EquipmentItem } = require("../models/equipment-item.model");
-const { jobMeta: buildJobMeta } = require("../domain/stats/job-meta");
+const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-meta");
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
@@ -182,6 +182,32 @@ async function jobMeta({ worldName = "", className = "" } = {}) {
   return { className: group.className, classes, ...meta };
 }
 
+const COMPARE_TOP = 10;
+const COMPARE_FIELDS = { _id: 0, ocid: 1, slot: 1, itemName: 1, score: 1, starforce: 1, "item.item_equipment_slot_name": 1, "item.item_icon": 1 };
+
+/**
+ * 직업 1위·상위 10명 평균과 내 메인 세팅의 칸별 템환산. 상위 캐릭터 쪽은 1시간 캐시, 내 장비는 매번 읽는다.
+ * → { className, me, leader, average } (그 직업을 모르면 leader·average 가 null)
+ */
+async function jobTop({ className = "", ocid = "" } = {}) {
+  if (!isMongoConnected()) return { className, me: null, leader: null, average: null };
+  const groups = await topByClass("");
+  const group = groups.find((entry) => entry.className === className);
+  const mine = ocid ? await EquipmentItem.find({ ocid, scoreVersion: SCORE_VERSION }, COMPARE_FIELDS).lean().maxTimeMS(TIMEOUT_MS) : [];
+  if (!group) return { className, ...jobTopCompare({ top: [], docs: [], mine }) };
+  const top = group.top.slice(0, COMPARE_TOP);
+  const docs = await cached(
+    `jobtop|${group.className}`,
+    () =>
+      EquipmentItem.find({ ocid: { $in: top.map((entry) => entry.ocid) }, scoreVersion: SCORE_VERSION }, COMPARE_FIELDS)
+        .lean()
+        .maxTimeMS(TIMEOUT_MS),
+    META_TTL_MS,
+    256 * 1024
+  );
+  return { className: group.className, ...jobTopCompare({ top, docs, mine }) };
+}
+
 // ---------------- 명예의 전당 ----------------
 
 const HALL_TTL_MS = 6 * 60 * 60 * 1000;
@@ -254,4 +280,4 @@ async function hallOfFame() {
   return hall.value || hall.pending;
 }
 
-module.exports = { classStats, levelStats, jobMeta, hallOfFame, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, TOP_CHOICES };

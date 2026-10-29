@@ -4286,3 +4286,107 @@ button.eq-slot:hover .eq-slot__img {
   }
 }
 
+/* 장비 카드 도구(운빨·직업 1위와 비교) */
+.eq-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.jobtop {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.jobtop__head {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 8px;
+}
+
+a.jobtop__leader {
+  border: 1px solid rgba(255, 196, 64, 0.55);
+  background: linear-gradient(120deg, rgba(255, 211, 110, 0.28), var(--surface-soft));
+  color: var(--text);
+  text-decoration: none;
+}
+
+.jobtop__leader span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jobtop__gap {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.jobtop__gap strong {
+  color: var(--danger);
+}
+
+.jobtop__gap.is-top {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #b07a00;
+}
+
+.jobtop__note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.jobtop__table-wrap {
+  overflow-x: auto;
+}
+
+.jobtop__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-14);
+}
+
+.jobtop__table th,
+.jobtop__table td {
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.jobtop__table thead th {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.jobtop__table th[scope="row"],
+.jobtop__table thead th:first-child {
+  text-align: left;
+  font-weight: 700;
+}
+
+.jobtop__table td.is-down {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.jobtop__table td.is-up {
+  color: var(--success);
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .jobtop__head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .jobtop__head > a {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+

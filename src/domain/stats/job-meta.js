@@ -214,4 +214,75 @@ function jobMeta(characters) {
   };
 }
 
-module.exports = { jobMeta, mainSetup, lineSum, flameScore, buckets };
+// ---------------- 직업 1위와 비교 ----------------
+
+// 반지·목걸이는 칸 번호가 사람마다 달라, 점수 높은 순으로 "반지 1", "반지 2"…로 맞춰 비교한다.
+const PAIRED = [
+  ["반지", /^반지/],
+  ["목걸이", /^목걸이/]
+];
+
+/** 메인 세팅 → { 비교 칸: 장비 }. */
+function compareSlots(docs) {
+  const out = new Map();
+  const grouped = new Map(PAIRED.map(([name]) => [name, []]));
+  for (const [slot, doc] of mainSetup(docs)) {
+    const pair = PAIRED.find(([, pattern]) => pattern.test(slot));
+    if (pair) grouped.get(pair[0]).push(doc);
+    else out.set(slot, doc);
+  }
+  for (const [name, list] of grouped) list.sort((a, b) => b.score - a.score).forEach((doc, index) => out.set(`${name} ${index + 1}`, doc));
+  return out;
+}
+
+const round1 = (value) => Math.round(value * 10) / 10;
+
+function sideOf(slots) {
+  const out = {};
+  let total = 0;
+  for (const [slot, doc] of slots) {
+    out[slot] = {
+      itemName: String(doc.itemName || ""),
+      score: round1(Number(doc.score) || 0),
+      starforce: Number(doc.starforce) || 0,
+      icon: String(doc.item?.item_icon || "")
+    };
+    total += Number(doc.score) || 0;
+  }
+  return { total: round1(total), slots: out };
+}
+
+/**
+ * 내 메인 세팅과 직업 1위·상위 N명 평균의 칸별 템환산(원점수).
+ * @param {{ top: Array<{ ocid: string, characterName?: string, worldName?: string, combatPower?: number }>, docs: any[], mine: any[] }} input
+ *   top: 전투력 순 상위 캐릭터, docs: 그 캐릭터들의 장비, mine: 내 장비
+ */
+function jobTopCompare({ top, docs, mine }) {
+  const byOcid = new Map();
+  for (const doc of toArray(docs)) {
+    if (!byOcid.has(doc.ocid)) byOcid.set(doc.ocid, []);
+    byOcid.get(doc.ocid).push(doc);
+  }
+  const setups = toArray(top)
+    .map((spec) => ({ spec, slots: compareSlots(byOcid.get(spec.ocid) || []) }))
+    .filter((entry) => entry.slots.size);
+  if (!setups.length) return { me: sideOf(compareSlots(mine)), leader: null, average: null };
+  const [first] = setups;
+  const sums = new Map();
+  for (const { slots } of setups) for (const [slot, doc] of slots) sums.set(slot, (sums.get(slot) || 0) + (Number(doc.score) || 0));
+  const averageSlots = {};
+  for (const [slot, sum] of sums) averageSlots[slot] = round1(sum / setups.length);
+  return {
+    me: sideOf(compareSlots(mine)),
+    leader: {
+      ocid: String(first.spec.ocid || ""),
+      name: String(first.spec.characterName || ""),
+      world: String(first.spec.worldName || ""),
+      combatPower: Number(first.spec.combatPower) || 0,
+      ...sideOf(first.slots)
+    },
+    average: { count: setups.length, total: round1([...sums.values()].reduce((sum, value) => sum + value, 0) / setups.length), slots: averageSlots }
+  };
+}
+
+module.exports = { jobMeta, mainSetup, lineSum, flameScore, buckets, compareSlots, jobTopCompare };

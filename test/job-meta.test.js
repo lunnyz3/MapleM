@@ -89,3 +89,35 @@ test("직업 메타: 무기 순위와 장신구 10성 비율·추옵 순위", ()
   );
   assert.deepEqual(meta.weapon.soul, [{ label: "위대한 칼로스의 소울", share: 1 }]);
 });
+
+test("직업 1위와 비교: 반지·목걸이는 점수 순으로 맞추고, 상위 N명 평균은 빈 칸을 0으로 센다", () => {
+  const { jobTopCompare, compareSlots } = require("../src/domain/stats/job-meta");
+  const slots = compareSlots([doc("반지 (3번째 슬롯)", "A", 30), doc("반지", "B", 10), doc("반지 (2번째 슬롯)", "C", 20), doc("무기", "W", 500)]);
+  assert.deepEqual(
+    [...slots.entries()].map(([slot, item]) => [slot, item.itemName]),
+    [
+      ["무기", "W"],
+      ["반지 1", "A"],
+      ["반지 2", "C"],
+      ["반지 3", "B"]
+    ]
+  );
+  const top = [
+    { ocid: "a", characterName: "가", worldName: "스카니아", combatPower: 300 },
+    { ocid: "b", characterName: "나", worldName: "루나", combatPower: 200 },
+    { ocid: "z", characterName: "장비 없음", combatPower: 100 }
+  ];
+  const docs = [
+    { ...doc("무기", "W1", 600), ocid: "a" },
+    { ...doc("반지", "R", 40), ocid: "a" },
+    { ...doc("무기", "W2", 400), ocid: "b" }
+  ];
+  const result = jobTopCompare({ top, docs, mine: [doc("무기", "W3", 300)] });
+  assert.equal(result.leader.name, "가");
+  assert.equal(result.leader.total, 640);
+  assert.equal(result.average.count, 2, "장비가 없는 캐릭터는 뺀다");
+  assert.deepEqual(result.average.slots, { 무기: 500, "반지 1": 20 });
+  assert.equal(result.average.total, 520);
+  assert.equal(result.me.slots["무기"].score, 300);
+  assert.equal(jobTopCompare({ top: [], docs: [], mine: [] }).leader, null);
+});
