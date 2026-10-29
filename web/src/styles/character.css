@@ -3682,3 +3682,78 @@ button.eq-slot:hover .eq-slot__img {
   color: var(--text-subtle);
   font-size: var(--fs-12);
 }
+
+/* 큐브·불꽃 어디에 쓸까 */
+.cube-advice {
+  display: grid;
+  gap: 10px;
+}
+
+.cube-advice__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cube-advice__head .sub-title {
+  margin: 0;
+}
+
+.cube-advice__list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cube-advice__list li {
+  display: grid;
+  grid-template-columns: 1.6em minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 2px;
+}
+
+.cube-advice__list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.cube-advice__rank {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: center;
+}
+
+.cube-advice__who {
+  display: grid;
+  min-width: 0;
+  font-size: var(--fs-14);
+}
+
+.cube-advice__who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cube-advice__who span {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.cube-advice__gain {
+  display: grid;
+  color: var(--success);
+  font-size: var(--fs-14);
+  font-weight: 800;
+  text-align: right;
+}
+
+.cube-advice__gain small {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}

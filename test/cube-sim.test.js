@@ -44,3 +44,19 @@ test("불꽃: 둘째 줄은 two_option_chance, 수치는 범위 안 step 단위"
   assert.equal(two[1].name, "최종 대미지 증가");
   assert.match(two[1].value, /^5\.[89]%$/);
 });
+
+test("효율: 좋아질 확률·평균 개수·좋아졌을 때 평균 상승을 굴려서 센다", async () => {
+  const { cubeEfficiency } = await load();
+  let i = 0;
+  // 4번에 1번만 좋아진다(+0.02), 나머지는 나빠진다
+  const result = cubeEfficiency({
+    roll: () => [{ name: "x", value: String(i++ % 4 === 0 ? 2 : -1) }],
+    ratioOf: (lines) => 1 + Number(lines[0]?.value || 0) / 100,
+    current: [{ name: "x", value: "0" }],
+    samples: 400
+  });
+  assert.equal(result.chance, 0.25);
+  assert.equal(result.cubes, 4);
+  assert.ok(Math.abs(result.gainWhenBetter - 0.02) < 1e-12);
+  assert.ok(Math.abs(result.gainPerCube - 0.005) < 1e-12);
+});

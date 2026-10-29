@@ -9,6 +9,7 @@ import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.
 import { growthSummary } from "../../lib/growthReport.mjs";
 import { linkStats, recommendLinks } from "../../lib/linkRecommend.mjs";
 import { withoutLinks } from "./Efficiency.jsx";
+import { CubeAdvice } from "./CubeAdvice.jsx";
 
 const squash = (/** @type {string} */ text) => String(text || "").replace(/\s+/g, "");
 
@@ -80,9 +81,10 @@ function amountText(row) {
 }
 
 /**
- * @param {{ data: any, majorStats: Record<string, any>, attackType: string, linkSkills: any[], className: string }} props
+ * @param {{ data: any, majorStats: Record<string, any>, attackType: string, linkSkills: any[], className: string, items?: any[] }} props
+ *   items: 보스 세팅 장비 프리셋 장비(큐브·불꽃 추천)
  */
-export function GrowthTab({ data, majorStats, attackType, linkSkills, className }) {
+export function GrowthTab({ data, majorStats, attackType, linkSkills, className, items = [] }) {
   const report = data.tabs?.growth;
   const summary = useMemo(() => {
     const totals = totalsFromStats(majorStats, attackType);
@@ -137,6 +139,7 @@ export function GrowthTab({ data, majorStats, attackType, linkSkills, className 
           </ul>
         </section>
       ) : null}
+      <CubeAdvice items={items} majorStats={majorStats} attackType={attackType} />
       <p class="growth-note">스텔라코드처럼 넥슨 정보에 없는 값과 예상 딜은 넣지 않았어요. 칠흑은 완성도만 보여 줘요.</p>
     </div>
   );

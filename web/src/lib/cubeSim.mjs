@@ -69,3 +69,29 @@ export function rollFlame(flame, random = Math.random) {
   }
   return lines;
 }
+
+/**
+ * 큐브·불꽃 효율: 한 번 썼을 때 지금보다 좋아질 확률과 좋아졌을 때 평균 상승(전투력 비율), 몬테카를로.
+ * @param {{ roll: () => Array<{ name: string, value: string }>, ratioOf: (lines: Array<{ name: string, value: string }>) => number, current: Array<{ name: string, value: string }>, samples?: number }} input
+ *   roll: 한 번 굴린 줄들, ratioOf: 그 줄들일 때 전투력 ÷ 지금 장비 전투력
+ * @returns {{ chance: number, cubes: number, gainWhenBetter: number, gainPerCube: number }}
+ */
+export function cubeEfficiency({ roll, ratioOf, current, samples = 800 }) {
+  const base = ratioOf(current);
+  let better = 0;
+  let gainSum = 0;
+  for (let i = 0; i < samples; i += 1) {
+    const diff = ratioOf(roll()) - base;
+    if (diff > 1e-12) {
+      better += 1;
+      gainSum += diff;
+    }
+  }
+  const chance = better / samples;
+  return {
+    chance,
+    cubes: chance > 0 ? 1 / chance : Infinity,
+    gainWhenBetter: better ? gainSum / better : 0,
+    gainPerCube: gainSum / samples
+  };
+}

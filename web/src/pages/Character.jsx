@@ -562,6 +562,7 @@ export function Character({ world, name }) {
           {tab === "growth" ? (
             <GrowthTab
               data={data}
+              items={presetByNo(data.tabs?.equipment, (stats.statSetting?.dimensions || []).find((dim) => dim.key === "equipment")?.boss)?.data?.itemEquipment || []}
               majorStats={stats.majorStats}
               attackType={stats.profile.attackType}
               linkSkills={presetByNo(data.tabs?.skillLink, bossPresets.link)?.data?.linkSkillInfo || []}
