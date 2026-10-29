@@ -147,6 +147,11 @@
 - 캐릭터 › 내실: 서버가 영역별 완성도와 다 채웠을 때 보스 세팅 스탯 차이를 계산(`src/domain/growth/report.js`, 표 `src/game-data/growth-report.json`, page-data `tabs.growth`), 화면이 같은 전투력 공식으로 상승량·합계를 낸다(`web/src/lib/growthReport.mjs`). 링크 영역은 전투력 기준 링크 추천(최대 레벨). 하이퍼·쥬얼·장비는 보스 세팅이 고른 프리셋 기준. 디올 심볼 59,970/61,837·치피 +2, HEXA 47,181 재현.
 - 남은 차이: 레벨 기본 공격력 표(우리 Lv.300 20,340, 공개 도구 20,358 추정값), 아케인 심볼 Lv.19→20 개수(우리 1,391, 공개 도구 1,359).
 
+### 20. 큐브 돌려 보기·큐브 효율 추천 — `2b48287` (화면만, 2026-10-29, 운영자 승인)
+- 장비 시트 "큐브 돌려 보기": 잠재(블랙·레드)·에디(에디셔널)·추옵(지금 불꽃)을 공식 줄 표(p)로 굴림. 등급 상승은 공식 표에 없어 고정값(블랙 2%, 레드·에디 1%). 사용 개수·보스 세팅 전투력 증감·지금 줄의 상위 %. `item-share.js resolveRollTables`, `web/src/lib/cubeSim.mjs`.
+- 내실 탭 "큐브·불꽃 어디에 쓸까": 보스 세팅 장비마다 2,000번 굴려 좋아질 확률·평균 개수·좋아지면 평균 상승, 1개당 기대 상승 순(정의는 우리 것: 경쟁 도구의 '목표까지 평균 개수' 정의는 조사 자료에 없다).
+- 점수 다시 계산 결과: equipment_items v4 0건(325만 건 갱신, 나머지는 도중에 바뀌거나 지워짐). 서버를 다시 켤 때 돌아가는 매일 수집이 버전 조건으로 1만 명을 v5로 다시 모았다(9,387명). 나머지 약 13만 명은 sweep 진행 중.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.
