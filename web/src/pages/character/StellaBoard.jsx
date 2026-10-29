@@ -1,7 +1,7 @@
 // 스타코러스 별자리판: 별을 눌러 열고(이어진 별만), 범위 별은 값을 고른다. 열린 별의 합을 직접 입력 값으로 넘긴다.
 // 표는 src/game-data/stella.json, 계산은 web/src/lib/stella.mjs. 판 상태는 캐릭터마다 브라우저에 기억한다.
 import board from "../../../../src/game-data/stella.json";
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Icon, SPARKLE_PATH } from "../../components/Icon.jsx";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 import { boardTotals, canOpen, nextStars, nodeValue, toManualValues, toggle } from "../../lib/stella.mjs";
@@ -58,9 +58,30 @@ export function StellaBoard({ storageKey, attackType, majorStats = {}, onApply, 
   const press = (id) => update({ ...state, open: toggle(board.nodes, state.open, id) });
   const pick = (id, value) => update({ ...state, picks: { ...state.picks, [id]: Number(value) } });
 
+  // 판이 화면보다 넓으면(좁은 화면) 양 끝에 더 있음을 흐림으로 알린다.
+  const scroller = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [more, setMore] = useState({ left: false, right: false });
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return undefined;
+    const measure = () => {
+      const max = element.scrollWidth - element.clientWidth;
+      setMore({ left: element.scrollLeft > 4, right: element.scrollLeft < max - 4 });
+    };
+    measure();
+    element.addEventListener("scroll", measure, { passive: true });
+    // 시트가 열리며 처음 그려질 때(크기가 생길 때)도 다시 잰다.
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
+    observer?.observe(element);
+    return () => {
+      element.removeEventListener("scroll", measure);
+      observer?.disconnect();
+    };
+  }, []);
+
   return (
     <div class="stella">
-      <div class="stella__scroll">
+      <div class={`stella__scroll${more.left ? " has-left" : ""}${more.right ? " has-right" : ""}`} ref={scroller}>
         <div class="stella__board" role="group" aria-label="스타코러스 별자리판">
           <svg class="stella__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {edges.map(([from, to]) => {

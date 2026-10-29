@@ -173,12 +173,15 @@
   gap: 4px;
   align-items: center;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
   color: var(--text-muted);
   font-weight: 700;
   text-decoration: none;
 }
 
-.crk-owner:hover .crk-owner__name {
+a.crk-owner:hover .crk-owner__name {
   color: var(--primary);
   text-decoration: underline;
 }
@@ -274,3 +277,70 @@
   width: auto;
   min-width: 7.5em;
 }
+
+.crk-owner__name,
+.crk-owner__class {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 719px) {
+  /* 조건 줄: 한 줄에 하나(세그먼트는 꽉 차게), 조건 고르기는 두 칸씩 */
+  .crk-filters__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .crk-filters__row .field {
+    min-width: 0;
+  }
+
+  .crk-filters__row .segmented {
+    display: flex;
+    width: 100%;
+  }
+
+  .crk-filters__row .segmented__option {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .crk-conds {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crk-conds__label {
+    grid-column: 1 / -1;
+  }
+
+  .crk-conds .select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* 무기 종류 칩: 한 줄로 밀어 본다 */
+  .crk-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .crk-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .crk-chip {
+    flex: none;
+  }
+
+  .crk-row__meta {
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+

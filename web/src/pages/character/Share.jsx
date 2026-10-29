@@ -322,7 +322,10 @@ function ProfileSharePanel({ profile, world }) {
             <ProfileShareCard profile={profile} world={world} />
           </div>
         ) : (
-          <Skeleton height={320} radius={20} />
+          <div class="share-preview__wait">
+            <Skeleton height={320} radius={20} />
+            <span>카드 만드는 중…</span>
+          </div>
         )}
       </div>
       <ShareActions spec={spec} />

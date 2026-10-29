@@ -155,6 +155,21 @@ export function TabPanel({ idBase, value, busy = false, class: className = "", c
 export function Segmented({ name, legend, options, value, onChange, class: className = "" }) {
   const ref = useRef(/** @type {HTMLFieldSetElement | null} */ (null));
   const box = useIndicator(ref, ".segmented__option.is-checked", [value, options.length]);
+
+  // 가로로 밀리는 칸 안에 있으면 고른 항목이 보이도록 그 칸만 민다(페이지는 움직이지 않는다).
+  useEffect(() => {
+    const field = ref.current;
+    const option = /** @type {HTMLElement | null} */ (field?.querySelector(".segmented__option.is-checked"));
+    if (!field || !option) return;
+    let scroller = field.parentElement;
+    while (scroller && scroller !== document.body) {
+      if (/(auto|scroll)/.test(getComputedStyle(scroller).overflowX) && scroller.scrollWidth > scroller.clientWidth + 1) break;
+      scroller = scroller.parentElement;
+    }
+    if (!scroller || scroller === document.body) return;
+    const left = option.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+    scroller.scrollTo({ left: Math.max(0, left - (scroller.clientWidth - option.offsetWidth) / 2), behavior: "auto" });
+  }, [value]);
   return (
     <fieldset ref={ref} class={`segmented${box ? " has-indicator" : ""} ${className}`}>
       <legend class="sr-only">{legend}</legend>

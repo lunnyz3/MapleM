@@ -750,6 +750,22 @@ html.is-capturing body > div:not(#app):not(.share-capture-host) img {
   animation: share-preview-in 520ms var(--ease-spring) backwards;
 }
 
+.share-preview__wait {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.share-preview__wait > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
 .share-preview__live {
   max-width: 100%;
   overflow: hidden;

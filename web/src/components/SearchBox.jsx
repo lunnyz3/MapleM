@@ -21,8 +21,16 @@ const KIND_OPTIONS = [
  * @param {SearchKind} [kind]
  */
 export function requestSearchFocus(kind) {
+  // 이 화면에 검색창이 없으면 홈 검색창으로 간다(#search 로 열리면 바로 포커스).
+  if (!mountedBoxes) {
+    window.location.assign(`/${kind === "guild" ? "guild" : ""}#search`);
+    return;
+  }
   window.dispatchEvent(new CustomEvent(FOCUS_EVENT, { detail: { kind } }));
 }
+
+/** 지금 화면에 붙어 있는 검색창 수 */
+let mountedBoxes = 0;
 
 const prefersReducedMotion = () =>
   typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -101,7 +109,16 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, d
       setOpen(true);
     };
     window.addEventListener(FOCUS_EVENT, onRequest);
-    return () => window.removeEventListener(FOCUS_EVENT, onRequest);
+    mountedBoxes += 1;
+    // 다른 화면의 검색 버튼으로 왔으면(#search) 바로 검색창으로
+    if (window.location.hash === "#search") {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      requestAnimationFrame(() => onRequest(new CustomEvent(FOCUS_EVENT, { detail: {} })));
+    }
+    return () => {
+      window.removeEventListener(FOCUS_EVENT, onRequest);
+      mountedBoxes -= 1;
+    };
   }, []);
 
   /** @param {{ kind: SearchKind, world: string, name: string }} entry */

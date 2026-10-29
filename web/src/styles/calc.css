@@ -249,7 +249,32 @@
 
 @media (max-width: 560px) {
   .calc-who {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 6.8em minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .calc-who .select select {
+    padding: 0 28px 0 10px;
+  }
+
+  .calc-who .select__icon {
+    right: 8px;
+  }
+
+  /* 좁은 화면: 머리글이 숨으니 줄마다 값 이름을 붙이고(.calc-row__tag) 줄을 구분한다 */
+  .calc-rows > .calc-row:not(.calc-row--head):not(.calc-row--boss) {
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .calc-row__label {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 13px;
+    line-height: 1.25;
+    white-space: normal;
+    word-break: keep-all;
   }
 
   .calc-row {
@@ -707,3 +732,147 @@
     font-size: 13px;
   }
 }
+
+.calc-row__tag {
+  display: none;
+  margin-right: 3px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .calc-row__tag {
+    display: inline;
+  }
+}
+
+.calc-income {
+  align-items: end;
+}
+
+@media (max-width: 420px) {
+  .calc-who__label {
+    display: none;
+  }
+
+  .calc-who .btn {
+    padding: 0 14px;
+  }
+
+  .calc-income__wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 좁은 화면 */
+@media (max-width: 719px) {
+  /* 계산기 전환: 12개가 모두 보이도록 격자로 */
+  .calc-switch {
+    overflow: visible;
+  }
+
+  .calc-switch .segmented {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .calc-switch .segmented__option {
+    min-height: 42px;
+    padding: 2px 4px;
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  /* 세 칸 세그먼트(장신구 연마 종류): 줄바꿈해서 모두 보이게 */
+  .calc-seg--wrap {
+    overflow: visible;
+  }
+
+  .calc-seg--wrap .segmented {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .calc-seg--wrap .segmented__option {
+    padding: 4px 6px;
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  .calc-table th,
+  .calc-table td {
+    padding: 6px 4px;
+  }
+
+  /* 돌려 보기 결과: 상위 %는 한 줄, 값은 오른쪽(넘치면 다음 줄) */
+  .calc-runs li {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+
+  .calc-runs li strong {
+    white-space: nowrap;
+  }
+
+  .calc-runs li > span:last-child {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .calc-runs li.calc-runs__draw > span:last-child {
+    margin-left: 0;
+  }
+
+  /* 길드 어빌리티: 이름·효과는 한 줄 전체, 레벨 고르기는 그 아래 */
+  .calc-guild__row {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    row-gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .calc-guild__name {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    gap: 2px 8px;
+    align-items: baseline;
+  }
+
+  .calc-guild__name small {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  /* 전수: 등급 고르기가 잘리지 않게 */
+  .calc-transfer-row {
+    grid-template-columns: 6.2em minmax(0, 1fr) 4.6em;
+    gap: 6px;
+  }
+
+  .calc-transfer-row select {
+    padding: 0 24px 0 8px;
+  }
+
+  .calc-transfer-row .select__icon {
+    right: 6px;
+  }
+
+  /* 세트 결과 표: 스탯 이름은 두 줄까지 */
+  .calc-set__result th[scope="row"] {
+    white-space: normal;
+    word-break: keep-all;
+  }
+}
+

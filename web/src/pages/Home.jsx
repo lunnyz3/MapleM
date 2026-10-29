@@ -226,7 +226,11 @@ export function RankRow({ type, row, index }) {
         </span>
         <span class="rank-row__value num" title={value.full}>
           {value.prefix ? <span class="rank-row__affix">{value.prefix}</span> : null}
-          {number !== null ? <CountUp value={number} format={type.big ? (n) => formatKoreanUnits(n) : (n) => formatComma(n)} duration={800} /> : value.text}
+          {number !== null ? (
+            <CountUp value={number} format={type.big ? (n) => formatKoreanUnits(n, { maxGroups: n >= 1e8 ? 2 : 1 }) : (n) => formatComma(n)} duration={800} />
+          ) : (
+            value.text
+          )}
           {value.unit ? <span class="rank-row__affix">{value.unit}</span> : null}
         </span>
       </a>

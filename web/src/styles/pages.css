@@ -246,7 +246,15 @@
 }
 
 @media (max-width: 719px) {
+  /* 좁은 화면: ‹ 지금 쪽 › 한 줄, 쪽 번호 입력은 다음 줄 */
+  .pager > .pager__btn.num:not(.is-current),
+  .pager__gap {
+    display: none;
+  }
+
   .pager__jump {
+    flex-basis: 100%;
+    justify-content: center;
     margin-left: 0;
   }
 }
@@ -286,6 +294,14 @@
   display: flex;
   flex-direction: column;
   max-height: inherit;
+  transition: transform 200ms var(--ease);
+}
+
+/* 좁은 화면: 시트가 열려 있는 동안 뒤 화면은 스크롤하지 않는다 */
+@media (max-width: 719px) {
+  html:has(dialog.sheet[open]) {
+    overflow: hidden;
+  }
 }
 
 .sheet__grip {
@@ -323,11 +339,26 @@
 }
 
 @media (max-width: 719px) {
-  .sheet {
+  .sheet,
+  .sheet.sheet--wide {
     width: 100vw;
     max-height: 86vh;
     margin: auto 0 0;
     border-radius: 24px 24px 0 0;
+  }
+
+  .sheet.sheet--wide {
+    max-height: 92vh;
+  }
+
+  /* 손잡이·머리를 끌면 시트가 따라 내려간다(뒤 화면은 스크롤하지 않는다) */
+  .sheet__grip,
+  .sheet__head {
+    touch-action: none;
+  }
+
+  .sheet__panel.is-dragging {
+    transition: none;
   }
 
   .sheet[open] {

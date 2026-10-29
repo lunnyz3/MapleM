@@ -35,10 +35,10 @@ function RecordCard({ record, delay }) {
         </span>
         <span class="hall-champ__who">
           <strong>{first.name}</strong>
-          <span>
-            {first.world}
-            {first.className ? ` · ${first.className}` : ""}
-            {ties > 1 ? ` · 공동 1위 ${ties}명` : ""}
+          <span class="hall-champ__meta">
+            <span>{first.world}</span>
+            {first.className ? <span>{first.className}</span> : null}
+            {ties > 1 ? <span>공동 1위 {ties}명</span> : null}
           </span>
         </span>
         <strong class="hall-champ__value display num">{valueText(first.value, record.unit)}</strong>
@@ -47,16 +47,18 @@ function RecordCard({ record, delay }) {
       <ol class="hall-list">
         {rest.map((row, index) => (
           <li key={`${row.world}-${row.name}-${index}`}>
-            <span class="hall-list__rank num">{row.rank}</span>
-            <a class="hall-list__name" href={urls.character(row.world, row.name)}>
-              {row.name}
-              <span>
-                {row.world}
-                {row.className ? ` · ${row.className}` : ""}
+            <a class="hall-list__row" href={urls.character(row.world, row.name)}>
+              <span class="hall-list__rank num">{row.rank}</span>
+              <span class="hall-list__name">
+                {row.name}
+                <span>
+                  {row.world}
+                  {row.className ? ` · ${row.className}` : ""}
+                </span>
               </span>
+              <strong class="hall-list__value num">{valueText(row.value, record.unit)}</strong>
+              {detailText(row) ? <span class="hall-list__detail">{detailText(row)}</span> : null}
             </a>
-            <strong class="hall-list__value num">{valueText(row.value, record.unit)}</strong>
-            {detailText(row) ? <span class="hall-list__detail">{detailText(row)}</span> : null}
           </li>
         ))}
       </ol>

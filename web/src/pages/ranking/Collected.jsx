@@ -2,7 +2,7 @@
 // 스펙(템환산·잠재·에디·최대 대미지·전투력).
 // 사이트에서 조회된 캐릭터 + 매일 모으는 전투력 랭킹 1만 명이 대상이다.
 import "../../styles/collected.css";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Avatar } from "../../components/Avatar.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { RankBadge } from "../../components/RankBadge.jsx";
@@ -139,6 +139,17 @@ function WorldSelect({ world, onWorld, id }) {
   );
 }
 
+/** 목록 줄 안의 주인(글자만: 줄을 누르면 장비 시트가 열리고, 캐릭터로 가는 링크는 시트에 있다). @param {{ row: any }} props */
+function OwnerText({ row }) {
+  return (
+    <span class="crk-owner">
+      <WorldIcon world={row.worldName} size={14} />
+      <span class="crk-owner__name">{row.characterName}</span>
+      {row.characterClass ? <span class="crk-owner__class">{row.characterClass}</span> : null}
+    </span>
+  );
+}
+
 /** @param {{ row: any }} props */
 function Owner({ row }) {
   return (
@@ -248,6 +259,14 @@ export function ItemRanking({ query, onQuery }) {
   const list = useJson(listUrl, listUrl);
 
   const topItems = [WEAPON_TAB, ...ARMOR_SLOTS.filter((name) => allSlots.some((entry) => entry.slot === name))].map((name) => ({ id: name, label: name }));
+  // 좁은 화면에서 무기 종류 칩은 한 줄로 밀리므로 고른 칩이 보이게 그 줄만 민다.
+  const chipsRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  useEffect(() => {
+    const row = chipsRef.current;
+    const chip = /** @type {HTMLElement | null} */ (row?.querySelector(".crk-chip.is-active"));
+    if (!row || !chip || row.scrollWidth <= row.clientWidth + 1) return;
+    row.scrollTo({ left: Math.max(0, chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2) });
+  }, [slot, weaponTypes.length]);
   const rows = list.data?.rows || [];
   const scoreField = query.noEmblem ? "scoreWithoutEmblem" : "score";
 
@@ -286,7 +305,7 @@ export function ItemRanking({ query, onQuery }) {
         </div>
         <ConditionRow query={query} onQuery={onQuery} />
         {isWeapon && weaponTypes.length ? (
-          <div class="crk-chips" role="group" aria-label="무기 종류">
+          <div class="crk-chips" role="group" aria-label="무기 종류" ref={chipsRef}>
             {weaponTypes.map((entry) => (
               <button
                 type="button"
@@ -307,7 +326,20 @@ export function ItemRanking({ query, onQuery }) {
         {!slot && slotsState.status === "ready" ? <EmptyState title="아직 모은 장비가 없어요" /> : null}
         {list.status === "loading" && (slot || slotsState.status === "loading") ? <ListSkeleton /> : null}
         {list.status === "error" ? <ErrorState title="랭킹을 불러오지 못했어요" description={list.error?.message} onRetry={list.retry} /> : null}
-        {list.status === "ready" && !rows.length ? <EmptyState title="아직 모은 장비가 없어요" /> : null}
+        {list.status === "ready" && !rows.length ? (
+          query.star || query.section ? (
+            <EmptyState
+              title="조건에 맞는 장비가 없어요"
+              action={
+                <button type="button" class="btn btn--secondary" onClick={() => onQuery({ star: 0, section: "", option: "", lines: 1, page: 1 })}>
+                  조건 지우기
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState title="아직 모은 장비가 없어요" />
+          )
+        ) : null}
         {list.status === "ready" && rows.length ? (
           <ol class="crk-list">
             {rows.map((row) => {
@@ -327,7 +359,7 @@ export function ItemRanking({ query, onQuery }) {
                         {star ? <span class="crk-star num">★{star}</span> : null}
                       </span>
                       <span class="crk-row__meta">
-                        <Owner row={row} />
+                        <OwnerText row={row} />
                         <span class="crk-row__time">{formatRelativeTime(Date.parse(row.checkedAt))}</span>
                       </span>
                       {row.parts ? (

@@ -155,7 +155,15 @@ function HexaCores({ rows, setRows }) {
               <LevelInput value={row.level} min={0} max={hexa.maxLevel} label={`${row.name} 현재 레벨`} onChange={(level) => update(row.id, { level })} />
               <LevelInput value={row.target} min={0} max={hexa.maxLevel} label={`${row.name} 목표 레벨`} onChange={(target) => update(row.id, { target })} />
               <span class="calc-row__cost num">
-                {need.perRow[index].e || need.perRow[index].f ? `${formatComma(need.perRow[index].e)} · ${formatComma(need.perRow[index].f)}` : "-"}
+                {need.perRow[index].e || need.perRow[index].f ? (
+                  <>
+                    <span class="calc-row__tag">기운</span>
+                    {formatComma(need.perRow[index].e)} · <span class="calc-row__tag">조각</span>
+                    {formatComma(need.perRow[index].f)}
+                  </>
+                ) : (
+                  "-"
+                )}
                 <button type="button" class="icon-btn calc-row__remove" aria-label={`${row.name} 빼기`} onClick={() => setRows(rows.filter((item) => item.id !== row.id))}>
                   <Icon name="x" size={16} />
                 </button>
@@ -324,7 +332,15 @@ function Symbols({ rows, setRows }) {
                 <LevelInput value={row.level} min={1} max={max} label={`${row.name} 현재 레벨`} onChange={(level) => update(row.id, { level })} />
                 <LevelInput value={row.target} min={1} max={max} label={`${row.name} 목표 레벨`} onChange={(target) => update(row.id, { target })} />
                 <span class="calc-row__cost num">
-                  {costs[index].symbols || costs[index].meso ? `${formatComma(costs[index].symbols)} · ${formatKoreanUnits(costs[index].meso, { maxGroups: 1 })}` : "-"}
+                  {costs[index].symbols || costs[index].meso ? (
+                    <>
+                      <span class="calc-row__tag">심볼</span>
+                      {formatComma(costs[index].symbols)} · <span class="calc-row__tag">메소</span>
+                      {formatKoreanUnits(costs[index].meso, { maxGroups: 1 })}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </span>
               </div>
             );
@@ -408,7 +424,7 @@ function Liberation({ liberated }) {
       <section class="card calc-card">
         <h2 class="calc-card__title">지금 진행</h2>
         <div class="calc-income">
-          <div class="field">
+          <div class="field calc-income__wide">
             <label class="field__label" for="lib-chapter">
               지금 장
             </label>
@@ -529,7 +545,8 @@ export function Calc() {
         ...(symbolTab.authenticSymbols || []).map((symbol) => toRow(symbol, "authentic"))
       ];
       const presets = Array.isArray(data.tabs?.equipment?.presets) ? data.tabs.equipment.presets : [];
-      setLiberated(presets.some((preset) => (preset?.data?.itemEquipment || []).some((item) => /제네시스/.test(String(item?.itemName || "")))));
+      const hasGenesis = presets.some((preset) => (preset?.data?.itemEquipment || []).some((item) => /제네시스/.test(String(item?.itemName || ""))));
+      setLiberated(hasGenesis);
       if (nextCores.length) setCores(nextCores);
       if (nextSymbols.length) setSymbols(nextSymbols);
       setCharacter({ name: data.profile?.name || name, attackType: data.profile?.attackType, majorStats: data.profile?.majorStats || {} });
@@ -538,7 +555,9 @@ export function Calc() {
         text:
           view === "set"
             ? `${data.profile?.name || name}의 보스 세팅 세트를 채웠어요.`
-            : `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.`
+            : view === "liberation"
+              ? `${data.profile?.name || name}: ${hasGenesis ? "이미 해방했어요(제네시스 무기)." : "아직 해방 전이에요."}`
+              : `${data.profile?.name || name}의 HEXA 코어 ${nextCores.length}개 · 심볼 ${nextSymbols.length}개를 채웠어요.`
       });
       const params = new URLSearchParams(window.location.search);
       params.set("a", `${who.world}/${name}`);
@@ -559,6 +578,10 @@ export function Calc() {
           <SplitText text="계산기" />
         </h1>
       </header>
+
+      <div class="calc-switch">
+        <Segmented name="calc-view" legend="계산기 종류" value={view} onChange={onView} options={VIEWS} />
+      </div>
 
       {CHARACTER_VIEWS.includes(view) ? (
         <form class="card calc-who" onSubmit={onLoad} aria-label="캐릭터 불러오기">
@@ -583,17 +606,13 @@ export function Calc() {
             value={who.name}
             onInput={(event) => setWho({ ...who, name: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
           />
-          <button type="submit" class="btn btn--primary" disabled={load.status === "loading" || !who.name.trim()}>
+          <button type="submit" class="btn btn--primary" disabled={load.status === "loading" || !who.name.trim()} aria-label="불러오기">
             <Icon name="download" size={18} />
-            {load.status === "loading" ? "불러오는 중" : "불러오기"}
+            <span class="calc-who__label">{load.status === "loading" ? "불러오는 중" : "불러오기"}</span>
           </button>
           {load.text ? <p class={`calc-who__msg is-${load.status}`}>{load.text}</p> : null}
         </form>
       ) : null}
-
-      <div class="calc-switch">
-        <Segmented name="calc-view" legend="계산기 종류" value={view} onChange={onView} options={VIEWS} />
-      </div>
 
       {view === "hexa" ? <HexaCores rows={cores} setRows={setCores} /> : null}
       {view === "stat" ? <HexaStat /> : null}

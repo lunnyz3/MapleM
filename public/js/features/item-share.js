@@ -261,7 +261,8 @@ function formatAdditionalOptionPercent(value) {
   }
   const bounded = Math.min(100, numeric);
   const digits = bounded >= 1 ? 1 : Math.min(12, -Math.floor(Math.log10(bounded)) + 1);
-  return `${Number(bounded.toFixed(digits))}%`;
+  // Number()로 바꾸면 1.5e-7 처럼 지수로 나온다: 고정 소수에서 끝의 0만 지운다.
+  return `${bounded.toFixed(digits).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "")}%`;
 }
 
 // 공유 문구: "상위 0.057%, 블랙큐브 1,766개, 에디셔널 큐브 3,548개 짜리 아이템입니다!"

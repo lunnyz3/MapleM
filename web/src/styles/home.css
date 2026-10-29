@@ -57,6 +57,8 @@
 /* ================= 히어로(하늘) ================= */
 .hero {
   position: relative;
+  /* 검색 제안 판이 아래 카드(내 캐릭터 등) 위로 오게 */
+  z-index: 3;
   isolation: isolate;
   display: flex;
   align-items: center;
@@ -760,7 +762,7 @@
 .bot-cta__free {
   padding: 1px 8px;
   border-radius: var(--radius-pill);
-  background: #ff5b5b;
+  background: #d63a3a;
   color: #fff;
   font-size: var(--fs-12);
   font-weight: 900;
@@ -831,3 +833,15 @@
 :root[data-theme="dark"] .bot-cta__go {
   color: var(--text);
 }
+
+@media (max-width: 420px) {
+  .rank-row {
+    grid-template-columns: 30px 40px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .rank-row__value {
+    font-size: var(--fs-16);
+  }
+}
+

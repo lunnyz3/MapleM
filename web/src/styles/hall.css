@@ -61,10 +61,22 @@
   text-overflow: ellipsis;
 }
 
-.hall-champ__who span {
+.hall-champ__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
   color: var(--text-muted);
   font-size: var(--fs-12);
   font-weight: 600;
+}
+
+.hall-champ__meta > span {
+  white-space: nowrap;
+}
+
+.hall-champ__meta > span + span::before {
+  margin-right: 6px;
+  content: "·";
 }
 
 .hall-champ__value {
@@ -85,7 +97,7 @@
   list-style: none;
 }
 
-.hall-list li {
+.hall-list__row {
   display: grid;
   grid-template-columns: 1.8em minmax(0, 1fr) auto;
   gap: 0 10px;
@@ -95,8 +107,18 @@
   font-size: var(--fs-14);
 }
 
-.hall-list li:hover {
+.hall-list__row {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.hall-list__row:hover,
+.hall-list__row:active {
   background: var(--surface-soft);
+}
+
+.hall-list__row:hover .hall-list__name {
+  color: var(--primary);
 }
 
 .hall-list__rank {
@@ -114,9 +136,6 @@
   text-decoration: none;
 }
 
-.hall-list__name:hover {
-  color: var(--primary);
-}
 
 .hall-list__name span {
   margin-left: 6px;

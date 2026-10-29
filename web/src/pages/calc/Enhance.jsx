@@ -21,6 +21,12 @@ import { copyText } from "../../lib/share.js";
 
 /** 437억 2,000만 */
 const meso = (/** @type {number} */ value) => (Number.isFinite(value) ? formatKoreanUnits(Math.round(value), { maxGroups: 2 }) : "-");
+/** 표 칸: "1.8억", "685만" */
+const mesoShort = (/** @type {number} */ value) => {
+  if (!Number.isFinite(value)) return "-";
+  if (value >= 1e8) return `${formatDecimal(value / 1e8, value >= 1e10 ? 0 : 1)}억`;
+  return value >= 1e4 ? `${formatComma(Math.round(value / 1e4))}만` : formatComma(Math.round(value));
+};
 const pct = (/** @type {number} */ value, digits = 1) => `${formatDecimal(value, digits)}%`;
 const range = (/** @type {number} */ from, /** @type {number} */ to) => Array.from({ length: to - from + 1 }, (_, index) => from + index);
 
@@ -171,7 +177,7 @@ export function StarforceCalc() {
           </div>
         )}
         <div class="calc-table-wrap">
-          <table class="calc-table">
+          <table class="calc-table calc-table--nowrap">
             <thead>
               <tr>
                 <th scope="col">강화</th>
@@ -364,7 +370,7 @@ export function PolishCalc() {
     <div class="calc-grid">
       <section class="card calc-card">
         <h2 class="calc-card__title">장신구 연마</h2>
-        <div class="calc-seg">
+        <div class="calc-seg calc-seg--wrap">
           <Segmented
             name="polish-track"
             legend="장비"
@@ -426,9 +432,9 @@ export function PolishCalc() {
                 <tr key={row.level} class={row.level > from && row.level <= goal ? "" : "is-muted"}>
                   <td class="num">Lv.{row.level}</td>
                   <td class="num">{pct(row.probability * 100)}</td>
-                  <td class="num">{meso(row.cost)}</td>
-                  <td class="num">{meso(row.meso)}</td>
-                  <td class="num">{meso(row.mesoSum)}</td>
+                  <td class="num">{mesoShort(row.cost)}</td>
+                  <td class="num">{mesoShort(row.meso)}</td>
+                  <td class="num">{mesoShort(row.mesoSum)}</td>
                   <td class="num">{formatDecimal(row.material, 1)}</td>
                 </tr>
               ))}

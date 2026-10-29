@@ -879,7 +879,8 @@
 
 @media (max-width: 719px) {
   .manual-actions {
-    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 8px);
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    border-radius: 14px 14px 0 0;
   }
 }
 
@@ -1035,8 +1036,10 @@
 }
 
 .kv-list__key {
+  flex: none;
   color: var(--text-muted);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .kv-list__val {
@@ -1167,6 +1170,7 @@
   bottom: -6px;
   left: 50%;
   padding: 0 6px;
+  white-space: nowrap;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--gold-500), var(--peach-500));
   color: #ffffff;
@@ -2368,8 +2372,9 @@ button.eq-slot:hover .eq-slot__img {
 
 .eq-opts__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px 6px;
   color: #dfe3ff;
   font-family: var(--font-sans);
   font-size: var(--fs-12);
@@ -2398,6 +2403,7 @@ button.eq-slot:hover .eq-slot__img {
 .eq-opts__grade {
   margin-left: auto;
   padding: 0 7px;
+  white-space: nowrap;
   border-radius: 999px;
   background: color-mix(in srgb, var(--g, #ffffff) 16%, transparent);
   color: var(--g, #dfe3ff);
@@ -3189,7 +3195,8 @@ button.eq-slot:hover .eq-slot__img {
 
 .whatif__bar {
   position: sticky;
-  top: 0;
+  /* 시트 본문 위 여백(--sp-4)만큼 올려 붙인다: 그 틈으로 아래 내용이 비치지 않게 */
+  top: calc(var(--sp-4) * -1);
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
@@ -3632,9 +3639,13 @@ button.eq-slot:hover .eq-slot__img {
 
 /* 큐브 돌려 보기 */
 .eq-trials {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
+}
+
+.eq-trials > .btn {
+  height: 100%;
 }
 
 .cubesim__now,
@@ -3969,8 +3980,8 @@ button.eq-slot:hover .eq-slot__img {
 }
 
 .stella__pick.select select {
-  height: 24px;
-  min-height: 24px;
+  height: 28px;
+  min-height: 28px;
   padding: 0 20px 0 8px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
@@ -4387,6 +4398,122 @@ a.jobtop__leader {
   .jobtop__head > a {
     grid-column: 1 / -1;
     order: -1;
+  }
+}
+
+/* ================= 좁은 화면 다듬기 ================= */
+.eff-equiv__label,
+.eff-equiv__value {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  /* 보스: 이름·상태가 한 줄, 필요 레벨·전투력은 그 아래 */
+  .boss-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name state"
+      "need need"
+      "bar bar";
+  }
+
+  .boss-row__name {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  /* 같은 효과: 한 줄에 하나 */
+  .eff-equiv {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 길드 머리: 버튼은 다음 줄 전체 */
+  .guild-hero > .btn {
+    flex: 1 0 100%;
+    justify-content: center;
+  }
+
+  /* 기록 요약: 2×2 */
+  .exp-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .exp-summary__item {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .exp-summary__item strong {
+    font-size: var(--fs-18);
+    white-space: nowrap;
+  }
+
+  /* 프로필 칩: 두 칸씩 */
+  .ch-hero__chips {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .ch-hero__chips > li {
+    min-width: 0;
+  }
+
+  /* li.chip(전투력)과 li > a.chip(템환산·잠재 등) 모두: 칸을 꽉 채우고 넘치면 줄바꿈 */
+  .ch-hero__chips .chip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 6px 10px;
+    border-radius: 14px;
+  }
+
+  /* 길드원: 이름 칸을 넓게 */
+  .member-list a {
+    grid-template-columns: 24px minmax(0, 1fr) auto auto;
+    gap: 8px;
+  }
+}
+
+/* 별자리판: 양 끝에 더 있으면 흐림 */
+.stella__scroll {
+  --fade-left: 0px;
+  --fade-right: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+}
+
+.stella__scroll.has-left {
+  --fade-left: 28px;
+}
+
+.stella__scroll.has-right {
+  --fade-right: 28px;
+}
+
+/* 직업 1위와 비교: 표 머리 고정(시트 본문이 스크롤된다) */
+.jobtop__table-wrap {
+  overflow: visible;
+}
+
+.jobtop__table thead th {
+  position: sticky;
+  top: calc(var(--sp-4) * -1);
+  z-index: 1;
+  background: var(--surface-raised);
+}
+
+@media (max-width: 719px) {
+  /* 상세 탭 목록은 위에 붙어 있다(긴 탭을 읽고 다른 탭으로 갈 때) */
+  .ch-tabs > .tabs-frame {
+    position: sticky;
+    top: var(--topbar-h);
+    z-index: 30;
+    padding: 6px 0;
+    background: var(--bg);
   }
 }
 

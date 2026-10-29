@@ -15,6 +15,13 @@ import { hexaCoreType, hexaSpend, symbolCost } from "../../lib/hexaCalc.mjs";
 import hexaRules from "../../../../src/game-data/hexa.json";
 import symbolCosts from "../../../../src/game-data/symbol-costs.json";
 
+/** 하이퍼 스탯 효과 글: 앞의 "스탯 이름 :"만 떼고, 다른 이름으로 시작하면(공격 시 추가 스킬 피해 등) 그대로. */
+function hyperValue(row) {
+  const text = String(row?.statIncrease || "").trim();
+  const [head, ...rest] = text.split(/\s*:\s*/);
+  return (rest.length && head === String(row?.statType || "").trim() ? rest.join(" : ") : text) || "-";
+}
+
 /** @param {{ children?: any, count?: number, note?: any }} props */
 function SubTitle({ children, count, note }) {
   return (
@@ -72,7 +79,7 @@ export function StatsTab({ data, presets}) {
               <li key={index}>
                 <span class="kv-list__key">{row.statType}</span>
                 <span class="badge num">Lv.{row.statLevel}</span>
-                <strong class="kv-list__val">{String(row.statIncrease || "").replace(/^.*?:\s*/, "") || "-"}</strong>
+                <strong class="kv-list__val">{hyperValue(row)}</strong>
               </li>
             ))}
           </ul>

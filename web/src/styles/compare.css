@@ -355,3 +355,15 @@
     white-space: normal;
   }
 }
+
+@media (max-width: 420px) {
+  .cmp-head__meta {
+    font-size: var(--fs-12);
+  }
+
+  .cmp-cell {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+

@@ -823,3 +823,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+@media (max-width: 420px) {
+  .gd-members__tools .segmented__option {
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+
+  .gd-power__row {
+    gap: 8px;
+  }
+}
+

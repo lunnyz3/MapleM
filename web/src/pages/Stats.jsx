@@ -7,6 +7,7 @@ import { Icon } from "../components/Icon.jsx";
 import { Aurora, Reveal, SplitText } from "../components/Motion.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
 import { ErrorState } from "../components/States.jsx";
+import { Sheet } from "../components/Sheet.jsx";
 import { Segmented } from "../components/Tabs.jsx";
 import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
@@ -249,14 +250,32 @@ function ShareList({ rows, tone = "" }) {
 const valueText = (/** @type {number} */ value, /** @type {string} */ unit) => `${formatDecimal(value, value % 1 ? (unit === "%" ? 2 : 1) : 0)}${unit}`;
 
 /**
- * 묶음 머리에 마우스를 올리거나 누르면 순위가 펼쳐진다(높은 값부터).
+ * 묶음 머리에 마우스를 올리면 순위 판이 뜨고, 터치·키보드로 누르면 순위 시트가 열린다(높은 값부터).
  * @param {{ title: string, rows: any[], unit: string, detail: (row: any) => string, children?: any }} props
  */
 function RankHover({ title, rows, unit, detail, children }) {
   const [open, setOpen] = useState(false);
-  // 마우스는 올리면 이미 열려 있으니 눌러도 닫지 않는다(터치·키보드는 누를 때마다 바꾼다).
+  const [sheet, setSheet] = useState(false);
+  // 마우스는 올리면 이미 열려 있으니 눌러도 닫지 않는다.
   const pointer = useRef("");
   const mouse = (/** @type {PointerEvent} */ event) => event.pointerType === "mouse";
+  const list = (
+    <ol class="meta-rank__list">
+      {rows.map((row, index) => (
+        <li key={`${row.world}-${row.name}-${index}`}>
+          <a class="meta-rank__row" href={urls.character(row.world, row.name)}>
+            <span class="meta-rank__no num">{index + 1}</span>
+            <span class="meta-rank__name">
+              {row.name}
+              <span>{row.world}</span>
+            </span>
+            <strong class="meta-rank__value num">{valueText(row.value, unit)}</strong>
+            <span class="meta-rank__detail">{detail(row)}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  );
   return (
     <div
       class={`meta-rank${open ? " is-open" : ""}`}
@@ -267,10 +286,11 @@ function RankHover({ title, rows, unit, detail, children }) {
       <button
         type="button"
         class="meta-rank__head"
-        aria-expanded={open ? "true" : "false"}
+        aria-expanded={open || sheet ? "true" : "false"}
         onPointerDown={(event) => (pointer.current = event.pointerType)}
         onClick={() => {
-          setOpen(pointer.current === "mouse" ? true : !open);
+          if (pointer.current === "mouse") setOpen(true);
+          else if (rows.length) setSheet(true);
           pointer.current = "";
         }}
       >
@@ -283,23 +303,10 @@ function RankHover({ title, rows, unit, detail, children }) {
         ) : null}
       </button>
       {children}
-      {open && rows.length ? (
-        <div class="meta-rank__panel">
-          <ol>
-            {rows.map((row, index) => (
-              <li key={`${row.world}-${row.name}-${index}`}>
-                <span class="meta-rank__no num">{index + 1}</span>
-                <a class="meta-rank__name" href={urls.character(row.world, row.name)}>
-                  {row.name}
-                  <span>{row.world}</span>
-                </a>
-                <strong class="meta-rank__value num">{valueText(row.value, unit)}</strong>
-                <span class="meta-rank__detail">{detail(row)}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      ) : null}
+      {open && rows.length ? <div class="meta-rank__panel">{list}</div> : null}
+      <Sheet open={sheet} title={`${title} 순위`} onClose={() => setSheet(false)}>
+        {list}
+      </Sheet>
     </div>
   );
 }
@@ -361,7 +368,6 @@ function JobMeta({ query, onQuery }) {
             <Reveal class="card stats-card" delay={120}>
               <span class="stats-card__label">평균 템환산</span>
               <strong class="display num">{setScoreText(data.summary.avgItemScore || 0)}</strong>
-              <span class="stats-card__note">&nbsp;</span>
             </Reveal>
           </div>
           <div class="stats-split stats-meta">
@@ -429,6 +435,7 @@ export function Stats() {
     if (next.view === "meta" && next.cls) params.set("class", next.cls);
     const url = `/stats${params.toString() ? `?${params}` : ""}`;
     if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState(null, "", url);
+    if (next.view !== query.view) window.scrollTo({ top: 0 });
   };
 
   return (

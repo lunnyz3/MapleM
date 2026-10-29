@@ -564,7 +564,21 @@ export function Character({ world, name }) {
       </div>
 
       <section class="ch-tabs" aria-label="상세 정보">
-        <Tabs idBase="ch" label="상세 정보" scrollable value={tab} onChange={setTab} items={TAB_ITEMS} />
+        <Tabs
+          idBase="ch"
+          label="상세 정보"
+          scrollable
+          value={tab}
+          onChange={(next) => {
+            setTab(next);
+            // 붙어 있는 탭 목록에서 바꾸면 새 탭의 맨 위부터 보이게
+            requestAnimationFrame(() => {
+              const section = document.querySelector(".ch-tabs");
+              if (section && section.getBoundingClientRect().top < 0) section.scrollIntoView({ block: "start" });
+            });
+          }}
+          items={TAB_ITEMS}
+        />
         <TabPanel idBase="ch" value={tab} class="ch-tabs__panel">
           {tab === "stats" ? <StatsTab data={data} presets={bossPresets} /> : null}
           {tab === "growth" ? (
