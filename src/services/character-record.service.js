@@ -3,6 +3,8 @@
 const mongoose = require("mongoose");
 const { CharacterRecord } = require("../models/character-record.model");
 const { mergeRecord, kstDate } = require("../domain/records/journal");
+const { recordBrief } = require("../domain/records/brief");
+const { CharacterSpec } = require("../models/character-spec.model");
 
 const DB_TIMEOUT_MS = 3000;
 
@@ -60,4 +62,31 @@ async function bestRecentCombatPower(ocid, observed, now = new Date()) {
   return { value: best.value, observedAt: `${best.date}T00:00:00+09:00`, recentBest: true };
 }
 
-module.exports = { recordSnapshot, findRecord, bestRecentCombatPower, RECENT_POWER_DAYS };
+const BRIEF_MAX = 12;
+
+/**
+ * 내 캐릭터 변화(첫 화면 즐겨찾기·최근 검색): 캐릭터마다 최근 7일 전투력·레벨·템환산 변화와 눈에 띄는 장비 변화 둘.
+ * @param {Array<{ world: string, name: string }>} list 정리된 월드 이름·캐릭터 이름(최대 12)
+ * → [{ world, name, className, brief }] (모은 적 없는 캐릭터는 빠진다)
+ */
+async function recordBriefs(list, now = new Date()) {
+  const wanted = list.slice(0, BRIEF_MAX);
+  if (!wanted.length || !isMongoConnected()) return [];
+  const specs = await CharacterSpec.find(
+    { $or: wanted.map(({ world, name }) => ({ worldName: world, characterName: name })) },
+    { _id: 0, ocid: 1, worldName: 1, characterName: 1, characterClass: 1 }
+  )
+    .maxTimeMS(DB_TIMEOUT_MS)
+    .lean();
+  if (!specs.length) return [];
+  const records = await CharacterRecord.find({ ocid: { $in: specs.map((spec) => spec.ocid) } }, { _id: 0, ocid: 1, journal: { $slice: -10 } })
+    .maxTimeMS(DB_TIMEOUT_MS)
+    .lean();
+  const journalOf = new Map(records.map((record) => [record.ocid, record.journal]));
+  const today = kstDate(now);
+  return specs
+    .map((spec) => ({ world: spec.worldName, name: spec.characterName, className: spec.characterClass || "", brief: recordBrief(journalOf.get(spec.ocid), today) }))
+    .filter((entry) => entry.brief);
+}
+
+module.exports = { recordSnapshot, findRecord, bestRecentCombatPower, recordBriefs, RECENT_POWER_DAYS };

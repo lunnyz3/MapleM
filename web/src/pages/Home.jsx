@@ -15,8 +15,8 @@ import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { TabPanel, Tabs } from "../components/Tabs.jsx";
-import { getJson, loadRanking, peekRanking } from "../lib/api.js";
-import { formatComma, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
+import { getJson, loadRanking, peekRanking, postJson } from "../lib/api.js";
+import { formatComma, formatDecimal, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
 import { RANKING_TYPES, detailUrl, getRankingType, urls } from "../lib/game.js";
 import { addRecent, clearRecent, entryKey, getSaved, removeRecent, toggleFavorite, useSaved } from "../lib/storage.js";
 
@@ -62,9 +62,65 @@ function Hero() {
 }
 
 /**
- * @param {{ entry: import("../lib/storage.js").SavedEntry, list: "favorites" | "recent", favorite: boolean, onRemoved: () => void, index?: number }} props
+ * 내 캐릭터 변화(POST /api/v2/records/brief): "월드/이름" → 최근 7일 전투력·레벨 변화와 눈에 띄는 장비 변화.
+ * @param {Array<{ kind: string, world: string, name: string }>} entries
  */
-function SavedItem({ entry, list, favorite, onRemoved, index = 0 }) {
+function useBriefs(entries) {
+  const key = entries
+    .filter((entry) => entry.kind === "character")
+    .slice(0, 12)
+    .map((entry) => `${entry.world}\u0000${entry.name}`)
+    .join("\u0001");
+  const [briefs, setBriefs] = useState(/** @type {Map<string, any>} */ (new Map()));
+  useEffect(() => {
+    if (!key) return undefined;
+    let alive = true;
+    const characters = key.split("\u0001").map((pair) => {
+      const [world, name] = pair.split("\u0000");
+      return { world, name };
+    });
+    postJson("/api/v2/records/brief", { characters }).then(
+      ({ response, body }) => {
+        if (alive && response.ok && body?.ok) setBriefs(new Map((body.briefs || []).map((entry) => [`${entry.world}\u0000${entry.name}`, entry.brief])));
+      },
+      () => {}
+    );
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+  return briefs;
+}
+
+/** "▲2.3% · Lv +1 · 제네시스 해머 ★35 달성 · 2일" (바뀐 게 없으면 그리지 않는다) */
+function BriefLine({ brief }) {
+  const parts = [];
+  const power = brief.combatPower;
+  if (power && power.from !== power.to) {
+    const up = power.to > power.from;
+    parts.push(
+      <span key="power" class={up ? "is-up" : "is-down"}>
+        {up ? "▲" : "▼"}
+        {formatDecimal(Math.abs(power.to / power.from - 1) * 100, 1)}%
+      </span>
+    );
+  }
+  const level = brief.level;
+  if (level && level.to > level.from) parts.push(<span key="level">Lv +{level.to - level.from}</span>);
+  if (brief.highlights?.[0]) parts.push(<span key="news" class="is-news">{brief.highlights[0]}</span>);
+  if (!parts.length) return null;
+  return (
+    <span class="saved-item__brief num">
+      {parts}
+      {brief.days ? <span class="saved-item__days">{brief.days}일</span> : null}
+    </span>
+  );
+}
+
+/**
+ * @param {{ entry: import("../lib/storage.js").SavedEntry, list: "favorites" | "recent", favorite: boolean, onRemoved: () => void, index?: number, brief?: any }} props
+ */
+function SavedItem({ entry, list, favorite, onRemoved, index = 0, brief = null }) {
   const key = entryKey(entry);
   return (
     <li class="saved-item" style={{ "--stagger": index }}>
@@ -77,6 +133,7 @@ function SavedItem({ entry, list, favorite, onRemoved, index = 0 }) {
             {entry.kind === "guild" ? <Icon name="flag" size={14} /> : null}
             {list === "recent" && entry.at ? <span>{formatRelativeTime(entry.at)}</span> : null}
           </span>
+          {brief ? <BriefLine brief={brief} /> : null}
         </span>
       </a>
       <button
@@ -116,6 +173,7 @@ function MyCharacters() {
   const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const list = tab === "favorites" ? favorites : recent;
   const favoriteKeys = new Set(favorites.map(entryKey));
+  const briefs = useBriefs(list.slice(0, 5));
   // 항목을 지워 버튼이 사라지면 포커스를 목록으로 옮긴다.
   const focusPanel = () => requestAnimationFrame(() => panelRef.current?.focus());
 
@@ -149,7 +207,15 @@ function MyCharacters() {
         {list.length ? (
           <ul class="saved-list stagger-in">
             {list.slice(0, 5).map((entry, index) => (
-              <SavedItem key={entryKey(entry)} index={index} entry={entry} list={tab} favorite={favoriteKeys.has(entryKey(entry))} onRemoved={focusPanel} />
+              <SavedItem
+                key={entryKey(entry)}
+                index={index}
+                entry={entry}
+                list={tab}
+                favorite={favoriteKeys.has(entryKey(entry))}
+                onRemoved={focusPanel}
+                brief={entry.kind === "character" ? briefs.get(`${entry.world}\u0000${entry.name}`) : null}
+              />
             ))}
           </ul>
         ) : tab === "favorites" ? (

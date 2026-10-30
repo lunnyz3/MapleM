@@ -30,7 +30,7 @@ const {
 
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
-const { findRecord } = require("../services/character-record.service");
+const { findRecord, recordBriefs } = require("../services/character-record.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -226,6 +226,23 @@ async function getCharacterRecord(req, res) {
   }
 }
 
+// POST /api/v2/records/brief { characters: [{ world, name }] } → { ok, briefs: [{ world, name, className, brief }] }
+async function postRecordBriefs(req, res) {
+  const list = (Array.isArray(req.body?.characters) ? req.body.characters : [])
+    .slice(0, 12)
+    .map((entry) => ({ world: normalizeWorldName(text(entry?.world, 20)), name: text(entry?.name, 24).trim() }))
+    .filter((entry) => entry.world.ok && entry.name)
+    .map((entry) => ({ world: entry.world.worldNameCanonical, name: entry.name }));
+  if (!list.length) return res.status(400).json({ ok: false, message: "characters is required" });
+  try {
+    const briefs = await recordBriefs(list);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, briefs });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 async function getCollectionSummary(req, res) {
   try {
     const summary = await collectionSummary();
@@ -247,5 +264,6 @@ module.exports = {
   postSpecs,
   getSpecSummary,
   getCharacterHistory,
-  getCharacterRecord
+  getCharacterRecord,
+  postRecordBriefs
 };

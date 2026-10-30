@@ -8,10 +8,9 @@ import { getJson } from "../../lib/api.js";
 import { combatPower, totalsFromStats } from "../../lib/efficiency.js";
 import { formatDecimal } from "../../lib/format.js";
 import { urls } from "../../lib/game.js";
-import { deltaToTotals } from "../../lib/growthReport.mjs";
 import { itemScoreDiff } from "../../lib/itemScore.js";
-import { currentSetTotals, setChange, setOfItem } from "../../lib/starforceWhatIf.mjs";
-import { swapTotals } from "../../lib/swapItem.mjs";
+import { currentSetTotals } from "../../lib/starforceWhatIf.mjs";
+import { swapUpTotals } from "../../lib/upgradePlan.mjs";
 import { EquipDetail } from "./Equipment.jsx";
 
 /** 같은 사람의 같은 장비(프리셋마다 따로 저장된 것)는 한 줄만. */
@@ -74,20 +73,13 @@ export function BetterItems({ item, rank, ocid, majorStats, attackType, onClose 
     };
   }, [scope, order, pages, rank?.slot, rank?.score]);
 
-  // 바꿔 끼면 전투력: 같은 스타포스 세트끼리는 세트 합 차이도 더한다.
+  // 바꿔 끼면 전투력: 같은 스타포스 세트끼리는 세트 합 차이도 더한다(web/src/lib/upgradePlan.mjs).
   const totals = useMemo(() => totalsFromStats(majorStats, attackType), [majorStats, attackType]);
-  const mySet = useMemo(() => setOfItem(starforceSets, item), [item]);
-  const setTotal = mySet ? currentSetTotals(majorStats)[mySet.label] : undefined;
+  const setTotals = useMemo(() => currentSetTotals(majorStats), [majorStats]);
   const gainOf = (/** @type {any} */ other) => {
     if (!totals) return null;
-    const theirSet = setOfItem(starforceSets, other);
-    let setDelta = {};
-    if (mySet && theirSet && theirSet.id === mySet.id && Number.isFinite(setTotal)) {
-      const stars = (Number(other.starforceUpgrade) || 0) - (Number(item.starforceUpgrade) || 0);
-      setDelta = deltaToTotals(setChange(mySet, setTotal, stars * (item.slotName === "한벌옷" ? 2 : 1), starforceSets.cap), attackType);
-    }
     const before = combatPower(totals);
-    return before > 0 ? combatPower(swapTotals(totals, item, other, attackType, setDelta)) / before - 1 : null;
+    return before > 0 ? combatPower(swapUpTotals({ totals, item, other, sets: starforceSets, setTotals, attackType })) / before - 1 : null;
   };
 
   if (!rank?.slot) {

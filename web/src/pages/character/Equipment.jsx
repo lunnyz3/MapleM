@@ -19,6 +19,7 @@ import { Luck } from "./Luck.jsx";
 import { JobTop } from "./JobTop.jsx";
 import { BetterItems } from "./BetterItems.jsx";
 import { Twins } from "./Twins.jsx";
+import { Upgrades } from "./Upgrades.jsx";
 import { combatPowerOf } from "../../lib/character.js";
 import { CubeSim } from "./CubeSim.jsx";
 import { itemScoreText } from "../../lib/itemScore.js";
@@ -441,6 +442,16 @@ export function Equipment({ data, world, mode, presetNo }) {
           <Luck items={items} profile={profile} power={combatPowerOf(data.profile?.combatPower).value} />
           {data.profile?.className ? <JobTop ocid={data.ocid} className={data.profile.className} /> : null}
           {data.ocid ? <Twins ocid={data.ocid} world={world} name={data.profile?.name || data.query?.characterName || ""} /> : null}
+          {data.ocid && items.length ? (
+            <Upgrades
+              items={items}
+              ocid={data.ocid}
+              majorStats={data.profile?.majorStats || {}}
+              attackType={data.profile?.attackType || "physical"}
+              basePower={Number(data.profile?.statSetting?.combatPower?.boss) || null}
+              onOpen={setSheetItem}
+            />
+          ) : null}
         </div>
         <label class="eq-caption-switch">
           <input

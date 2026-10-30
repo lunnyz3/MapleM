@@ -835,3 +835,19 @@
   }
 }
 
+
+/* 전투력 순위 위 줄: 기록 있는 길드원 수 · 엑셀로 받기 */
+.gd-power__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.gd-power__count {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}

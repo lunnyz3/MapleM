@@ -15,7 +15,8 @@ import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { toast } from "../components/Toast.jsx";
 import { getJson, loadCharacterImage, peekCharacterClass } from "../lib/api.js";
 import { loadGuild } from "../lib/data.js";
-import { formatComma, formatDateDot, formatKoreanUnits, formatRelativeTime, toNumber } from "../lib/format.js";
+import { downloadCsv } from "../lib/csv.mjs";
+import { formatComma, formatDateDot, formatKoreanUnits, formatRelativeTime, kstToday, toNumber } from "../lib/format.js";
 import { WORLDS, getRankingType, urls } from "../lib/game.js";
 import { RankRow, useRanking } from "./Home.jsx";
 import { useInView } from "../lib/motion.js";
@@ -366,34 +367,68 @@ function PowerPanel({ guild }) {
 
   if (state.status === "loading") return <SkeletonList rows={6} />;
   if (state.status === "error") return <ErrorState compact title="전투력 순위를 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} />;
+
+  // 엑셀(CSV): 순위·이름·직업·레벨·전투력·템환산·잠재·에디·길드 활동
+  const exportCsv = () => {
+    let place = 0;
+    const table = rows.map(({ member, spec }) => {
+      const power = Number(spec?.combatPower) || 0;
+      if (power) place += 1;
+      return [
+        power ? place : "",
+        member.name,
+        spec?.characterClass || member.job || "",
+        spec?.characterLevel || member.level || "",
+        power || "",
+        spec?.itemScore ? setScoreText(spec.itemScore) : "",
+        spec?.potential ?? "",
+        spec?.additionalPotential ?? "",
+        member.activity ?? "",
+        member.master ? "길드 마스터" : ""
+      ];
+    });
+    downloadCsv(`${guild.world}-${guild.name}-길드원-${kstToday()}.csv`, [["순위", "이름", "직업", "레벨", "전투력", "템환산", "잠재", "에디", "길드 활동", "직위"], ...table]);
+  };
+
   let rank = 0;
   return (
-    <ol class="gd-power stagger-in" aria-label="길드원 전투력 순위">
-      {rows.map(({ member, spec }, index) => {
-        const power = Number(spec?.combatPower) || 0;
-        if (power) rank += 1;
-        return (
-          <li key={member.name} style={{ "--stagger": Math.min(index, 12) }}>
-            <a class="gd-power__row" href={urls.character(guild.world, member.name)}>
-              {power ? <RankBadge rank={rank} size={32} /> : <span class="gd-power__none" aria-hidden="true">-</span>}
-              <Avatar world={guild.world} name={member.name} size={40} lazy />
-              <span class="gd-power__text">
-                <span class="gd-power__name">
-                  {member.name}
-                  {member.master ? <Icon name="crown" size={14} class="gd-power__crown" /> : null}
+    <>
+      <div class="gd-power__tools">
+        <span class="gd-power__count num">
+          기록 있는 길드원 {formatComma(rows.filter((row) => Number(row.spec?.combatPower) > 0).length)}/{formatComma(rows.length)}명
+        </span>
+        <button type="button" class="btn btn--secondary btn--sm" onClick={exportCsv}>
+          <Icon name="download" size={16} />
+          엑셀로 받기
+        </button>
+      </div>
+      <ol class="gd-power stagger-in" aria-label="길드원 전투력 순위">
+        {rows.map(({ member, spec }, index) => {
+          const power = Number(spec?.combatPower) || 0;
+          if (power) rank += 1;
+          return (
+            <li key={member.name} style={{ "--stagger": Math.min(index, 12) }}>
+              <a class="gd-power__row" href={urls.character(guild.world, member.name)}>
+                {power ? <RankBadge rank={rank} size={32} /> : <span class="gd-power__none" aria-hidden="true">-</span>}
+                <Avatar world={guild.world} name={member.name} size={40} lazy />
+                <span class="gd-power__text">
+                  <span class="gd-power__name">
+                    {member.name}
+                    {member.master ? <Icon name="crown" size={14} class="gd-power__crown" /> : null}
+                  </span>
+                  <span class="gd-power__meta">
+                    <span class="num">Lv.{spec?.characterLevel || member.level || "-"}</span>
+                    {spec?.characterClass || member.job ? <span>{spec?.characterClass || member.job}</span> : null}
+                    {spec?.itemScore ? <span class="num">템환산 {setScoreText(spec.itemScore)}점</span> : null}
+                  </span>
                 </span>
-                <span class="gd-power__meta">
-                  <span class="num">Lv.{spec?.characterLevel || member.level || "-"}</span>
-                  {spec?.characterClass || member.job ? <span>{spec?.characterClass || member.job}</span> : null}
-                  {spec?.itemScore ? <span class="num">템환산 {setScoreText(spec.itemScore)}점</span> : null}
-                </span>
-              </span>
-              <span class="gd-power__value num">{power ? formatKoreanUnits(power, { maxGroups: 2 }) : "기록 없음"}</span>
-            </a>
-          </li>
-        );
-      })}
-    </ol>
+                <span class="gd-power__value num">{power ? formatKoreanUnits(power, { maxGroups: 2 }) : "기록 없음"}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </>
   );
 }
 
