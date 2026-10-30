@@ -283,6 +283,7 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  min-height: 36px;
   color: var(--text);
   font-family: var(--font-display);
   font-size: var(--fs-16);
@@ -295,6 +296,10 @@
 }
 
 .allmenu__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 4px;
   color: var(--text-subtle);
   font-size: var(--fs-12);
   font-weight: 700;

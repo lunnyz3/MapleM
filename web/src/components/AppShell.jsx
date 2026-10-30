@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { CALC_VIEWS, RANKING_TYPES, urls } from "../lib/game.js";
+import { CALC_VIEWS, GAME_MODES, RANKING_TYPES, urls } from "../lib/game.js";
 import { entryKey, useSaved } from "../lib/storage.js";
 import { useTheme } from "../lib/theme.js";
 import { BrandMark } from "./Decor.jsx";
@@ -37,6 +37,7 @@ const NAV = [
     href: urls.guildSearch,
     children: [
       { label: "길드 검색", href: urls.guildSearch },
+      { label: "길드 비교", href: "/guild/compare" },
       ...RANKING_TYPES.filter((type) => type.subject === "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) }))
     ]
   },
@@ -49,11 +50,19 @@ const NAV = [
     children: [
       { label: "직업별 전투력", href: "/stats" },
       { label: "직업 메타", href: "/stats?view=meta" },
+      { label: "직업 티어", href: "/stats?view=tier" },
+      { label: "월드 대항전", href: "/stats?view=world" },
       { label: "레벨 분포", href: "/stats?view=level" }
     ]
   },
   { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },
-  { key: "game", label: "미니게임", icon: "swords", href: urls.game },
+  {
+    key: "game",
+    label: "미니게임",
+    icon: "swords",
+    href: urls.game,
+    children: GAME_MODES.map((game) => ({ label: game.label, href: `${urls.game}?mode=${game.value}` }))
+  },
   { key: "bot", label: "카톡 봇", icon: "chat", href: urls.bot, highlight: true }
 ];
 

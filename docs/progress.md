@@ -319,6 +319,11 @@
 - 캐릭터 화면 머리의 직업 옆에 "S~D 티어"(통계 직업 티어의 상위 100명 평균 전투력 기준, `GET /api/v2/stats/tiers` 한 번만 읽음), 누르면 `/stats?view=tier`. 몬밀(캡틴) C 티어.
 - 운영 확인(42~45): 몬밀 다음 보스 경로(전체·★ 강화만), 순위 컷 추이(전투력·레벨), 길드 비교(레전드 vs 술이네, 없는 길드 안내), 직업 티어 배지를 1280·390 폭에서(오류·넘침 0). 반영 직전 운영 사본의 `public/uploads/`가 상태 목록에서 빠진 것은 앱의 공유 이미지 만료 정리가 폴더를 비운 것(추적 파일 변경 없음)이었다.
 
+### 46. 메뉴: 미니게임·통계·길드 하위 메뉴 (작업 사본, 운영 반영 전)
+- 운영자 요청: 상단 메뉴의 미니게임에 마우스를 올려도 하위 메뉴가 없었다. 오락실 게임 15개를 하위 메뉴로(8개가 넘어 두 줄), 누르면 `/game?mode=`로 바로 그 게임. 모바일 "전체" 메뉴도 같은 목록이라 미니게임 묶음이 생겼다.
+- 게임 이름은 `GAME_MODES`(`web/src/lib/game.js`) 하나에서 상단·전체 메뉴와 오락실 화면이 같이 쓴다(`test/game-modes.test.js`가 두 목록이 같은지 확인).
+- 통계 하위 메뉴에 직업 티어·월드 대항전, 길드 하위 메뉴에 길드 비교를 넣었다. 전체 메뉴의 묶음 제목·"전체 보기"는 누르기 쉽게 높이 36px.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

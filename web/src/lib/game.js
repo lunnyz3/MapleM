@@ -201,6 +201,25 @@ export function getRankingType(id) {
 
 /** 화면 주소. 기존 화면은 /legacy 첫 화면만 남아 있다. */
 /** 계산기 화면 목록(계산기 탭과 상단 메뉴가 같이 쓴다). 해방이 첫 화면. */
+/** 오락실 게임(/game?mode=): 상단·전체 메뉴와 오락실 화면이 같은 이름을 쓴다. */
+export const GAME_MODES = [
+  { value: "fortune", label: "오늘의 운세" },
+  { value: "match", label: "캐릭터 궁합" },
+  { value: "nick", label: "닉네임 생성기" },
+  { value: "cup", label: "장비창 월드컵" },
+  { value: "vs", label: "누가 더 셀까?" },
+  { value: "guess", label: "전투력 맞히기" },
+  { value: "reaction", label: "레전더리 반응속도" },
+  { value: "star", label: "스타캐치" },
+  { value: "sf", label: "스타포스 도전" },
+  { value: "merge", label: "장비 합성" },
+  { value: "memory", label: "짝 맞추기" },
+  { value: "simon", label: "등급 순서 기억" },
+  { value: "quiz", label: "아이템 이름 맞히기" },
+  { value: "typing", label: "장비 이름 타자" },
+  { value: "catch", label: "아이템 줍기" }
+];
+
 export const CALC_VIEWS = [
   { value: "liberation", label: "해방" },
   { value: "hexa", label: "HEXA 강화" },

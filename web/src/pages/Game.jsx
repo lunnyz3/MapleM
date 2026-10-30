@@ -15,7 +15,7 @@ import { ErrorState } from "../components/States.jsx";
 import { toast } from "../components/Toast.jsx";
 import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
-import { urls } from "../lib/game.js";
+import { GAME_MODES, urls } from "../lib/game.js";
 import { setScoreText } from "../lib/itemScore.js";
 import { GUESS_ROUNDS, guessPoints, guessTitle, pickOne, pickPair, roundPower, sliderRange } from "../lib/powerGame.mjs";
 import { copyText } from "../lib/share.js";
@@ -40,22 +40,23 @@ const GUESS_KEY = "mmp.game.guess";
 const HINTS = 3;
 
 // key: 이 브라우저 최고 기록(없으면 기록 없는 놀이)
+const GAME_TITLE = Object.fromEntries(GAME_MODES.map((game) => [game.value, game.label]));
 const GAMES = [
-  { mode: "fortune", title: "오늘의 운세", line: "캐릭터 이름으로 보는 오늘의 메이플 운", icon: "sun", tone: "peach", key: "" },
-  { mode: "match", title: "캐릭터 궁합", line: "두 캐릭터의 메이플 궁합 보기", icon: "heart", tone: "lavender", key: "" },
-  { mode: "nick", title: "닉네임 생성기", line: "실제 닉네임 14만 개로 배운 새 이름 짓기", icon: "user", tone: "mint", key: "" },
-  { mode: "cup", title: "장비창 월드컵", line: "16명의 장비창 중 가장 멋진 하나 고르기", icon: "crown", tone: "gold", key: "" },
-  { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY },
-  { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY },
-  { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction" },
-  { mode: "star", title: "스타캐치", line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star" },
-  { mode: "sf", title: "스타포스 도전", line: "주문서 150장으로 몇 성까지 갈까", icon: "bolt", tone: "gold", key: "mmp.game.sf" },
-  { mode: "merge", title: "장비 합성", line: "같은 등급끼리 밀어 합쳐 ★35까지", icon: "union", tone: "lavender", key: "mmp.game.merge" },
-  { mode: "memory", title: "짝 맞추기", line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory" },
-  { mode: "simon", title: "등급 순서 기억", line: "빛난 등급 순서 그대로 누르기", icon: "flag", tone: "mint", key: "mmp.game.simon" },
-  { mode: "quiz", title: "아이템 이름 맞히기", line: "아이콘 보고 이름 고르기", icon: "search", tone: "sky", key: "mmp.game.quiz" },
-  { mode: "typing", title: "장비 이름 타자", line: "60초 동안 장비 이름 치기", icon: "chat", tone: "gold", key: "mmp.game.typing" },
-  { mode: "catch", title: "아이템 줍기", line: "30초 동안 떨어지는 장비 줍기", icon: "download", tone: "gold", key: "mmp.game.catch" }
+  { mode: "fortune", title: GAME_TITLE.fortune, line: "캐릭터 이름으로 보는 오늘의 메이플 운", icon: "sun", tone: "peach", key: "" },
+  { mode: "match", title: GAME_TITLE.match, line: "두 캐릭터의 메이플 궁합 보기", icon: "heart", tone: "lavender", key: "" },
+  { mode: "nick", title: GAME_TITLE.nick, line: "실제 닉네임 14만 개로 배운 새 이름 짓기", icon: "user", tone: "mint", key: "" },
+  { mode: "cup", title: GAME_TITLE.cup, line: "16명의 장비창 중 가장 멋진 하나 고르기", icon: "crown", tone: "gold", key: "" },
+  { mode: "vs", title: GAME_TITLE.vs, line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY },
+  { mode: "guess", title: GAME_TITLE.guess, line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY },
+  { mode: "reaction", title: GAME_TITLE.reaction, line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction" },
+  { mode: "star", title: GAME_TITLE.star, line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star" },
+  { mode: "sf", title: GAME_TITLE.sf, line: "주문서 150장으로 몇 성까지 갈까", icon: "bolt", tone: "gold", key: "mmp.game.sf" },
+  { mode: "merge", title: GAME_TITLE.merge, line: "같은 등급끼리 밀어 합쳐 ★35까지", icon: "union", tone: "lavender", key: "mmp.game.merge" },
+  { mode: "memory", title: GAME_TITLE.memory, line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory" },
+  { mode: "simon", title: GAME_TITLE.simon, line: "빛난 등급 순서 그대로 누르기", icon: "flag", tone: "mint", key: "mmp.game.simon" },
+  { mode: "quiz", title: GAME_TITLE.quiz, line: "아이콘 보고 이름 고르기", icon: "search", tone: "sky", key: "mmp.game.quiz" },
+  { mode: "typing", title: GAME_TITLE.typing, line: "60초 동안 장비 이름 치기", icon: "chat", tone: "gold", key: "mmp.game.typing" },
+  { mode: "catch", title: GAME_TITLE.catch, line: "30초 동안 떨어지는 장비 줍기", icon: "download", tone: "gold", key: "mmp.game.catch" }
 ];
 
 const readMode = () => {
