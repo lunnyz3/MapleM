@@ -37,7 +37,8 @@ function matchPoints(a, b) {
   if (a.power > 0 && b.power > 0) {
     const [strong, weak] = a.power >= b.power ? [a, b] : [b, a];
     const ratio = strong.power / weak.power;
-    points.push(ratio < 1.15 ? "전투력이 비슷해서 막상막하예요." : `${strong.name}님이 전투력 ${Math.round(ratio * 10) / 10}배로 든든하게 이끌어요.`);
+    // 수십 배 차이는 한쪽이 사냥 프리셋으로 잰 값일 때가 많아 말하지 않는다
+    if (ratio <= 20) points.push(ratio < 1.15 ? "전투력이 비슷해서 막상막하예요." : `${strong.name}님이 전투력 ${Math.round(ratio * 10) / 10}배로 든든하게 이끌어요.`);
   }
   if (a.level > 0 && b.level > 0) {
     const gap = Math.abs(a.level - b.level);

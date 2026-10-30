@@ -13,6 +13,7 @@ const { checkMessage, checkNickname, REASON_TEXT } = require("../domain/communit
 const { fortuneOf } = require("../domain/community/fortune");
 const { matchScore, matchPoints, lineOf } = require("../domain/community/match");
 const { CharacterSpec } = require("../models/character-spec.model");
+const { plausiblePowers } = require("./stats.service");
 const { headlineNews } = require("./news.service");
 const { TtlLruCache } = require("../nexon/client");
 
@@ -204,15 +205,16 @@ async function fortune({ world, name, now = new Date() }) {
 
 // ---------------- 캐릭터 궁합 ----------------
 
-const MATCH_FIELDS = { _id: 0, characterName: 1, worldName: 1, characterClass: 1, characterLevel: 1, combatPower: 1, attackType: 1 };
+const MATCH_FIELDS = { _id: 0, characterName: 1, worldName: 1, characterClass: 1, characterLevel: 1, combatPower: 1, itemScore: 1, attackType: 1 };
 
 async function findWho(world, name) {
   const base = { world, name, className: "", level: 0, power: 0, attackType: "", found: false };
   if (!isMongoConnected()) return base;
   const spec = await CharacterSpec.findOne({ worldName: world, characterName: name }, MATCH_FIELDS).lean().maxTimeMS(DB_TIMEOUT_MS).catch(() => null);
-  return spec
-    ? { world, name, className: spec.characterClass || "", level: spec.characterLevel || 0, power: spec.combatPower || 0, attackType: spec.attackType || "", found: true }
-    : base;
+  if (!spec) return base;
+  // 사냥 프리셋으로 잰 듯한 전투력은 비교하지 않는다
+  const [power] = await plausiblePowers([spec]).catch(() => [0]);
+  return { world, name, className: spec.characterClass || "", level: spec.characterLevel || 0, power, attackType: spec.attackType || "", found: true };
 }
 
 /** 두 캐릭터 궁합 → { match: { score, line, points, a, b } } */

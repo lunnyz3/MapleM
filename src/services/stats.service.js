@@ -426,6 +426,18 @@ const TWIN_FIELDS = { _id: 0, ocid: 1, characterName: 1, worldName: 1, character
 const TWIN_COUNT = 6;
 const TWIN_BAND = 0.08;
 
+/**
+ * 사냥 프리셋으로 잰 듯한 전투력(템환산·레벨이 비슷한 캐릭터 중앙값의 0.6배 아래)은 0(모름)으로.
+ * @param {Array<{ combatPower?: number, itemScore?: number, characterLevel?: number }>} rows
+ */
+async function plausiblePowers(rows) {
+  const medians = await gamePeers();
+  return rows.map((row) => {
+    const ratio = fairRatio(row, medians);
+    return row.combatPower > 0 && (ratio === null || ratio >= 0.6) ? row.combatPower : 0;
+  });
+}
+
 /** 템환산·잠재·에디·레벨이 얼마나 다른지(0 이면 같다). */
 function twinDistance(me, other) {
   return (
@@ -445,8 +457,7 @@ async function specTwins({ ocid = "" } = {}) {
   if (!OCID_PATTERN.test(key) || !isMongoConnected()) return { me: null, twins: [] };
   const me = await CharacterSpec.findOne({ ocid: key, scoreVersion: SCORE_VERSION }, TWIN_FIELDS).lean().maxTimeMS(TIMEOUT_MS);
   if (!me?.characterClass || !(me.itemScore > 0)) return { me: null, twins: [] };
-  const [rows, medians] = await Promise.all([
-    CharacterSpec.find(
+  const rows = await CharacterSpec.find(
       {
         scoreVersion: SCORE_VERSION,
         itemScore: { $gte: me.itemScore * (1 - TWIN_BAND), $lte: me.itemScore * (1 + TWIN_BAND) },
@@ -455,32 +466,27 @@ async function specTwins({ ocid = "" } = {}) {
       },
       TWIN_FIELDS
     )
-      .lean()
-      .maxTimeMS(TIMEOUT_MS),
-    gamePeers()
-  ]);
-  // 비슷한 장비보다 한참 낮은 전투력(사냥 프리셋으로 잰 값)은 모른다(0)로 둔다
-  const powerOf = (row) => {
-    const ratio = fairRatio(row, medians);
-    return row.combatPower > 0 && (ratio === null || ratio >= 0.6) ? row.combatPower : 0;
-  };
-  const view = (row) => ({
-    world: row.worldName,
-    name: row.characterName,
-    className: row.characterClass,
-    level: row.characterLevel,
-    power: powerOf(row),
-    itemScore: row.itemScore,
-    potential: row.potential,
-    additionalPotential: row.additionalPotential
-  });
-  const twins = rows
+    .lean()
+    .maxTimeMS(TIMEOUT_MS);
+  const nearest = rows
     .filter((row) => row.characterName)
     .map((row) => ({ row, distance: twinDistance(me, row) }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, TWIN_COUNT)
-    .map(({ row }) => view(row));
-  return { me: view(me), twins };
+    .map(({ row }) => row);
+  // 비슷한 장비보다 한참 낮은 전투력(사냥 프리셋으로 잰 값)은 모른다(0)로 둔다
+  const powers = await plausiblePowers([me, ...nearest]);
+  const view = (row, index) => ({
+    world: row.worldName,
+    name: row.characterName,
+    className: row.characterClass,
+    level: row.characterLevel,
+    power: powers[index],
+    itemScore: row.itemScore,
+    potential: row.potential,
+    additionalPotential: row.additionalPotential
+  });
+  return { me: view(me, 0), twins: nearest.map((row, index) => view(row, index + 1)) };
 }
 
 // ---------------- 캐릭터 카드 ----------------
@@ -532,4 +538,4 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, TOP_CHOICES };
