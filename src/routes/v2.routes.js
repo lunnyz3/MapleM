@@ -18,6 +18,7 @@ const {
   getCharacterHistory,
   getCharacterRecord,
   postRecordBriefs,
+  getSuggest,
   getCollectionSummary
 } = require("../controllers/item-ranking-v2.controller");
 
@@ -37,6 +38,7 @@ router.get("/spec-summary", getSpecSummary);
 router.get("/character-history", getCharacterHistory);
 router.get("/character-record", getCharacterRecord);
 router.post("/records/brief", postRecordBriefs);
+router.get("/suggest", getSuggest);
 router.get("/collection-summary", getCollectionSummary);
 router.get("/notices", getNotices);
 router.get("/popular", getPopular);

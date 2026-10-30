@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { getJson } from "../lib/api.js";
 import { DEFAULT_WORLD, WORLDS, detailUrl } from "../lib/game.js";
 import { addRecent, entryKey, getSaved, useSaved } from "../lib/storage.js";
 import { Icon } from "./Icon.jsx";
@@ -10,6 +11,25 @@ import { Segmented } from "./Tabs.jsx";
 const FOCUS_EVENT = "mmp:focus-search";
 const NAME_MAX = 24;
 const SUGGESTION_MAX = 8;
+// 모은 캐릭터 이름 찾기(GET /api/v2/suggest): 치기를 멈추고 잠깐 뒤에, 같은 글자는 한 번만
+const COLLECTED_MAX = 6;
+const SUGGEST_DELAY_MS = 180;
+/** @type {Map<string, Promise<any[]>>} */
+const collectedCache = new Map();
+
+/** @param {string} query @param {string} world */
+function loadCollected(query, world) {
+  const key = `${world}|${query}`;
+  if (!collectedCache.has(key)) {
+    const request = getJson(`/api/v2/suggest?${new URLSearchParams({ q: query, world_name: world })}`).then(
+      ({ response, body }) => (response.ok && body?.ok ? body.characters || [] : []),
+      () => []
+    );
+    collectedCache.set(key, request);
+    if (collectedCache.size > 200) collectedCache.delete(collectedCache.keys().next().value);
+  }
+  return collectedCache.get(key);
+}
 
 const KIND_OPTIONS = [
   { value: "character", label: "캐릭터", icon: "user" },
@@ -73,11 +93,26 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, d
   const hintId = `${id}-hint`;
   const kindLabel = kind === "guild" ? "길드" : "캐릭터";
 
-  // 즐겨찾기 먼저, 그다음 최근 검색. 입력한 글자가 들어간 이름만.
+  // 모은 캐릭터 중 입력한 글자로 시작하는 이름(캐릭터 검색일 때, 한글 한 글자·영문 두 글자부터)
+  const [collected, setCollected] = useState(/** @type {{ query: string, rows: any[] }} */ ({ query: "", rows: [] }));
+  const query = name.replace(/\s+/g, "");
+  useEffect(() => {
+    if (kind !== "character" || !(/[가-힣]/.test(query) || query.length >= 2)) return undefined;
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      loadCollected(query, world).then((rows) => alive && setCollected({ query, rows }));
+    }, SUGGEST_DELAY_MS);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [query, world, kind]);
+
+  // 즐겨찾기 먼저, 그다음 최근 검색. 입력한 글자가 들어간 이름만. 그 뒤에 모은 캐릭터.
   const suggestions = useMemo(() => {
     const query = name.trim().toLowerCase();
     const seen = new Set();
-    /** @type {Array<import("../lib/storage.js").SavedEntry & { key: string, group: "favorite" | "recent" }>} */
+    /** @type {Array<import("../lib/storage.js").SavedEntry & { key: string, group: "favorite" | "recent" | "collected", meta?: string }>} */
     const result = [];
     for (const [group, list] of /** @type {const} */ ([
       ["favorite", saved.favorites],
@@ -90,8 +125,20 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, d
         result.push({ ...entry, key, group });
       }
     }
-    return result.slice(0, SUGGESTION_MAX);
-  }, [saved, name]);
+    const mine = result.slice(0, SUGGESTION_MAX);
+    if (kind === "character" && collected.query && collected.query === name.replace(/\s+/g, "")) {
+      let added = 0;
+      for (const row of collected.rows) {
+        const entry = { kind: /** @type {SearchKind} */ ("character"), world: row.world, name: row.name };
+        const key = entryKey(entry);
+        if (seen.has(key) || added >= COLLECTED_MAX) continue;
+        seen.add(key);
+        added += 1;
+        mine.push({ ...entry, key, group: "collected", meta: [row.className, row.level ? `Lv.${row.level}` : ""].filter(Boolean).join(" · ") });
+      }
+    }
+    return mine;
+  }, [saved, name, collected, kind]);
 
   const panelOpen = open && suggestions.length > 0;
 
@@ -256,12 +303,12 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, d
         ) : null}
       </p>
 
-      <ul id={listId} class="search__panel" role="listbox" aria-label="즐겨찾기와 최근 검색" hidden={!panelOpen}>
+      <ul id={listId} class="search__panel" role="listbox" aria-label="즐겨찾기 · 최근 검색 · 모은 캐릭터" hidden={!panelOpen}>
         {suggestions.map((entry, index) => {
           const header =
             entry.group !== lastGroup ? (
               <li role="presentation" class="search__group" key={`group-${entry.group}`}>
-                {entry.group === "favorite" ? "즐겨찾기" : "최근 검색"}
+                {entry.group === "favorite" ? "즐겨찾기" : entry.group === "recent" ? "최근 검색" : "모은 캐릭터"}
               </li>
             ) : null;
           lastGroup = entry.group;
@@ -278,11 +325,11 @@ export function SearchBox({ id = "search", size = "lg", showKindSwitch = true, d
               onClick={() => go(entry)}
             >
               <span class={`search__option-icon ${entry.group === "favorite" ? "is-favorite" : ""}`}>
-                <Icon name={entry.group === "favorite" ? "heart" : "clock"} size={18} filled={entry.group === "favorite"} />
+                <Icon name={entry.group === "favorite" ? "heart" : entry.group === "recent" ? "clock" : "user"} size={18} filled={entry.group === "favorite"} />
               </span>
               <span class="search__option-name">{entry.name}</span>
               <span class="search__option-meta">
-                {entry.world} · {entry.kind === "guild" ? "길드" : "캐릭터"}
+                {entry.world} · {entry.group === "collected" ? entry.meta || "캐릭터" : entry.kind === "guild" ? "길드" : "캐릭터"}
               </span>
             </li>
           ];

@@ -189,6 +189,11 @@ function MyCharacters() {
           <button type="button" class="btn btn--ghost btn--sm" onClick={() => (clearRecent(), focusPanel())}>
             기록 지우기
           </button>
+        ) : tab === "favorites" && favorites.some((entry) => entry.kind === "character") ? (
+          <a class="text-link" href={urls.my}>
+            한눈에 보기
+            <Icon name="chevronRight" size={16} />
+          </a>
         ) : null
       }
     >

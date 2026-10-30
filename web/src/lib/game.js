@@ -213,7 +213,8 @@ export const CALC_VIEWS = [
   { value: "transfer", label: "전수" },
   { value: "guild", label: "길드 어빌리티" },
   { value: "gacha", label: "확률" },
-  { value: "itemdb", label: "아이템 DB" }
+  { value: "itemdb", label: "아이템 DB" },
+  { value: "party", label: "보스 파티" }
 ];
 
 export const urls = {
@@ -234,6 +235,7 @@ export const urls = {
   itemSearch: "/ranking?view=search",
   game: "/game",
   news: "/news",
+  my: "/my",
   /** @param {string} [world] @param {string} [name] 왼쪽에 넣어 둘 캐릭터 */
   compare: (world = "", name = "") => (world && name ? `/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/compare"),
   legacyHome: "/legacy",

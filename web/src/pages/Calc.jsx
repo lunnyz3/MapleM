@@ -18,6 +18,7 @@ import { liberationPlan } from "../lib/liberation.mjs";
 import { EmblemCalc, GuildAbilityCalc, PolishCalc, StarforceCalc, TransferCalc } from "./calc/Enhance.jsx";
 import { GachaCalc } from "./calc/Gacha.jsx";
 import { ItemDbCalc } from "./calc/ItemDb.jsx";
+import { PartyCalc } from "./calc/Party.jsx";
 import { SetCompareCalc } from "./calc/SetCompare.jsx";
 
 const CORE_TYPES = ["오리진 코어", "어센트 코어", "마스터리 코어", "강화 코어", "공용 코어"];
@@ -626,6 +627,7 @@ export function Calc() {
       {view === "guild" ? <GuildAbilityCalc /> : null}
       {view === "gacha" ? <GachaCalc /> : null}
       {view === "itemdb" ? <ItemDbCalc /> : null}
+      {view === "party" ? <PartyCalc /> : null}
     </div>
   );
 }

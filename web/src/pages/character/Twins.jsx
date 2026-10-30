@@ -1,5 +1,5 @@
 // 스펙 쌍둥이: 같은 직업에서 템환산(±8%)·잠재·에디·레벨이 나와 가장 비슷한 캐릭터 6명과 전투력 차이.
-// 비슷한 장비보다 한참 낮은 전투력(사냥 프리셋으로 잰 값)은 서버가 0 으로 보내 "-". GET /api/v2/stats/twins.
+// 비슷한 장비 중앙값의 0.3배 아래 전투력(사냥 프리셋으로 잰 값)은 서버가 0 으로 보내 "-". GET /api/v2/stats/twins.
 import { useEffect, useState } from "preact/hooks";
 import { Avatar } from "../../components/Avatar.jsx";
 import { WorldIcon } from "../../components/GameIcons.jsx";

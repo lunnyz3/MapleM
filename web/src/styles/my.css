@@ -1,0 +1,183 @@
+/* 내 캐릭터 한눈에(/my) */
+.my {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.card.my-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.my-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.my-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-summary li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.my-summary strong {
+  margin: 0 2px;
+  color: var(--text);
+}
+
+.my-table {
+  display: grid;
+  gap: 6px;
+}
+
+.my-table__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 60px minmax(0, 1.2fr) 80px minmax(0, 1.3fr) minmax(0, 1.8fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.my-table__row:hover {
+  box-shadow: inset 0 0 0 2px var(--primary-soft);
+}
+
+.my-table__head {
+  padding-block: 4px;
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.my-table__who {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.my-table__who > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.my-table__who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-table__meta {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.my-table__power {
+  font-weight: 800;
+}
+
+.my-change {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.my-change .is-up {
+  color: var(--success);
+}
+
+.my-change .is-down {
+  color: var(--danger);
+}
+
+.my-change .is-news {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+}
+
+.my-missing {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.my-missing p {
+  margin: 0;
+}
+
+.my-missing ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-missing a {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+@media (max-width: 719px) {
+  .my-table__head {
+    display: none;
+  }
+
+  .my-table__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 12px;
+  }
+
+  .my-table__who {
+    grid-column: 1 / -1;
+  }
+
+  .my-table__row > [data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text-subtle);
+    font-size: var(--fs-12);
+    font-weight: 700;
+  }
+}

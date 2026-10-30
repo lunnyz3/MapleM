@@ -57,6 +57,7 @@ const Bot = lazyPage(() => import("./pages/Bot.jsx"), "Bot");
 const Stats = lazyPage(() => import("./pages/Stats.jsx"), "Stats");
 const Game = lazyPage(() => import("./pages/Game.jsx"), "Game");
 const News = lazyPage(() => import("./pages/News.jsx"), "News");
+const MyCharacters = lazyPage(() => import("./pages/MyCharacters.jsx"), "MyCharacters");
 const Calc = lazyPage(() => import("./pages/Calc.jsx"), "Calc");
 const Compare = lazyPage(() => import("./pages/Compare.jsx"), "Compare");
 const Licenses = lazyPage(() => import("./pages/Licenses.jsx"), "Licenses");
@@ -77,6 +78,7 @@ function resolveRoute() {
   if (rest === "/stats") return { title: "통계 · 메이플M 플러스", nav: "stats", Page: Stats };
   if (rest === "/game") return { title: "미니게임 · 메이플M 플러스", nav: "game", Page: Game };
   if (rest === "/news") return { title: "강화 소식 · 메이플M 플러스", nav: "ranking", Page: News };
+  if (rest === "/my") return { title: "내 캐릭터 한눈에 · 메이플M 플러스", nav: "home", Page: MyCharacters };
   if (rest === "/hall") return { title: "명예의 전당 · 메이플M 플러스", nav: "ranking", Page: Ranking };
   if (rest === "/calc") return { title: "계산기 · 메이플M 플러스", nav: "calc", Page: Calc };
   if (rest === "/compare") return { title: "캐릭터 비교 · 메이플M 플러스", nav: "compare", Page: Compare };

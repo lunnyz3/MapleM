@@ -426,15 +426,18 @@ const TWIN_FIELDS = { _id: 0, ocid: 1, characterName: 1, worldName: 1, character
 const TWIN_COUNT = 6;
 const TWIN_BAND = 0.08;
 
+// 사냥 프리셋으로 잰 값은 보통 중앙값의 몇 % 수준이다. 최상위권은 장비 밖의 차이가 커서 0.6배만 돼도 정상일 때가 있다.
+const PLAUSIBLE_RATIO = 0.3;
+
 /**
- * 사냥 프리셋으로 잰 듯한 전투력(템환산·레벨이 비슷한 캐릭터 중앙값의 0.6배 아래)은 0(모름)으로.
+ * 사냥 프리셋으로 잰 듯한 전투력(템환산·레벨이 비슷한 캐릭터 중앙값의 0.3배 아래)은 0(모름)으로.
  * @param {Array<{ combatPower?: number, itemScore?: number, characterLevel?: number }>} rows
  */
 async function plausiblePowers(rows) {
   const medians = await gamePeers();
   return rows.map((row) => {
     const ratio = fairRatio(row, medians);
-    return row.combatPower > 0 && (ratio === null || ratio >= 0.6) ? row.combatPower : 0;
+    return row.combatPower > 0 && (ratio === null || ratio >= PLAUSIBLE_RATIO) ? row.combatPower : 0;
   });
 }
 

@@ -22,7 +22,9 @@ const rateLimiters = {
   gameStarts: createRateLimiter({ name: "game-starts", windowMs: minute, max: 60 }),
   gameScores: createRateLimiter({ name: "game-scores", windowMs: minute, max: 20 }),
   megaphones: createRateLimiter({ name: "megaphones", windowMs: minute, max: 5 }),
-  fortunes: createRateLimiter({ name: "fortunes", windowMs: minute, max: 30 })
+  fortunes: createRateLimiter({ name: "fortunes", windowMs: minute, max: 30 }),
+  // 검색 자동완성은 글자를 칠 때마다 부른다
+  suggest: createRateLimiter({ name: "suggest", windowMs: minute, max: 120 })
 };
 
 const publicDir = path.join(__dirname, "..", "public");
@@ -122,6 +124,7 @@ function createApp() {
   app.post("/api/v2/game/score", rateLimiters.gameScores);
   app.post("/api/v2/megaphone", rateLimiters.megaphones);
   app.get(["/api/v2/fortune", "/api/v2/match", "/api/v2/fun/nicknames"], rateLimiters.fortunes);
+  app.get("/api/v2/suggest", rateLimiters.suggest);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

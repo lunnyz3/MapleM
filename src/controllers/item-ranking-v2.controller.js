@@ -30,7 +30,7 @@ const {
 
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
-const { findRecord, recordBriefs } = require("../services/character-record.service");
+const { findRecord, recordBriefs, suggestCharacters } = require("../services/character-record.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -226,7 +226,8 @@ async function getCharacterRecord(req, res) {
   }
 }
 
-// POST /api/v2/records/brief { characters: [{ world, name }] } → { ok, briefs: [{ world, name, className, brief }] }
+// POST /api/v2/records/brief { characters: [{ world, name }] }
+//   → { ok, briefs: [{ world, name, className, level, power, itemScore, potential, additionalPotential, checkedAt, brief }] }
 async function postRecordBriefs(req, res) {
   const list = (Array.isArray(req.body?.characters) ? req.body.characters : [])
     .slice(0, 12)
@@ -238,6 +239,19 @@ async function postRecordBriefs(req, res) {
     const briefs = await recordBriefs(list);
     res.set("Cache-Control", "private, max-age=60");
     return res.json({ ok: true, briefs });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+// GET /api/v2/suggest?q=&world_name= → { ok, characters: [{ world, name, className, level, power }] } (검색 자동완성)
+async function getSuggest(req, res) {
+  const q = text(req.query.q, 24);
+  const world = normalizeWorldName(text(req.query.world_name, 20));
+  try {
+    const characters = await suggestCharacters({ q, world: world.ok ? world.worldNameCanonical : "" });
+    res.set("Cache-Control", "public, max-age=60");
+    return res.json({ ok: true, characters });
   } catch (error) {
     return fail(res, error);
   }
@@ -265,5 +279,6 @@ module.exports = {
   getSpecSummary,
   getCharacterHistory,
   getCharacterRecord,
-  postRecordBriefs
+  postRecordBriefs,
+  getSuggest
 };
