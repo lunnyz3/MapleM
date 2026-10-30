@@ -8,7 +8,7 @@ import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameI
 const KEY = "mmp.game.star";
 
 /** ★ 35개를 다섯 개씩 묶어 그린다. */
-function StarRow({ star }) {
+export function StarRow({ star }) {
   return (
     <div class="arc-stars" role="img" aria-label={`${star}성`}>
       {Array.from({ length: STAR_MAX / 5 }, (_, group) => (

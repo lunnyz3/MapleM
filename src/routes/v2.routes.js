@@ -4,7 +4,7 @@ const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getNotices } = require("../controllers/notices-v2.controller");
 const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
-const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNews } = require("../controllers/arcade-v2.controller");
+const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
 const {
   getItemRanks,
@@ -56,6 +56,7 @@ router.post("/megaphone", postMegaphones);
 router.get("/fortune", getFortune);
 router.get("/news", getNews);
 router.get("/match", getMatch);
+router.get("/fun/nicknames", getNicknames);
 router.get("/item-collection", (req, res) => res.json({ ok: true, ...itemCollector.getStatus() }));
 
 module.exports = { v2Router: router };

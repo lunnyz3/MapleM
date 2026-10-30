@@ -14,7 +14,6 @@ import { Skeleton } from "../components/Skeleton.jsx";
 import { ErrorState } from "../components/States.jsx";
 import { toast } from "../components/Toast.jsx";
 import { getJson, toApiError } from "../lib/api.js";
-import { gradeInfo } from "../lib/character.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
 import { urls } from "../lib/game.js";
 import { setScoreText } from "../lib/itemScore.js";
@@ -22,14 +21,18 @@ import { GUESS_ROUNDS, guessPoints, guessTitle, pickOne, pickPair, roundPower, s
 import { copyText } from "../lib/share.js";
 import { Fortune } from "./game/Fortune.jsx";
 import { ItemCatch } from "./game/ItemCatch.jsx";
+import { Cup } from "./game/Cup.jsx";
 import { ItemQuiz } from "./game/ItemQuiz.jsx";
 import { Match } from "./game/Match.jsx";
 import { Memory } from "./game/Memory.jsx";
 import { Merge } from "./game/Merge.jsx";
+import { Nickname } from "./game/Nickname.jsx";
 import { Reaction } from "./game/Reaction.jsx";
 import { Simon } from "./game/Simon.jsx";
 import { StarCatch } from "./game/StarCatch.jsx";
+import { StarForce } from "./game/StarForce.jsx";
 import { Typing } from "./game/Typing.jsx";
+import { GearWindow, loadGear, useGear } from "./game/gear.jsx";
 import { RankPanel, SCORE_TEXT, SubmitScore, readBest, useRunToken, useWindowKey, writeBest } from "./game/shared.jsx";
 
 const VS_KEY = "mmp.game.vs";
@@ -40,10 +43,13 @@ const HINTS = 3;
 const GAMES = [
   { mode: "fortune", title: "오늘의 운세", line: "캐릭터 이름으로 보는 오늘의 메이플 운", icon: "sun", tone: "peach", key: "" },
   { mode: "match", title: "캐릭터 궁합", line: "두 캐릭터의 메이플 궁합 보기", icon: "heart", tone: "lavender", key: "" },
+  { mode: "nick", title: "닉네임 생성기", line: "실제 닉네임 14만 개로 배운 새 이름 짓기", icon: "user", tone: "mint", key: "" },
+  { mode: "cup", title: "장비창 월드컵", line: "16명의 장비창 중 가장 멋진 하나 고르기", icon: "crown", tone: "gold", key: "" },
   { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY },
   { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY },
   { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction" },
   { mode: "star", title: "스타캐치", line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star" },
+  { mode: "sf", title: "스타포스 도전", line: "주문서 150장으로 몇 성까지 갈까", icon: "bolt", tone: "gold", key: "mmp.game.sf" },
   { mode: "merge", title: "장비 합성", line: "같은 등급끼리 밀어 합쳐 ★35까지", icon: "union", tone: "lavender", key: "mmp.game.merge" },
   { mode: "memory", title: "짝 맞추기", line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory" },
   { mode: "simon", title: "등급 순서 기억", line: "빛난 등급 순서 그대로 누르기", icon: "flag", tone: "mint", key: "mmp.game.simon" },
@@ -62,104 +68,6 @@ const power = (value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 
 // 키보드 조작을 글 입력 칸에서는 받지 않는다(슬라이더는 받는다).
 const typingTarget = (/** @type {EventTarget | null} */ target) =>
   target instanceof HTMLElement && (/select|textarea/i.test(target.tagName) || (target.tagName === "INPUT" && /** @type {HTMLInputElement} */ (target).type !== "range"));
-
-// ---------------- 장비창 ----------------
-
-/** @type {Map<string, Promise<any[]>>} */
-const gearCache = new Map();
-
-/** 캐릭터들의 장비창(같은 캐릭터는 한 번만 읽는다). */
-function loadGear(/** @type {string[]} */ ids) {
-  const missing = ids.filter((id) => id && !gearCache.has(id));
-  if (missing.length) {
-    const request = getJson(`/api/v2/game/gear?${new URLSearchParams({ ids: missing.join(",") })}`).then(({ response, body }) => {
-      if (!response.ok || !body?.ok) throw toApiError(response, body, "장비를 불러오지 못했어요.");
-      return body.gear || {};
-    });
-    missing.forEach((id) => {
-      const one = request.then((gear) => gear[id] || []);
-      one.catch(() => gearCache.delete(id));
-      gearCache.set(id, one);
-    });
-  }
-  return Promise.all(ids.map((id) => gearCache.get(id)));
-}
-
-/** @param {string[]} ids */
-function useGear(ids) {
-  const key = ids.filter(Boolean).join(",");
-  const [state, setState] = useState(/** @type {{ key: string, gear: any[][] | null, failed: boolean }} */ ({ key: "", gear: null, failed: false }));
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    if (!key) return undefined;
-    let alive = true;
-    loadGear(key.split(",")).then(
-      (gear) => alive && setState({ key, gear, failed: false }),
-      () => alive && setState({ key, gear: null, failed: true })
-    );
-    return () => {
-      alive = false;
-    };
-  }, [key, attempt]);
-  const current = state.key === key ? state : { key, gear: null, failed: false };
-  return { ...current, retry: () => setAttempt((n) => n + 1) };
-}
-
-/**
- * 장비창: 아이콘·등급 테두리·스타포스·잠재 등급(마우스를 올리면 이름).
- * @param {{ gear: any[] | null | undefined, failed?: boolean, onRetry?: () => void }} props
- */
-function GearWindow({ gear, failed = false, onRetry }) {
-  if (failed) {
-    return (
-      <div class="game-gear__note">
-        장비를 불러오지 못했어요.
-        {onRetry ? (
-          <button
-            type="button"
-            class="btn btn--secondary btn--sm"
-            onClick={(event) => {
-              event.stopPropagation();
-              onRetry();
-            }}
-          >
-            다시 시도
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-  if (!gear) {
-    return (
-      <div class="game-gear" aria-hidden="true">
-        {Array.from({ length: 23 }, (_, index) => (
-          <span key={index} class="game-gear__slot is-loading" />
-        ))}
-      </div>
-    );
-  }
-  if (!gear.length) return <p class="game-gear__note">장비 정보가 없어요.</p>;
-  return (
-    <ul class="game-gear" aria-label="장비창">
-      {gear.map((item, index) => {
-        const grade = gradeInfo(item.grade);
-        const pot = gradeInfo(item.potential);
-        const label = [item.slot, item.name, item.star ? `${item.star}성` : "", pot ? `잠재 ${pot.label}` : ""].filter(Boolean).join(" · ");
-        return (
-          <li key={item.slot} class={`game-gear__slot${grade ? ` is-${grade.key}` : ""}`} title={label} style={{ "--stagger": index }}>
-            {item.icon ? <img class="game-gear__img" src={item.icon} alt={label} width={40} height={40} loading="lazy" decoding="async" /> : <span class="sr-only">{label}</span>}
-            {item.star ? (
-              <span class="game-gear__star num" aria-hidden="true">
-                ★{item.star}
-              </span>
-            ) : null}
-            {pot ? <img class="game-gear__pot" src={pot.icon} alt="" width={13} height={13} /> : null}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 /** 월드·직업·레벨 */
 function Who({ entry }) {
@@ -709,7 +617,7 @@ export function Game() {
   const [state, setState] = useState(/** @type {{ status: "idle" | "loading" | "ready" | "error", pool?: any[], error?: any }} */ ({ status: "idle" }));
   const [attempt, setAttempt] = useState(0);
   const game = GAMES.find((entry) => entry.mode === mode) || null;
-  const needsPool = mode === "vs" || mode === "guess";
+  const needsPool = mode === "vs" || mode === "guess" || mode === "cup";
 
   useEffect(() => {
     const onPop = () => setMode(readMode());
@@ -754,6 +662,7 @@ export function Game() {
   if (needsPool) {
     if (state.status === "error") content = <ErrorState title="불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} />;
     else if (state.status !== "ready") content = <Skeleton height={420} radius={20} />;
+    else if (mode === "cup") content = <Cup pool={state.pool || []} />;
     else content = mode === "guess" ? <GuessGame key="guess" pool={state.pool || []} /> : <VsGame key="vs" pool={state.pool || []} />;
   } else if (mode === "reaction") content = <Reaction />;
   else if (mode === "star") content = <StarCatch />;
@@ -765,6 +674,8 @@ export function Game() {
   else if (mode === "typing") content = <Typing />;
   else if (mode === "fortune") content = <Fortune />;
   else if (mode === "match") content = <Match />;
+  else if (mode === "nick") content = <Nickname />;
+  else if (mode === "sf") content = <StarForce />;
 
   return (
     <div class={`game game--${mode}`}>

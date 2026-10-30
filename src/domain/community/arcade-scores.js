@@ -15,7 +15,8 @@ const GAME_RULES = Object.freeze({
   catch: { lower: false, min: 1, max: 20000, seconds: () => 30 },
   merge: { lower: false, min: 4, max: 400000, seconds: (value) => value / 150 },
   simon: { lower: false, min: 1, max: 100, seconds: (value) => value },
-  typing: { lower: false, min: 10, max: 1500, seconds: () => 60 }
+  typing: { lower: false, min: 10, max: 1500, seconds: () => 60 },
+  sf: { lower: false, min: 1, max: 35, seconds: (value) => value * 0.25 }
 });
 
 const TOKEN_MAX_AGE_MS = 3 * 60 * 60 * 1000;

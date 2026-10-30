@@ -6,10 +6,11 @@
 //   POST /api/v2/megaphone { name, text }                    → { ok, message }
 //   GET  /api/v2/fortune?world_name=&name=                   → { ok, fortune }
 //   GET  /api/v2/match?a_world=&a_name=&b_world=&b_name=   → { ok, match: { score, line, points, a, b } } (캐릭터 궁합)
+//   GET  /api/v2/fun/nicknames?kind=ko|en&prefix=          → { ok, names } (닉네임 생성기)
 //   GET  /api/v2/news?day=yesterday                          → { ok, date, counts, events } (오늘의 강화 소식)
 const { normalizeWorldName } = require("../config/worlds");
 const { resolveClientIp } = require("../middleware/rate-limit");
-const { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, characterMatch } = require("../services/arcade.service");
+const { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, characterMatch, nicknames } = require("../services/arcade.service");
 const { upgradeNews } = require("../services/news.service");
 
 const text = (value, max = 200) => String(value ?? "").slice(0, max);
@@ -66,6 +67,8 @@ const whoOf = (req, side) => {
 
 const getMatch = route(async (req) => characterMatch({ a: whoOf(req, "a"), b: whoOf(req, "b") }), "public, max-age=300");
 
+const getNicknames = route((req) => nicknames({ kind: text(req.query.kind, 4) === "en" ? "en" : "ko", prefix: text(req.query.prefix, 4) }));
+
 const getNews = route((req) => upgradeNews({ day: text(req.query.day, 12) === "yesterday" ? "yesterday" : "" }), "public, max-age=60");
 
-module.exports = { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNews };
+module.exports = { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews };

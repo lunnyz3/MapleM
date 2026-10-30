@@ -12,6 +12,7 @@ const { GAME_RULES, weekKey, sortScore, valueOf, checkScore, issueToken, verifyT
 const { checkMessage, checkNickname, REASON_TEXT } = require("../domain/community/text-filter");
 const { fortuneOf } = require("../domain/community/fortune");
 const { matchScore, matchPoints, lineOf } = require("../domain/community/match");
+const { buildModel, generateNames } = require("../domain/community/nickname-model");
 const { CharacterSpec } = require("../models/character-spec.model");
 const { plausiblePowers } = require("./stats.service");
 const { headlineNews } = require("./news.service");
@@ -225,4 +226,49 @@ async function characterMatch({ a, b }) {
   return { match: { score, line: lineOf(score), points: matchPoints(left, right), a: left, b: right } };
 }
 
-module.exports = { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, characterMatch, MESSAGE_MAX, NAME_MAX, NICKNAME_MAX };
+// ---------------- 닉네임 생성기 ----------------
+
+const NICK_TTL_MS = 24 * 60 * 60 * 1000;
+// 한글은 앞 두 글자, 영문은 앞 세 글자를 보고 다음 글자를 고른다
+const NICK_KINDS = {
+  ko: { pattern: /^[가-힣]{2,6}$/, order: 2, min: 2, max: 6 },
+  en: { pattern: /^[A-Za-z]{4,12}$/, order: 3, min: 4, max: 10 }
+};
+/** @type {{ at: number, pending: Promise<any> | null, value: any }} */
+let nickModels = { at: 0, pending: null, value: null };
+
+function loadNickModels() {
+  if (nickModels.value && Date.now() - nickModels.at < NICK_TTL_MS) return Promise.resolve(nickModels.value);
+  if (!nickModels.pending) {
+    nickModels.pending = CharacterSpec.distinct("characterName")
+      .maxTimeMS(60000)
+      .then((names) => {
+        const existing = new Set(names.map((name) => String(name).toLowerCase()));
+        const value = { existing };
+        for (const [kind, rule] of Object.entries(NICK_KINDS)) {
+          const list = names.filter((name) => rule.pattern.test(name));
+          value[kind] = buildModel(kind === "en" ? list.map((name) => name.toLowerCase()) : list, rule.order);
+        }
+        nickModels = { at: Date.now(), pending: null, value };
+        return value;
+      })
+      .catch((error) => {
+        nickModels.pending = null;
+        throw error;
+      });
+  }
+  return nickModels.value ? Promise.resolve(nickModels.value) : nickModels.pending;
+}
+
+/** 모은 이름에 없는 새 닉네임 12개. kind: ko | en, prefix: 첫 글자(선택). */
+async function nicknames({ kind = "ko", prefix = "" } = {}) {
+  if (!isMongoConnected()) throw new ArcadeError(503, "DB", "지금은 지을 수 없어요.");
+  const rule = NICK_KINDS[kind] || NICK_KINDS.ko;
+  const models = await loadNickModels();
+  const head = kind === "en" ? String(prefix).toLowerCase().replace(/[^a-z]/g, "").slice(0, 2) : String(prefix).replace(/[^가-힣]/g, "").slice(0, 2);
+  const names = generateNames(models[kind === "en" ? "en" : "ko"], { order: rule.order, min: rule.min, max: rule.max, prefix: head, existing: models.existing }, 12);
+  // 영문은 첫 글자를 대문자로
+  return { names: kind === "en" ? names.map((name) => name.charAt(0).toUpperCase() + name.slice(1)) : names };
+}
+
+module.exports = { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, characterMatch, nicknames, MESSAGE_MAX, NAME_MAX, NICKNAME_MAX };

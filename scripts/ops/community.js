@@ -4,7 +4,7 @@
 //   node scripts/ops/community.js hide <id>               # 그 글 숨기기(10초 안에 화면에서 빠진다)
 //   node scripts/ops/community.js unhide <id>             # 다시 보이기
 //   node scripts/ops/community.js hide-visitor <id>       # 그 글을 쓴 방문자의 글 전부 숨기기
-//   node scripts/ops/community.js scores <게임> [개수]    # 이번 주 랭킹(vs guess reaction star memory quiz catch merge simon typing)
+//   node scripts/ops/community.js scores <게임> [개수]    # 이번 주 랭킹(vs guess reaction star memory quiz catch merge simon typing sf)
 //   node scripts/ops/community.js remove-score <id>       # 랭킹 한 줄 지우기
 //
 // 운영 .env 의 MONGODB_URI 를 쓴다(MAPLEM_ENV_FILE 로 바꿀 수 있다). 비밀값은 출력하지 않는다.

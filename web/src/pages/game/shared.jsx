@@ -104,7 +104,8 @@ export const SCORE_TEXT = {
   catch: (value) => `${formatComma(value)}점`,
   merge: (value) => `${formatComma(value)}점`,
   simon: (value) => `${value}단계`,
-  typing: (value) => `${formatComma(value)}타`
+  typing: (value) => `${formatComma(value)}타`,
+  sf: (value) => `★${value}`
 };
 
 const NICK_KEY = "mmp.game.nick";

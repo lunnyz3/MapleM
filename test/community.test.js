@@ -39,7 +39,7 @@ test("랭킹: 이번 주 열쇠는 서울 월요일, 낮을수록 좋은 기록�
   assert.equal(valueOf("reaction", -230), 230);
   assert.equal(sortScore("catch", 1200), 1200);
   assert.ok(sortScore("reaction", 200) > sortScore("reaction", 300));
-  assert.equal(Object.keys(GAME_RULES).length, 10);
+  assert.equal(Object.keys(GAME_RULES).length, 11);
 });
 
 test("랭킹: 점수 범위와 최소 플레이 시간", () => {
@@ -102,4 +102,23 @@ test("캐릭터 궁합: 순서와 상관없이 같은 점수, 실제 비교 줄"
   assert.equal(points[3], "가님이 10레벨 선배예요.");
   // 모은 스펙이 없으면 월드 줄만
   assert.deepEqual(matchPoints({ world: "루나", name: "가", power: 0, level: 0 }, { world: "크로아", name: "나", power: 0, level: 0 }), ["루나와 크로아, 월드가 달라 아쉬워요."]);
+});
+
+test("닉네임 생성기: 빈도표를 따라 짓고, 있는 이름·반복·욕설·길이를 거른다", () => {
+  const { buildModel, generateName, generateNames } = require("../src/domain/community/nickname-model");
+  const names = ["햄스터", "햄찌", "햄토리", "별빛", "별사탕", "사탕별", "토리빵"];
+  const model = buildModel(names, 2);
+  assert.ok(model.get("^^").has("햄"));
+  let seed = 9;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const existing = new Set(names);
+  const made = generateNames(model, { order: 2, min: 2, max: 6, existing, random }, 5);
+  made.forEach((name) => {
+    assert.ok(!existing.has(name), name);
+    assert.ok([...name].length >= 2 && [...name].length <= 6, name);
+  });
+  const withHead = generateName(model, { order: 2, min: 2, max: 6, prefix: "별", existing, random });
+  assert.ok(withHead === null || withHead.startsWith("별"));
+  // 표에 없는 첫 글자면 못 짓는다
+  assert.equal(generateName(model, { order: 2, min: 2, max: 6, prefix: "뷁", existing, random, tries: 20 }), null);
 });
