@@ -2,6 +2,7 @@
 // 데이터: GET /api/maplestorym/guild/id → GET /api/maplestorym/guild/basic, 길드원 썸네일은 /api/maplestorym/character/image.
 // 길드원 스펙(전투력 순위·보스 파티): POST /api/v2/specs(사이트가 모은 길드원만, power = 사냥 프리셋으로 잰 듯하면 0).
 // 길드 비교(/guild/compare?a=월드/길드&b=월드/길드): 두 길드의 인원·평균 레벨·전투력·템환산·보스 입장 인원·직업.
+// 들고 난 기록: GET /api/v2/guild-roster(길드 화면을 열 때와 하루 한 번 랭킹 상위 길드를 훑을 때 서버가 남긴 날짜별 들어옴·나감).
 import "../styles/guild.css";
 import bossData from "../../../src/game-data/boss-entry.json";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -41,6 +42,7 @@ const TAB_ITEMS = [
   { id: "members", label: "길드원", icon: "user" },
   { id: "power", label: "전투력 순위", icon: "bolt" },
   { id: "boss", label: "보스 파티", icon: "swords" },
+  { id: "roster", label: "들고 난 기록", icon: "clock" },
   { id: "skills", label: "길드 스킬", icon: "sparkle" },
   { id: "buildings", label: "건물", icon: "home" },
   { id: "abilities", label: "어빌리티", icon: "medal" }
@@ -599,6 +601,105 @@ function BossPanel({ guild }) {
   );
 }
 
+// ---------------- 들고 난 기록 ----------------
+
+const ROSTER_SHOWN = 14;
+
+/** 인원 변화 선(점 2개 이상일 때) @param {{ counts: Array<{ date: string, count: number }> }} props */
+function RosterSpark({ counts }) {
+  if (counts.length < 2) return null;
+  const width = 160;
+  const height = 36;
+  const values = counts.map((row) => row.count);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const x = (index) => 3 + (index / (counts.length - 1)) * (width - 6);
+  const y = (value) => (max === min ? height / 2 : 3 + (1 - (value - min) / (max - min)) * (height - 6));
+  return (
+    <svg class="gd-roster__spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`인원 ${values[0]}명에서 ${values[values.length - 1]}명`}>
+      <polyline points={counts.map((row, index) => `${x(index)},${y(row.count)}`).join(" ")} />
+    </svg>
+  );
+}
+
+/** @param {{ guild: GuildView }} props */
+function RosterPanel({ guild }) {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", roster?: any }} */ ({ status: "loading" }));
+  const [all, setAll] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    getJson(`/api/v2/guild-roster?${new URLSearchParams({ world_name: guild.world, guild_name: guild.name })}`).then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", roster: body.roster } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [guild]);
+
+  if (state.status === "loading") return <SkeletonList rows={4} />;
+  if (state.status === "error") return <ErrorState compact title="기록을 불러오지 못했어요" />;
+  const roster = state.roster;
+  if (!roster) return <EmptyState compact title="오늘부터 길드원이 들고 나는 것을 기록해요" />;
+  const recent = (days) => {
+    const since = new Date(Date.now() + 9 * 3600000 - days * 86400000).toISOString().slice(0, 10);
+    const rows = roster.events.filter((event) => event.date > since);
+    return { joined: rows.reduce((sum, event) => sum + event.joined.length, 0), left: rows.reduce((sum, event) => sum + event.left.length, 0) };
+  };
+  const week = recent(7);
+  const events = all ? roster.events : roster.events.slice(0, ROSTER_SHOWN);
+  const person = (name) => (
+    <li key={name}>
+      <a href={urls.character(guild.world, name)}>{name}</a>
+    </li>
+  );
+
+  return (
+    <div class="gd-roster">
+      <div class="gd-roster__head">
+        <ul class="gd-boss__summary">
+          <li>
+            기록 시작 <strong class="num">{formatDateDot(new Date(Date.parse(roster.since) + 9 * 3600000).toISOString().slice(0, 10))}</strong>
+          </li>
+          <li>
+            최근 7일 <strong class="num is-up">+{formatComma(week.joined)}</strong> <strong class="num is-down">−{formatComma(week.left)}</strong>
+          </li>
+        </ul>
+        <RosterSpark counts={roster.counts} />
+      </div>
+      {!roster.events.length ? <EmptyState compact title="기록을 시작한 뒤로 들고 난 길드원이 없어요" /> : null}
+      {events.length ? (
+        <ol class="gd-roster__list">
+          {events.map((event) => (
+            <li key={event.date} class="gd-roster__day">
+              <span class="gd-roster__date num">{formatDateDot(event.date)}</span>
+              <div class="gd-roster__changes">
+                {event.joined.length ? (
+                  <div class="gd-roster__group is-joined">
+                    <span class="gd-roster__label">들어옴 {event.joined.length}</span>
+                    <ul>{event.joined.map(person)}</ul>
+                  </div>
+                ) : null}
+                {event.left.length ? (
+                  <div class="gd-roster__group is-left">
+                    <span class="gd-roster__label">나감 {event.left.length}</span>
+                    <ul>{event.left.map(person)}</ul>
+                  </div>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {roster.events.length > ROSTER_SHOWN ? (
+        <button type="button" class="btn btn--ghost btn--sm" onClick={() => setAll(!all)} aria-expanded={all}>
+          {all ? "접기" : `${formatComma(roster.events.length - ROSTER_SHOWN)}일 더 보기`}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 // ---------------- 길드 비교 ----------------
 
 const COMPARE_BOSSES = [
@@ -1080,7 +1181,7 @@ export function Guild({ world = "", name = "" }) {
   }
 
   const guild = state.guild;
-  const counts = { power: undefined, boss: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
+  const counts = { power: undefined, boss: undefined, roster: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
 
   return (
     <div class="gd">
@@ -1101,6 +1202,7 @@ export function Guild({ world = "", name = "" }) {
           {tab === "members" ? <MembersPanel guild={guild} /> : null}
           {tab === "power" ? <PowerPanel guild={guild} /> : null}
           {tab === "boss" ? <BossPanel guild={guild} /> : null}
+          {tab === "roster" ? <RosterPanel guild={guild} /> : null}
           {tab === "skills" ? <SkillsPanel guild={guild} /> : null}
           {tab === "buildings" ? <BuildingsPanel guild={guild} /> : null}
           {tab === "abilities" ? <AbilitiesPanel guild={guild} /> : null}

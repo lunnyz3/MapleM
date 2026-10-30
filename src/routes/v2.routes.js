@@ -20,6 +20,7 @@ const {
   getRankingHistory,
   getRankingCuts,
   postMultiSearch,
+  getGuildRoster,
   postRecordBriefs,
   getSuggest,
   getCollectionSummary
@@ -43,6 +44,7 @@ router.get("/character-record", getCharacterRecord);
 router.get("/ranking-history", getRankingHistory);
 router.get("/ranking-cuts", getRankingCuts);
 router.post("/multi-search", postMultiSearch);
+router.get("/guild-roster", getGuildRoster);
 router.post("/records/brief", postRecordBriefs);
 router.get("/suggest", getSuggest);
 router.get("/collection-summary", getCollectionSummary);

@@ -336,6 +336,11 @@
 - `POST /api/v2/multi-search`(월드마다 색인 `{worldName, characterName}` `$in`, IP 30/분), `multiSearch`(`src/services/character-record.service.js`), `web/src/lib/multiSearch.mjs`(`parseNames`·`hardestBoss`), 테스트 `test/multi-search.test.js`. 표는 내 캐릭터 한눈에와 같은 모양.
 - 상단 "비교"를 묶음으로: 캐릭터 비교 · 길드 비교 · 멀티서치.
 
+### 49. 길드 들고 난 기록 (작업 사본, 운영 반영 전)
+- 운영자 요청(다른 사이트 참고: 메이플 PC 쪽 길드 가입/탈퇴 기록·길드 장기 히스토리). 새 컬렉션 `guild_rosters`(길드마다 한 건: 지금 길드원 이름, 날짜별 들어옴·나감 최근 200일치, 날짜별 인원 최근 180일, 색인 `{worldName, guildName}` 고유) — 운영자 승인.
+- 넥슨 guild/basic 응답을 받을 때마다(길드 화면, 캐릭터 화면 길드 탭) 지난 목록과 견줘 바뀐 것만 쓴다(`mergeRoster`: 같은 날 들어왔다 나가면 서로 지움, 이름만 보므로 닉네임을 바꾸면 나감 + 들어옴). 하루 한 번(서버 시작 15분 뒤부터 24시간마다) 지하수로 랭킹 최근 집계일 상위 1,000개 길드를 훑는다(`src/jobs/guild-roster.job.js`, 길드마다 guild/id + guild/basic, `GUILD_ROSTER_ENABLED`, 로컬 실행기는 끔). 스테이징: 1,000개 33초, 실패 0, 데이터 약 1MB.
+- 길드 화면 "들고 난 기록" 탭: 기록 시작일, 최근 7일 +들어옴 −나감, 인원 변화 선, 날짜별 들어옴(초록)·나감(취소선) 길드원(누르면 캐릭터), 14일 넘으면 더 보기. `src/domain/guild/roster.js`, `src/services/guild-roster.service.js`, `GET /api/v2/guild-roster`, 테스트 `test/guild-roster.test.js`.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

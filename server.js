@@ -3,6 +3,7 @@ const { connectMongo } = require("./src/config/mongo");
 const { env } = require("./src/config/env");
 const { itemCollector } = require("./src/jobs/item-collection.job");
 const { powerPatrol } = require("./src/jobs/power-patrol.job");
+const { guildRosterJob } = require("./src/jobs/guild-roster.job");
 const { bossReach, hallOfFame } = require("./src/services/stats.service");
 const { upgradeNews } = require("./src/services/news.service");
 
@@ -28,5 +29,9 @@ app.listen(env.port, (error) => {
   // 전투력 순찰: 모은 캐릭터의 전투력을 한 시간마다 다시 읽어 보스 세팅으로 바꿔 낀 때의 값을 남긴다.
   if (env.powerPatrolEnabled && env.nexonApiKey) {
     powerPatrol.start();
+  }
+  // 길드 들고 난 기록: 서버 시작 15분 뒤, 그다음 하루마다 길드 랭킹 상위 길드를 훑는다.
+  if (env.guildRosterEnabled && env.nexonApiKey) {
+    guildRosterJob.start();
   }
 });

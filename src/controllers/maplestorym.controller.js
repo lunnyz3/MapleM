@@ -27,6 +27,7 @@ const {
   canSaveRequestLogs
 } = require("../services/maplestorym.service");
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
+const { recordGuildRoster } = require("../services/guild-roster.service");
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
 const { buildGrowthReport } = require("../domain/growth/report");
@@ -636,6 +637,7 @@ async function fetchCharacterDetails({ characterName, worldNameCanonical, ocid, 
     if (oguildId) {
       try {
         const guildBasicResult = await getGuildBasicById(oguildId);
+        recordGuildRoster(guildBasicResult.data).catch(() => {});
 
         if (shouldLog) {
           await saveRequestLog({
@@ -3063,6 +3065,8 @@ async function getGuildBasicController(req, res) {
 
   try {
     const result = await getGuildBasicById(oguildId);
+    // 길드 들고 난 기록(응답을 막지 않는다)
+    recordGuildRoster(result.data).catch(() => {});
 
     await saveRequestLog({
       endpoint: result.endpoint,

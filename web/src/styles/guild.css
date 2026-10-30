@@ -1185,3 +1185,122 @@
     word-break: keep-all;
   }
 }
+
+/* 들고 난 기록 */
+.gd-roster {
+  display: grid;
+  gap: 12px;
+}
+
+.gd-roster__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gd-roster__head .is-up {
+  color: var(--success);
+}
+
+.gd-roster__head .is-down {
+  color: var(--danger);
+}
+
+.gd-roster__spark polyline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gd-roster__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gd-roster__day {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.gd-roster__date {
+  padding-top: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 800;
+}
+
+.gd-roster__changes {
+  display: grid;
+  gap: 6px;
+}
+
+.gd-roster__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.gd-roster__label {
+  font-size: var(--fs-12);
+  font-weight: 900;
+}
+
+.gd-roster__group.is-joined .gd-roster__label {
+  color: var(--success);
+}
+
+.gd-roster__group.is-left .gd-roster__label {
+  color: var(--danger);
+}
+
+.gd-roster__group ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gd-roster__group a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.gd-roster__group.is-left a {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+@media (max-width: 560px) {
+  .gd-roster__day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .gd-roster__date {
+    padding-top: 0;
+  }
+}

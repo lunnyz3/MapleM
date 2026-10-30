@@ -32,6 +32,8 @@ const env = {
   itemCollectionEnabled: parseBoolean(process.env.ITEM_COLLECTION_ENABLED, true),
   // 전투력 순찰: 모은 캐릭터의 전투력(stat)을 주기마다 다시 읽어 그날 최고·최근 14일 최고를 남긴다.
   powerPatrolEnabled: parseBoolean(process.env.POWER_PATROL_ENABLED, true),
+  // 길드 들고 난 기록: 하루 한 번 지하수로 랭킹 상위 1,000개 길드의 길드원 목록을 읽는다.
+  guildRosterEnabled: parseBoolean(process.env.GUILD_ROSTER_ENABLED, true),
   powerPatrolIntervalMinutes: Math.max(5, parseNumber(process.env.POWER_PATROL_INTERVAL_MINUTES, 60)),
   powerPatrolConcurrency: Math.min(32, Math.max(1, parseNumber(process.env.POWER_PATROL_CONCURRENCY, 10))),
   guildCollectionMemberDelayMs: Math.max(0, parseNumber(process.env.GUILD_COLLECTION_MEMBER_DELAY_MS, 1000)),

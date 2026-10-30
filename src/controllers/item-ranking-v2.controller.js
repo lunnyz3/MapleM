@@ -14,6 +14,7 @@
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
 //   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
 //   GET /api/v2/ranking-history?ocid=&type=power|level   → { ok, type, points: [{ date, ranking, value }] } (넥슨 과거 랭킹 약 16일)
+//   GET /api/v2/guild-roster?world_name=&guild_name=     → { ok, roster: { since, count, events: [{ date, joined, left }], counts } | null }
 //   POST /api/v2/multi-search { entries: [{ world?, name }], world_name? } → { ok, rows: [{ world, name, className, level, power, itemScore, … }] } (최대 30명)
 //   GET /api/v2/ranking-cuts?type=combat-power|level      → { ok, type, cuts: [{ rank, points: [{ date, value }] }] } (1·100·1,000·10,000위, 12주)
 //   GET /api/v2/collection-summary                        → { ok, characters } (모은 캐릭터 수)
@@ -38,6 +39,7 @@ const { findRecord, multiSearch, recordBriefs, suggestCharacters } = require("..
 const { plausiblePowers } = require("../services/stats.service");
 const { rankingHistory } = require("../services/ranking-history.service");
 const { rankingCuts } = require("../services/ranking-cuts.service");
+const { guildRoster } = require("../services/guild-roster.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -248,6 +250,21 @@ async function getRankingHistory(req, res) {
   }
 }
 
+async function getGuildRoster(req, res) {
+  const world = normalizeWorldName(text(req.query.world_name));
+  const guildName = text(req.query.guild_name, 24);
+  if (!world.ok || !guildName) {
+    return res.status(400).json({ ok: false, message: "world_name and guild_name are required" });
+  }
+  try {
+    const roster = await guildRoster(world.worldNameCanonical, guildName);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, roster });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 const MULTI_NAME = /^[가-힣A-Za-z0-9]{2,12}$/;
 
 async function postMultiSearch(req, res) {
@@ -345,6 +362,7 @@ module.exports = {
   getRankingHistory,
   getRankingCuts,
   postMultiSearch,
+  getGuildRoster,
   postRecordBriefs,
   getSuggest
 };
