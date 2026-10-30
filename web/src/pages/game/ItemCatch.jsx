@@ -6,7 +6,7 @@ import { ErrorState } from "../../components/States.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
 import { formatComma } from "../../lib/format.js";
 import { CATCH_SECONDS, catchPoints, comboRate, fallSpeed, shuffled, spawnGap } from "../../lib/miniGames.mjs";
-import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems } from "./shared.jsx";
+import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useRunToken } from "./shared.jsx";
 
 const KEY = "mmp.game.catch";
 const DROP_SIZE = 56;
@@ -23,6 +23,7 @@ export function ItemCatch() {
   const [best, setBest] = useState(() => readBest(KEY));
   const [newBest, setNewBest] = useState(false);
   const field = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const runToken = useRunToken("catch");
   // 떨어지는 장비의 자리: 그릴 때마다 상태를 바꾸지 않고 요소를 직접 옮긴다
   const live = useRef(/** @type {Map<number, { born: number, speed: number, el: HTMLElement | null }>} */ (new Map()));
   const run = useRef({ startAt: 0, nextId: 1, frame: 0, spawn: 0, deck: /** @type {any[]} */ ([]), combo: 0, score: 0, left: CATCH_SECONDS });
@@ -94,6 +95,7 @@ export function ItemCatch() {
   };
 
   const start = () => {
+    runToken.renew();
     stopLoops();
     live.current.clear();
     run.current = { startAt: performance.now(), nextId: 1, frame: 0, spawn: 0, deck: shuffled(items.items), combo: 0, score: 0, left: CATCH_SECONDS };
@@ -186,6 +188,9 @@ export function ItemCatch() {
           isBest={newBest}
           onShare={() => shareResult(`메이플M 플러스 '아이템 줍기' 30초 동안 ${formatComma(score)}점!`)}
           onRetry={start}
+          game="catch"
+          score={score}
+          token={runToken.token}
         />
       ) : null}
     </>

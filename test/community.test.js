@@ -1,0 +1,86 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { checkMessage, checkNickname } = require("../src/domain/community/text-filter");
+const { GAME_RULES, weekKey, sortScore, valueOf, checkScore, issueToken, verifyToken, rankRows } = require("../src/domain/community/arcade-scores");
+const { fortuneOf } = require("../src/domain/community/fortune");
+
+test("전광판 글: 욕설·링크·전화번호·도배·길이를 막고 공백을 다듬는다", () => {
+  assert.deepEqual(checkMessage("  스카니아   길드원 모집합니다  ", 40), { ok: true, text: "스카니아 길드원 모집합니다" });
+  assert.deepEqual(checkMessage("보지 마세요 이 장비", 40), { ok: true, text: "보지 마세요 이 장비" });
+  assert.equal(checkMessage("", 40).reason, "empty");
+  assert.equal(checkMessage("가".repeat(41), 40).reason, "long");
+  assert.equal(checkMessage("놀러오세요 www.example.com", 40).reason, "link");
+  assert.equal(checkMessage("open.kakao 링크로", 40).reason, "link");
+  assert.equal(checkMessage("연락 010-1234-5678", 40).reason, "phone");
+  assert.equal(checkMessage("ㅋㅋㅋㅋㅋㅋㅋ", 40).reason, "repeat");
+  assert.equal(checkMessage("시 발 진짜", 40).reason, "banned");
+  assert.equal(checkMessage("ㅅ.ㅂ", 40).reason, "banned");
+  assert.equal(checkMessage("FUCK", 40).reason, "banned");
+  // 눈에 안 보이는 글자는 지운다
+  assert.deepEqual(checkMessage("안​녕", 40), { ok: true, text: "안녕" });
+});
+
+test("닉네임: 한글·영문·숫자만, 길이·욕설", () => {
+  assert.deepEqual(checkNickname("피카츄 01", 12), { ok: true, text: "피카츄 01" });
+  assert.equal(checkNickname("<script>", 12).reason, "chars");
+  assert.equal(checkNickname("가나다라마바사아자차카타파", 12).reason, "long");
+  assert.equal(checkNickname("병신", 12).reason, "banned");
+  assert.equal(checkNickname("   ", 12).reason, "empty");
+});
+
+test("랭킹: 이번 주 열쇠는 서울 월요일, 낮을수록 좋은 기록은 음수로 정렬", () => {
+  // 2026-10-30(금) 10:00 KST → 그 주 월요일 2026-10-26
+  assert.equal(weekKey(new Date("2026-10-30T01:00:00Z")), "2026-10-26");
+  // 일요일 23:30 KST 는 아직 그 주
+  assert.equal(weekKey(new Date("2026-11-01T14:30:00Z")), "2026-10-26");
+  // 월요일 00:30 KST 는 새 주
+  assert.equal(weekKey(new Date("2026-11-01T15:30:00Z")), "2026-11-02");
+  assert.equal(sortScore("reaction", 230), -230);
+  assert.equal(valueOf("reaction", -230), 230);
+  assert.equal(sortScore("catch", 1200), 1200);
+  assert.ok(sortScore("reaction", 200) > sortScore("reaction", 300));
+  assert.equal(Object.keys(GAME_RULES).length, 10);
+});
+
+test("랭킹: 점수 범위와 최소 플레이 시간", () => {
+  assert.deepEqual(checkScore("quiz", 9, 20000), { ok: true, value: 9 });
+  assert.equal(checkScore("quiz", 11, 20000).reason, "value");
+  assert.equal(checkScore("quiz", 9, 3000).reason, "fast");
+  assert.equal(checkScore("catch", 2500, 29000).reason, "fast");
+  assert.equal(checkScore("reaction", 50, 60000).reason, "value");
+  assert.equal(checkScore("nope", 1, 60000).reason, "game");
+  assert.equal(checkScore("vs", Number.NaN, 60000).reason, "value");
+  assert.deepEqual(checkScore("memory", 12.4, 10000), { ok: true, value: 12 });
+});
+
+test("랭킹: 시작 표는 게임·시각이 맞고 서명이 같아야 받는다", () => {
+  const now = Date.UTC(2026, 9, 30, 1);
+  const token = issueToken("secret", "quiz", now);
+  assert.deepEqual(verifyToken("secret", token, "quiz", now + 30000), { ok: true, issuedAt: now });
+  assert.equal(verifyToken("other", token, "quiz", now + 30000).ok, false);
+  assert.equal(verifyToken("secret", token, "catch", now + 30000).ok, false);
+  assert.equal(verifyToken("secret", token, "quiz", now + 4 * 60 * 60 * 1000).ok, false);
+  const forged = token.replace(/\.[^.]+\./, `.${(now - 600000).toString(36)}.`);
+  assert.equal(verifyToken("secret", forged, "quiz", now + 30000).ok, false);
+  assert.equal(verifyToken("secret", "a.b.c", "quiz", now).ok, false);
+});
+
+test("랭킹: 같은 점수는 같은 순위", () => {
+  const rows = rankRows([{ score: 10 }, { score: 10 }, { score: 8 }, { score: 7 }]);
+  assert.deepEqual(
+    rows.map((row) => row.rank),
+    [1, 1, 3, 4]
+  );
+});
+
+test("오늘의 운세: 같은 날 같은 캐릭터는 같은 운세, 날이 바뀌면 달라진다", () => {
+  const a = fortuneOf({ world: "스카니아", name: "피카츄", date: "2026-10-30" });
+  const b = fortuneOf({ world: "스카니아", name: "피카츄", date: "2026-10-30" });
+  assert.deepEqual(a, b);
+  assert.ok(a.total >= 30 && a.total <= 100);
+  assert.equal(a.areas.length, 4);
+  a.areas.forEach((area) => assert.ok(area.stars >= 1 && area.stars <= 5 && area.line));
+  assert.ok(a.luckyBoss && a.luckyWorld && a.luckyGrade && a.luckyNumber >= 1);
+  const days = new Set(Array.from({ length: 10 }, (_, day) => fortuneOf({ world: "스카니아", name: "피카츄", date: `2026-11-${String(day + 1).padStart(2, "0")}` }).total));
+  assert.ok(days.size > 3);
+});

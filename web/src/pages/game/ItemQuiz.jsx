@@ -4,7 +4,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { ErrorState } from "../../components/States.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
 import { QUIZ_ROUNDS, makeQuiz } from "../../lib/miniGames.mjs";
-import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useWindowKey } from "./shared.jsx";
+import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useRunToken, useWindowKey } from "./shared.jsx";
 
 const KEY = "mmp.game.quiz";
 
@@ -17,8 +17,10 @@ export function ItemQuiz() {
   const [done, setDone] = useState(false);
   const [best, setBest] = useState(() => readBest(KEY));
   const [newBest, setNewBest] = useState(false);
+  const run = useRunToken("quiz");
 
   const deal = () => {
+    run.renew();
     setQuiz(makeQuiz(items.items, QUIZ_ROUNDS));
     setIndex(0);
     setPicked(null);
@@ -116,6 +118,9 @@ export function ItemQuiz() {
           isBest={newBest}
           onShare={() => shareResult(`메이플M 플러스 '아이템 이름 맞히기' ${total}문제 중 ${right}개 맞혔어요!`)}
           onRetry={deal}
+          game="quiz"
+          score={right}
+          token={run.token}
         />
       )}
     </>

@@ -2,7 +2,8 @@
 //  - 누가 더 셀까?(vs) · 전투력 맞히기(guess): 모은 캐릭터의 장비창(GET /api/v2/game/pool · /api/v2/game/gear, 장비에 맞는
 //    전투력인 캐릭터만). vs 는 연속이 길수록 두 전투력이 비슷한 짝(web/src/lib/powerGame.mjs), 템환산 힌트 세 번.
 //    guess 는 슬라이더 다섯 문제, 가까울수록 점수가 높다.
-//  - 레전더리 반응속도 · 스타캐치 · 짝 맞추기 · 아이템 이름 맞히기 · 아이템 줍기: web/src/pages/game/*.jsx.
+//  - 레전더리 반응속도 · 스타캐치 · 짝 맞추기 · 아이템 이름 맞히기 · 아이템 줍기 · 장비 합성 · 등급 순서 기억 · 장비 이름 타자,
+//    오늘의 운세: web/src/pages/game/*.jsx. 게임마다 이번 주 랭킹(닉네임으로 등록, web/src/pages/game/shared.jsx).
 import "../styles/game.css";
 import "../styles/arcade.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -19,25 +20,34 @@ import { urls } from "../lib/game.js";
 import { setScoreText } from "../lib/itemScore.js";
 import { GUESS_ROUNDS, guessPoints, guessTitle, pickOne, pickPair, roundPower, sliderRange } from "../lib/powerGame.mjs";
 import { copyText } from "../lib/share.js";
+import { Fortune } from "./game/Fortune.jsx";
 import { ItemCatch } from "./game/ItemCatch.jsx";
 import { ItemQuiz } from "./game/ItemQuiz.jsx";
 import { Memory } from "./game/Memory.jsx";
+import { Merge } from "./game/Merge.jsx";
 import { Reaction } from "./game/Reaction.jsx";
+import { Simon } from "./game/Simon.jsx";
 import { StarCatch } from "./game/StarCatch.jsx";
-import { readBest, useWindowKey, writeBest } from "./game/shared.jsx";
+import { Typing } from "./game/Typing.jsx";
+import { RankPanel, SCORE_TEXT, SubmitScore, readBest, useRunToken, useWindowKey, writeBest } from "./game/shared.jsx";
 
 const VS_KEY = "mmp.game.vs";
 const GUESS_KEY = "mmp.game.guess";
 const HINTS = 3;
 
+// key: 이 브라우저 최고 기록(없으면 기록 없는 놀이)
 const GAMES = [
-  { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY, best: (v) => `연속 ${v}` },
-  { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY, best: (v) => `${formatComma(v)}점` },
-  { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction", best: (v) => `${formatComma(v)}ms` },
-  { mode: "star", title: "스타캐치", line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star", best: (v) => `★${v}` },
-  { mode: "memory", title: "짝 맞추기", line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory", best: (v) => `${v}번` },
-  { mode: "quiz", title: "아이템 이름 맞히기", line: "아이콘 보고 이름 고르기", icon: "search", tone: "sky", key: "mmp.game.quiz", best: (v) => `${v}/10` },
-  { mode: "catch", title: "아이템 줍기", line: "30초 동안 떨어지는 장비 줍기", icon: "download", tone: "gold", key: "mmp.game.catch", best: (v) => `${formatComma(v)}점` }
+  { mode: "fortune", title: "오늘의 운세", line: "캐릭터 이름으로 보는 오늘의 메이플 운", icon: "sun", tone: "peach", key: "" },
+  { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY },
+  { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY },
+  { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction" },
+  { mode: "star", title: "스타캐치", line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star" },
+  { mode: "merge", title: "장비 합성", line: "같은 등급끼리 밀어 합쳐 ★35까지", icon: "union", tone: "lavender", key: "mmp.game.merge" },
+  { mode: "memory", title: "짝 맞추기", line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory" },
+  { mode: "simon", title: "등급 순서 기억", line: "빛난 등급 순서 그대로 누르기", icon: "flag", tone: "mint", key: "mmp.game.simon" },
+  { mode: "quiz", title: "아이템 이름 맞히기", line: "아이콘 보고 이름 고르기", icon: "search", tone: "sky", key: "mmp.game.quiz" },
+  { mode: "typing", title: "장비 이름 타자", line: "60초 동안 장비 이름 치기", icon: "chat", tone: "gold", key: "mmp.game.typing" },
+  { mode: "catch", title: "아이템 줍기", line: "30초 동안 떨어지는 장비 줍기", icon: "download", tone: "gold", key: "mmp.game.catch" }
 ];
 
 const readMode = () => {
@@ -240,6 +250,7 @@ function VsGame({ pool }) {
   const [hints, setHints] = useState(HINTS);
   const [hinted, setHinted] = useState(false);
   const gear = useGear(pair ? [pair[0].id, pair[1].id] : []);
+  const run = useRunToken("vs");
 
   const draw = (/** @type {number} */ level) => {
     let chosen = pickPair(pool, used.current, level);
@@ -261,7 +272,10 @@ function VsGame({ pool }) {
   };
 
   useEffect(() => {
-    if (!pair) show(0);
+    if (!pair) {
+      run.renew();
+      show(0);
+    }
   }, []);
 
   const choose = (/** @type {number} */ index) => {
@@ -287,6 +301,7 @@ function VsGame({ pool }) {
   };
 
   const restart = () => {
+    run.renew();
     setStreak(0);
     setOver(false);
     setHints(HINTS);
@@ -387,6 +402,7 @@ function VsGame({ pool }) {
                   </button>
                 )}
               </div>
+              {over && streak > 0 ? <SubmitScore game="vs" value={streak} token={run.token} /> : null}
             </div>
           ) : (
             <div class="game-tools">
@@ -439,6 +455,7 @@ function GuessGame({ pool }) {
   const [submitted, setSubmitted] = useState(false);
   const [best, setBest] = useState(() => readBest(GUESS_KEY));
   const gear = useGear(entry ? [entry.id] : []);
+  const run = useRunToken("guess");
 
   const draw = () => {
     let chosen = pickOne(pool, used.current);
@@ -459,7 +476,10 @@ function GuessGame({ pool }) {
   };
 
   useEffect(() => {
-    if (!entry) showNext();
+    if (!entry) {
+      run.renew();
+      showNext();
+    }
   }, []);
 
   const guess = roundPower(10 ** value);
@@ -485,6 +505,7 @@ function GuessGame({ pool }) {
   };
 
   const restart = () => {
+    run.renew();
     setRounds([]);
     showNext();
   };
@@ -618,6 +639,7 @@ function GuessGame({ pool }) {
               </li>
             ))}
           </ol>
+          {total > 0 ? <SubmitScore game="guess" value={total} token={run.token} /> : null}
           <div class="game-result__actions">
             <button type="button" class="btn btn--secondary" onClick={share}>
               <Icon name="share" size={18} />
@@ -649,7 +671,7 @@ function Lobby({ onOpen }) {
       </header>
       <ul class="arc-lobby">
         {GAMES.map((game, index) => {
-          const best = readBest(game.key);
+          const best = game.key ? readBest(game.key) : 0;
           return (
             <li key={game.mode} style={{ "--stagger": index }}>
               <a
@@ -669,7 +691,7 @@ function Lobby({ onOpen }) {
                   <strong class="arc-tile__title">{game.title}</strong>
                   <span class="arc-tile__line">{game.line}</span>
                 </span>
-                {best ? <span class="arc-tile__best num">최고 {game.best(best)}</span> : null}
+                {best ? <span class="arc-tile__best num">최고 {SCORE_TEXT[game.mode](best)}</span> : null}
                 <Icon name="arrowRight" size={18} class="arc-tile__go" />
               </a>
             </li>
@@ -736,6 +758,10 @@ export function Game() {
   else if (mode === "memory") content = <Memory />;
   else if (mode === "quiz") content = <ItemQuiz />;
   else if (mode === "catch") content = <ItemCatch />;
+  else if (mode === "merge") content = <Merge />;
+  else if (mode === "simon") content = <Simon />;
+  else if (mode === "typing") content = <Typing />;
+  else if (mode === "fortune") content = <Fortune />;
 
   return (
     <div class={`game game--${mode}`}>
@@ -752,6 +778,7 @@ export function Game() {
         </h1>
       </div>
       {content}
+      {SCORE_TEXT[mode] ? <RankPanel game={mode} /> : null}
     </div>
   );
 }

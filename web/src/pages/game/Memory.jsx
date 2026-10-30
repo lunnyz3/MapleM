@@ -4,7 +4,7 @@ import { BrandMark } from "../../components/Decor.jsx";
 import { ErrorState } from "../../components/States.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
 import { makeDeck } from "../../lib/miniGames.mjs";
-import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems } from "./shared.jsx";
+import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useRunToken } from "./shared.jsx";
 
 const KEY = "mmp.game.memory";
 const PAIRS = 8;
@@ -21,8 +21,10 @@ export function Memory() {
   const [now, setNow] = useState(Date.now());
   const [best, setBest] = useState(() => readBest(KEY));
   const [newBest, setNewBest] = useState(false);
+  const run = useRunToken("memory");
 
   const deal = () => {
+    run.renew();
     setDeck(makeDeck(items.items, PAIRS));
     setOpen([]);
     setMatched(new Set());
@@ -124,6 +126,9 @@ export function Memory() {
           isBest={newBest}
           onShare={() => shareResult(`메이플M 플러스 '짝 맞추기' ${moves}번 만에 ${seconds}초로 다 찾았어요!`)}
           onRetry={deal}
+          game="memory"
+          score={moves}
+          token={run.token}
         />
       ) : null}
     </>

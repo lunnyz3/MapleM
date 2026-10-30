@@ -9,6 +9,7 @@ import { Icon } from "../components/Icon.jsx";
 import { Aurora, CountUp, Particles, Tilt, spotlightHandlers } from "../components/Motion.jsx";
 import { RankBadge } from "../components/RankBadge.jsx";
 import { RankChange } from "../components/RankChange.jsx";
+import { Megaphone } from "../components/Megaphone.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
@@ -53,6 +54,7 @@ function Hero() {
           <Icon name="arrowRight" size={16} class="bot-cta__go" />
         </a>
         <SearchBox id="hero-search" size="lg" />
+        <Megaphone />
       </div>
     </section>
   );

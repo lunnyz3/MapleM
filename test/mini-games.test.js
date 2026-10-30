@@ -89,3 +89,48 @@ test("아이템 줍기: 등급 점수, 연속 배수, 시간이 갈수록 더 �
   assert.ok(spawnGap(0, fixed) > spawnGap(29, fixed));
   assert.ok(fallSpeed(29, fixed) > fallSpeed(0, fixed));
 });
+
+test("장비 합성: 한 줄 밀기·합치기는 한 번씩, 네 방향, 막힘 판정", async () => {
+  const { slideRow, moveBoard, spawnTile, canMove, emptyBoard, MERGE_LEVELS, MERGE_GOAL } = await load();
+  assert.deepEqual(slideRow([1, 1, 1, 1]), { row: [2, 2, 0, 0], gained: 8 });
+  assert.deepEqual(slideRow([0, 2, 0, 2]), { row: [3, 0, 0, 0], gained: 8 });
+  assert.deepEqual(slideRow([2, 2, 3, 0]), { row: [3, 3, 0, 0], gained: 8 });
+  assert.deepEqual(slideRow([1, 2, 3, 4]), { row: [1, 2, 3, 4], gained: 0 });
+  const board = [
+    [1, 1, 0, 0],
+    [0, 0, 0, 0],
+    [2, 0, 0, 2],
+    [0, 0, 0, 0]
+  ];
+  assert.deepEqual(moveBoard(board, "left").board[0], [2, 0, 0, 0]);
+  assert.deepEqual(moveBoard(board, "right").board[2], [0, 0, 0, 3]);
+  assert.equal(moveBoard(board, "left").gained, 4 + 8);
+  assert.deepEqual(
+    moveBoard(board, "down").board.map((row) => row[0]),
+    [0, 0, 1, 2]
+  );
+  assert.equal(moveBoard([[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]], "left").moved, false);
+  assert.equal(canMove([[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]]), false);
+  assert.equal(canMove([[1, 1, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]]), true);
+  const fresh = emptyBoard(seeded(5));
+  assert.equal(fresh.flat().filter(Boolean).length, 2);
+  assert.equal(spawnTile([[1, 2], [3, 4]]).flat().join(), "1,2,3,4");
+  assert.equal(MERGE_LEVELS[MERGE_GOAL].label, "★35");
+});
+
+test("순서 기억·타자: 순서 늘리기, 빠르기, 한글 타수", async () => {
+  const { extendSequence, simonStep, keystrokes, typingSpeed } = await load();
+  const sequence = extendSequence(extendSequence([], seeded(2)), seeded(3));
+  assert.equal(sequence.length, 2);
+  assert.ok(sequence.every((step) => step >= 0 && step <= 3));
+  assert.ok(simonStep(1) > simonStep(10));
+  assert.equal(simonStep(100), 260);
+  // 한 = ㅎ ㅏ ㄴ(3), 과 = ㄱ ㅗ ㅏ(3), 닭 = ㄷ ㅏ ㄹ ㄱ(4), A·공백 1
+  assert.equal(keystrokes("한"), 3);
+  assert.equal(keystrokes("과"), 3);
+  assert.equal(keystrokes("닭"), 4);
+  assert.equal(keystrokes("A 한"), 5);
+  assert.equal(typingSpeed(300, 60), 300);
+  assert.equal(typingSpeed(150, 30), 300);
+  assert.equal(typingSpeed(10, 0), 0);
+});

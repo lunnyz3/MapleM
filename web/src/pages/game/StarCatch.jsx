@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
 import { STAR_LIVES, STAR_MAX, inZone, pingPong, starStage, zoneStart } from "../../lib/miniGames.mjs";
-import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useWindowKey } from "./shared.jsx";
+import { GameOver, ItemTile, ScoreBar, readBest, saveBest, shareResult, useGameItems, useRunToken, useWindowKey } from "./shared.jsx";
 
 const KEY = "mmp.game.star";
 
@@ -43,6 +43,7 @@ export function StarCatch() {
   const speed = useRef(starStage(0).speed);
   const marker = useRef(/** @type {HTMLSpanElement | null} */ (null));
   const timer = useRef(0);
+  const run = useRunToken("star");
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const nextRound = (/** @type {number} */ level) => {
@@ -74,7 +75,10 @@ export function StarCatch() {
   };
 
   const stop = () => {
-    if (phase === "ready") return nextRound(star);
+    if (phase === "ready") {
+      run.renew();
+      return nextRound(star);
+    }
     if (phase !== "moving") return;
     const position = pingPong((performance.now() - startAt.current) / 1000, speed.current);
     setStopAt(position);
@@ -165,6 +169,9 @@ export function StarCatch() {
           isBest={newBest}
           onShare={() => shareResult(`메이플M 플러스 '스타캐치' ★${star}까지 올렸어요!`)}
           onRetry={restart}
+          game="star"
+          score={star}
+          token={run.token}
         />
       ) : null}
     </>

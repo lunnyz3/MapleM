@@ -149,3 +149,120 @@ export function fallSpeed(elapsed, random = Math.random) {
   const t = Math.min(1, Math.max(0, elapsed) / CATCH_SECONDS);
   return round3((0.28 + 0.32 * t) * (0.85 + random() * 0.3));
 }
+
+// ---------------- 장비 합성(2048) ----------------
+// 칸 값 = 단계(0 은 빈칸). 같은 단계 둘을 밀어 붙이면 한 단계 위, 점수는 2^(새 단계).
+// 1 노말 → 2 레어 → 3 에픽 → 4 유니크 → 5 레전더리 → 6 ★5 → … → 12 ★35
+
+export const MERGE_SIZE = 4;
+export const MERGE_GOAL = 12;
+export const MERGE_LEVELS = [
+  null,
+  { label: "노말", grade: "" },
+  { label: "레어", grade: "rare" },
+  { label: "에픽", grade: "epic" },
+  { label: "유니크", grade: "unique" },
+  { label: "레전더리", grade: "legendary" },
+  ...[5, 10, 15, 20, 25, 30, 35].map((star) => ({ label: `★${star}`, grade: "star", star }))
+];
+
+/** 한 줄을 왼쪽으로 밀기 → { row, gained } (한 번 합쳐진 칸은 그 이동에서 다시 합치지 않는다) */
+export function slideRow(row) {
+  const tiles = row.filter(Boolean);
+  const out = [];
+  let gained = 0;
+  for (let i = 0; i < tiles.length; i += 1) {
+    if (tiles[i] === tiles[i + 1]) {
+      const level = tiles[i] + 1;
+      out.push(level);
+      gained += 2 ** level;
+      i += 1;
+    } else {
+      out.push(tiles[i]);
+    }
+  }
+  while (out.length < row.length) out.push(0);
+  return { row: out, gained };
+}
+
+const transpose = (board) => board[0].map((_, column) => board.map((row) => row[column]));
+
+/**
+ * 판을 밀기. dir: "left" | "right" | "up" | "down" → { board, gained, moved }
+ * @param {number[][]} board
+ */
+export function moveBoard(board, dir) {
+  const vertical = dir === "up" || dir === "down";
+  const reverse = dir === "right" || dir === "down";
+  let rows = vertical ? transpose(board) : board.map((row) => [...row]);
+  let gained = 0;
+  rows = rows.map((row) => {
+    const source = reverse ? [...row].reverse() : row;
+    const result = slideRow(source);
+    gained += result.gained;
+    return reverse ? result.row.reverse() : result.row;
+  });
+  const next = vertical ? transpose(rows) : rows;
+  const moved = next.some((row, r) => row.some((value, c) => value !== board[r][c]));
+  return { board: next, gained, moved };
+}
+
+/** 빈칸 하나에 새 장비(90% 노말, 10% 레어). 빈칸이 없으면 그대로. */
+export function spawnTile(board, random = Math.random) {
+  const empty = [];
+  board.forEach((row, r) => row.forEach((value, c) => !value && empty.push([r, c])));
+  if (!empty.length) return board;
+  const [r, c] = empty[Math.floor(random() * empty.length)];
+  const next = board.map((row) => [...row]);
+  next[r][c] = random() < 0.9 ? 1 : 2;
+  return next;
+}
+
+export function emptyBoard(random = Math.random) {
+  const board = Array.from({ length: MERGE_SIZE }, () => Array(MERGE_SIZE).fill(0));
+  return spawnTile(spawnTile(board, random), random);
+}
+
+/** 더 밀 수 있는지(빈칸이나 붙어 있는 같은 단계). */
+export function canMove(board) {
+  return board.some((row, r) => row.some((value, c) => !value || value === row[c + 1] || value === board[r + 1]?.[c]));
+}
+
+// ---------------- 등급 순서 기억 ----------------
+
+/** 순서에 하나 더(0~3). */
+export function extendSequence(sequence, random = Math.random) {
+  return [...sequence, Math.floor(random() * 4)];
+}
+
+/** 보여 주는 빠르기(ms): 단계가 오를수록 빨라진다. */
+export function simonStep(level) {
+  return Math.max(260, 620 - level * 22);
+}
+
+// ---------------- 장비 이름 타자 ----------------
+
+export const TYPING_SECONDS = 60;
+const COMPOUND_VOWELS = new Set([9, 10, 11, 14, 15, 16, 19]);
+const COMPOUND_FINALS = new Set([3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]);
+
+/** 자판을 누르는 횟수(한글은 자모로: 초성 1 + 중성 1~2 + 종성 0~2, 그 밖의 글자 1). */
+export function keystrokes(text) {
+  let count = 0;
+  for (const char of String(text || "")) {
+    const code = char.codePointAt(0) - 0xac00;
+    if (code >= 0 && code <= 11171) {
+      const final = code % 28;
+      const vowel = Math.floor(code / 28) % 21;
+      count += 1 + (COMPOUND_VOWELS.has(vowel) ? 2 : 1) + (final ? (COMPOUND_FINALS.has(final) ? 2 : 1) : 0);
+    } else {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+/** 분당 타수 */
+export function typingSpeed(strokes, seconds) {
+  return seconds > 0 ? Math.round((strokes * 60) / seconds) : 0;
+}

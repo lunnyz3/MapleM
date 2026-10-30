@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { formatComma } from "../../lib/format.js";
 import { REACTION_TRIES, averageMs, decoyGrade, reactionDelay, reactionTitle } from "../../lib/miniGames.mjs";
-import { GameOver, ScoreBar, readBest, saveBest, shareResult } from "./shared.jsx";
+import { GameOver, ScoreBar, readBest, saveBest, shareResult, useRunToken } from "./shared.jsx";
 
 const KEY = "mmp.game.reaction";
 const GRADES = {
@@ -22,6 +22,7 @@ export function Reaction() {
   const [best, setBest] = useState(() => readBest(KEY));
   const [newBest, setNewBest] = useState(false);
   const goAt = useRef(0);
+  const run = useRunToken("reaction");
   const stops = useRef(/** @type {Array<() => void>} */ ([]));
 
   const clearTimers = () => {
@@ -68,6 +69,7 @@ export function Reaction() {
     } else if (phase === "go") {
       record(Math.round(performance.now() - goAt.current));
     } else if (phase !== "done") {
+      if (!times.length) run.renew();
       startTry();
     }
   };
@@ -149,6 +151,9 @@ export function Reaction() {
           isBest={newBest}
           onShare={() => shareResult(`메이플M 플러스 '레전더리 반응속도' 평균 ${formatComma(average)}ms · ${reactionTitle(average)}`)}
           onRetry={restart}
+          game="reaction"
+          score={valid.length >= 3 ? average : null}
+          token={run.token}
         />
       ) : null}
     </>

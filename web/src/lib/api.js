@@ -40,6 +40,14 @@ export async function getJson(url, init = {}) {
 }
 
 /**
+ * JSON 을 보내는 POST(응답 모양은 getJson 과 같다).
+ * @param {string} url @param {any} data
+ */
+export function postJson(url, data) {
+  return getJson(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+}
+
+/**
  * 오늘 랭킹이 아직 집계되지 않았다는 넥슨 응답인지.
  * @param {any} body
  */

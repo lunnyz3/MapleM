@@ -216,6 +216,116 @@
   margin-top: 6px;
 }
 
+/* ================= 랭킹 등록 · 이번 주 랭킹 ================= */
+.arc-submit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  margin: 4px auto 0;
+}
+
+.arc-submit .input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.arc-submit__error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  text-align: center;
+}
+
+.arc-submit__done {
+  margin: 4px 0 0;
+  color: var(--success);
+  font-weight: 800;
+  text-align: center;
+}
+
+.game-result .arc-submit,
+.game-result .arc-submit__done {
+  flex-basis: 100%;
+}
+
+.card.arc-board {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+}
+
+.arc-board__title {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+.arc-board__title .icon {
+  color: var(--gold-fg);
+}
+
+.arc-board__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arc-board__list li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.arc-board__rank {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: center;
+}
+
+.arc-board__list .is-top-1 .arc-board__rank {
+  color: #c98a00;
+}
+
+.arc-board__list .is-top-2 .arc-board__rank {
+  color: #7d8597;
+}
+
+.arc-board__list .is-top-3 .arc-board__rank {
+  color: #b5651d;
+}
+
+.arc-board__list .is-top {
+  background: var(--gold-bg);
+}
+
+.arc-board__name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arc-board__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
 /* ================= 레전더리 반응속도 ================= */
 .arc-react {
   display: grid;
@@ -734,6 +844,489 @@
   --g: #4ea3ff;
 }
 
+/* ================= 장비 합성 ================= */
+.card.arc-merge {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 18px;
+}
+
+.arc-merge__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 420px);
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+  box-shadow: inset 0 0 0 2px var(--border);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.arc-merge__cell {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+.arc-merge__tile {
+  --g: #9aa0b4;
+  border: 2px solid var(--g);
+  background:
+    radial-gradient(80% 80% at 50% 30%, color-mix(in srgb, var(--g) 26%, transparent), transparent),
+    var(--surface);
+  box-shadow: var(--shadow-1);
+  animation: arc-pop 160ms var(--ease-spring);
+}
+
+.arc-merge__tile img {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+}
+
+.arc-merge__tile.is-rare {
+  --g: #4ea3ff;
+}
+
+.arc-merge__tile.is-epic {
+  --g: #b36bff;
+}
+
+.arc-merge__tile.is-unique {
+  --g: #ffc933;
+}
+
+.arc-merge__tile.is-legendary {
+  --g: #7ee05c;
+}
+
+.arc-merge__tile.is-star {
+  --g: #f5b301;
+  background: linear-gradient(160deg, #fff6d6, #ffe08a);
+}
+
+.arc-merge__tile.is-l10,
+.arc-merge__tile.is-l11 {
+  background: linear-gradient(160deg, #ffe08a, #ffb81f);
+}
+
+.arc-merge__tile.is-l12 {
+  background: linear-gradient(160deg, #ffb81f, #ff7a2f);
+  box-shadow: 0 0 0 3px rgba(255, 184, 31, 0.45);
+}
+
+.arc-merge__label {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.arc-merge__star {
+  color: #6b4700;
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 900;
+}
+
+.arc-merge__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(2, 44px);
+  gap: 6px;
+}
+
+.arc-merge__dir {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.arc-merge__dir.is-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.arc-merge__dir.is-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.arc-merge__dir.is-down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.arc-merge__dir.is-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.arc-merge__dir.is-up .icon {
+  transform: rotate(-90deg);
+}
+
+.arc-merge__dir.is-left .icon {
+  transform: rotate(180deg);
+}
+
+.arc-merge__dir.is-down .icon {
+  transform: rotate(90deg);
+}
+
+/* ================= 등급 순서 기억 ================= */
+.card.arc-simon {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 20px 18px;
+}
+
+.arc-simon__state {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.arc-simon__pads {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, 420px);
+}
+
+.arc-simon__pad {
+  --g: #4ea3ff;
+  display: grid;
+  gap: 6px;
+  place-items: center;
+  aspect-ratio: 1.25;
+  border: 3px solid color-mix(in srgb, var(--g) 55%, var(--border));
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--g) 10%, var(--surface));
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  opacity: 0.72;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 120ms var(--ease),
+    opacity 120ms linear,
+    box-shadow 120ms linear,
+    background-color 120ms linear;
+}
+
+.arc-simon__pad img {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.arc-simon__pad:disabled {
+  cursor: default;
+}
+
+.arc-simon.is-input .arc-simon__pad {
+  opacity: 1;
+}
+
+.arc-simon__pad.is-epic {
+  --g: #b36bff;
+}
+
+.arc-simon__pad.is-unique {
+  --g: #ffc933;
+}
+
+.arc-simon__pad.is-legendary {
+  --g: #4fd06a;
+}
+
+.arc-simon__pad.is-lit {
+  opacity: 1;
+  background: color-mix(in srgb, var(--g) 45%, var(--surface));
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--g) 35%, transparent);
+  transform: scale(1.04);
+}
+
+.arc-simon__pad.is-wrong {
+  border-color: var(--danger);
+  animation: arc-shake 320ms var(--ease);
+}
+
+.arc-simon__start {
+  min-width: 200px;
+}
+
+/* ================= 장비 이름 타자 ================= */
+.card.arc-type {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 22px 18px;
+}
+
+.arc-type__target {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  animation: arc-pop 180ms var(--ease-spring);
+}
+
+.arc-type__name {
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.arc-type__name .is-ok {
+  color: var(--success);
+}
+
+.arc-type__name .is-bad {
+  color: var(--danger);
+  text-decoration: underline wavy;
+}
+
+.arc-type__next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  color: var(--text-subtle);
+  font-weight: 700;
+  list-style: none;
+}
+
+.arc-type__input {
+  width: min(100%, 460px);
+  font-size: var(--fs-18);
+  text-align: center;
+}
+
+/* ================= 오늘의 운세 ================= */
+.card.arc-fortune__form {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 14px;
+}
+
+.arc-fortune__form .select,
+.arc-fortune__form .input {
+  min-width: 0;
+}
+
+.arc-fortune__wait {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.card.arc-fortune {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background:
+    radial-gradient(120% 70% at 100% 0%, var(--peach-bg), transparent 60%),
+    radial-gradient(90% 60% at 0% 100%, var(--lavender-bg), transparent 60%),
+    var(--surface);
+  animation: game-card-in 360ms var(--ease-spring) both;
+}
+
+.arc-fortune__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arc-fortune__who {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 700;
+}
+
+.arc-fortune__date {
+  color: var(--text-subtle);
+  font-weight: 700;
+}
+
+.arc-fortune__total {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.arc-fortune__ring {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--surface) 78%, transparent 79%),
+    conic-gradient(#ff8a5c var(--fortune, 0deg), color-mix(in srgb, var(--border) 70%, transparent) 0);
+}
+
+.arc-fortune__ring strong {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.arc-fortune__ring > span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.arc-fortune__line {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.arc-fortune__areas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arc-fortune__areas li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.arc-fortune__label {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 800;
+}
+
+.arc-fortune__stars {
+  color: var(--border-strong);
+  letter-spacing: 1px;
+}
+
+.arc-fortune__stars .is-on {
+  color: #f5b301;
+}
+
+.arc-fortune__text {
+  grid-column: 1 / -1;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.arc-fortune__lucky {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.arc-fortune__item {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.arc-fortune__item-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.arc-fortune__item-row > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arc-fortune__item-row a {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  min-height: 28px;
+  color: var(--primary-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.arc-fortune__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.arc-fortune__facts > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.arc-fortune__facts dt {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.arc-fortune__facts dd {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin: 0;
+  font-weight: 800;
+}
+
+.arc-fortune__note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .arc-lobby > li,
   .arc-react__cube,
@@ -797,6 +1390,28 @@
 
   .arc-quiz__options {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arc-board__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arc-fortune__areas,
+  .arc-fortune__lucky {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card.arc-fortune__form {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .arc-fortune__form .btn {
+    grid-column: 1 / -1;
+  }
+
+  .arc-simon__pad img {
+    width: 44px;
+    height: 44px;
   }
 
   .arc-star__stop {

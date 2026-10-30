@@ -17,7 +17,12 @@ const rateLimiters = {
   thumbnails: createRateLimiter({ name: "thumbnails", windowMs: minute, max: 300 }),
   characterPages: createRateLimiter({ name: "character-pages", windowMs: minute, max: 30 }),
   nexonData: createRateLimiter({ name: "nexon-data", windowMs: minute, max: 120 }),
-  shareUploads: createRateLimiter({ name: "share-uploads", windowMs: minute, max: 10 })
+  shareUploads: createRateLimiter({ name: "share-uploads", windowMs: minute, max: 10 }),
+  // 미니게임 시작 표·기록, 전광판 글, 운세(글은 서비스가 방문자마다 2분에 한 번으로 따로 막는다)
+  gameStarts: createRateLimiter({ name: "game-starts", windowMs: minute, max: 60 }),
+  gameScores: createRateLimiter({ name: "game-scores", windowMs: minute, max: 20 }),
+  megaphones: createRateLimiter({ name: "megaphones", windowMs: minute, max: 5 }),
+  fortunes: createRateLimiter({ name: "fortunes", windowMs: minute, max: 30 })
 };
 
 const publicDir = path.join(__dirname, "..", "public");
@@ -113,6 +118,10 @@ function createApp() {
   app.post("/api/v2/character-stats", rateLimiters.characterPages);
   // One ranking page with ▲▼ costs up to ~5 Nexon calls (most are cached for hours).
   app.use("/api/v2/ranking", rateLimiters.nexonData);
+  app.post("/api/v2/game/start", rateLimiters.gameStarts);
+  app.post("/api/v2/game/score", rateLimiters.gameScores);
+  app.post("/api/v2/megaphone", rateLimiters.megaphones);
+  app.get("/api/v2/fortune", rateLimiters.fortunes);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);
