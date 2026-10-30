@@ -56,6 +56,8 @@ async function recordCharacterItems({
   itemData,
   combatPower = null,
   maxDamage = null,
+  // 날짜별 기록에 남길 전투력(스펙과 다를 때만: 사냥 프리셋이면 스펙은 2주 최고, 기록은 관측값)
+  recordPower,
   source = "lookup",
   rankedOnly = false,
   now = new Date()
@@ -135,7 +137,7 @@ async function recordCharacterItems({
     characterName: owner.characterName,
     snapshot: {
       scoreVersion: SCORE_VERSION,
-      combatPower: spec.combatPower,
+      combatPower: recordPower === undefined ? spec.combatPower : finiteOrNull(recordPower) ?? undefined,
       itemScore: spec.itemScore,
       itemScoreWithoutEmblem: spec.itemScoreWithoutEmblem,
       potential: spec.potential,

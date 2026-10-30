@@ -46,6 +46,20 @@ async function findRecord(ocid) {
 }
 
 const RECENT_POWER_DAYS = 14;
+// 지금 관측값이 최근 2주 최고의 이 비율 아래면 사냥 프리셋을 끼고 잰 값으로 본다
+const FARMING_RATIO = 0.5;
+
+/**
+ * 스펙(랭킹·카드·쌍둥이·미니게임이 읽는 값)에 남길 전투력: 지금 관측값이 최근 2주 최고의 절반 아래면(사냥 프리셋)
+ * 2주 최고, 아니면 관측값. 날짜별 기록에는 관측값을 그대로 남겨 예전 최고가 계속 이어지지 않게 한다.
+ * @param {number | null | undefined} observed @param {number | null | undefined} recentBest
+ */
+function specCombatPower(observed, recentBest) {
+  const now = Number(observed) || 0;
+  const best = Number(recentBest) || 0;
+  if (now > 0 && best > 0 && now < best * FARMING_RATIO) return best;
+  return now > 0 ? now : null;
+}
 
 /**
  * 최근 14일(한국 날짜) 성장 일지에서 가장 높은 전투력과 그날. 지금 관측값(observed: { value, observedAt })이
@@ -155,4 +169,4 @@ async function suggestCharacters({ q, world = "" }) {
   return rows;
 }
 
-module.exports = { recordSnapshot, findRecord, bestRecentCombatPower, recordBriefs, suggestCharacters, RECENT_POWER_DAYS };
+module.exports = { recordSnapshot, findRecord, bestRecentCombatPower, specCombatPower, recordBriefs, suggestCharacters, RECENT_POWER_DAYS };

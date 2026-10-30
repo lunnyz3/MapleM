@@ -30,7 +30,7 @@ const { observeCombatPower, rankingObservedAt } = require("../services/combat-po
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
 const { buildGrowthReport } = require("../domain/growth/report");
-const { bestRecentCombatPower } = require("../services/character-record.service");
+const { bestRecentCombatPower, specCombatPower } = require("../services/character-record.service");
 const { recordSearch } = require("../services/popular-search.service");
 const { resolveClientIp } = require("../middleware/rate-limit");
 
@@ -764,6 +764,7 @@ async function recordLookupItems({ ocid, characterName, worldNameCanonical, deta
       itemData: details.itemEquipment.data,
       combatPower,
       maxDamage,
+      ...(spec && Object.hasOwn(spec, "recordPower") ? { recordPower: spec.recordPower } : {}),
       source: "lookup"
     });
   } catch (error) {
@@ -2644,7 +2645,12 @@ async function getCharacterPageData(req, res) {
         ocid,
         details
       },
-      spec: { combatPower: combatPower?.value ?? null, maxDamage: pageData.profile?.majorStats?.maxDamage?.value ?? null }
+      // 사냥 프리셋으로 잰 값이면(최근 2주 최고의 절반 아래) 스펙에는 2주 최고, 날짜별 기록에는 관측값
+      spec: {
+        combatPower: specCombatPower(combatPower?.value, displayPower?.recentBest ? displayPower.value : null),
+        recordPower: combatPower?.value ?? null,
+        maxDamage: pageData.profile?.majorStats?.maxDamage?.value ?? null
+      }
     });
     pageData.meta.aggregateSaved = aggregateSaved;
     pageData.meta.guildCollection = enqueueRelatedGuild(details, worldNameCanonical, details?.basic?.data?.character_name || characterName, aggregateSaved);

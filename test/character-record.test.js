@@ -79,3 +79,13 @@ test("성장 일지: 전투력은 그날 본 값 중 가장 높은 값(사냥 �
   record = mergeRecord(record, { scoreVersion: 5, combatPower: 150 }, day("2026-10-02T05:00:00Z"));
   assert.equal(record.journal[1].combatPower, 150, "다음 날은 그날 값");
 });
+
+test("스펙 전투력: 지금 관측값이 최근 2주 최고의 절반 아래면(사냥 프리셋) 2주 최고, 아니면 관측값", () => {
+  const { specCombatPower } = require("../src/services/character-record.service");
+  assert.equal(specCombatPower(36206397, 168002403), 168002403);
+  assert.equal(specCombatPower(150000000, 168002403), 150000000);
+  assert.equal(specCombatPower(200000000, 168002403), 200000000);
+  assert.equal(specCombatPower(41742, null), 41742);
+  assert.equal(specCombatPower(null, 168002403), null);
+  assert.equal(specCombatPower(0, 0), null);
+});
