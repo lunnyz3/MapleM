@@ -1,7 +1,9 @@
 // v2 notices: the latest Nexon notices, patch notes and events in one response.
 //   GET /api/v2/notices → { ok, notice: [], patch: [], event: [] } (each { title, url, date }, newest first)
+//   GET /api/v2/events  → { ok, today, events: [{ title, name, url, start, end, status, daysLeft, daysToStart }] } (이벤트 달력)
 const { env } = require("../config/env");
 const { getNoticeList } = require("../services/maplestorym.service");
+const { eventCalendar } = require("../services/event-calendar.service");
 
 const LIST_SIZE = 6;
 const KINDS = [
@@ -38,4 +40,18 @@ function createNoticesHandler({ fetchList = getNoticeList, hasApiKey = () => Boo
   };
 }
 
-module.exports = { createNoticesHandler, getNotices: createNoticesHandler() };
+async function getEvents(req, res) {
+  if (!env.nexonApiKey) {
+    return res.status(500).json({ ok: false, message: "NEXON_OPEN_API_KEY is not configured" });
+  }
+  try {
+    const calendar = await eventCalendar();
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json({ ok: true, ...calendar });
+  } catch (error) {
+    console.error("[events] read failed:", error?.message || error);
+    return res.status(502).json({ ok: false, message: "이벤트를 불러오지 못했습니다." });
+  }
+}
+
+module.exports = { createNoticesHandler, getNotices: createNoticesHandler(), getEvents };

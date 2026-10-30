@@ -61,6 +61,11 @@ async function getNoticeList(kind) {
   return requestNexon(`/maplestorym/v1/${kind}`, {});
 }
 
+/** 공지 한 건(제목·본문 HTML·날짜). kind: notice | notice-patch | notice-event */
+async function getNoticeDetail(kind, noticeId) {
+  return requestNexon(`/maplestorym/v1/${kind}/detail`, { notice_id: noticeId });
+}
+
 async function getUserUnion(ocid) {
   return requestNexon(unionEndpointPath, { ocid });
 }
@@ -263,6 +268,7 @@ function getNexonClientStats() {
 
 module.exports = {
   getNoticeList,
+  getNoticeDetail,
   canSaveRequestLogs,
   getNexonClientStats,
   getCharacterOcid,

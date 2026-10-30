@@ -702,6 +702,24 @@
   font-weight: 700;
 }
 
+.news-row__date.is-urgent {
+  color: var(--danger);
+  font-weight: 900;
+}
+
+.news-card__more {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  justify-self: end;
+  min-height: 36px;
+  margin-top: 4px;
+  color: var(--primary-strong);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .news-row__title {
   overflow: hidden;
   font-size: var(--fs-14);

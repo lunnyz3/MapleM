@@ -1,0 +1,224 @@
+/* 이벤트 달력(/events) */
+.ev-page {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.ev-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-summary li {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.ev-summary li.is-urgent {
+  background: var(--peach-bg);
+  color: var(--peach-ink);
+}
+
+.ev-summary strong {
+  margin-left: 2px;
+  color: inherit;
+  font-weight: 900;
+}
+
+.card.ev-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+/* 줄 열: 이름 · 기간 · 남은 날 · 막대. 날짜 축은 막대 칸과 같은 자리(줄 안쪽 여백 10px + 열 사이 12px 셋) */
+.ev-card {
+  --ev-name: 230px;
+  --ev-period: 96px;
+  --ev-day: 76px;
+}
+
+.ev-axis {
+  position: relative;
+  height: 22px;
+  margin: 0 10px 0 calc(var(--ev-name) + var(--ev-period) + var(--ev-day) + 36px + 10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.ev-axis__tick,
+.ev-axis__today {
+  position: absolute;
+  bottom: 4px;
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.ev-axis__today {
+  color: var(--danger);
+  font-weight: 900;
+}
+
+.ev-group {
+  display: grid;
+  gap: 6px;
+}
+
+.ev-group__title {
+  margin: 0;
+  font-size: var(--fs-14);
+  font-weight: 900;
+}
+
+.ev-group__title span {
+  color: var(--text-subtle);
+}
+
+.ev-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-row {
+  display: grid;
+  grid-template-columns: var(--ev-name) var(--ev-period) var(--ev-day) minmax(0, 1fr);
+  grid-template-areas: "name period day track";
+  gap: 4px 12px;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.ev-row__name {
+  display: inline-flex;
+  grid-area: name;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  min-height: 32px;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ev-row__name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-row__name .icon {
+  flex: none;
+  color: var(--text-subtle);
+}
+
+.ev-row__period {
+  grid-area: period;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ev-row__day {
+  grid-area: day;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 900;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ev-row.is-urgent .ev-row__day {
+  color: var(--danger);
+}
+
+.ev-row__track {
+  position: relative;
+  grid-area: track;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.ev-row__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.ev-row.is-urgent .ev-row__bar {
+  background: var(--peach-500);
+}
+
+.ev-row.is-upcoming .ev-row__bar {
+  background: var(--lavender-fg);
+}
+
+.ev-row.is-ended .ev-row__bar {
+  background: var(--border);
+}
+
+.ev-row__today {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--danger);
+  opacity: 0.6;
+}
+
+.ev-ended summary {
+  min-height: 36px;
+  padding: 6px 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ev-ended .ev-group__title {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .ev-axis {
+    margin: 0 10px;
+  }
+
+  /* 좁은 화면: 눈금 글자는 하나 걸러 */
+  .ev-axis__tick.is-minor {
+    display: none;
+  }
+
+  .ev-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name day"
+      "period period"
+      "track track";
+    padding: 8px 10px;
+  }
+
+  .ev-row__period {
+    margin-top: -4px;
+  }
+}

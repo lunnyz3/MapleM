@@ -10,6 +10,7 @@ import { Aurora, CountUp, Particles, Tilt, spotlightHandlers } from "../componen
 import { RankBadge } from "../components/RankBadge.jsx";
 import { RankChange } from "../components/RankChange.jsx";
 import { Megaphone } from "../components/Megaphone.jsx";
+import { dayLabel } from "../lib/eventCalendar.mjs";
 import { UpgradeNewsCard } from "../components/UpgradeNews.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
@@ -433,7 +434,45 @@ const NEWS_TABS = [
 /** "2026-10-28T10:00+09:00" → "10.28" */
 const monthDay = (/** @type {string} */ date) => (/^\d{4}-(\d{2})-(\d{2})/.exec(date) || []).slice(1).join(".");
 
-/** 넥슨 공지·패치 노트·이벤트 최신 목록(제목을 누르면 넥슨 공식 페이지). */
+/** 이벤트 탭: 진행 중·곧 시작 이벤트(끝나는 날 순)와 남은 날. GET /api/v2/events 를 탭을 열 때 한 번 읽는다. */
+function EventRows() {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", events?: any[] }} */ ({ status: "loading" }));
+  useEffect(() => {
+    let alive = true;
+    getJson("/api/v2/events").then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", events: body.events || [] } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const events = (state.events || []).filter((event) => event.status !== "ended").slice(0, 6);
+  if (state.status === "loading") return <SkeletonList rows={4} />;
+  if (state.status === "error") return <EmptyState compact title="이벤트를 불러오지 못했어요" />;
+  if (!events.length) return <EmptyState compact title="진행 중인 이벤트가 없어요" />;
+  return (
+    <>
+      <ul class="news-list stagger-in">
+        {events.map((event, index) => (
+          <li key={event.url} style={{ "--stagger": index }}>
+            <a class="news-row" href={event.url} target="_blank" rel="noopener noreferrer">
+              <span class={`news-row__date num${event.status === "ongoing" && event.daysLeft <= 3 ? " is-urgent" : ""}`}>{dayLabel(event)}</span>
+              <span class="news-row__title">{event.name}</span>
+              <Icon name="external" size={16} class="news-row__go" />
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a class="news-card__more" href={urls.events}>
+        이벤트 달력 전체 보기
+        <Icon name="chevronRight" size={14} />
+      </a>
+    </>
+  );
+}
+
+/** 넥슨 공지·패치 노트·이벤트 최신 목록(제목을 누르면 넥슨 공식 페이지). 이벤트 탭은 남은 날 순. */
 function NewsCard() {
   const [tab, setTab] = useState("patch");
   const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", data?: any }} */ ({ status: "loading" }));
@@ -455,10 +494,11 @@ function NewsCard() {
     <Card class="news-card" title="소식" icon="info" tone="mint">
       <Tabs idBase="news" label="소식 종류" value={tab} onChange={setTab} items={NEWS_TABS} />
       <TabPanel idBase="news" value={tab} busy={state.status === "loading"} class="news-card__panel">
-        {state.status === "loading" ? <SkeletonList rows={4} /> : null}
-        {state.status === "error" ? <ErrorState compact title="소식을 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} /> : null}
-        {state.status === "ready" && !rows.length ? <EmptyState compact title="새 소식이 없어요" /> : null}
-        {rows.length ? (
+        {tab === "event" ? <EventRows /> : null}
+        {tab !== "event" && state.status === "loading" ? <SkeletonList rows={4} /> : null}
+        {tab !== "event" && state.status === "error" ? <ErrorState compact title="소식을 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} /> : null}
+        {tab !== "event" && state.status === "ready" && !rows.length ? <EmptyState compact title="새 소식이 없어요" /> : null}
+        {tab !== "event" && rows.length ? (
           <ul class="news-list stagger-in">
             {rows.map((row, index) => (
               <li key={row.url} style={{ "--stagger": index }}>

@@ -1,7 +1,7 @@
 const express = require("express");
 const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2.controller");
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
-const { getNotices } = require("../controllers/notices-v2.controller");
+const { getEvents, getNotices } = require("../controllers/notices-v2.controller");
 const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getJobTiers, getWorldStats, getBossReach, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
@@ -45,6 +45,7 @@ router.post("/records/brief", postRecordBriefs);
 router.get("/suggest", getSuggest);
 router.get("/collection-summary", getCollectionSummary);
 router.get("/notices", getNotices);
+router.get("/events", getEvents);
 router.get("/popular", getPopular);
 router.get("/stats/classes", getClassStats);
 router.get("/stats/levels", getLevelStats);
