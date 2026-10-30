@@ -11,6 +11,8 @@ const POLL_MS = 60 * 1000;
 
 export function Megaphone() {
   const [messages, setMessages] = useState(/** @type {Array<{ id: string, text: string }>} */ ([]));
+  // 오늘의 큰 강화 소식(서버가 고른 축하 문구), 방문자 글 뒤에 다른 색으로
+  const [news, setNews] = useState(/** @type {Array<{ id: string, text: string }>} */ ([]));
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -20,7 +22,10 @@ export function Megaphone() {
       if (document.visibilityState !== "visible") return;
       getJson("/api/v2/megaphone").then(
         ({ response, body }) => {
-          if (alive && response.ok && body?.ok) setMessages(body.messages || []);
+          if (alive && response.ok && body?.ok) {
+            setMessages(body.messages || []);
+            setNews(body.news || []);
+          }
         },
         () => {}
       );
@@ -54,12 +59,13 @@ export function Megaphone() {
     }
   };
 
-  const chars = messages.reduce((sum, entry) => sum + [...entry.text].length + 4, 0);
+  const all = [...messages, ...news.map((entry) => ({ ...entry, news: true }))];
+  const chars = all.reduce((sum, entry) => sum + [...entry.text].length + 4, 0);
   // 글이 짧으면 판을 채울 만큼 되풀이한다(한 줄이 판보다 짧으면 끊겨 보인다)
   const repeat = chars ? Math.max(1, Math.ceil(70 / chars)) : 1;
   // 글자가 많을수록 천천히(한 바퀴 최소 14초)
   const duration = Math.max(14, Math.round(chars * repeat * 0.32));
-  const shown = Array.from({ length: repeat }, (_, round) => messages.map((entry) => ({ ...entry, key: `${round}-${entry.id}` }))).flat();
+  const shown = Array.from({ length: repeat }, (_, round) => all.map((entry) => ({ ...entry, key: `${round}-${entry.id}` }))).flat();
 
   return (
     <div class="mega">
@@ -68,11 +74,11 @@ export function Megaphone() {
           <Icon name="chat" size={16} />
           전광판
         </span>
-        <div class="mega__window" tabIndex={messages.length ? 0 : -1} aria-label="전광판 글">
-          {messages.length ? (
+        <div class="mega__window" tabIndex={all.length ? 0 : -1} aria-label="전광판 글">
+          {all.length ? (
             <>
               <ul class="sr-only">
-                {messages.map((entry) => (
+                {all.map((entry) => (
                   <li key={entry.id}>{entry.text}</li>
                 ))}
               </ul>
@@ -80,7 +86,7 @@ export function Megaphone() {
                 {[0, 1].map((copy) => (
                   <span key={copy} class="mega__run">
                     {shown.map((entry) => (
-                      <span key={entry.key} class="mega__item">
+                      <span key={entry.key} class={`mega__item${entry.news ? " is-news" : ""}`}>
                         {entry.text}
                       </span>
                     ))}

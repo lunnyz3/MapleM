@@ -84,3 +84,22 @@ test("오늘의 운세: 같은 날 같은 캐릭터는 같은 운세, 날이 바
   const days = new Set(Array.from({ length: 10 }, (_, day) => fortuneOf({ world: "스카니아", name: "피카츄", date: `2026-11-${String(day + 1).padStart(2, "0")}` }).total));
   assert.ok(days.size > 3);
 });
+
+test("캐릭터 궁합: 순서와 상관없이 같은 점수, 실제 비교 줄", () => {
+  const { matchScore, matchPoints, lineOf } = require("../src/domain/community/match");
+  const a = { world: "스카니아", name: "피카츄" };
+  const b = { world: "루나", name: "라이츄" };
+  assert.equal(matchScore(a, b), matchScore(b, a));
+  assert.ok(matchScore(a, b) >= 20 && matchScore(a, b) <= 100);
+  assert.ok(lineOf(100) && lineOf(20));
+  const points = matchPoints(
+    { world: "스카니아", name: "가", className: "비숍", level: 280, power: 3e8, attackType: "magical" },
+    { world: "스카니아", name: "나", className: "히어로", level: 270, power: 1e8, attackType: "physical" }
+  );
+  assert.equal(points[0], "둘 다 스카니아 월드라 바로 만날 수 있어요.");
+  assert.equal(points[1], "물리·마법이 섞여 균형이 좋아요.");
+  assert.equal(points[2], "가님이 전투력 3배로 든든하게 이끌어요.");
+  assert.equal(points[3], "가님이 10레벨 선배예요.");
+  // 모은 스펙이 없으면 월드 줄만
+  assert.deepEqual(matchPoints({ world: "루나", name: "가", power: 0, level: 0 }, { world: "크로아", name: "나", power: 0, level: 0 }), ["루나와 크로아, 월드가 달라 아쉬워요."]);
+});

@@ -95,6 +95,19 @@
   text-shadow: none;
 }
 
+/* 강화 소식 축하 문구: 하늘색 글자 */
+.mega__item.is-news {
+  color: #7fe3ff;
+  text-shadow:
+    0 0 6px rgba(127, 227, 255, 0.5),
+    0 0 1px rgba(127, 227, 255, 0.9);
+}
+
+.mega__item.is-news::before {
+  content: "★";
+  color: #ffd54a;
+}
+
 .mega__empty {
   display: block;
   color: rgba(255, 213, 74, 0.75);

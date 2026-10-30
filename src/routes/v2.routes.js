@@ -2,9 +2,9 @@ const express = require("express");
 const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2.controller");
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getNotices } = require("../controllers/notices-v2.controller");
-const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
+const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
-const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune } = require("../controllers/arcade-v2.controller");
+const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNews } = require("../controllers/arcade-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
 const {
   getItemRanks,
@@ -44,6 +44,7 @@ router.get("/stats/job-meta", getJobMeta);
 router.get("/stats/hall-of-fame", getHallOfFame);
 router.get("/stats/job-top", getJobTop);
 router.get("/stats/card", getCharacterCard);
+router.get("/stats/twins", getSpecTwins);
 router.get("/game/pool", getGamePool);
 router.get("/game/gear", getGameGear);
 router.get("/game/items", getGameItems);
@@ -53,6 +54,8 @@ router.get("/game/leaderboard", getLeaderboard);
 router.get("/megaphone", getMegaphones);
 router.post("/megaphone", postMegaphones);
 router.get("/fortune", getFortune);
+router.get("/news", getNews);
+router.get("/match", getMatch);
 router.get("/item-collection", (req, res) => res.json({ ok: true, ...itemCollector.getStatus() }));
 
 module.exports = { v2Router: router };

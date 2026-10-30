@@ -11,6 +11,9 @@ const { ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { GAME_RULES, weekKey, sortScore, valueOf, checkScore, issueToken, verifyToken, rankRows } = require("../domain/community/arcade-scores");
 const { checkMessage, checkNickname, REASON_TEXT } = require("../domain/community/text-filter");
 const { fortuneOf } = require("../domain/community/fortune");
+const { matchScore, matchPoints, lineOf } = require("../domain/community/match");
+const { CharacterSpec } = require("../models/character-spec.model");
+const { headlineNews } = require("./news.service");
 const { TtlLruCache } = require("../nexon/client");
 
 const DB_TIMEOUT_MS = 3000;
@@ -116,17 +119,17 @@ let messageCache = null;
 
 const toMessage = (doc) => ({ id: String(doc._id), name: doc.name || "", text: doc.text, at: doc.createdAt });
 
-/** 24시간 안의 최근 글 20개(10초 보관). */
+/** 24시간 안의 최근 글 20개(10초 보관) + 오늘의 큰 강화 소식 셋(축하 문구). */
 async function megaphones(now = new Date()) {
-  if (!isMongoConnected()) return { messages: [] };
-  if (messageCache && now.getTime() - messageCache.at < 10 * 1000) return { messages: messageCache.messages };
+  if (!isMongoConnected()) return { messages: [], news: [] };
+  if (messageCache && now.getTime() - messageCache.at < 10 * 1000) return { messages: messageCache.messages, news: headlineNews() };
   const docs = await Megaphone.find({ hidden: { $ne: true }, createdAt: { $gte: new Date(now.getTime() - SHOW_MS) } }, { visitor: 0, hidden: 0 })
     .sort({ createdAt: -1 })
     .limit(SHOW_COUNT)
     .lean()
     .maxTimeMS(DB_TIMEOUT_MS);
   messageCache = { at: now.getTime(), messages: docs.map(toMessage) };
-  return { messages: messageCache.messages };
+  return { messages: messageCache.messages, news: headlineNews() };
 }
 
 /** 전광판 글 쓰기. → { message } */
@@ -199,4 +202,25 @@ async function fortune({ world, name, now = new Date() }) {
   return value;
 }
 
-module.exports = { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, MESSAGE_MAX, NAME_MAX, NICKNAME_MAX };
+// ---------------- 캐릭터 궁합 ----------------
+
+const MATCH_FIELDS = { _id: 0, characterName: 1, worldName: 1, characterClass: 1, characterLevel: 1, combatPower: 1, attackType: 1 };
+
+async function findWho(world, name) {
+  const base = { world, name, className: "", level: 0, power: 0, attackType: "", found: false };
+  if (!isMongoConnected()) return base;
+  const spec = await CharacterSpec.findOne({ worldName: world, characterName: name }, MATCH_FIELDS).lean().maxTimeMS(DB_TIMEOUT_MS).catch(() => null);
+  return spec
+    ? { world, name, className: spec.characterClass || "", level: spec.characterLevel || 0, power: spec.combatPower || 0, attackType: spec.attackType || "", found: true }
+    : base;
+}
+
+/** 두 캐릭터 궁합 → { match: { score, line, points, a, b } } */
+async function characterMatch({ a, b }) {
+  if (a.world === b.world && a.name === b.name) throw new ArcadeError(400, "SAME", "서로 다른 두 캐릭터를 넣어 주세요.");
+  const [left, right] = await Promise.all([findWho(a.world, a.name), findWho(b.world, b.name)]);
+  const score = matchScore(a, b);
+  return { match: { score, line: lineOf(score), points: matchPoints(left, right), a: left, b: right } };
+}
+
+module.exports = { ArcadeError, startGame, leaderboard, submitScore, megaphones, postMegaphone, fortune, characterMatch, MESSAGE_MAX, NAME_MAX, NICKNAME_MAX };

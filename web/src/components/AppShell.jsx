@@ -26,7 +26,8 @@ const NAV = [
       { label: "아이템 랭킹", href: "/ranking?view=item" },
       { label: "스펙 랭킹", href: "/ranking?view=spec" },
       { label: "장비 검색", href: urls.itemSearch },
-      { label: "명예의 전당", href: urls.hall }
+      { label: "명예의 전당", href: urls.hall },
+      { label: "강화 소식", href: urls.news }
     ]
   },
   {

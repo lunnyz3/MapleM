@@ -3,6 +3,7 @@ const { connectMongo } = require("./src/config/mongo");
 const { env } = require("./src/config/env");
 const { itemCollector } = require("./src/jobs/item-collection.job");
 const { hallOfFame } = require("./src/services/stats.service");
+const { upgradeNews } = require("./src/services/news.service");
 
 const app = createApp();
 
@@ -16,6 +17,8 @@ app.listen(env.port, (error) => {
   connectMongo();
   // 명예의 전당은 계산에 몇 초 걸려 미리 만들어 둔다.
   setTimeout(() => hallOfFame().catch(() => {}), 60000).unref();
+  // 오늘의 강화 소식(첫 화면 카드·전광판 축하 문구)도 미리
+  setTimeout(() => upgradeNews().catch(() => {}), 20000).unref();
   if (env.itemCollectionEnabled && env.nexonApiKey) {
     itemCollector.start();
   }

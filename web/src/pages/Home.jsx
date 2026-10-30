@@ -10,6 +10,7 @@ import { Aurora, CountUp, Particles, Tilt, spotlightHandlers } from "../componen
 import { RankBadge } from "../components/RankBadge.jsx";
 import { RankChange } from "../components/RankChange.jsx";
 import { Megaphone } from "../components/Megaphone.jsx";
+import { UpgradeNewsCard } from "../components/UpgradeNews.jsx";
 import { SearchBox, requestSearchFocus } from "../components/SearchBox.jsx";
 import { SkeletonList } from "../components/Skeleton.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
@@ -462,6 +463,7 @@ export function Home() {
         <MyCharacters />
       </div>
       <div class="home-data">
+        <UpgradeNewsCard />
         <RankingPreview />
         <RankingShortcuts />
         <NewsCard />

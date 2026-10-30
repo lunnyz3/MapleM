@@ -1327,9 +1327,144 @@
   text-align: center;
 }
 
+/* ================= 캐릭터 궁합 ================= */
+.card.arc-match__form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 14px;
+}
+
+.arc-match__field {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.arc-match__and {
+  color: #ff6b8b;
+}
+
+.arc-match__go {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-width: 200px;
+}
+
+.card.arc-match {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 22px 18px;
+  background:
+    radial-gradient(90% 70% at 50% 0%, var(--peach-bg), transparent 65%),
+    var(--surface);
+  animation: game-card-in 360ms var(--ease-spring) both;
+}
+
+.arc-match__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+}
+
+.arc-match__side {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 0;
+  color: var(--text);
+  text-align: center;
+  text-decoration: none;
+}
+
+.arc-match__side strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arc-match__meta {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+.arc-match__heart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: #ff6b8b;
+  animation: arc-beat 1.2s var(--ease) infinite;
+}
+
+.arc-match__heart strong {
+  position: absolute;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.arc-match__heart small {
+  font-size: 12px;
+}
+
+.arc-match__line {
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 800;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.arc-match__points {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arc-match__points li {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+@keyframes arc-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.1);
+  }
+  30% {
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .arc-lobby > li,
   .arc-react__cube,
+  .arc-match__heart,
   .card.arc-over,
   .card.arc-quiz,
   .arc-star.is-miss .arc-star__bar {
@@ -1403,6 +1538,22 @@
 
   .card.arc-fortune__form {
     grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .card.arc-match__form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arc-match__field {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+
+  .arc-match__and {
+    justify-self: center;
+  }
+
+  .arc-match__go {
+    width: 100%;
   }
 
   .arc-fortune__form .btn {

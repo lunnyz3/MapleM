@@ -23,6 +23,7 @@ import { copyText } from "../lib/share.js";
 import { Fortune } from "./game/Fortune.jsx";
 import { ItemCatch } from "./game/ItemCatch.jsx";
 import { ItemQuiz } from "./game/ItemQuiz.jsx";
+import { Match } from "./game/Match.jsx";
 import { Memory } from "./game/Memory.jsx";
 import { Merge } from "./game/Merge.jsx";
 import { Reaction } from "./game/Reaction.jsx";
@@ -38,6 +39,7 @@ const HINTS = 3;
 // key: 이 브라우저 최고 기록(없으면 기록 없는 놀이)
 const GAMES = [
   { mode: "fortune", title: "오늘의 운세", line: "캐릭터 이름으로 보는 오늘의 메이플 운", icon: "sun", tone: "peach", key: "" },
+  { mode: "match", title: "캐릭터 궁합", line: "두 캐릭터의 메이플 궁합 보기", icon: "heart", tone: "lavender", key: "" },
   { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY },
   { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY },
   { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction" },
@@ -762,6 +764,7 @@ export function Game() {
   else if (mode === "simon") content = <Simon />;
   else if (mode === "typing") content = <Typing />;
   else if (mode === "fortune") content = <Fortune />;
+  else if (mode === "match") content = <Match />;
 
   return (
     <div class={`game game--${mode}`}>

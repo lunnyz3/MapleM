@@ -6,7 +6,7 @@ const { CharacterSpec } = require("../models/character-spec.model");
 const { EquipmentItem } = require("../models/equipment-item.model");
 const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-meta");
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
-const { fairCharacters, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
+const { fairCharacters, fairRatio, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
 const { buildCard, cardScale } = require("../domain/stats/character-card");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
@@ -420,6 +420,69 @@ async function gameItems() {
   );
 }
 
+// ---------------- 스펙 쌍둥이 ----------------
+
+const TWIN_FIELDS = { _id: 0, ocid: 1, characterName: 1, worldName: 1, characterClass: 1, characterLevel: 1, combatPower: 1, itemScore: 1, potential: 1, additionalPotential: 1 };
+const TWIN_COUNT = 6;
+const TWIN_BAND = 0.08;
+
+/** 템환산·잠재·에디·레벨이 얼마나 다른지(0 이면 같다). */
+function twinDistance(me, other) {
+  return (
+    Math.abs(other.itemScore - me.itemScore) / Math.max(1, me.itemScore) +
+    Math.abs((other.potential || 0) - (me.potential || 0)) / Math.max(20, me.potential || 0) +
+    Math.abs((other.additionalPotential || 0) - (me.additionalPotential || 0)) / Math.max(20, me.additionalPotential || 0) +
+    Math.abs((other.characterLevel || 0) - (me.characterLevel || 0)) / 20
+  );
+}
+
+/**
+ * 스펙 쌍둥이: 같은 직업에서 템환산(±8%)·잠재·에디·레벨이 가장 비슷한 캐릭터 6명과 그 전투력.
+ * → { me, twins: [{ world, name, className, level, power, itemScore, potential, additionalPotential }] }
+ */
+async function specTwins({ ocid = "" } = {}) {
+  const key = String(ocid || "").trim();
+  if (!OCID_PATTERN.test(key) || !isMongoConnected()) return { me: null, twins: [] };
+  const me = await CharacterSpec.findOne({ ocid: key, scoreVersion: SCORE_VERSION }, TWIN_FIELDS).lean().maxTimeMS(TIMEOUT_MS);
+  if (!me?.characterClass || !(me.itemScore > 0)) return { me: null, twins: [] };
+  const [rows, medians] = await Promise.all([
+    CharacterSpec.find(
+      {
+        scoreVersion: SCORE_VERSION,
+        itemScore: { $gte: me.itemScore * (1 - TWIN_BAND), $lte: me.itemScore * (1 + TWIN_BAND) },
+        characterClass: me.characterClass,
+        ocid: { $ne: key }
+      },
+      TWIN_FIELDS
+    )
+      .lean()
+      .maxTimeMS(TIMEOUT_MS),
+    gamePeers()
+  ]);
+  // 비슷한 장비보다 한참 낮은 전투력(사냥 프리셋으로 잰 값)은 모른다(0)로 둔다
+  const powerOf = (row) => {
+    const ratio = fairRatio(row, medians);
+    return row.combatPower > 0 && (ratio === null || ratio >= 0.6) ? row.combatPower : 0;
+  };
+  const view = (row) => ({
+    world: row.worldName,
+    name: row.characterName,
+    className: row.characterClass,
+    level: row.characterLevel,
+    power: powerOf(row),
+    itemScore: row.itemScore,
+    potential: row.potential,
+    additionalPotential: row.additionalPotential
+  });
+  const twins = rows
+    .filter((row) => row.characterName)
+    .map((row) => ({ row, distance: twinDistance(me, row) }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, TWIN_COUNT)
+    .map(({ row }) => view(row));
+  return { me: view(me), twins };
+}
+
 // ---------------- 캐릭터 카드 ----------------
 
 const CARD_TTL_MS = 6 * 60 * 60 * 1000;
@@ -469,4 +532,4 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, TOP_CHOICES };
