@@ -1,7 +1,11 @@
-/* 누가 더 셀까?(/game) */
+/* 미니게임(/game): 누가 더 셀까? · 전투력 맞히기 */
 .game {
   display: grid;
   gap: var(--sp-4);
+}
+
+.game-modes {
+  justify-self: start;
 }
 
 .card.game-score {
@@ -38,16 +42,14 @@
   position: relative;
   display: grid;
   align-content: start;
-  gap: 6px;
-  width: 100%;
+  gap: 10px;
+  min-width: 0;
   padding: 18px;
   border: 2px solid var(--border);
   border-radius: var(--radius-hero);
   background: radial-gradient(120% 80% at 100% 0%, var(--sky-bg), transparent 60%), var(--surface);
   box-shadow: var(--shadow-2);
   color: var(--text);
-  font: inherit;
-  text-align: left;
   animation: game-card-in 360ms var(--ease-spring) both;
 }
 
@@ -55,21 +57,21 @@
   animation-delay: 80ms;
 }
 
-button.game-card {
+.game-card.is-pickable {
   cursor: pointer;
   transition:
     transform var(--dur-hover) var(--ease),
     border-color var(--dur-hover) var(--ease);
 }
 
-button.game-card:hover,
-button.game-card:focus-visible {
+.game-card.is-pickable:hover,
+.game-card.is-pickable:focus-within {
   border-color: var(--primary);
   transform: translateY(-2px);
 }
 
-button.game-card:active {
-  transform: scale(0.98);
+.game-card.is-pickable:active {
+  transform: scale(0.99);
 }
 
 .game-card.is-win {
@@ -80,7 +82,7 @@ button.game-card:active {
 }
 
 .game-card.is-lose {
-  opacity: 0.78;
+  opacity: 0.82;
 }
 
 .game-card.is-picked.is-lose {
@@ -88,17 +90,25 @@ button.game-card:active {
   opacity: 1;
 }
 
+.game-card__who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
 .game-card__world {
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  flex-basis: 100%;
   color: var(--text-subtle);
   font-size: var(--fs-12);
   font-weight: 700;
 }
 
 .game-card__job {
-  font-size: clamp(18px, 2.6vw, 24px);
+  font-size: clamp(18px, 2.4vw, 22px);
   line-height: 1.2;
   word-break: keep-all;
 }
@@ -108,31 +118,21 @@ button.game-card:active {
   font-weight: 800;
 }
 
-.game-card__stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin: 6px 0 0;
-}
-
-.game-card__stats > div {
-  display: grid;
-  gap: 1px;
-  padding: 8px 10px;
+.game-card__spec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 8px 12px;
   border-radius: 12px;
-  background: var(--surface-soft);
-}
-
-.game-card__stats dt {
-  color: var(--text-subtle);
-  font-size: var(--fs-12);
+  background: var(--gold-bg);
+  color: var(--text-muted);
+  font-size: var(--fs-14);
   font-weight: 700;
 }
 
-.game-card__stats dd {
-  margin: 0;
-  font-weight: 800;
-  white-space: nowrap;
+.game-card__spec strong {
+  color: var(--text);
 }
 
 .game-card__cta {
@@ -140,12 +140,15 @@ button.game-card:active {
   gap: 8px;
   align-items: center;
   justify-content: center;
-  margin-top: 8px;
+  min-height: 44px;
   padding: 10px;
+  border: 0;
   border-radius: 12px;
   background: var(--primary-soft);
   color: var(--primary-strong);
+  font: inherit;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .game-card__key {
@@ -161,7 +164,6 @@ button.game-card:active {
 .game-card__reveal {
   display: grid;
   gap: 2px;
-  margin-top: 8px;
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--surface-soft);
@@ -180,9 +182,124 @@ button.game-card:active {
   display: inline-flex;
   gap: 2px;
   align-items: center;
+  justify-self: start;
+  min-height: 32px;
   color: var(--primary-strong);
   font-weight: 800;
   text-decoration: none;
+}
+
+/* 장비창 */
+.game-gear {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 10px;
+  list-style: none;
+  border-radius: 16px;
+  background:
+    radial-gradient(60% 50% at 50% 45%, var(--sky-bg), transparent 70%),
+    var(--surface-soft);
+}
+
+.game-gear .is-rare {
+  --g: #4ea3ff;
+}
+
+.game-gear .is-epic {
+  --g: #b36bff;
+}
+
+.game-gear .is-unique {
+  --g: #ffc933;
+}
+
+.game-gear .is-legendary {
+  --g: #7ee05c;
+}
+
+.game-gear__slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 1.5px solid color-mix(in srgb, var(--g, var(--border)) 55%, var(--border));
+  border-radius: 12px;
+  background:
+    radial-gradient(80% 80% at 50% 30%, color-mix(in srgb, var(--g, transparent) 18%, transparent), transparent),
+    var(--surface);
+  animation: game-slot-in 420ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--stagger, 0) * 16ms);
+}
+
+.game-gear__slot.is-loading {
+  border-style: dashed;
+  background: var(--surface);
+  animation: none;
+}
+
+.game-gear__img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.game-gear__star {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  padding: 0 3px;
+  border-radius: 5px;
+  background: rgba(23, 26, 48, 0.82);
+  color: #ffd748;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.game-gear__pot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 13px;
+  height: 13px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.game-gear__note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 24px 12px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.game-tools {
+  display: flex;
+  justify-content: center;
+}
+
+.game-tools .num {
+  color: var(--text-muted);
+}
+
+/* 결과 줄(누가 더 셀까?) */
+.card.game-result,
+.card.game-guess.is-revealed {
+  scroll-margin-bottom: calc(var(--tabbar-h) + 16px);
 }
 
 .card.game-result {
@@ -214,6 +331,305 @@ button.game-card:active {
   margin-left: auto;
 }
 
+/* 전투력 맞히기 */
+.game-solo {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.game-solo .game-gear {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  max-width: 600px;
+}
+
+.card.game-guess {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px;
+  text-align: center;
+  animation: game-card-in 300ms var(--ease-spring) both;
+}
+
+/* 답을 고르는 동안에는 화면 아래에 붙어 장비창을 보면서 움직일 수 있다 */
+.card.game-guess:not(.is-revealed) {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  box-shadow: var(--shadow-pop);
+}
+
+.game-guess__label {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.game-guess__value {
+  font-size: clamp(26px, 5vw, 36px);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.game-guess__slider {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.game-range {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.game-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sky-bg), var(--primary-soft));
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.game-range::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sky-bg), var(--primary-soft));
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.game-range::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  margin-top: -10px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: var(--shadow-2);
+  appearance: none;
+}
+
+.game-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: var(--shadow-2);
+}
+
+.game-range:focus-visible {
+  outline: none;
+}
+
+.game-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.game-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.game-guess__ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -6px;
+  padding: 0 54px;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.game-guess__submit {
+  justify-self: center;
+  min-width: 200px;
+}
+
+.game-guess__answer {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+
+.game-guess__answer .game-guess__value {
+  color: var(--success);
+}
+
+.game-guess__answer .game-card__name {
+  justify-self: center;
+}
+
+.game-guess__mine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  justify-content: center;
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.game-guess__points {
+  color: var(--primary-strong);
+  font-size: var(--fs-18);
+}
+
+/* 내 답과 정답을 찍는 줄(로그 눈금) */
+.game-line {
+  position: relative;
+  height: 46px;
+  margin: 0 18px;
+}
+
+.game-line__track {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.game-line__gap {
+  position: absolute;
+  top: 30px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warning) 55%, transparent);
+}
+
+.game-line__pin {
+  position: absolute;
+  top: 26px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.game-line__pin > span {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.game-line__pin.is-guess {
+  background: var(--primary);
+}
+
+.game-line__pin.is-guess > span {
+  color: var(--primary-strong);
+}
+
+.game-line__pin.is-actual {
+  background: var(--success);
+}
+
+.game-line__pin.is-actual > span {
+  bottom: auto;
+  top: 16px;
+  color: var(--success);
+}
+
+.game-line {
+  margin-bottom: 14px;
+}
+
+/* 다섯 문제 합계 */
+.card.game-summary {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px;
+  animation: game-card-in 300ms var(--ease-spring) both;
+}
+
+.game-summary__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.game-summary__title {
+  font-size: var(--fs-22);
+  font-weight: 900;
+}
+
+.game-summary__total {
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 900;
+}
+
+.game-summary__total small {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.game-summary__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-summary__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.game-summary__who {
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.game-summary__who .num {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.game-summary__nums {
+  display: grid;
+  justify-items: end;
+  font-weight: 800;
+}
+
+.game-summary__nums span {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.game-summary__list strong {
+  min-width: 56px;
+  color: var(--primary-strong);
+  text-align: right;
+}
+
 @keyframes game-card-in {
   from {
     opacity: 0;
@@ -221,14 +637,38 @@ button.game-card:active {
   }
 }
 
+@keyframes game-slot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .game-card,
-  .card.game-result {
+  .game-gear__slot,
+  .card.game-result,
+  .card.game-guess,
+  .card.game-summary {
     animation: none;
   }
 }
 
+@media (max-width: 720px) {
+  .game-solo .game-gear {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 560px) {
+  .game .page-head--rank {
+    padding-block: var(--sp-4);
+  }
+
+  .game-modes {
+    justify-self: stretch;
+  }
+
   .card.game-score {
     gap: var(--sp-4);
     font-size: var(--fs-14);
@@ -244,26 +684,44 @@ button.game-card:active {
   }
 
   .game-card {
-    gap: 4px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
     border-radius: 18px;
   }
 
-  .game-card__stats {
-    grid-template-columns: minmax(0, 1fr);
+  .game-arena .game-gear {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
   }
 
-  .game-card__stats > div {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 6px;
-    align-items: baseline;
+  .game-arena .game-gear__slot {
+    border-radius: 8px;
+  }
+
+  .game-arena .game-gear__img {
+    width: 80%;
+    height: 80%;
+  }
+
+  .game-arena .game-gear__pot {
+    width: 11px;
+    height: 11px;
+  }
+
+  .game-arena .game-gear__star {
+    left: 1px;
+    bottom: 1px;
+    padding: 0 2px;
+    line-height: 13px;
+  }
+
+  .game-card__spec {
+    flex-direction: column;
+    gap: 2px;
     padding: 6px 8px;
-  }
-
-  .game-card__stats dd {
-    text-align: right;
-    font-size: var(--fs-14);
+    font-size: var(--fs-12);
   }
 
   .game-card__cta {
@@ -273,6 +731,10 @@ button.game-card:active {
 
   .game-card__key {
     display: none;
+  }
+
+  .game-card__power {
+    font-size: var(--fs-18);
   }
 
   .card.game-result {
@@ -286,5 +748,53 @@ button.game-card:active {
   .game-result__actions > .btn {
     flex: 1;
     justify-content: center;
+  }
+
+  .card.game-guess,
+  .card.game-summary {
+    padding: 14px;
+  }
+
+  .card.game-guess:not(.is-revealed) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 10px 12px 12px;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 8px);
+    text-align: left;
+  }
+
+  .card.game-guess:not(.is-revealed) .game-guess__label {
+    font-size: var(--fs-12);
+  }
+
+  .card.game-guess:not(.is-revealed) .game-guess__value {
+    grid-column: 1;
+    font-size: var(--fs-22);
+  }
+
+  .card.game-guess:not(.is-revealed) .game-guess__slider,
+  .card.game-guess:not(.is-revealed) .game-guess__ticks {
+    grid-column: 1 / -1;
+  }
+
+  .card.game-guess:not(.is-revealed) .game-guess__submit {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: auto;
+    min-width: 0;
+  }
+
+  .game-guess__ticks {
+    padding: 0 48px;
+  }
+
+  .game-guess__submit {
+    width: 100%;
+  }
+
+  .game-summary__list li {
+    gap: 8px;
+    padding: 8px 10px;
   }
 }

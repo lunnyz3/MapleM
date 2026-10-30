@@ -11,7 +11,7 @@ const STATIC_PAGES = {
   "/": { title: SITE, description: DEFAULT_DESCRIPTION },
   "/ranking": { title: "랭킹", description: "메이플스토리M 전투력·레벨 공식 랭킹과 템환산·잠재·에디 스펙 랭킹, 제네시스·아케인셰이드 아이템 랭킹." },
   "/stats": { title: "통계", description: "메이플스토리M 전투력 상위 캐릭터의 직업별 인원·평균 전투력·템환산, 직업별 상위 100명의 무기 잠재·에디·추옵과 장신구, 레벨 분포." },
-  "/game": { title: "누가 더 셀까?", description: "메이플스토리M 캐릭터 둘 중 전투력이 더 높은 쪽을 맞히는 미니게임. 연속 기록에 도전하세요." },
+  "/game": { title: "미니게임", description: "메이플스토리M 장비창만 보고 누가 더 센지, 전투력이 얼마인지 맞히는 미니게임. 연속 기록과 점수에 도전하세요." },
   "/hall": { title: "명예의 전당", description: "메이플스토리M 전투력·템환산·무기 잠재·추옵·최종 대미지 추옵 최고 기록 보유자." },
   "/calc": { title: "계산기", description: "메이플스토리M HEXA 강화 기간, HEXA 스탯 기댓값, 심볼 비용, 무기 해방 날짜 계산기." },
   "/compare": { title: "캐릭터 비교", description: "메이플스토리M 두 캐릭터의 전투력·스탯·장비 템환산 비교." },

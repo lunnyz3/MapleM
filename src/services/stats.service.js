@@ -6,6 +6,7 @@ const { CharacterSpec } = require("../models/character-spec.model");
 const { EquipmentItem } = require("../models/equipment-item.model");
 const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-meta");
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
+const { fairCharacters, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
 
@@ -280,41 +281,111 @@ async function hallOfFame() {
   return hall.value || hall.pending;
 }
 
-// ---------------- 누가 더 셀까?(미니게임) ----------------
+// ---------------- 미니게임 ----------------
 
 const GAME_POOL_SIZE = 300;
 const GAME_MIN_POWER = 1e7;
+// 예상 전투력(템환산·레벨이 비슷한 캐릭터의 전투력 중앙값)을 낼 무리. 6시간마다 다시 센다.
+const GAME_PEER_MIN_POWER = 3e6;
+const GAME_PEERS_TTL_MS = 6 * 60 * 60 * 1000;
 const GAME_TTL_MS = 10 * 60 * 1000;
+const GAME_FIELDS = {
+  _id: 0,
+  ocid: 1,
+  characterName: 1,
+  worldName: 1,
+  characterClass: 1,
+  characterLevel: 1,
+  combatPower: 1,
+  itemScore: 1,
+  potential: 1,
+  additionalPotential: 1,
+  maxDamage: 1
+};
+const GEAR_FIELDS = {
+  _id: 0,
+  score: 1,
+  starforce: 1,
+  "item.item_equipment_slot_name": 1,
+  "item.item_name": 1,
+  "item.item_icon": 1,
+  "item.item_grade": 1,
+  "item.starforce_upgrade": 1,
+  "item.item_potential_option": 1,
+  "item.item_potential_option_grade": 1,
+  "item.item_additional_potential_option": 1,
+  "item.item_additional_potential_option_grade": 1
+};
+const OCID_PATTERN = /^[0-9a-f]{16,96}$/i;
+// 캐릭터마다 하나씩 쌓이므로 통계 캐시와 따로 둔다.
+const gearCache = new TtlLruCache({ maxEntries: 1000, maxBytes: 6 * 1024 * 1024 });
 
-/** 전투력 1천만 이상인 캐릭터를 무작위로 300명(10분마다 새로). 화면이 둘씩 짝지어 묻는다. */
+function gamePeers() {
+  return cached(
+    "game-peers",
+    async () =>
+      peerMedians(
+        await CharacterSpec.find(
+          { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_PEER_MIN_POWER }, itemScore: { $gt: 0 } },
+          { _id: 0, itemScore: 1, characterLevel: 1, combatPower: 1 }
+        )
+          .lean()
+          .maxTimeMS(TIMEOUT_MS)
+      ),
+    GAME_PEERS_TTL_MS,
+    256 * 1024
+  );
+}
+
+/**
+ * 전투력 1천만 이상이고 장비에 맞는 전투력(사냥 프리셋으로 잰 값이 아닌)인 캐릭터를 무작위로 300명(10분마다 새로).
+ * 화면이 이 무리에서 문제를 내고, id 로 장비창(gameGear)을 읽는다.
+ */
 async function gamePool() {
   if (!isMongoConnected()) return { pool: [] };
   return cached(
     "game-pool",
     async () => {
+      const medians = await gamePeers();
       const rows = await CharacterSpec.aggregate([
-        { $match: { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_MIN_POWER } } },
-        { $sample: { size: GAME_POOL_SIZE } },
-        {
-          $project: {
-            _id: 0,
-            name: "$characterName",
-            world: "$worldName",
-            className: "$characterClass",
-            level: "$characterLevel",
-            power: "$combatPower",
-            itemScore: 1,
-            potential: 1,
-            additionalPotential: 1,
-            maxDamage: 1
-          }
-        }
+        { $match: { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_MIN_POWER }, itemScore: { $gt: 0 } } },
+        { $sample: { size: GAME_POOL_SIZE * 4 } },
+        { $project: GAME_FIELDS }
       ]).option({ maxTimeMS: TIMEOUT_MS });
-      return { pool: rows.filter((row) => row.name && row.power > 0) };
+      const unique = [...new Map(rows.filter((row) => row.ocid && row.characterName).map((row) => [row.ocid, row])).values()];
+      const pool = sampleOf(fairCharacters(unique, medians, GAME_MIN_POWER), GAME_POOL_SIZE).map((row) => ({
+        id: row.ocid,
+        name: row.characterName,
+        world: row.worldName,
+        className: row.characterClass,
+        level: row.characterLevel,
+        power: row.combatPower,
+        itemScore: row.itemScore,
+        potential: row.potential,
+        additionalPotential: row.additionalPotential,
+        maxDamage: row.maxDamage
+      }));
+      return { pool };
     },
     GAME_TTL_MS,
-    64 * 1024
+    96 * 1024
   );
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, TOP_CHOICES };
+/** 캐릭터(최대 둘)의 장비창. → { gear: { [id]: [{ slot, name, icon, star, grade, potential, additional }] } } */
+async function gameGear(ids) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || "").trim()).filter((id) => OCID_PATTERN.test(id)))].slice(0, 2);
+  if (!list.length || !isMongoConnected()) return { gear: {} };
+  const entries = await Promise.all(
+    list.map(async (ocid) => {
+      const hit = gearCache.get(ocid);
+      if (hit) return [ocid, hit];
+      const gear = gearWindow(await EquipmentItem.find({ ocid, scoreVersion: SCORE_VERSION }, GEAR_FIELDS).lean().maxTimeMS(TIMEOUT_MS));
+      gearCache.set(ocid, gear, GAME_TTL_MS, 4 * 1024);
+      return [ocid, gear];
+    })
+  );
+  return { gear: Object.fromEntries(entries) };
+}
+
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, TOP_CHOICES };

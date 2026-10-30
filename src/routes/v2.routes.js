@@ -2,7 +2,7 @@ const express = require("express");
 const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2.controller");
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getNotices } = require("../controllers/notices-v2.controller");
-const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getGamePool } = require("../controllers/stats-page-v2.controller");
+const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getGamePool, getGameGear } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
 const {
@@ -43,6 +43,7 @@ router.get("/stats/job-meta", getJobMeta);
 router.get("/stats/hall-of-fame", getHallOfFame);
 router.get("/stats/job-top", getJobTop);
 router.get("/game/pool", getGamePool);
+router.get("/game/gear", getGameGear);
 router.get("/item-collection", (req, res) => res.json({ ok: true, ...itemCollector.getStatus() }));
 
 module.exports = { v2Router: router };
