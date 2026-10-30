@@ -8,6 +8,10 @@ const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-me
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { fairCharacters, fairRatio, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
 const { buildCard, cardScale } = require("../domain/stats/character-card");
+const { classRatios, tierList, worldBoard } = require("../domain/stats/tiers");
+const { reachShares } = require("../domain/stats/boss-reach");
+const bossEntry = require("../game-data/boss-entry.json");
+const { allowedWorldNames } = require("../config/worlds");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
 
@@ -420,6 +424,74 @@ async function gameItems() {
   );
 }
 
+// ---------------- 직업 티어 · 월드 대항전 ----------------
+
+/** 같은 템 대비 전투력(직업별, 전체·월드별). 미니게임 예상 전투력과 같은 무리로 6시간마다 다시 센다. */
+function classEfficiency() {
+  return cached(
+    "class-efficiency",
+    async () => {
+      const rows = await CharacterSpec.find(
+        { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_PEER_MIN_POWER }, itemScore: { $gt: 0 } },
+        { _id: 0, itemScore: 1, characterLevel: 1, combatPower: 1, characterClass: 1, worldName: 1 }
+      )
+        .lean()
+        .maxTimeMS(TIMEOUT_MS);
+      return classRatios(rows, peerMedians(rows));
+    },
+    GAME_PEERS_TTL_MS,
+    64 * 1024
+  );
+}
+
+/**
+ * 직업 티어표(월드를 고르면 그 월드만). basis "power" = 상위 100명 평균 전투력(직업 메타와 같은 묶음, 1시간 보관),
+ * "gear" = 같은 템 대비 전투력.
+ */
+async function jobTiers({ worldName = "", basis = "power" } = {}) {
+  const byGear = basis === "gear";
+  if (!isMongoConnected()) return { basis: byGear ? "gear" : "power", tiers: [] };
+  const groups = await topByClass(worldName);
+  if (!byGear) return { basis: "power", tiers: tierList(groups) };
+  const ratios = (await classEfficiency())[worldName] || {};
+  return { basis: "gear", tiers: tierList(groups.map((group) => ({ ...group, gear: ratios[group.className] || null })), "gear") };
+}
+
+const WORLD_TOP = 100;
+const WORLD_CUT = 1000;
+
+/** 월드 대항전: 월드마다 상위 100명(색인 {scoreVersion, worldName, combatPower})·1,000위 전투력과 모은 수, 1시간 보관. */
+async function worldStats() {
+  if (!isMongoConnected()) return { worlds: [] };
+  return cached(
+    "world-board",
+    async () => {
+      const worlds = await Promise.all(
+        allowedWorldNames.map(async (world) => {
+          const match = { scoreVersion: SCORE_VERSION, worldName: world, combatPower: { $gt: 0 } };
+          const [top, cut, count] = await Promise.all([
+            CharacterSpec.find(match, { _id: 0, characterName: 1, characterClass: 1, combatPower: 1, itemScore: 1 })
+              .sort({ combatPower: -1 })
+              .limit(WORLD_TOP)
+              .lean()
+              .maxTimeMS(TIMEOUT_MS),
+            CharacterSpec.findOne(match, { _id: 0, combatPower: 1 })
+              .sort({ combatPower: -1 })
+              .skip(WORLD_CUT - 1)
+              .lean()
+              .maxTimeMS(TIMEOUT_MS),
+            CharacterSpec.countDocuments(match).maxTimeMS(TIMEOUT_MS)
+          ]);
+          return { world, count, top, cut1000: cut?.combatPower || 0 };
+        })
+      );
+      return { worlds: worldBoard(worlds) };
+    },
+    META_TTL_MS,
+    32 * 1024
+  );
+}
+
 // ---------------- 스펙 쌍둥이 ----------------
 
 const TWIN_FIELDS = { _id: 0, ocid: 1, characterName: 1, worldName: 1, characterClass: 1, characterLevel: 1, combatPower: 1, itemScore: 1, potential: 1, additionalPotential: 1 };
@@ -439,6 +511,32 @@ async function plausiblePowers(rows) {
     const ratio = fairRatio(row, medians);
     return row.combatPower > 0 && (ratio === null || ratio >= PLAUSIBLE_RATIO) ? row.combatPower : 0;
   });
+}
+
+/** 보스 입장 가능 비율: 모은 캐릭터(사냥 프리셋으로 잰 듯한 전투력은 뺌) 중 보스마다 레벨·전투력이 되는 비율. 6시간 보관. */
+async function bossReach() {
+  if (!isMongoConnected()) return { total: 0, bosses: [] };
+  return cached(
+    "boss-reach",
+    async () => {
+      const [rows, medians] = await Promise.all([
+        CharacterSpec.find(
+          { scoreVersion: SCORE_VERSION, combatPower: { $gt: 0 }, characterLevel: { $gt: 0 } },
+          { _id: 0, combatPower: 1, characterLevel: 1, itemScore: 1 }
+        )
+          .lean()
+          .maxTimeMS(TIMEOUT_MS),
+        gamePeers()
+      ]);
+      const plausible = (row) => {
+        const ratio = fairRatio(row, medians);
+        return ratio === null || ratio >= PLAUSIBLE_RATIO;
+      };
+      return reachShares(rows, plausible, bossEntry.bosses);
+    },
+    GAME_PEERS_TTL_MS,
+    16 * 1024
+  );
 }
 
 /** 템환산·잠재·에디·레벨이 얼마나 다른지(0 이면 같다). */
@@ -541,4 +639,4 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, jobTiers, worldStats, bossReach, TOP_CHOICES };

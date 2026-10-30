@@ -36,3 +36,26 @@ test("스펙업 추천: 교체는 두 장비의 옵션 차이, 오르는 것만 
     [0.05, 0.01]
   );
 });
+
+test("스펙업 추천: 강화 비용은 강화 계산기와 같은 기댓값, 1회당 순으로도 줄 세운다", async () => {
+  const { withStarCost, rankPlans } = await load();
+  const { starforceExpectation } = await import("../web/src/lib/enhanceCalc.mjs");
+  const rules = require("../src/game-data/enhance.json");
+  const easy = withStarCost({ item: { starforceUpgrade: "0" }, toStar: 1, gain: 0.01 }, rules);
+  assert.equal(easy.tries, 1);
+  assert.equal(easy.destroyChance, 0);
+  assert.equal(easy.perTry, 0.01);
+  const hard = withStarCost({ item: { starforceUpgrade: "24" }, toStar: 25, gain: 0.05 }, rules);
+  const expected = starforceExpectation(rules, 24, 25);
+  assert.equal(hard.tries, expected.tries);
+  assert.ok(hard.destroyChance > 0);
+  assert.ok(Math.abs(hard.perTry - 0.05 / expected.tries) < 1e-12);
+  assert.deepEqual(
+    rankPlans([hard, easy], 10, "perTry").map((plan) => plan.toStar),
+    [1, 25]
+  );
+  assert.deepEqual(
+    rankPlans([easy, hard]).map((plan) => plan.toStar),
+    [25, 1]
+  );
+});

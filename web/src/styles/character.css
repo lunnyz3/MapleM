@@ -2790,6 +2790,63 @@ button.eq-slot:hover .eq-slot__img {
   font-weight: 600;
 }
 
+.boss-summary__force {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.boss-force {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--lavender-bg);
+  color: var(--lavender-ink);
+}
+
+.boss-force p {
+  margin: 0;
+}
+
+.boss-force__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  font-weight: 700;
+}
+
+.boss-force__title strong {
+  font-weight: 900;
+}
+
+.boss-force__have,
+.boss-force__cost {
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.boss-force__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boss-force__steps li {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
 .boss-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2804,7 +2861,8 @@ button.eq-slot:hover .eq-slot__img {
   grid-template-columns: minmax(0, 1fr) auto auto;
   grid-template-areas:
     "name need state"
-    "bar bar bar";
+    "bar bar bar"
+    "reach reach reach";
   gap: 6px 10px;
   align-items: center;
   padding: 10px 12px;
@@ -2851,6 +2909,14 @@ button.eq-slot:hover .eq-slot__img {
 
 .boss-row__need .is-short {
   color: #e0663f;
+}
+
+.boss-row__reach {
+  grid-area: reach;
+  margin-top: -2px;
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .boss-row__bar {
@@ -3394,6 +3460,38 @@ button.eq-slot:hover .eq-slot__img {
 .rec-journal__empty {
   padding: 18px 0;
   text-align: center;
+}
+
+/* 공식 랭킹 1년 기록 */
+.rec-rank__open {
+  justify-self: start;
+}
+
+.rec-rank__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.rec-rank__summary strong {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.rec-rank__value {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+}
+
+.rec-rank__count {
+  margin-left: auto;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
 }
 
 .rec-journal__note {
@@ -4414,7 +4512,8 @@ a.jobtop__leader {
     grid-template-areas:
       "name state"
       "need need"
-      "bar bar";
+      "bar bar"
+      "reach reach";
   }
 
   .boss-row__name {
@@ -4840,6 +4939,23 @@ a.jobtop__leader {
 
 .upgrades__kinds {
   margin-bottom: 10px;
+}
+
+.upgrades__sorts .segmented__option {
+  font-size: var(--fs-12);
+}
+
+.upgrades__cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.upgrades__cost .is-risk {
+  color: var(--danger);
 }
 
 .upgrades__owner {

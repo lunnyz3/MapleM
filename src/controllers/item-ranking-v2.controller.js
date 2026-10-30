@@ -8,10 +8,12 @@
 //       c = "potential:물리 대미지:50|additional:최종 대미지:6" (묶음:옵션:값 합 이상, 최대 3개) → { ok, rows, page, hasMore, partial }
 //       나보다 좋은 장비: above=점수(이보다 높은 것만) &order=near(가까운 것부터) &exact=1(name 과 같은 이름만) &not=ocid(이 캐릭터 장비 빼기)
 //   GET /api/v2/spec-ranking?metric=&world_name=&class=&page=
-//   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, itemScore, … }] }
+//   POST /api/v2/specs { world_name, names: [] }        → { ok, specs: [{ characterName, combatPower, power, itemScore, … }] }
+//                                                           power: 사냥 프리셋으로 잰 듯한 전투력은 0(모름)
 //   GET /api/v2/spec-summary?world_name=&character_name= → { ok, spec, ranks: { itemScore: { rank, total }, … } }
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
 //   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
+//   GET /api/v2/ranking-history?ocid=&type=power|level   → { ok, type, points: [{ date, ranking, value }] } (넥슨 과거 랭킹 약 16일)
 //   GET /api/v2/collection-summary                        → { ok, characters } (모은 캐릭터 수)
 const { normalizeWorldName } = require("../config/worlds");
 const {
@@ -31,6 +33,8 @@ const {
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
 const { findRecord, recordBriefs, suggestCharacters } = require("../services/character-record.service");
+const { plausiblePowers } = require("../services/stats.service");
+const { rankingHistory } = require("../services/ranking-history.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -176,8 +180,9 @@ async function postSpecs(req, res) {
   }
   try {
     const specs = await findSpecs(world.worldNameCanonical, names);
+    const powers = await plausiblePowers(specs).catch(() => specs.map(() => 0));
     res.set("Cache-Control", "private, max-age=60");
-    return res.json({ ok: true, specs });
+    return res.json({ ok: true, specs: specs.map((spec, index) => ({ ...spec, power: powers[index] })) });
   } catch (error) {
     return fail(res, error);
   }
@@ -221,6 +226,20 @@ async function getCharacterRecord(req, res) {
     const record = await findRecord(ocid);
     res.set("Cache-Control", "private, max-age=60");
     return res.json({ ok: true, record });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
+async function getRankingHistory(req, res) {
+  const ocid = text(req.query.ocid, 100);
+  if (!/^[0-9a-f]{20,100}$/i.test(ocid)) {
+    return res.status(400).json({ ok: false, message: "ocid is required" });
+  }
+  try {
+    const history = await rankingHistory({ ocid, type: req.query.type === "level" ? "level" : "power" });
+    res.set("Cache-Control", "private, max-age=600");
+    return res.json({ ok: true, ...history });
   } catch (error) {
     return fail(res, error);
   }
@@ -279,6 +298,7 @@ module.exports = {
   getSpecSummary,
   getCharacterHistory,
   getCharacterRecord,
+  getRankingHistory,
   postRecordBriefs,
   getSuggest
 };

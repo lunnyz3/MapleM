@@ -1,6 +1,8 @@
 // 길드 화면: /preview/guild(길드 검색) · /preview/guild/<월드>/<이름>(길드 상세).
 // 데이터: GET /api/maplestorym/guild/id → GET /api/maplestorym/guild/basic, 길드원 썸네일은 /api/maplestorym/character/image.
+// 길드원 스펙(전투력 순위·보스 파티): POST /api/v2/specs(사이트가 모은 길드원만, power = 사냥 프리셋으로 잰 듯하면 0).
 import "../styles/guild.css";
+import bossData from "../../../src/game-data/boss-entry.json";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
 import { Card } from "../components/Card.jsx";
@@ -23,6 +25,7 @@ import { useInView } from "../lib/motion.js";
 import { copyText, sharePageUrl } from "../lib/share.js";
 import { addRecent, entryKey, toggleFavorite, useSaved } from "../lib/storage.js";
 import { setScoreText } from "../lib/itemScore.js";
+import { bossRoster, defaultBoss, splitParties } from "../lib/guildParty.mjs";
 
 /** 길드 건물 5종(기존 화면과 같은 이름 규칙·그림) */
 const BUILDINGS = [
@@ -36,6 +39,7 @@ const BUILDINGS = [
 const TAB_ITEMS = [
   { id: "members", label: "길드원", icon: "user" },
   { id: "power", label: "전투력 순위", icon: "bolt" },
+  { id: "boss", label: "보스 파티", icon: "swords" },
   { id: "skills", label: "길드 스킬", icon: "sparkle" },
   { id: "buildings", label: "건물", icon: "home" },
   { id: "abilities", label: "어빌리티", icon: "medal" }
@@ -339,24 +343,7 @@ function MembersPanel({ guild }) {
  * @param {{ guild: GuildView }} props
  */
 function PowerPanel({ guild }) {
-  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", specs?: any[] }} */ ({ status: "loading" }));
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    setState({ status: "loading" });
-    const names = guild.members.map((member) => member.name).filter((name) => name && name !== "-");
-    getJson("/api/v2/specs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ world_name: guild.world, names })
-    }).then(
-      ({ response, body }) => alive && setState(response.ok && body?.ok ? { status: "ready", specs: body.specs } : { status: "error" }),
-      () => alive && setState({ status: "error" })
-    );
-    return () => {
-      alive = false;
-    };
-  }, [guild, attempt]);
+  const { state, retry } = useGuildSpecs(guild);
 
   const rows = useMemo(() => {
     const byName = new Map((state.specs || []).map((spec) => [spec.characterName, spec]));
@@ -366,7 +353,7 @@ function PowerPanel({ guild }) {
   }, [guild, state.specs]);
 
   if (state.status === "loading") return <SkeletonList rows={6} />;
-  if (state.status === "error") return <ErrorState compact title="전투력 순위를 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} />;
+  if (state.status === "error") return <ErrorState compact title="전투력 순위를 불러오지 못했어요" onRetry={retry} />;
 
   // 엑셀(CSV): 순위·이름·직업·레벨·전투력·템환산·잠재·에디·길드 활동
   const exportCsv = () => {
@@ -429,6 +416,181 @@ function PowerPanel({ guild }) {
         })}
       </ol>
     </>
+  );
+}
+
+// 길드원 스펙: 전투력 순위·보스 파티 탭이 같이 쓴다(길드마다 한 번, 실패하면 다시 읽는다).
+const specCache = new Map();
+
+/** @param {GuildView} guild */
+function loadGuildSpecs(guild) {
+  const key = `${guild.world}/${guild.name}`;
+  if (!specCache.has(key)) {
+    const names = guild.members.map((member) => member.name).filter((name) => name && name !== "-");
+    const request = getJson("/api/v2/specs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ world_name: guild.world, names })
+    }).then(({ response, body }) => {
+      if (!response.ok || !body?.ok) throw new Error("specs");
+      return body.specs || [];
+    });
+    request.catch(() => specCache.delete(key));
+    specCache.set(key, request);
+  }
+  return specCache.get(key);
+}
+
+/** @param {GuildView} guild */
+function useGuildSpecs(guild) {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", specs?: any[] }} */ ({ status: "loading" }));
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setState({ status: "loading" });
+    loadGuildSpecs(guild).then(
+      (specs) => alive && setState({ status: "ready", specs }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [guild, attempt]);
+  return { state, retry: () => setAttempt((n) => n + 1) };
+}
+
+const PARTY_SIZE = 6;
+const BOSSES = [...bossData.bosses].sort((a, b) => a.power - b.power);
+const SPLITS = [
+  { value: "strong", label: "강한 순" },
+  { value: "even", label: "고르게" }
+];
+const shortPower = (/** @type {number} */ value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 });
+const bossLabel = (/** @type {any} */ boss) => `${boss.difficulty} ${boss.name}`;
+
+/**
+ * 보스 파티: 보스를 고르면 들어갈 수 있는 길드원(레벨·전투력)을 6인 파티로 나눈다(강한 순 / 고르게). 나눈 결과 복사.
+ * @param {{ guild: GuildView }} props
+ */
+function BossPanel({ guild }) {
+  const { state, retry } = useGuildSpecs(guild);
+  const [pick, setPick] = useState(-1);
+  const [split, setSplit] = useState("strong");
+
+  const members = useMemo(() => {
+    const byName = new Map((state.specs || []).map((spec) => [spec.characterName, spec]));
+    return guild.members
+      .filter((member) => member.name && member.name !== "-")
+      .map((member) => {
+        const spec = byName.get(member.name);
+        return { name: member.name, level: Number(spec?.characterLevel) || member.level || 0, power: Number(spec?.power) || 0, className: spec?.characterClass || member.job || "" };
+      });
+  }, [guild, state.specs]);
+
+  if (state.status === "loading") return <SkeletonList rows={6} />;
+  if (state.status === "error") return <ErrorState compact title="길드원 기록을 불러오지 못했어요" onRetry={retry} />;
+
+  const index = pick >= 0 ? pick : Math.max(0, defaultBoss(members, BOSSES, PARTY_SIZE));
+  const boss = BOSSES[index];
+  const roster = bossRoster(members, boss);
+  const parties = splitParties(roster.ready, PARTY_SIZE, /** @type {"strong" | "even"} */ (split));
+  const recommended = roster.ready.filter((member) => member.recommended).length;
+
+  const copy = async () => {
+    const lines = [`[${bossLabel(boss)}] ${guild.name}`, ...parties.map((party, i) => `${i + 1}파티: ${party.map((member) => member.name).join(", ")}`)];
+    toast((await copyText(lines.join("\n"))) ? "파티 목록을 복사했어요" : "복사하지 못했어요", "success");
+  };
+
+  return (
+    <div class="gd-boss">
+      <div class="gd-boss__tools">
+        <span class="select">
+          <select aria-label="보스" value={String(index)} onChange={(event) => setPick(Number(/** @type {HTMLSelectElement} */ (event.currentTarget).value))}>
+            {BOSSES.map((entry, i) => (
+              <option key={bossLabel(entry)} value={String(i)}>
+                {bossLabel(entry)} · Lv.{entry.level} · {shortPower(entry.power)}
+              </option>
+            ))}
+          </select>
+          <Icon name="chevronDown" size={18} class="select__icon" />
+        </span>
+        <Segmented name="gd-boss-split" legend="나누는 방법" value={split} onChange={setSplit} options={SPLITS} />
+      </div>
+      <div class="gd-boss__head">
+        <ul class="gd-boss__summary">
+          <li>
+            입장 가능 <strong class="num">{formatComma(roster.ready.length)}</strong>명
+          </li>
+          {boss.recommend?.power ? (
+            <li>
+              권장 전투력 이상 <strong class="num">{formatComma(recommended)}</strong>명
+            </li>
+          ) : null}
+          <li>
+            파티 <strong class="num">{formatComma(parties.length)}</strong>개
+          </li>
+        </ul>
+        {parties.length ? (
+          <button type="button" class="btn btn--secondary btn--sm" onClick={copy}>
+            <Icon name="chat" size={16} />
+            파티 목록 복사
+          </button>
+        ) : null}
+      </div>
+      {parties.length ? (
+        <ol class="gd-boss__parties">
+          {parties.map((party, i) => (
+            <li key={i} class="gd-party">
+              <div class="gd-party__head">
+                <strong>{i + 1}파티</strong>
+                <span class="num">
+                  {party.length}명 · 합 {shortPower(party.reduce((sum, member) => sum + member.power, 0))}
+                </span>
+              </div>
+              <ol class="gd-party__members">
+                {party.map((member) => (
+                  <li key={member.name}>
+                    <a class="gd-party__member" href={urls.character(guild.world, member.name)}>
+                      <Avatar world={guild.world} name={member.name} size={36} lazy />
+                      <span class="gd-party__who">
+                        <strong>{member.name}</strong>
+                        <span class="num">
+                          {member.className ? `${member.className} · ` : ""}Lv.{member.level}
+                        </span>
+                      </span>
+                      <span class="gd-party__power num">
+                        {shortPower(member.power)}
+                        {member.recommended ? <span class="gd-party__good">권장</span> : null}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <EmptyState compact title="이 보스에 들어갈 수 있는 길드원이 없어요" />
+      )}
+      {roster.short.length ? (
+        <details class="gd-boss__more">
+          <summary>
+            조건이 모자란 길드원 <span class="num">{formatComma(roster.short.length)}</span>명
+          </summary>
+          <ul>
+            {roster.short.map((member) => (
+              <li key={member.name}>
+                <a href={urls.character(guild.world, member.name)}>
+                  <strong>{member.name}</strong>
+                  <span class="num">{member.level < boss.level ? `Lv.${boss.level} 필요` : `${shortPower(boss.power - member.power)} 부족`}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      {roster.unknown.length ? <p class="gd-boss__note num">기록 없음·전투력 모름 {formatComma(roster.unknown.length)}명(캐릭터를 한 번 열어 보면 생겨요)</p> : null}
+    </div>
   );
 }
 
@@ -714,7 +876,7 @@ export function Guild({ world = "", name = "" }) {
   }
 
   const guild = state.guild;
-  const counts = { power: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
+  const counts = { power: undefined, boss: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
 
   return (
     <div class="gd">
@@ -734,6 +896,7 @@ export function Guild({ world = "", name = "" }) {
         <TabPanel idBase="gd" value={tab} class="gd-tabs__panel card">
           {tab === "members" ? <MembersPanel guild={guild} /> : null}
           {tab === "power" ? <PowerPanel guild={guild} /> : null}
+          {tab === "boss" ? <BossPanel guild={guild} /> : null}
           {tab === "skills" ? <SkillsPanel guild={guild} /> : null}
           {tab === "buildings" ? <BuildingsPanel guild={guild} /> : null}
           {tab === "abilities" ? <AbilitiesPanel guild={guild} /> : null}

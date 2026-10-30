@@ -1,5 +1,6 @@
 // 스펙업 추천(순수 함수): 장비 한 개를 ★+1 하거나 다른 장비로 바꿨을 때의 보스 세팅 스탯 합계.
 // 전투력은 화면이 efficiency.js combatPower 로 잰다(이 파일은 Node 테스트에서도 읽히게 .mjs 만 가져온다).
+import { starforceExpectation } from "./enhanceCalc.mjs";
 import { addTotals, deltaToTotals } from "./growthReport.mjs";
 import { basicChange, setChange, setOfItem } from "./starforceWhatIf.mjs";
 import { swapTotals } from "./swapItem.mjs";
@@ -36,6 +37,18 @@ export function starUpTotals({ totals, item, dbEntry, sets, setTotals, attackTyp
 }
 
 /**
+ * 강화 계획에 평균 강화 횟수·도중 파괴 확률·1회당 상승을 붙인다(방지권·럭키데이 없이, 강화 계산기와 같은 표).
+ * @template {{ item: any, toStar: number, gain: number }} T
+ * @param {T} plan @param {any} rules enhance.json
+ * @returns {T & { tries: number, destroyChance: number, perTry: number }}
+ */
+export function withStarCost(plan, rules) {
+  const from = Number(plan.item?.starforceUpgrade) || 0;
+  const { tries, destroyChance } = starforceExpectation(rules, from, plan.toStar);
+  return { ...plan, tries, destroyChance, perTry: Number.isFinite(tries) && tries > 0 ? plan.gain / tries : 0 };
+}
+
+/**
  * 다른 장비로 바꿨을 때 합계(같은 스타포스 세트면 세트 합 차이도).
  * @param {{ totals: Record<string, number>, item: any, other: any, sets: any, setTotals: Record<string, number>, attackType: string }} input
  */
@@ -51,13 +64,13 @@ export function swapUpTotals({ totals, item, other, sets, setTotals, attackType 
 }
 
 /**
- * 오르는 것만, 많이 오르는 순으로 limit 개.
+ * 오르는 것만, by(기본 gain)가 큰 순으로 limit 개.
  * @template {{ gain: number }} T
- * @param {T[]} plans
+ * @param {T[]} plans @param {number} [limit] @param {string} [by]
  */
-export function rankPlans(plans, limit = 10) {
+export function rankPlans(plans, limit = 10, by = "gain") {
   return plans
     .filter((plan) => Number.isFinite(plan.gain) && plan.gain > 1e-6)
-    .sort((a, b) => b.gain - a.gain)
+    .sort((a, b) => (Number(b[by]) || 0) - (Number(a[by]) || 0))
     .slice(0, limit);
 }

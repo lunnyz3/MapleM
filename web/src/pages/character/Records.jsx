@@ -1,5 +1,6 @@
-// 기록 탭: 캐릭터 정보(생성일·최근 접속) · 최고 기록 · 날짜별 기록(날짜별 전투력·템환산과 바뀐 장비).
+// 기록 탭: 캐릭터 정보(생성일·최근 접속) · 최고 기록 · 날짜별 기록(날짜별 전투력·템환산과 바뀐 장비) · 공식 랭킹 1년 기록.
 // 최고 기록과 일지는 사이트 조회·매일 수집 때마다 서버가 남긴 값(/api/v2/character-record).
+// 공식 랭킹 1년 기록은 누르면 넥슨 과거 랭킹(상위 1만 명)을 읽는다(/api/v2/ranking-history, 첫날·매월 1일·최근 4주).
 import { useEffect, useId, useMemo, useRef, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
 import { Segmented } from "../../components/Tabs.jsx";
@@ -120,7 +121,8 @@ function BestRecords({ best }) {
 
 /**
  * 한 지표의 날짜별 선 그래프(한 계열이라 범례 없음, 제목이 이름). 점을 누르거나 올리면 날짜·값.
- * @param {{ rows: any[], metric: { value: string, label: string, format: (n: number) => string } }} props
+ * metric.axis·metric.diff 가 있으면 눈금 글자·이전 기록 대비 글을 그것으로 쓴다(순위처럼 작을수록 좋은 값).
+ * @param {{ rows: any[], metric: { value: string, label: string, format: (n: number) => string, read: (n: number) => number, axis?: (n: number) => string, diff?: (delta: number) => string } }} props
  */
 function JournalChart({ rows, metric }) {
   const boxRef = useRef(/** @type {HTMLDivElement | null} */ (null));
@@ -199,7 +201,7 @@ function JournalChart({ rows, metric }) {
             <g key={y} class="trend__tick">
               <line x1={pad.l} x2={width - pad.r} y1={yOf(y)} y2={yOf(y)} class="trend__grid" />
               <text x={pad.l - 8} y={yOf(y)} class="trend__axis" text-anchor="end" dominant-baseline="middle">
-                {axisLabel(y)}
+                {(metric.axis || axisLabel)(y)}
               </text>
             </g>
           ))}
@@ -231,8 +233,14 @@ function JournalChart({ rows, metric }) {
             </p>
             {prev ? (
               <p class={`trend__tip-gain num${cur.y > prev.y ? " is-up" : ""}`}>
-                이전 기록 대비 {cur.y >= prev.y ? "+" : "-"}
-                {metric.format(Math.abs(cur.y - prev.y))}
+                {metric.diff ? (
+                  metric.diff(cur.y - prev.y)
+                ) : (
+                  <>
+                    이전 기록 대비 {cur.y >= prev.y ? "+" : "-"}
+                    {metric.format(Math.abs(cur.y - prev.y))}
+                  </>
+                )}
               </p>
             ) : (
               <p class="trend__tip-gain">첫 기록</p>
@@ -372,6 +380,87 @@ function GrowthJournal({ journal, since }) {
   );
 }
 
+const RANK_TYPES = [
+  { value: "power", label: "전투력 랭킹" },
+  { value: "level", label: "레벨 랭킹" }
+];
+// 순위는 작을수록 위로: 그래프 값은 -순위
+const RANK_METRIC = {
+  value: "rank",
+  label: "순위",
+  read: (value) => -value,
+  format: (value) => `${formatComma(Math.abs(Math.round(value)))}위`,
+  axis: (value) => (value < 0 ? `${formatComma(Math.round(-value))}위` : ""),
+  diff: (delta) => (Math.round(delta) === 0 ? "이전 기록과 같은 순위" : `이전 기록보다 ${formatComma(Math.abs(Math.round(delta)))}계단 ${delta > 0 ? "상승" : "하락"}`)
+};
+
+/** 공식 랭킹 1년 기록: 누르면 읽는다(종류마다 한 번). @param {{ ocid: string }} props */
+function RankingHistory({ ocid }) {
+  const [type, setType] = useState("power");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState(/** @type {Record<string, { status: "loading" | "ready" | "error", points?: any[] }>} */ ({}));
+  const current = results[type];
+
+  useEffect(() => {
+    if (!open || !ocid || results[type]) return;
+    setResults((prev) => ({ ...prev, [type]: { status: "loading" } }));
+    getJson(`/api/v2/ranking-history?${new URLSearchParams({ ocid, type })}`).then(
+      ({ response, body }) =>
+        setResults((prev) => ({ ...prev, [type]: response.ok && body?.ok ? { status: "ready", points: body.points || [] } : { status: "error" } })),
+      () => setResults((prev) => ({ ...prev, [type]: { status: "error" } }))
+    );
+  }, [open, type, ocid]);
+
+  const ranked = (current?.points || []).filter((point) => point.ranking > 0);
+  const rows = ranked.map((point) => ({ date: point.date, rank: point.ranking }));
+  const first = ranked[0];
+  const last = ranked[ranked.length - 1];
+  const valueText = (/** @type {any} */ point) => (type === "level" ? `Lv.${point.value}` : power(point.value));
+
+  return (
+    <section class="sect rec-rank">
+      <div class="rec-journal__head">
+        <h3 class="sub-title">
+          공식 랭킹 1년 기록
+          <span class="sub-title__note">상위 1만 명 안에 든 날만</span>
+        </h3>
+        {open ? <Segmented name="rank-history-type" legend="랭킹 종류" value={type} onChange={setType} options={RANK_TYPES} /> : null}
+      </div>
+      {!open ? (
+        <button type="button" class="btn btn--secondary rec-rank__open" onClick={() => setOpen(true)}>
+          <Icon name="trophy" size={18} />
+          공식 랭킹 기록 불러오기
+        </button>
+      ) : null}
+      {open && (!current || current.status === "loading") ? <p class="rec-journal__empty">공식 랭킹을 읽는 중…</p> : null}
+      {current?.status === "error" ? <p class="rec-journal__empty">불러오지 못했어요.</p> : null}
+      {current?.status === "ready" ? (
+        ranked.length ? (
+          <>
+            <p class="rec-rank__summary num">
+              {formatDateDot(first.date)} <strong>{formatComma(first.ranking)}위</strong>
+              <span class="rec-rank__value">{valueText(first)}</span>
+              {last !== first ? (
+                <>
+                  <Icon name="arrowRight" size={14} />
+                  {formatDateDot(last.date)} <strong>{formatComma(last.ranking)}위</strong>
+                  <span class="rec-rank__value">{valueText(last)}</span>
+                </>
+              ) : null}
+              <span class="rec-rank__count">
+                랭킹에 든 날 {ranked.length}/{current.points.length}
+              </span>
+            </p>
+            {rows.length > 1 ? <JournalChart rows={rows} metric={RANK_METRIC} /> : null}
+          </>
+        ) : (
+          <p class="rec-journal__empty">이 기간에 {type === "level" ? "레벨" : "전투력"} 랭킹 1만 위 안에 든 날이 없어요.</p>
+        )
+      ) : null}
+    </section>
+  );
+}
+
 /** @param {{ ocid: string, profile: any }} props */
 export function RecordsSection({ ocid, profile }) {
   const record = useRecord(ocid);
@@ -380,6 +469,7 @@ export function RecordsSection({ ocid, profile }) {
       <CharacterFacts profile={profile} />
       {record ? <BestRecords best={record.best} /> : null}
       {record ? <GrowthJournal journal={Array.isArray(record.journal) ? record.journal : []} since={record.since} /> : null}
+      {ocid ? <RankingHistory ocid={ocid} /> : null}
     </>
   );
 }

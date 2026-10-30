@@ -2,6 +2,7 @@
 // 종류마다 10개(전체 · 강화 · 교체로 나눠 본다).
 // 강화는 아이템 DB(단계별 기본 옵션)에 있는 장비만, 다음 단계가 표에 없으면 표에 있는 가장 가까운 위 단계(최대 3성 위)까지. 교체 후보는 같은 부위·계열에서 내 점수 바로 위 장비 8개 중 가장 많이
 // 오르는 것(GET /api/v2/item-search above·order=near). 계산은 옵션 넣어 보기·더 좋은 장비와 같다(web/src/lib/upgradePlan.mjs).
+// 강화에는 강화 계산기와 같은 확률표로 평균 강화 횟수·도중 파괴 확률·1회당 상승을 붙이고, ★ 강화는 1회당 순으로도 본다.
 import starforceSets from "../../../../src/game-data/starforce-sets.json";
 import { useEffect, useState } from "preact/hooks";
 import { Icon } from "../../components/Icon.jsx";
@@ -10,11 +11,11 @@ import { Segmented } from "../../components/Tabs.jsx";
 import { getJson } from "../../lib/api.js";
 import { gradeInfo } from "../../lib/character.js";
 import { combatPower, totalsFromStats } from "../../lib/efficiency.js";
-import { formatDecimal, formatKoreanUnits } from "../../lib/format.js";
+import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 import { urls } from "../../lib/game.js";
 import { loadItemRanks } from "../../lib/itemRanks.js";
 import { currentSetTotals } from "../../lib/starforceWhatIf.mjs";
-import { rankPlans, starUpTotals, swapUpTotals } from "../../lib/upgradePlan.mjs";
+import { rankPlans, starUpTotals, swapUpTotals, withStarCost } from "../../lib/upgradePlan.mjs";
 
 const CANDIDATES = 8;
 const WORKERS = 4;
@@ -28,12 +29,16 @@ async function computePlans({ items, ocid, majorStats, attackType }) {
   const before = combatPower(totals);
   const ratio = (/** @type {any} */ next) => (before > 0 && next ? combatPower(next) / before - 1 : Number.NaN);
   const setTotals = currentSetTotals(majorStats);
-  const [db, ranks] = await Promise.all([import("../../../../src/game-data/item-db.json").then((module) => module.default || module), loadItemRanks(ocid)]);
+  const [db, rules, ranks] = await Promise.all([
+    import("../../../../src/game-data/item-db.json").then((module) => module.default || module),
+    import("../../../../src/game-data/enhance.json").then((module) => module.default || module),
+    loadItemRanks(ocid)
+  ]);
   /** @type {any[]} */
   const plans = [];
   for (const item of items) {
     const up = starUpTotals({ totals, item, dbEntry: db.items?.[item.itemName], sets: starforceSets, setTotals, attackType });
-    if (up) plans.push({ kind: "star", item, toStar: up.toStar, gain: ratio(up.totals) });
+    if (up) plans.push(withStarCost({ kind: "star", item, toStar: up.toStar, gain: ratio(up.totals) }, rules));
   }
   const queue = items.filter((item) => ranks[item.fingerprint]?.slot);
   const worker = async () => {
@@ -55,7 +60,7 @@ async function computePlans({ items, ocid, majorStats, attackType }) {
     }
   };
   await Promise.all(Array.from({ length: WORKERS }, worker));
-  return { star: rankPlans(plans.filter((plan) => plan.kind === "star"), 10), swap: rankPlans(plans.filter((plan) => plan.kind === "swap"), 10) };
+  return { star: rankPlans(plans.filter((plan) => plan.kind === "star"), 40), swap: rankPlans(plans.filter((plan) => plan.kind === "swap"), 10) };
 }
 
 const KINDS = [
@@ -63,6 +68,23 @@ const KINDS = [
   { value: "star", label: "★ 강화" },
   { value: "swap", label: "교체" }
 ];
+const SORTS = [
+  { value: "gain", label: "많이 오르는 순" },
+  { value: "per", label: "1회당 많이 오르는 순" }
+];
+const percent = (/** @type {number} */ value) => `${formatDecimal(value * 100, value < 0.0001 ? 3 : value < 0.01 ? 2 : 1)}%`;
+
+/** 평균 n회 · 파괴 x% · 1회당 +y% @param {{ plan: any }} props */
+function StarCost({ plan }) {
+  if (!Number.isFinite(plan.tries)) return null;
+  return (
+    <span class="upgrades__cost num">
+      <span>평균 {plan.tries < 10 ? formatDecimal(plan.tries, 1) : formatComma(Math.round(plan.tries))}회</span>
+      {plan.destroyChance > 0 ? <span class="is-risk">파괴 {percent(plan.destroyChance)}</span> : null}
+      <span>1회당 +{percent(plan.perTry)}</span>
+    </span>
+  );
+}
 
 /** @param {{ item: any }} props */
 function ItemIcon({ item }) {
@@ -81,6 +103,7 @@ export function Upgrades({ items, ocid, majorStats, attackType, basePower, onOpe
   const [open, setOpen] = useState(false);
   const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", items?: any[], plans?: { star: any[], swap: any[] } }} */ ({ status: "loading" }));
   const [kind, setKind] = useState("all");
+  const [sort, setSort] = useState("gain");
 
   // 시트를 열 때 재고, 다른 프리셋을 고르면 다시 잰다(같은 장비면 앞서 잰 것을 쓴다)
   useEffect(() => {
@@ -97,7 +120,12 @@ export function Upgrades({ items, ocid, majorStats, attackType, basePower, onOpe
   }, [open, items]);
 
   const lists = state.plans || { star: [], swap: [] };
-  const plans = kind === "all" ? rankPlans([...lists.star, ...lists.swap], 10) : lists[kind] || [];
+  const plans =
+    kind === "all"
+      ? rankPlans([...lists.star, ...lists.swap], 10)
+      : kind === "star"
+        ? rankPlans(lists.star, 10, sort === "per" ? "perTry" : "gain")
+        : lists.swap;
   return (
     <>
       <button type="button" class="eq-luck" onClick={() => setOpen(true)}>
@@ -107,6 +135,9 @@ export function Upgrades({ items, ocid, majorStats, attackType, basePower, onOpe
       <Sheet open={open} title="스펙업 추천" class="upgrades-sheet" onClose={() => setOpen(false)}>
         {state.status === "ready" && (lists.star.length || lists.swap.length) ? (
           <Segmented name="upgrade-kind" legend="추천 종류" value={kind} onChange={setKind} options={KINDS} class="upgrades__kinds" />
+        ) : null}
+        {state.status === "ready" && kind === "star" && lists.star.length > 1 ? (
+          <Segmented name="upgrade-sort" legend="강화 순서" value={sort} onChange={setSort} options={SORTS} class="upgrades__kinds upgrades__sorts" />
         ) : null}
         {state.status === "loading" ? <p class="upgrades__note">장비마다 재는 중…</p> : null}
         {state.status === "error" ? <p class="upgrades__note">재지 못했어요.</p> : null}
@@ -128,9 +159,12 @@ export function Upgrades({ items, ocid, majorStats, attackType, basePower, onOpe
                       {star ? ` ★${star}` : ""}
                     </span>
                     {plan.kind === "star" ? (
-                      <strong>
-                        스타포스 ★{star} → ★{plan.toStar}
-                      </strong>
+                      <>
+                        <strong>
+                          스타포스 ★{star} → ★{plan.toStar}
+                        </strong>
+                        <StarCost plan={plan} />
+                      </>
                     ) : (
                       <strong>
                         {plan.other.itemName}

@@ -1,8 +1,10 @@
-// 통계(/stats?view=class|level|meta): 사이트가 모은 캐릭터(랭킹·길드 훑기·조회) 기준.
+// 통계(/stats?view=class|level|meta|tier|world): 사이트가 모은 캐릭터(랭킹·길드 훑기·조회) 기준.
 // 직업별: 전투력 상위 N명의 직업 인원·평균/최고 전투력·평균 템환산·잠재·에디. 레벨: 레벨 분포와 직업 비율.
 // 직업 메타: 한 직업 전투력 상위 100명의 무기 잠재·에디(대미지 합)·추옵 점수 구간과 순위, 장신구 최대 강화 비율·추옵 순위, 문장·소울.
+// 직업 티어: 상위 100명 평균 전투력 또는 같은 템 대비 전투력으로 S~D. 월드 대항전: 월드마다 상위 100명 평균 전투력 순위.
 import "../styles/stats.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { WorldIcon } from "../components/GameIcons.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { Aurora, Reveal, SplitText } from "../components/Motion.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
@@ -13,6 +15,7 @@ import { getJson, toApiError } from "../lib/api.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../lib/format.js";
 import { WORLDS, urls } from "../lib/game.js";
 import { CollectedNote } from "../components/CollectedNote.jsx";
+import { RankBadge } from "../components/RankBadge.jsx";
 import { setScoreText } from "../lib/itemScore.js";
 
 const TOPS = [
@@ -22,6 +25,17 @@ const TOPS = [
   { value: "0", label: "전체" }
 ];
 const MIN_LEVELS = [250, 260, 270, 280, 290];
+const VIEWS = [
+  { value: "class", label: "직업별 전투력" },
+  { value: "meta", label: "직업 메타" },
+  { value: "tier", label: "직업 티어" },
+  { value: "world", label: "월드 대항전" },
+  { value: "level", label: "레벨 분포" }
+];
+const BASES = [
+  { value: "power", label: "상위 100명 전투력" },
+  { value: "gear", label: "같은 템 대비" }
+];
 
 /** 1억 아래는 "9,612만", 위는 "1억 2,345만" */
 const power = (/** @type {number} */ value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 });
@@ -42,7 +56,8 @@ function readQuery() {
   const minLevel = Number(params.get("min_level")) || 260;
   const view = String(params.get("view") || "");
   return {
-    view: view === "level" || view === "meta" ? view : "class",
+    view: VIEWS.some((item) => item.value === view) ? view : "class",
+    basis: params.get("basis") === "gear" ? "gear" : "power",
     cls: String(params.get("class") || "").slice(0, 20),
     world: WORLDS.includes(world) ? world : "",
     top: TOPS.some((item) => item.value === top) ? top : "1000",
@@ -417,6 +432,117 @@ function JobMeta({ query, onQuery }) {
   );
 }
 
+const TIER_TONES = { S: "gold", A: "peach", B: "mint", C: "sky", D: "lavender" };
+const gearText = (/** @type {number} */ ratio) => {
+  const change = Math.round((ratio - 1) * 1000) / 10;
+  return `${change > 0 ? "+" : change < 0 ? "−" : ""}${formatDecimal(Math.abs(change), 1)}%`;
+};
+
+/** @param {{ query: ReturnType<typeof readQuery>, onQuery: (patch: any) => void }} props */
+function JobTiers({ query, onQuery }) {
+  const params = new URLSearchParams();
+  if (query.world) params.set("world_name", query.world);
+  if (query.basis === "gear") params.set("basis", "gear");
+  const stats = useStats(`/api/v2/stats/tiers?${params}`);
+  const tiers = stats.data?.tiers || [];
+  const byGear = stats.data?.basis === "gear";
+
+  return (
+    <>
+      <div class="stats-filters card">
+        <WorldSelect world={query.world} onWorld={(world) => onQuery({ world })} />
+        <Segmented name="stats-basis" legend="티어 기준" value={query.basis} onChange={(basis) => onQuery({ basis })} options={BASES} />
+      </div>
+      {stats.status === "loading" ? <Skeleton height={520} radius={20} /> : null}
+      {stats.status === "error" ? <ErrorState title="통계를 불러오지 못했어요" description={stats.error?.message} onRetry={stats.retry} /> : null}
+      {stats.status === "ready" && !tiers.length ? <ErrorState title="모은 캐릭터가 없어요" /> : null}
+      {stats.status === "ready" && tiers.length ? (
+        <ol class="card tier-board" aria-label="직업 티어">
+          {tiers.map((tier, index) => (
+            <Reveal as="li" key={tier.tier} class={`tier-row tone-${TIER_TONES[tier.tier]}`} delay={index * 60}>
+              <span class="tier-row__label display" role="img" aria-label={`${tier.tier} 티어`}>
+                {tier.tier}
+              </span>
+              <ul class="tier-row__classes">
+                {tier.classes.map((row) => (
+                  <li key={row.className}>
+                    <button type="button" class="tier-chip" onClick={() => onQuery({ view: "meta", cls: row.className })}>
+                      <strong>{row.className}</strong>
+                      <span class="num">{byGear ? gearText(row.gear) : power(row.average)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          ))}
+        </ol>
+      ) : null}
+    </>
+  );
+}
+
+function WorldBoard() {
+  const stats = useStats("/api/v2/stats/worlds");
+  const worlds = stats.data?.worlds || [];
+  const top = Math.max(1, ...worlds.map((entry) => entry.average));
+
+  return (
+    <>
+      {stats.status === "loading" ? <Skeleton height={520} radius={20} /> : null}
+      {stats.status === "error" ? <ErrorState title="통계를 불러오지 못했어요" description={stats.error?.message} onRetry={stats.retry} /> : null}
+      {stats.status === "ready" && !worlds.length ? <ErrorState title="모은 캐릭터가 없어요" /> : null}
+      {stats.status === "ready" && worlds.length ? (
+        <ol class="world-board" aria-label="월드 대항전">
+          {worlds.map((entry, index) => (
+            <Reveal as="li" key={entry.world} class="card world-row" delay={index * 50}>
+              <RankBadge rank={entry.rank} size={36} />
+              <div class="world-row__main">
+                <h2 class="world-row__name">
+                  <WorldIcon world={entry.world} size={20} />
+                  {entry.world}
+                </h2>
+                <span class="world-row__bar" aria-hidden="true">
+                  <span style={{ width: `${Math.max(2, (entry.average / top) * 100)}%` }} />
+                </span>
+                <span class="world-row__sub num">
+                  상위 100명 평균 템환산 {setScoreText(entry.itemScore)} · 모은 캐릭터 {formatComma(entry.count)}명
+                </span>
+              </div>
+              <strong class="world-row__power display num">{power(entry.average)}</strong>
+              <dl class="world-row__facts">
+                <div>
+                  <dt>1위</dt>
+                  <dd>
+                    <a class="world-row__best" href={urls.character(entry.world, entry.best.name)}>
+                      <strong>{entry.best.name}</strong>
+                      <span>
+                        {entry.best.className} · <span class="num">{power(entry.best.power)}</span>
+                      </span>
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt>상위 100명에 많은 직업</dt>
+                  <dd>{entry.popular.map((row) => `${row.className} ${row.count}`).join(" · ")}</dd>
+                </div>
+                <div class="world-row__cuts">
+                  <dt>순위 컷</dt>
+                  <dd class="num">
+                    {entry.cuts
+                      .filter((cut) => cut.power > 0)
+                      .map((cut) => `${formatComma(cut.rank)}위 ${power(cut.power)}`)
+                      .join(" · ")}
+                  </dd>
+                </div>
+              </dl>
+            </Reveal>
+          ))}
+        </ol>
+      ) : null}
+    </>
+  );
+}
+
 export function Stats() {
   const [query, setQuery] = useState(readQuery);
   useEffect(() => {
@@ -429,10 +555,11 @@ export function Stats() {
     setQuery(next);
     const params = new URLSearchParams();
     if (next.view !== "class") params.set("view", next.view);
-    if (next.world) params.set("world_name", next.world);
+    if (next.world && next.view !== "world") params.set("world_name", next.world);
     if (next.view === "class" && next.top !== "1000") params.set("top", next.top);
     if (next.view === "level" && next.minLevel !== 260) params.set("min_level", String(next.minLevel));
     if (next.view === "meta" && next.cls) params.set("class", next.cls);
+    if (next.view === "tier" && next.basis === "gear") params.set("basis", "gear");
     const url = `/stats${params.toString() ? `?${params}` : ""}`;
     if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState(null, "", url);
     if (next.view !== query.view) window.scrollTo({ top: 0 });
@@ -456,16 +583,14 @@ export function Stats() {
           legend="통계 종류"
           value={query.view}
           onChange={(view) => onQuery({ view })}
-          options={[
-            { value: "class", label: "직업별 전투력" },
-            { value: "meta", label: "직업 메타" },
-            { value: "level", label: "레벨 분포" }
-          ]}
+          options={VIEWS}
         />
       </div>
       {query.view === "class" ? <ClassStats query={query} onQuery={onQuery} /> : null}
       {query.view === "meta" ? <JobMeta query={query} onQuery={onQuery} /> : null}
       {query.view === "level" ? <LevelStats query={query} onQuery={onQuery} /> : null}
+      {query.view === "tier" ? <JobTiers query={query} onQuery={onQuery} /> : null}
+      {query.view === "world" ? <WorldBoard /> : null}
     </div>
   );
 }

@@ -2,7 +2,7 @@ const { createApp } = require("./src/app");
 const { connectMongo } = require("./src/config/mongo");
 const { env } = require("./src/config/env");
 const { itemCollector } = require("./src/jobs/item-collection.job");
-const { hallOfFame } = require("./src/services/stats.service");
+const { bossReach, hallOfFame } = require("./src/services/stats.service");
 const { upgradeNews } = require("./src/services/news.service");
 
 const app = createApp();
@@ -19,6 +19,8 @@ app.listen(env.port, (error) => {
   setTimeout(() => hallOfFame().catch(() => {}), 60000).unref();
   // 오늘의 강화 소식(첫 화면 카드·전광판 축하 문구)도 미리
   setTimeout(() => upgradeNews().catch(() => {}), 20000).unref();
+  // 보스 입장 가능 비율(캐릭터 보스 탭)은 모은 캐릭터를 다 읽어 몇 초 걸린다
+  setTimeout(() => bossReach().catch(() => {}), 40000).unref();
   if (env.itemCollectionEnabled && env.nexonApiKey) {
     itemCollector.start();
   }

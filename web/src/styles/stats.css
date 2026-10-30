@@ -523,3 +523,233 @@
   }
 }
 
+
+/* 직업 티어 */
+.tier-board {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  list-style: none;
+}
+
+.tier-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.tier-row__label {
+  display: grid;
+  place-items: center;
+  min-height: 56px;
+  border-radius: 12px;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.tier-row__classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tier-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14);
+  cursor: pointer;
+}
+
+.tier-chip:hover {
+  border-color: var(--tone-fg);
+}
+
+.tier-chip strong {
+  font-weight: 800;
+}
+
+.tier-chip span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+/* 월드 대항전 */
+.world-board {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card.world-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1.4fr) auto minmax(0, 1.6fr);
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.world-row__main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.world-row__name {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-16);
+  font-weight: 900;
+}
+
+.world-row__bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.world-row__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sky-500);
+}
+
+.world-row__sub {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.world-row__power {
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.world-row__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0;
+}
+
+.world-row__facts > .world-row__cuts {
+  grid-column: 1 / -1;
+}
+
+.world-row__facts > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.world-row__facts dt {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.world-row__facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.world-row__best {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  min-height: 32px;
+  padding: 4px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.world-row__best strong {
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.world-row__best:hover strong {
+  color: var(--primary-strong);
+}
+
+@media (max-width: 760px) {
+  .card.world-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 10px 12px;
+  }
+
+  .world-row__facts {
+    grid-column: 1 / -1;
+    gap: 8px 12px;
+  }
+
+  .tier-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .tier-row__label {
+    min-height: 44px;
+    font-size: 22px;
+  }
+
+  .tier-chip {
+    padding: 6px 10px;
+  }
+}
+
+/* 통계 종류 5개: 좁은 화면에서는 다섯 칸 격자로 모두 보이게 */
+@media (max-width: 600px) {
+  .stats-switch .segmented {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .stats-switch .segmented__option {
+    min-height: 44px;
+    padding: 2px 4px;
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    word-break: keep-all;
+  }
+}

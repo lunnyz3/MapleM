@@ -2,7 +2,7 @@ const express = require("express");
 const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2.controller");
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getNotices } = require("../controllers/notices-v2.controller");
-const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
+const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getJobTiers, getWorldStats, getBossReach, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
@@ -17,6 +17,7 @@ const {
   getSpecSummary,
   getCharacterHistory,
   getCharacterRecord,
+  getRankingHistory,
   postRecordBriefs,
   getSuggest,
   getCollectionSummary
@@ -37,6 +38,7 @@ router.post("/specs", postSpecs);
 router.get("/spec-summary", getSpecSummary);
 router.get("/character-history", getCharacterHistory);
 router.get("/character-record", getCharacterRecord);
+router.get("/ranking-history", getRankingHistory);
 router.post("/records/brief", postRecordBriefs);
 router.get("/suggest", getSuggest);
 router.get("/collection-summary", getCollectionSummary);
@@ -49,6 +51,9 @@ router.get("/stats/hall-of-fame", getHallOfFame);
 router.get("/stats/job-top", getJobTop);
 router.get("/stats/card", getCharacterCard);
 router.get("/stats/twins", getSpecTwins);
+router.get("/stats/tiers", getJobTiers);
+router.get("/stats/worlds", getWorldStats);
+router.get("/stats/boss-reach", getBossReach);
 router.get("/game/pool", getGamePool);
 router.get("/game/gear", getGameGear);
 router.get("/game/items", getGameItems);
