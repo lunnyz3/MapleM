@@ -42,6 +42,7 @@ process.env.PORT = process.env.PORT || (staging ? "3300" : "3200");
 process.env.ITEM_COLLECTION_ENABLED = process.env.ITEM_COLLECTION_ENABLED || "false";
 process.env.POWER_PATROL_ENABLED = process.env.POWER_PATROL_ENABLED || "false";
 process.env.GUILD_ROSTER_ENABLED = process.env.GUILD_ROSTER_ENABLED || "false";
+process.env.LOOK_COLLECTION_ENABLED = process.env.LOOK_COLLECTION_ENABLED || "false";
 process.env.MONGODB_URI = mongoUri;
 process.env.CHATBOT_ENABLED = "false";
 process.env.NEXON_STATS_LOG_INTERVAL_MS = process.env.NEXON_STATS_LOG_INTERVAL_MS || "5000";

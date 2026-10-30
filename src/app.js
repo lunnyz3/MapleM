@@ -131,6 +131,8 @@ function createApp() {
   app.get("/api/v2/suggest", rateLimiters.suggest);
   app.get(["/api/v2/ranking-history", "/api/v2/ranking-cuts"], rateLimiters.rankingHistory);
   app.post("/api/v2/multi-search", rateLimiters.multiSearch);
+  // 코디 모아 보기·무작위 구경은 부를 때마다 무작위로 읽는다
+  app.get(["/api/v2/looks/wearers", "/api/v2/looks/random"], rateLimiters.fortunes);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

@@ -341,6 +341,12 @@
 - 넥슨 guild/basic 응답을 받을 때마다(길드 화면, 캐릭터 화면 길드 탭) 지난 목록과 견줘 바뀐 것만 쓴다(`mergeRoster`: 같은 날 들어왔다 나가면 서로 지움, 이름만 보므로 닉네임을 바꾸면 나감 + 들어옴). 하루 한 번(서버 시작 15분 뒤부터 24시간마다) 지하수로 랭킹 최근 집계일 상위 1,000개 길드를 훑는다(`src/jobs/guild-roster.job.js`, 길드마다 guild/id + guild/basic, `GUILD_ROSTER_ENABLED`, 로컬 실행기는 끔). 스테이징: 1,000개 33초, 실패 0, 데이터 약 1MB.
 - 길드 화면 "들고 난 기록" 탭: 기록 시작일, 최근 7일 +들어옴 −나감, 인원 변화 선, 날짜별 들어옴(초록)·나감(취소선) 길드원(누르면 캐릭터), 14일 넘으면 더 보기. `src/domain/guild/roster.js`, `src/services/guild-roster.service.js`, `GET /api/v2/guild-roster`, 테스트 `test/guild-roster.test.js`.
 
+### 50. 코디 구경 (작업 사본, 운영 반영 전)
+- 운영자 요청(다른 사이트 참고: 메이플 PC 쪽 코디 분석·코디 검색). `/looks?tab=hair|face|item|random&gender=`: 모은 캐릭터의 인기 헤어·성형(+피부)·부위별 캐시템(모자·한벌옷·상의·하의·망토·무기·신발·장갑·얼굴장식·눈장식·귀고리·탈것·의자, 아이콘) 순위(명·비율, 성별로 거르기, 1시간 보관), 줄을 누르면 그 코디를 한 캐릭터 무작위 24명(그림), "코디 구경"은 무작위 24명(다시 섞기). 통계 하위 메뉴 "코디 구경".
+- 새 컬렉션(운영자 승인): `character_looks`(캐릭터마다: 성별, 헤어·성형 이름·색, 피부, 지금 입은 캐시템 부위·이름 — 반지 4칸·이펙트·보조무기는 뺌, 색인 ocid 고유·`hair.name`·`face.name`, 30일 동안 다시 안 보면 지움), `cosmetic_items`(캐시템 이름마다 처음 본 부위·아이콘).
+- 채우기: 캐릭터 조회 때 이미 받는 beauty·cashitem 응답으로(넥슨 추가 호출 없음) + 하루 한 번(서버 시작 20분 뒤부터 24시간마다) 모은 캐릭터 중 코디가 없거나 7일 지난 캐릭터를 최근 확인 순으로 4만 명(캐릭터마다 넥슨 2회, 따로 도는 클라이언트 동시 6, `LOOK_COLLECTION_ENABLED`, 로컬 실행기는 끔). 스테이징 603명 9초, 한 건 약 730바이트 → 14.8만 명이면 데이터 약 108MB(디스크는 압축되어 색인 포함 60MB 안팎 예상).
+- `src/domain/looks/look.js`(`lookFromApi`), `src/services/looks.service.js`, `src/jobs/look-collection.job.js`, `GET /api/v2/looks/stats·wearers·random`(모아 보기·무작위는 IP 30/분), 테스트 `test/looks.test.js`.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

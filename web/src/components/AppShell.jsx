@@ -63,7 +63,8 @@ const NAV = [
       { label: "직업 메타", href: "/stats?view=meta" },
       { label: "직업 티어", href: "/stats?view=tier" },
       { label: "월드 대항전", href: "/stats?view=world" },
-      { label: "레벨 분포", href: "/stats?view=level" }
+      { label: "레벨 분포", href: "/stats?view=level" },
+      { label: "코디 구경", href: urls.looks }
     ]
   },
   { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },

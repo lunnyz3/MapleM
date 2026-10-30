@@ -256,6 +256,7 @@ export const urls = {
   news: "/news",
   events: "/events",
   multi: "/multi",
+  looks: "/looks",
   my: "/my",
   /** @param {string} [world] @param {string} [name] 왼쪽에 넣어 둘 캐릭터 */
   compare: (world = "", name = "") => (world && name ? `/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/compare"),

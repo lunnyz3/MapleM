@@ -4,6 +4,7 @@ const { env } = require("./src/config/env");
 const { itemCollector } = require("./src/jobs/item-collection.job");
 const { powerPatrol } = require("./src/jobs/power-patrol.job");
 const { guildRosterJob } = require("./src/jobs/guild-roster.job");
+const { lookCollectionJob } = require("./src/jobs/look-collection.job");
 const { bossReach, hallOfFame } = require("./src/services/stats.service");
 const { upgradeNews } = require("./src/services/news.service");
 
@@ -33,5 +34,9 @@ app.listen(env.port, (error) => {
   // 길드 들고 난 기록: 서버 시작 15분 뒤, 그다음 하루마다 길드 랭킹 상위 길드를 훑는다.
   if (env.guildRosterEnabled && env.nexonApiKey) {
     guildRosterJob.start();
+  }
+  // 코디 채우기: 서버 시작 20분 뒤, 그다음 하루마다 코디가 없거나 7일 지난 캐릭터를 4만 명까지.
+  if (env.lookCollectionEnabled && env.nexonApiKey) {
+    lookCollectionJob.start();
   }
 });

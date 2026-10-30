@@ -28,6 +28,7 @@ const {
 } = require("../services/maplestorym.service");
 const { observeCombatPower, rankingObservedAt } = require("../services/combat-power.service");
 const { recordGuildRoster } = require("../services/guild-roster.service");
+const { recordLook } = require("../services/looks.service");
 const { recordCharacterItems } = require("../services/item-ranking.service");
 const { itemFingerprint } = require("../domain/items/collect");
 const { buildGrowthReport } = require("../domain/growth/report");
@@ -769,6 +770,15 @@ async function recordLookupItems({ ocid, characterName, worldNameCanonical, deta
       ...(spec && Object.hasOwn(spec, "recordPower") ? { recordPower: spec.recordPower } : {}),
       source: "lookup"
     });
+    // 코디(조회 응답에 이미 있는 헤어·성형·캐시템, 넥슨을 더 부르지 않는다)
+    await recordLook({
+      ocid,
+      worldName: worldNameCanonical,
+      characterName: basic.character_name || characterName,
+      characterClass: basic.character_class,
+      beauty: details?.beautyEquipment?.data,
+      cash: details?.cashitemEquipment?.data
+    }).catch(() => {});
   } catch (error) {
     console.error("[item-ranking] record failed:", error?.message || error);
   }

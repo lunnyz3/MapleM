@@ -34,6 +34,8 @@ const env = {
   powerPatrolEnabled: parseBoolean(process.env.POWER_PATROL_ENABLED, true),
   // 길드 들고 난 기록: 하루 한 번 지하수로 랭킹 상위 1,000개 길드의 길드원 목록을 읽는다.
   guildRosterEnabled: parseBoolean(process.env.GUILD_ROSTER_ENABLED, true),
+  // 코디 채우기: 하루 한 번 모은 캐릭터 중 코디가 없거나 7일 지난 캐릭터를 4만 명까지 읽는다.
+  lookCollectionEnabled: parseBoolean(process.env.LOOK_COLLECTION_ENABLED, true),
   powerPatrolIntervalMinutes: Math.max(5, parseNumber(process.env.POWER_PATROL_INTERVAL_MINUTES, 60)),
   powerPatrolConcurrency: Math.min(32, Math.max(1, parseNumber(process.env.POWER_PATROL_CONCURRENCY, 10))),
   guildCollectionMemberDelayMs: Math.max(0, parseNumber(process.env.GUILD_COLLECTION_MEMBER_DELAY_MS, 1000)),
