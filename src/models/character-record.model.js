@@ -13,6 +13,8 @@ const characterRecordSchema = new mongoose.Schema(
     journal: { type: [mongoose.Schema.Types.Mixed], default: [] },
     // Latest best-preset gear [{ slot, name, starforce, score }] to diff the next snapshot against.
     gear: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    // 최근 14일 최고 전투력 { value, at }: 전투력 순찰이 같거나 높은 값을 볼 때마다(같은 값은 하루에 한 번) 새로 남긴다.
+    recentPeak: { type: mongoose.Schema.Types.Mixed, default: undefined },
     scoreVersion: { type: Number, required: true },
     updatedAt: { type: Date, required: true }
   },

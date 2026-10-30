@@ -2,6 +2,7 @@ const { createApp } = require("./src/app");
 const { connectMongo } = require("./src/config/mongo");
 const { env } = require("./src/config/env");
 const { itemCollector } = require("./src/jobs/item-collection.job");
+const { powerPatrol } = require("./src/jobs/power-patrol.job");
 const { bossReach, hallOfFame } = require("./src/services/stats.service");
 const { upgradeNews } = require("./src/services/news.service");
 
@@ -23,5 +24,9 @@ app.listen(env.port, (error) => {
   setTimeout(() => bossReach().catch(() => {}), 40000).unref();
   if (env.itemCollectionEnabled && env.nexonApiKey) {
     itemCollector.start();
+  }
+  // 전투력 순찰: 모은 캐릭터의 전투력을 한 시간마다 다시 읽어 보스 세팅으로 바꿔 낀 때의 값을 남긴다.
+  if (env.powerPatrolEnabled && env.nexonApiKey) {
+    powerPatrol.start();
   }
 });

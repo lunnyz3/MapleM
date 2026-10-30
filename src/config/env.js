@@ -30,6 +30,10 @@ const env = {
   guildCollectionEnabled: parseBoolean(process.env.GUILD_COLLECTION_ENABLED, true),
   // Daily item-equipment collection of the combat-power top 10,000 (item and spec rankings).
   itemCollectionEnabled: parseBoolean(process.env.ITEM_COLLECTION_ENABLED, true),
+  // 전투력 순찰: 모은 캐릭터의 전투력(stat)을 주기마다 다시 읽어 그날 최고·최근 14일 최고를 남긴다.
+  powerPatrolEnabled: parseBoolean(process.env.POWER_PATROL_ENABLED, true),
+  powerPatrolIntervalMinutes: Math.max(5, parseNumber(process.env.POWER_PATROL_INTERVAL_MINUTES, 60)),
+  powerPatrolConcurrency: Math.min(32, Math.max(1, parseNumber(process.env.POWER_PATROL_CONCURRENCY, 10))),
   guildCollectionMemberDelayMs: Math.max(0, parseNumber(process.env.GUILD_COLLECTION_MEMBER_DELAY_MS, 1000)),
   chatbotEnabled: parseBoolean(process.env.CHATBOT_ENABLED, false),
   pythonChatBaseUrl: process.env.PYTHON_CHAT_BASE_URL || "http://localhost:8001",

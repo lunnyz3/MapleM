@@ -80,12 +80,52 @@ test("성장 일지: 전투력은 그날 본 값 중 가장 높은 값(사냥 �
   assert.equal(record.journal[1].combatPower, 150, "다음 날은 그날 값");
 });
 
-test("스펙 전투력: 지금 관측값이 최근 2주 최고의 절반 아래면(사냥 프리셋) 2주 최고, 아니면 관측값", () => {
-  const { specCombatPower } = require("../src/services/character-record.service");
+test("스펙 전투력: 지금 관측값과 최근 14일 최고 중 큰 값", () => {
+  const { specCombatPower, bestInJournal } = require("../src/services/character-record.service");
   assert.equal(specCombatPower(36206397, 168002403), 168002403);
-  assert.equal(specCombatPower(150000000, 168002403), 150000000);
+  assert.equal(specCombatPower(150000000, 168002403), 168002403);
   assert.equal(specCombatPower(200000000, 168002403), 200000000);
   assert.equal(specCombatPower(41742, null), 41742);
-  assert.equal(specCombatPower(null, 168002403), null);
+  assert.equal(specCombatPower(null, 168002403), 168002403);
   assert.equal(specCombatPower(0, 0), null);
+  const journal = [
+    { date: "2026-10-10", combatPower: 999 },
+    { date: "2026-10-20", combatPower: 300 },
+    { date: "2026-10-29", combatPower: 500 },
+    { date: "2026-10-30", itemScore: 10 }
+  ];
+  assert.equal(bestInJournal(journal, "2026-10-17"), 500);
+  assert.equal(bestInJournal(journal, "2026-10-01"), 999);
+  assert.equal(bestInJournal([], "2026-10-01"), 0);
+});
+
+test("전투력 순찰: 최근 14일 최고는 높으면 새로·같으면 하루 지난 것만, 날짜별 기록은 오를 때만, 스펙은 둘 중 큰 값", () => {
+  const { peakPlan } = require("../src/services/character-record.service");
+  const now = new Date("2026-10-30T05:00:00Z"); // 서울 14시
+  const record = (peak, journal) => ({ recentPeak: peak, journal });
+  const yesterday = [{ date: "2026-10-29", combatPower: 6000 }];
+  // 처음 보는 보스 세팅 값: 최고 새로, 마지막 줄(6000)보다 높으니 오늘 줄도
+  let plan = peakPlan(record(undefined, yesterday), 10000, now);
+  assert.deepEqual([plan.peak?.value, plan.journal, plan.todayMax, plan.specPower], [10000, true, 10000, 10000]);
+  // 사냥 세팅 값: 최고는 그대로, 줄도 안 만든다, 스펙은 최근 최고
+  const peak = { value: 10000, at: new Date("2026-10-30T01:00:00Z") };
+  plan = peakPlan(record(peak, [...yesterday, { date: "2026-10-30", combatPower: 10000 }]), 6000, now);
+  assert.deepEqual([plan.peak, plan.journal, plan.todayMax, plan.specPower], [null, false, 10000, 10000]);
+  // 같은 값을 다시 봄: 하루가 안 지났으면 쓰지 않고, 지났으면 날짜만 새로
+  assert.equal(peakPlan(record(peak, yesterday), 10000, now).peak, null);
+  const old = { value: 10000, at: new Date("2026-10-28T01:00:00Z") };
+  assert.equal(peakPlan(record(old, yesterday), 10000, now).peak.value, 10000);
+  // 처음 도는 바퀴(recentPeak 없음): 날짜별 기록의 14일 최고를 지킨다
+  plan = peakPlan(record(undefined, [{ date: "2026-10-25", combatPower: 270000000 }, { date: "2026-10-29", combatPower: 6000000 }]), 5184601, now);
+  assert.deepEqual([plan.peak, plan.journal, plan.specPower], [null, false, 270000000]);
+  // 날짜별 기록이 없으면 스펙에 있던 값(확인한 지 14일 안)을 지키고, 14일이 지났으면 지금 값
+  plan = peakPlan(null, 5184601, now, { value: 270888033, at: new Date("2026-10-28T07:46:08Z") });
+  assert.deepEqual([plan.peak, plan.journal, plan.specPower], [null, true, 270888033]);
+  assert.equal(peakPlan(null, 5184601, now, { value: 270888033, at: new Date("2026-10-01T00:00:00Z") }).specPower, 5184601);
+  // 14일이 지난 최고는 빠지고, 남은 것(어제 기록 6000) 중 큰 값
+  const expired = { value: 99999, at: new Date("2026-10-10T01:00:00Z") };
+  plan = peakPlan(record(expired, yesterday), 5000, now);
+  assert.deepEqual([plan.peak, plan.journal, plan.specPower], [null, false, 6000]);
+  plan = peakPlan(record(expired, []), 5000, now);
+  assert.deepEqual([plan.peak?.value, plan.journal, plan.specPower], [5000, true, 5000]);
 });

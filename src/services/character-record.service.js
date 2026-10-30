@@ -8,6 +8,7 @@ const { CharacterSpec } = require("../models/character-spec.model");
 const { plausiblePowers } = require("./stats.service");
 const { TtlLruCache } = require("../nexon/client");
 const { allowedWorldNames } = require("../config/worlds");
+const { SCORE_VERSION } = require("../domain/items/score");
 
 const DB_TIMEOUT_MS = 3000;
 
@@ -46,19 +47,79 @@ async function findRecord(ocid) {
 }
 
 const RECENT_POWER_DAYS = 14;
-// 지금 관측값이 최근 2주 최고의 이 비율 아래면 사냥 프리셋을 끼고 잰 값으로 본다
-const FARMING_RATIO = 0.5;
 
 /**
- * 스펙(랭킹·카드·쌍둥이·미니게임이 읽는 값)에 남길 전투력: 지금 관측값이 최근 2주 최고의 절반 아래면(사냥 프리셋)
- * 2주 최고, 아니면 관측값. 날짜별 기록에는 관측값을 그대로 남겨 예전 최고가 계속 이어지지 않게 한다.
+ * 스펙(랭킹·카드·쌍둥이·미니게임이 읽는 값)에 남길 전투력: 지금 관측값과 최근 14일(날짜별 기록의 그날 최고) 최고 중
+ * 큰 값. 사냥 프리셋으로 바꿔 낀 동안에도 보스 세팅 전투력이 남고, 14일이 지나면 그 최고도 빠진다.
  * @param {number | null | undefined} observed @param {number | null | undefined} recentBest
  */
 function specCombatPower(observed, recentBest) {
-  const now = Number(observed) || 0;
-  const best = Number(recentBest) || 0;
-  if (now > 0 && best > 0 && now < best * FARMING_RATIO) return best;
-  return now > 0 ? now : null;
+  const value = Math.max(Number(observed) || 0, Number(recentBest) || 0);
+  return value > 0 ? value : null;
+}
+
+/** 날짜별 기록에서 since(서울 날짜) 이후 가장 높은 전투력(없으면 0). */
+function bestInJournal(journal, since) {
+  let best = 0;
+  for (const row of Array.isArray(journal) ? journal : []) if (row?.date >= since && Number(row.combatPower) > best) best = Number(row.combatPower);
+  return best;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 최근 14일 최고({ value, at })가 아직 유효하면 그 값, 아니면 0 */
+function peakValue(peak, now) {
+  const at = peak?.at ? new Date(peak.at).getTime() : 0;
+  return at && now.getTime() - at < RECENT_POWER_DAYS * DAY_MS ? Number(peak.value) || 0 : 0;
+}
+
+/**
+ * 전투력 순찰이 본 값을 어디에 남길지(순수 함수). 지금까지의 최근 14일 최고 = recentPeak, 날짜별 기록 14일 최고,
+ * 스펙에 있던 전투력(확인한 지 14일 안, seed — 날짜별 기록이 생기기 전 값) 중 가장 큰 값.
+ * - 최근 14일 최고(recentPeak): 더 높으면 새로, 같으면 하루 지난 것만 날짜를 새로(계속 보스 세팅이면 사라지지 않게).
+ * - 날짜별 기록: 그날 줄이 있으면 그날 최고보다 높을 때, 없으면 마지막 줄보다 높을 때만(사냥 세팅으로 본 날은 줄을 만들지 않는다).
+ * - 스펙 전투력: 지금 값과 최근 14일 최고 중 큰 값.
+ * @returns {{ peak: { value: number, at: Date } | null, journal: boolean, todayMax: number, specPower: number }}
+ */
+function peakPlan(previous, power, now, seed = null) {
+  const rows = Array.isArray(previous?.journal) ? previous.journal : [];
+  const last = rows[rows.length - 1] || null;
+  const todayBefore = last?.date === kstDate(now) ? Number(last.combatPower) || 0 : 0;
+  const current = Math.max(
+    peakValue(previous?.recentPeak, now),
+    bestInJournal(rows, kstDate(new Date(now.getTime() - (RECENT_POWER_DAYS - 1) * DAY_MS))),
+    peakValue(seed, now)
+  );
+  const stale = !previous?.recentPeak?.at || now.getTime() - new Date(previous.recentPeak.at).getTime() >= DAY_MS;
+  const peak = power > current || (power === current && stale) ? { value: power, at: now } : null;
+  const journal = todayBefore > 0 ? power > todayBefore : power > (Number(last?.combatPower) || 0);
+  return { peak, journal, todayMax: Math.max(power, todayBefore), specPower: Math.max(power, current) };
+}
+
+/**
+ * 전투력 순찰(src/jobs/power-patrol.job.js): peakPlan 대로 최근 14일 최고·날짜별 기록(그날 최고)·최고 기록을 고치고,
+ * 스펙 전투력을 지금 값과 최근 14일 최고 중 큰 값으로 맞춘다(14일이 지나면 내려간다). → { todayMax, specPower, wrote } | null
+ * combatPower·checkedAt: 순찰 대상 스펙의 지금 전투력과 확인 시각(seed).
+ */
+async function recordPeakPower({ ocid, worldName = "", characterName = "", value, combatPower = null, checkedAt = null, now = new Date() }) {
+  const key = String(ocid || "").trim();
+  const power = Number(value) || 0;
+  if (!key || !(power > 0) || !isMongoConnected()) return null;
+  const previous = await CharacterRecord.findOne({ ocid: key })
+    .select({ _id: 0, best: 1, journal: 1, gear: 1, scoreVersion: 1, recentPeak: 1 })
+    .maxTimeMS(DB_TIMEOUT_MS)
+    .lean();
+  const plan = peakPlan(previous, power, now, combatPower && checkedAt ? { value: combatPower, at: checkedAt } : null);
+  const set = {};
+  if (plan.peak) set.recentPeak = plan.peak;
+  if (plan.journal) {
+    // 장비 없이 전투력만: 그날 줄의 다른 값·장비 변화는 그대로, 템환산 버전도 그대로
+    const next = mergeRecord(previous, { scoreVersion: previous?.scoreVersion ?? SCORE_VERSION, combatPower: power }, now);
+    Object.assign(set, next, worldName && characterName ? { worldName, characterName } : {});
+  }
+  if (Object.keys(set).length) await CharacterRecord.updateOne({ ocid: key }, { $set: { ...set, updatedAt: now } }, { upsert: true });
+  await CharacterSpec.updateOne({ ocid: key, combatPower: { $ne: plan.specPower } }, { $set: { combatPower: plan.specPower } }).maxTimeMS(DB_TIMEOUT_MS);
+  return { todayMax: plan.todayMax, specPower: plan.specPower, wrote: plan.journal || Boolean(plan.peak) };
 }
 
 /**
@@ -69,14 +130,17 @@ async function bestRecentCombatPower(ocid, observed, now = new Date()) {
   const key = String(ocid || "").trim();
   const current = Number(observed?.value) || 0;
   if (!key || !isMongoConnected()) return observed;
-  const record = await CharacterRecord.findOne({ ocid: key }).select({ _id: 0, journal: 1 }).maxTimeMS(DB_TIMEOUT_MS).lean();
+  const record = await CharacterRecord.findOne({ ocid: key }).select({ _id: 0, journal: 1, recentPeak: 1 }).maxTimeMS(DB_TIMEOUT_MS).lean();
   const since = kstDate(new Date(now.getTime() - (RECENT_POWER_DAYS - 1) * 86400000));
   let best = null;
   for (const row of Array.isArray(record?.journal) ? record.journal : []) {
     if (row?.date >= since && Number(row.combatPower) > (best?.value || 0)) best = { value: Number(row.combatPower), date: row.date };
   }
+  // 전투력 순찰이 본 최근 14일 최고
+  const peak = peakValue(record?.recentPeak, now);
+  if (peak > (best?.value || 0)) best = { value: peak, at: new Date(record.recentPeak.at).toISOString() };
   if (!best || best.value <= current) return observed;
-  return { value: best.value, observedAt: `${best.date}T00:00:00+09:00`, recentBest: true };
+  return { value: best.value, observedAt: best.at || `${best.date}T00:00:00+09:00`, recentBest: true };
 }
 
 const BRIEF_MAX = 12;
@@ -169,4 +233,15 @@ async function suggestCharacters({ q, world = "" }) {
   return rows;
 }
 
-module.exports = { recordSnapshot, findRecord, bestRecentCombatPower, specCombatPower, recordBriefs, suggestCharacters, RECENT_POWER_DAYS };
+module.exports = {
+  recordSnapshot,
+  findRecord,
+  bestRecentCombatPower,
+  specCombatPower,
+  bestInJournal,
+  peakPlan,
+  recordPeakPower,
+  recordBriefs,
+  suggestCharacters,
+  RECENT_POWER_DAYS
+};
