@@ -1,7 +1,8 @@
 "use strict";
 
 // 내 캐릭터 변화(순수 함수): 날짜별 기록의 마지막 날을 최근 7일 안 첫날과 견주고(전투력·레벨·템환산),
-// 그 사이 눈에 띄는 장비 변화 둘(강화 소식 규칙, src/domain/stats/upgrade-news.js).
+// 그 사이 눈에 띄는 장비 변화 둘(강화 소식 규칙, src/domain/stats/upgrade-news.js). 전투력이 절반 아래로 떨어지거나
+// 세 배 넘게 뛰었으면 어느 한쪽이 사냥 프리셋으로 잰 값이라 보고 전투력 변화는 뺀다.
 const { classifyChange } = require("../stats/upgrade-news");
 
 const DAYS = 7;
@@ -33,6 +34,8 @@ function recordBrief(journal, today) {
     const to = Number(last[key]);
     return from > 0 && to > 0 ? { from, to } : null;
   };
+  const power = pair("combatPower");
+  const plausible = power && power.to / power.from >= 0.5 && power.to / power.from <= 3;
   const events = window
     .flatMap((row) => (Array.isArray(row.changes) ? row.changes : []))
     .map(classifyChange)
@@ -41,7 +44,7 @@ function recordBrief(journal, today) {
   return {
     date: last.date,
     days: dayGap(first.date, last.date),
-    combatPower: pair("combatPower"),
+    combatPower: plausible ? power : null,
     level: pair("level"),
     itemScore: pair("itemScore"),
     highlights: [...new Set(events.map(highlightText))].slice(0, 2)

@@ -29,4 +29,9 @@ test("내 캐릭터 변화: 최근 7일 첫날과 마지막 날, 눈에 띄는 �
   assert.equal(single.days, 0);
   assert.deepEqual(single.combatPower, { from: 1e7, to: 1e7 });
   assert.equal(recordBrief([], "2026-10-30"), null);
+  // 사냥 프리셋으로 잰 날이 끼면(절반 아래·세 배 넘게) 전투력 변화는 뺀다
+  const farming = recordBrief([{ date: "2026-10-29", combatPower: 12362418 }, { date: "2026-10-30", combatPower: 41742 }], "2026-10-30");
+  assert.equal(farming.combatPower, null);
+  const back = recordBrief([{ date: "2026-10-29", combatPower: 41742 }, { date: "2026-10-30", combatPower: 12362418 }], "2026-10-30");
+  assert.equal(back.combatPower, null);
 });
