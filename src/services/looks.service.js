@@ -18,11 +18,12 @@ let knownItems = null;
 
 const isMongoConnected = () => mongoose.connection.readyState === 1;
 
-async function cached(key, ttl, compute) {
+/** keep(value) 가 false 면 보관하지 않는다(코디를 아직 못 모았을 때 빈 순위가 1시간 남지 않게). */
+async function cached(key, ttl, compute, keep = () => true) {
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
   const value = await compute();
-  cache.set(key, value, ttl, 16 * 1024);
+  if (keep(value)) cache.set(key, value, ttl, 16 * 1024);
   return value;
 }
 
@@ -96,7 +97,7 @@ async function lookStats({ gender = "" } = {}) {
       slots: items.map((slot) => slot._id),
       items: Object.fromEntries(Object.entries(bySlot).map(([slot, rows]) => [slot, withShare(rows, total, 15).map((row) => ({ ...row, icon: icons.get(row.name) || "" }))]))
     };
-  });
+  }, (value) => value.total > 0);
 }
 
 const PERSON = { _id: 0, worldName: 1, characterName: 1, characterClass: 1, gender: 1, hair: 1, face: 1 };
