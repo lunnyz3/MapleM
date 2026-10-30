@@ -14,6 +14,7 @@
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
 //   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
 //   GET /api/v2/ranking-history?ocid=&type=power|level   → { ok, type, points: [{ date, ranking, value }] } (넥슨 과거 랭킹 약 16일)
+//   GET /api/v2/ranking-cuts?type=combat-power|level      → { ok, type, cuts: [{ rank, points: [{ date, value }] }] } (1·100·1,000·10,000위, 12주)
 //   GET /api/v2/collection-summary                        → { ok, characters } (모은 캐릭터 수)
 const { normalizeWorldName } = require("../config/worlds");
 const {
@@ -35,6 +36,7 @@ const { characterHistory } = require("../services/character-history.service");
 const { findRecord, recordBriefs, suggestCharacters } = require("../services/character-record.service");
 const { plausiblePowers } = require("../services/stats.service");
 const { rankingHistory } = require("../services/ranking-history.service");
+const { rankingCuts } = require("../services/ranking-cuts.service");
 
 const MAX_SPEC_NAMES = 300;
 
@@ -245,6 +247,16 @@ async function getRankingHistory(req, res) {
   }
 }
 
+async function getRankingCuts(req, res) {
+  try {
+    const cuts = await rankingCuts({ type: req.query.type === "level" ? "level" : "combat-power" });
+    res.set("Cache-Control", "public, max-age=1800");
+    return res.json({ ok: true, ...cuts });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 // POST /api/v2/records/brief { characters: [{ world, name }] }
 //   → { ok, briefs: [{ world, name, className, level, power, itemScore, potential, additionalPotential, checkedAt, brief }] }
 async function postRecordBriefs(req, res) {
@@ -299,6 +311,7 @@ module.exports = {
   getCharacterHistory,
   getCharacterRecord,
   getRankingHistory,
+  getRankingCuts,
   postRecordBriefs,
   getSuggest
 };

@@ -18,6 +18,7 @@ const {
   getCharacterHistory,
   getCharacterRecord,
   getRankingHistory,
+  getRankingCuts,
   postRecordBriefs,
   getSuggest,
   getCollectionSummary
@@ -39,6 +40,7 @@ router.get("/spec-summary", getSpecSummary);
 router.get("/character-history", getCharacterHistory);
 router.get("/character-record", getCharacterRecord);
 router.get("/ranking-history", getRankingHistory);
+router.get("/ranking-cuts", getRankingCuts);
 router.post("/records/brief", postRecordBriefs);
 router.get("/suggest", getSuggest);
 router.get("/collection-summary", getCollectionSummary);

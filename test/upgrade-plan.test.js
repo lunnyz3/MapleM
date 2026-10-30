@@ -59,3 +59,68 @@ test("스펙업 추천: 강화 비용은 강화 계산기와 같은 기댓값, 1
     [25, 1]
   );
 });
+
+test("스펙업 추천: 다음 목표까지 장비마다 하나씩 곱해 쌓고, 남은 몫을 혼자 채우면 그중 가장 작은 것", async () => {
+  const { planToTarget } = await load();
+  const item = (fingerprint) => ({ fingerprint, slotName: fingerprint, itemName: fingerprint });
+  const plans = [
+    { kind: "star", item: item("무기"), gain: 0.03 },
+    { kind: "swap", item: item("무기"), gain: 0.05 },
+    { kind: "star", item: item("모자"), gain: 0.02 },
+    { kind: "star", item: item("신발"), gain: 0.01 },
+    { kind: "swap", item: item("장갑"), gain: Number.NaN }
+  ];
+  const result = planToTarget(plans, 0.06);
+  assert.deepEqual(
+    result.steps.map((step) => [step.item.fingerprint, step.kind]),
+    [
+      ["무기", "swap"],
+      ["신발", "star"]
+    ]
+  );
+  assert.ok(Math.abs(result.total - (1.05 * 1.01 - 1)) < 1e-12);
+  assert.equal(result.reached, true);
+  // 혼자 채우는 것 중 가장 작은 것: +1.5% 가 필요하면 무기(+5%)가 아니라 모자(+2%)
+  assert.deepEqual(
+    planToTarget(plans, 0.015).steps.map((step) => step.item.fingerprint),
+    ["모자"]
+  );
+  const short = planToTarget(plans, 0.5);
+  assert.equal(short.steps.length, 3);
+  assert.equal(short.reached, false);
+  assert.deepEqual(planToTarget([], 0.1), { steps: [], total: 0, reached: false });
+  // 혼자 채우는 큰 교체(+59%)가 남은 몫의 세 배를 넘고 작은 것들로 채울 수 있으면 작은 것부터
+  const big = [
+    { kind: "swap", item: item("무기"), gain: 0.59 },
+    { kind: "swap", item: item("반지"), gain: 0.05 },
+    { kind: "star", item: item("모자"), gain: 0.03 },
+    { kind: "star", item: item("신발"), gain: 0.02 }
+  ];
+  assert.deepEqual(
+    planToTarget(big, 0.094).steps.map((step) => step.item.fingerprint),
+    ["반지", "모자", "신발"]
+  );
+  // 작은 것들로 못 채우면 큰 것 하나
+  assert.deepEqual(
+    planToTarget(big, 0.2).steps.map((step) => step.item.fingerprint),
+    ["무기"]
+  );
+});
+
+test("스펙업 추천: 바꾸기 문구의 로/으로", async () => {
+  const { withRo, swapText } = await load();
+  assert.equal(withRo("커맨더 포스 이어링"), "커맨더 포스 이어링으로");
+  assert.equal(withRo("창세의 뱃지"), "창세의 뱃지로");
+  assert.equal(withRo("고귀한 이피아의 반지 ★7"), "고귀한 이피아의 반지 ★7로");
+  assert.equal(withRo("★30"), "★30으로");
+  assert.equal(withRo("아케인셰이드 투핸드소드 ★23"), "아케인셰이드 투핸드소드 ★23으로");
+  assert.equal(withRo("데스페라도 ★35"), "데스페라도 ★35로");
+  assert.equal(withRo("벨트"), "벨트로");
+  assert.equal(withRo("반지 ★1"), "반지 ★1로");
+  assert.equal(withRo("파풀라투스 마크"), "파풀라투스 마크로");
+  assert.equal(withRo("마이스터 링"), "마이스터 링으로");
+  assert.equal(withRo("골드 클로버 벨트"), "골드 클로버 벨트로");
+  assert.equal(withRo("칠흑의 보스 세트 펜던트"), "칠흑의 보스 세트 펜던트로");
+  assert.equal(swapText({ itemName: "커맨더 포스 이어링", starforceUpgrade: "0" }), "커맨더 포스 이어링으로 바꾸기");
+  assert.equal(swapText({ itemName: "제네시스 피스톨", starforceUpgrade: "35" }), "제네시스 피스톨 ★35로 바꾸기");
+});

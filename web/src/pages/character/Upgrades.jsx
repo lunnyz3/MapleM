@@ -15,17 +15,19 @@ import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.
 import { urls } from "../../lib/game.js";
 import { loadItemRanks } from "../../lib/itemRanks.js";
 import { currentSetTotals } from "../../lib/starforceWhatIf.mjs";
-import { rankPlans, starUpTotals, swapUpTotals, withStarCost } from "../../lib/upgradePlan.mjs";
+import { rankPlans, starUpTotals, swapText, swapUpTotals, withStarCost } from "../../lib/upgradePlan.mjs";
 
 const CANDIDATES = 8;
 const WORKERS = 4;
 
 /**
+ * 장비마다 강화·교체 계획(보스 탭의 다음 보스까지 경로도 쓴다). 스탯을 모르면 빈 목록.
  * @param {{ items: any[], ocid: string, majorStats: Record<string, any>, attackType: string }} input
+ * @returns {Promise<{ star: any[], swap: any[] }>}
  */
-async function computePlans({ items, ocid, majorStats, attackType }) {
+export async function computePlans({ items, ocid, majorStats, attackType }) {
   const totals = totalsFromStats(majorStats, attackType);
-  if (!totals) return [];
+  if (!totals) return { star: [], swap: [] };
   const before = combatPower(totals);
   const ratio = (/** @type {any} */ next) => (before > 0 && next ? combatPower(next) / before - 1 : Number.NaN);
   const setTotals = currentSetTotals(majorStats);
@@ -75,7 +77,7 @@ const SORTS = [
 const percent = (/** @type {number} */ value) => `${formatDecimal(value * 100, value < 0.0001 ? 3 : value < 0.01 ? 2 : 1)}%`;
 
 /** 평균 n회 · 파괴 x% · 1회당 +y% @param {{ plan: any }} props */
-function StarCost({ plan }) {
+export function StarCost({ plan }) {
   if (!Number.isFinite(plan.tries)) return null;
   return (
     <span class="upgrades__cost num">
@@ -166,10 +168,7 @@ export function Upgrades({ items, ocid, majorStats, attackType, basePower, onOpe
                         <StarCost plan={plan} />
                       </>
                     ) : (
-                      <strong>
-                        {plan.other.itemName}
-                        {Number(plan.other.starforceUpgrade) ? ` ★${plan.other.starforceUpgrade}` : ""}로 바꾸기
-                      </strong>
+                      <strong>{swapText(plan.other)}</strong>
                     )}
                     {plan.kind === "swap" ? (
                       <a class="upgrades__owner" href={urls.character(plan.owner.world, plan.owner.name)}>

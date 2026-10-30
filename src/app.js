@@ -127,7 +127,7 @@ function createApp() {
   app.post("/api/v2/megaphone", rateLimiters.megaphones);
   app.get(["/api/v2/fortune", "/api/v2/match", "/api/v2/fun/nicknames"], rateLimiters.fortunes);
   app.get("/api/v2/suggest", rateLimiters.suggest);
-  app.get("/api/v2/ranking-history", rateLimiters.rankingHistory);
+  app.get(["/api/v2/ranking-history", "/api/v2/ranking-cuts"], rateLimiters.rankingHistory);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

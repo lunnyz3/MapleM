@@ -13,6 +13,7 @@ import { RowMeta, WorldIcon } from "../components/GameIcons.jsx";
 import { EmptyState, ErrorState } from "../components/States.jsx";
 import { Segmented, TabPanel, Tabs } from "../components/Tabs.jsx";
 import { ItemRanking, SPEC_METRICS, SpecRanking } from "./ranking/Collected.jsx";
+import { RankingCuts } from "./ranking/Cuts.jsx";
 import { HallRecords } from "./HallOfFame.jsx";
 import { ItemSearch } from "./ranking/ItemSearch.jsx";
 import { RANKING_PAGE_SIZE, findCharacterRank, loadRankingPage } from "../lib/data.js";
@@ -847,6 +848,8 @@ function OfficialRanking({ onView }) {
       {result && (result.rows.length || query.page > 1) ? (
         <Pager page={query.page} hasMore={Boolean(result.hasMore)} onPage={(page) => update({ page })} disabled={state.status === "loading"} />
       ) : null}
+
+      {query.type === "combat-power" || query.type === "level" ? <RankingCuts typeId={query.type} /> : null}
 
     </div>
   );

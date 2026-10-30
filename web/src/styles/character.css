@@ -114,6 +114,19 @@
   font-weight: 700;
 }
 
+.ch-hero__tier {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+  font-size: var(--fs-12);
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .ch-hero__name {
   font-size: clamp(2rem, 1.3rem + 2.6vw, 3rem);
   font-weight: 800;
@@ -2826,6 +2839,85 @@ button.eq-slot:hover .eq-slot__img {
 .boss-force__have,
 .boss-force__cost {
   font-size: var(--fs-14);
+  font-weight: 700;
+}
+
+.boss-path {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--sky-bg);
+  color: var(--sky-ink);
+}
+
+.boss-path p {
+  margin: 0;
+}
+
+.boss-path__go,
+.boss-path__kinds {
+  justify-self: start;
+}
+
+.boss-path__steps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boss-path__steps li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.boss-path__no {
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: center;
+}
+
+.boss-path__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.boss-path__slot {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boss-path__text strong {
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.boss-path__gain {
+  display: grid;
+  justify-items: end;
+}
+
+.boss-path__gain strong {
+  color: var(--success);
+  font-weight: 900;
+}
+
+.boss-path__gain span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
   font-weight: 700;
 }
 

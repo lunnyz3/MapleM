@@ -1,6 +1,7 @@
 // 길드 화면: /preview/guild(길드 검색) · /preview/guild/<월드>/<이름>(길드 상세).
 // 데이터: GET /api/maplestorym/guild/id → GET /api/maplestorym/guild/basic, 길드원 썸네일은 /api/maplestorym/character/image.
 // 길드원 스펙(전투력 순위·보스 파티): POST /api/v2/specs(사이트가 모은 길드원만, power = 사냥 프리셋으로 잰 듯하면 0).
+// 길드 비교(/guild/compare?a=월드/길드&b=월드/길드): 두 길드의 인원·평균 레벨·전투력·템환산·보스 입장 인원·직업.
 import "../styles/guild.css";
 import bossData from "../../../src/game-data/boss-entry.json";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -19,13 +20,13 @@ import { getJson, loadCharacterImage, peekCharacterClass } from "../lib/api.js";
 import { loadGuild } from "../lib/data.js";
 import { downloadCsv } from "../lib/csv.mjs";
 import { formatComma, formatDateDot, formatKoreanUnits, formatRelativeTime, kstToday, toNumber } from "../lib/format.js";
-import { WORLDS, getRankingType, urls } from "../lib/game.js";
+import { DEFAULT_WORLD, WORLDS, getRankingType, urls } from "../lib/game.js";
 import { RankRow, useRanking } from "./Home.jsx";
 import { useInView } from "../lib/motion.js";
 import { copyText, sharePageUrl } from "../lib/share.js";
 import { addRecent, entryKey, toggleFavorite, useSaved } from "../lib/storage.js";
 import { setScoreText } from "../lib/itemScore.js";
-import { bossRoster, defaultBoss, splitParties } from "../lib/guildParty.mjs";
+import { bossRoster, defaultBoss, guildSummary, splitParties } from "../lib/guildParty.mjs";
 
 /** 길드 건물 5종(기존 화면과 같은 이름 규칙·그림) */
 const BUILDINGS = [
@@ -184,6 +185,10 @@ function GuildHero({ guild }) {
             <Icon name="link" size={18} />
             링크 복사
           </button>
+          <a class="btn btn--secondary btn--sm" href={`/guild/compare?${new URLSearchParams({ a: `${guild.world}/${guild.name}` })}`}>
+            <Icon name="swords" size={18} />
+            다른 길드와 비교
+          </a>
         </div>
       </div>
     </section>
@@ -590,6 +595,205 @@ function BossPanel({ guild }) {
         </details>
       ) : null}
       {roster.unknown.length ? <p class="gd-boss__note num">기록 없음·전투력 모름 {formatComma(roster.unknown.length)}명(캐릭터를 한 번 열어 보면 생겨요)</p> : null}
+    </div>
+  );
+}
+
+// ---------------- 길드 비교 ----------------
+
+const COMPARE_BOSSES = [
+  ["선택받은 세렌", "하드"],
+  ["감시자 칼로스", "노말"],
+  ["감시자 칼로스", "하드"],
+  ["카링", "노말"]
+]
+  .map(([name, difficulty]) => BOSSES.find((boss) => boss.name === name && boss.difficulty === difficulty))
+  .filter(Boolean);
+
+/** "스카니아/레전드" → { world, name } */
+function parseSide(value) {
+  const [world, ...rest] = String(value || "").split("/");
+  return WORLDS.includes(world) ? { world, name: rest.join("/").trim() } : { world: DEFAULT_WORLD, name: "" };
+}
+
+/** 한 길드: 넥슨 길드 정보 + 모은 길드원 스펙 → 요약 */
+async function loadSide({ world, name }) {
+  const guild = shapeGuild(await loadGuild(world, name), world, name);
+  const specs = await loadGuildSpecs(guild);
+  const byName = new Map(specs.map((spec) => [spec.characterName, spec]));
+  const members = guild.members
+    .filter((member) => member.name && member.name !== "-")
+    .map((member) => {
+      const spec = byName.get(member.name);
+      return {
+        name: member.name,
+        level: Number(spec?.characterLevel) || member.level || 0,
+        power: Number(spec?.power) || 0,
+        itemScore: Number(spec?.itemScore) || 0,
+        className: spec?.characterClass || member.job || ""
+      };
+    });
+  return { guild, summary: guildSummary(members, COMPARE_BOSSES) };
+}
+
+/** 길드 비교 표의 줄: 큰 쪽에 표시(같으면 둘 다 없음) */
+const COMPARE_ROWS = [
+  { label: "길드 레벨", value: (side) => side.guild.level || 0, text: (side) => `Lv.${side.guild.level ?? "-"}` },
+  { label: "길드원", value: (side) => side.summary.count, text: (side) => `${formatComma(side.summary.count)}명` },
+  { label: "평균 레벨", value: (side) => side.summary.avgLevel, text: (side) => (side.summary.avgLevel ? `Lv.${side.summary.avgLevel.toFixed(1)}` : "-") },
+  { label: "전투력 합", value: (side) => side.summary.powerSum, text: (side) => (side.summary.powerSum ? shortPower(side.summary.powerSum) : "-") },
+  { label: "상위 10명 평균", value: (side) => side.summary.top10, text: (side) => (side.summary.top10 ? shortPower(side.summary.top10) : "-") },
+  { label: "1위 길드원", value: (side) => side.summary.best?.power || 0, text: (side) => (side.summary.best ? `${side.summary.best.name} · ${shortPower(side.summary.best.power)}` : "-") },
+  { label: "평균 템환산", value: (side) => side.summary.avgItemScore, text: (side) => (side.summary.avgItemScore ? `${setScoreText(side.summary.avgItemScore)}점` : "-") },
+  ...COMPARE_BOSSES.map((boss, index) => ({
+    label: `${boss.difficulty} ${boss.name.replace(/^(선택받은|감시자) /, "")} 입장`,
+    value: (side) => side.summary.bosses[index].count,
+    text: (side) => `${formatComma(side.summary.bosses[index].count)}명`
+  }))
+];
+
+/** @param {{ id: string, label: string, side: { world: string, name: string }, onChange: (side: { world: string, name: string }) => void }} props */
+function SideInput({ id, label, side, onChange }) {
+  return (
+    <fieldset class="gdc-side">
+      <legend>{label}</legend>
+      <span class="select">
+        <select aria-label={`${label} 월드`} value={side.world} onChange={(event) => onChange({ ...side, world: /** @type {HTMLSelectElement} */ (event.currentTarget).value })}>
+          {WORLDS.map((world) => (
+            <option key={world} value={world}>
+              {world}
+            </option>
+          ))}
+        </select>
+        <Icon name="chevronDown" size={18} class="select__icon" />
+      </span>
+      <input
+        id={id}
+        class="input"
+        type="text"
+        maxLength={24}
+        autoComplete="off"
+        aria-label={`${label} 이름`}
+        placeholder="길드 이름"
+        value={side.name}
+        onInput={(event) => onChange({ ...side, name: /** @type {HTMLInputElement} */ (event.currentTarget).value })}
+      />
+    </fieldset>
+  );
+}
+
+export function GuildCompare() {
+  const [form, setForm] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return { a: parseSide(params.get("a")), b: parseSide(params.get("b")) };
+  });
+  const [state, setState] = useState(/** @type {{ status: "idle" | "loading" | "ready" | "error", sides?: any[], message?: string }} */ ({ status: "idle" }));
+
+  const run = (/** @type {typeof form} */ pair) => {
+    const sides = [pair.a, pair.b].map((side) => ({ world: side.world, name: side.name.trim() }));
+    if (!sides.every((side) => side.name)) return;
+    setState({ status: "loading" });
+    const url = `/guild/compare?${new URLSearchParams({ a: `${sides[0].world}/${sides[0].name}`, b: `${sides[1].world}/${sides[1].name}` })}`;
+    if (`${window.location.pathname}${window.location.search}` !== url) window.history.replaceState(null, "", url);
+    Promise.all(sides.map((side) => loadSide(side).catch((error) => Promise.reject({ side, error })))).then(
+      (loaded) => setState({ status: "ready", sides: loaded }),
+      ({ side, error }) =>
+        setState({ status: "error", message: error?.status === 404 ? `${side.world} 월드에서 '${side.name}' 길드를 찾지 못했어요.` : "길드 정보를 불러오지 못했어요." })
+    );
+  };
+  useEffect(() => {
+    document.title = "길드 비교 · 메이플M 플러스";
+    if (form.a.name && form.b.name) run(form);
+  }, []);
+
+  const sides = state.status === "ready" ? state.sides || [] : [];
+  return (
+    <div class="gd gdc">
+      <header class="page-head page-head--rank tone-mint">
+        <Aurora tone="mint" />
+        <span class="page-head__icon" aria-hidden="true">
+          <Icon name="swords" size={28} />
+        </span>
+        <h1 class="page-head__title display">
+          <SplitText text="길드 비교" />
+        </h1>
+      </header>
+      <form
+        class="card gdc-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          run(form);
+        }}
+      >
+        <SideInput id="gdc-a" label="첫째 길드" side={form.a} onChange={(a) => setForm({ ...form, a })} />
+        <span class="gdc-vs display" aria-hidden="true">
+          VS
+        </span>
+        <SideInput id="gdc-b" label="둘째 길드" side={form.b} onChange={(b) => setForm({ ...form, b })} />
+        <button type="submit" class="btn btn--primary gdc-go" disabled={!form.a.name.trim() || !form.b.name.trim() || state.status === "loading"}>
+          <Icon name="swords" size={18} />
+          {state.status === "loading" ? "불러오는 중" : "비교하기"}
+        </button>
+      </form>
+      {state.status === "loading" ? <SkeletonList rows={8} /> : null}
+      {state.status === "error" ? <ErrorState compact title={state.message || "불러오지 못했어요"} /> : null}
+      {sides.length === 2 ? (
+        <section class="card gdc-result" aria-label="길드 비교">
+          <table class="gdc-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  <span class="sr-only">항목</span>
+                </th>
+                {sides.map((side) => (
+                  <th scope="col" key={`${side.guild.world}/${side.guild.name}`}>
+                    <a href={urls.guild(side.guild.world, side.guild.name)}>
+                      {side.guild.mark ? <img src={side.guild.mark} alt="" width={28} height={28} /> : <Icon name="flag" size={20} />}
+                      <span>
+                        <strong>{side.guild.name}</strong>
+                        <span>
+                          <WorldIcon world={side.guild.world} size={12} /> {side.guild.world}
+                        </span>
+                      </span>
+                    </a>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE_ROWS.map((row) => {
+                const [a, b] = sides.map((side) => row.value(side));
+                return (
+                  <tr key={row.label}>
+                    <th scope="row">{row.label}</th>
+                    {sides.map((side, index) => {
+                      const mine = index ? b : a;
+                      const other = index ? a : b;
+                      return (
+                        <td key={index} class={`num${mine > other ? " is-win" : ""}`}>
+                          {row.text(side)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+              <tr>
+                <th scope="row">많은 직업</th>
+                {sides.map((side, index) => (
+                  <td key={index} class="gdc-classes">
+                    {side.summary.classes.map((entry) => `${entry.className} ${entry.count}`).join(" · ") || "-"}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+          <p class="gdc-note num">
+            전투력·템환산은 사이트가 모은 길드원 기준(
+            {sides.map((side) => `${side.guild.name} ${formatComma(side.summary.known)}/${formatComma(side.summary.count)}명`).join(", ")})
+          </p>
+        </section>
+      ) : null}
     </div>
   );
 }

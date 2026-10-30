@@ -59,3 +59,27 @@ test("길드 보스 파티: 기본 보스는 6명 이상 가는 가장 어려운
   assert.equal(defaultBoss([member("top", 2000)], bosses), 2);
   assert.equal(defaultBoss([member("x", 1)], bosses), -1);
 });
+
+test("길드 비교 요약: 평균 레벨·전투력 합·상위 10명 평균·1위·직업 다섯·보스 입장 인원", async () => {
+  const { guildSummary } = await load();
+  const members = [
+    { name: "a", level: 290, power: 300, itemScore: 1000, className: "렌" },
+    { name: "b", level: 280, power: 100, itemScore: 0, className: "렌" },
+    { name: "c", level: 270, power: 0, className: "비숍" },
+    { name: "d", level: 0, power: 0, className: "" }
+  ];
+  const summary = guildSummary(members, [{ name: "보스", difficulty: "하드", level: 280, power: 200 }]);
+  assert.equal(summary.count, 4);
+  assert.equal(summary.known, 2);
+  assert.equal(summary.avgLevel, 280);
+  assert.equal(summary.powerSum, 400);
+  assert.equal(summary.top10, 200);
+  assert.equal(summary.best.name, "a");
+  assert.equal(summary.avgItemScore, 1000);
+  assert.deepEqual(summary.classes, [
+    { className: "렌", count: 2 },
+    { className: "비숍", count: 1 }
+  ]);
+  assert.equal(summary.bosses[0].count, 1);
+  assert.equal(guildSummary([], []).best, null);
+});

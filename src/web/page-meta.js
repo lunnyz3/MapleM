@@ -18,6 +18,7 @@ const STATIC_PAGES = {
   "/calc": { title: "계산기", description: "메이플스토리M HEXA 강화 기간, HEXA 스탯 기댓값, 심볼 비용, 무기 해방 날짜 계산기." },
   "/compare": { title: "캐릭터 비교", description: "메이플스토리M 두 캐릭터의 전투력·스탯·장비 템환산 비교." },
   "/guild": { title: "길드", description: "메이플스토리M 길드 검색과 길드원 전투력 순위." },
+  "/guild/compare": { title: "길드 비교", description: "메이플스토리M 두 길드의 길드원 수·평균 레벨·상위 10명 전투력·보스 입장 인원 비교." },
   "/bot": { title: "카카오톡 봇", description: "단톡방에 무료로 넣는 메이플스토리M 캐릭터 정보 봇. 오픈채팅으로 신청하세요." }
 };
 

@@ -6,6 +6,26 @@ import { basicChange, setChange, setOfItem } from "./starforceWhatIf.mjs";
 import { swapTotals } from "./swapItem.mjs";
 import { applyLineChanges } from "./whatIf.mjs";
 
+/**
+ * "…로 / …으로": 마지막 글자 받침(ㄹ 받침은 로), 숫자는 읽는 소리(0·3·6 → 으로).
+ * @param {string} word
+ */
+export function withRo(word) {
+  const text = String(word || "");
+  const code = text.charCodeAt(text.length - 1);
+  if (code >= 0xac00 && code <= 0xd7a3) {
+    const final = (code - 0xac00) % 28;
+    return `${text}${final === 0 || final === 8 ? "로" : "으로"}`;
+  }
+  return `${text}${/[036]$/.test(text) ? "으로" : "로"}`;
+}
+
+/** 다른 장비로 바꾸기 문구: "커맨더 포스 이어링으로 바꾸기", "제네시스 피스톨 ★35로 바꾸기" @param {any} other */
+export function swapText(other) {
+  const star = Number(other?.starforceUpgrade) || 0;
+  return `${withRo(`${other?.itemName || ""}${star ? ` ★${star}` : ""}`)} 바꾸기`;
+}
+
 /** 한벌옷은 상의·하의 두 칸이라 세트 합이 두 배로 움직인다 */
 const setStep = (item) => (item?.slotName === "한벌옷" ? 2 : 1);
 
@@ -61,6 +81,46 @@ export function swapUpTotals({ totals, item, other, sets, setTotals, attackType 
     setDelta = deltaToTotals(setChange(mine, setTotals[mine.label], stars * setStep(item), sets.cap), attackType);
   }
   return swapTotals(totals, item, other, attackType, setDelta);
+}
+
+/**
+ * 목표(need: 올려야 하는 비율, 0.094 = +9.4%)까지: 장비마다 가장 많이 오르는 것 하나씩 고른다. 남은 몫을 혼자 채우는
+ * 계획이 있으면 그중 가장 작은 것(목표를 크게 넘지 않게), 없으면 가장 많이 오르는 것부터. 혼자 채우는 것이 남은 몫의
+ * 세 배를 넘고 그보다 작은 것들로도 채울 수 있으면 작은 것부터(제네시스 무기 같은 큰 교체 하나보다 작은 것 여럿).
+ * 서로 다른 장비의 상승은 곱으로 쌓인다고 본다(전투력 식이 곱이라 대략 맞다).
+ * @template {{ gain: number, item: any }} T
+ * @param {T[]} plans @param {number} need
+ * @returns {{ steps: Array<T & { total: number }>, total: number, reached: boolean }}
+ */
+export function planToTarget(plans, need) {
+  const best = new Map();
+  for (const plan of plans) {
+    if (!(Number.isFinite(plan.gain) && plan.gain > 1e-6)) continue;
+    const key = plan.item?.fingerprint || `${plan.item?.slotName}|${plan.item?.itemName}`;
+    if (!best.has(key) || plan.gain > best.get(key).gain) best.set(key, plan);
+  }
+  const pool = [...best.values()].sort((a, b) => b.gain - a.gain);
+  const steps = [];
+  let total = 0;
+  while (pool.length && total < need) {
+    const rest = (1 + need) / (1 + total) - 1;
+    let pick = -1;
+    for (let i = pool.length - 1; i >= 0; i -= 1) {
+      if (pool[i].gain >= rest) {
+        pick = i;
+        break;
+      }
+    }
+    if (pick >= 0 && pool[pick].gain > rest * 3) {
+      const smaller = pool.slice(pick + 1);
+      if (smaller.reduce((product, plan) => product * (1 + plan.gain), 1) - 1 >= rest) pick += 1;
+    }
+    if (pick < 0) pick = 0;
+    const [plan] = pool.splice(pick, 1);
+    total = (1 + total) * (1 + plan.gain) - 1;
+    steps.push({ ...plan, total });
+  }
+  return { steps, total, reached: total >= need };
 }
 
 /**

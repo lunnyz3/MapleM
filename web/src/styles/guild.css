@@ -1044,3 +1044,144 @@
   font-size: var(--fs-12);
   font-weight: 700;
 }
+
+/* 길드 비교 */
+.card.gdc-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+}
+
+.gdc-side {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gdc-side legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.gdc-vs {
+  align-self: center;
+  padding-top: 18px;
+  color: var(--text-subtle);
+  font-size: var(--fs-16);
+  font-weight: 900;
+}
+
+.card.gdc-result {
+  display: grid;
+  gap: 10px;
+  padding: 8px 16px 16px;
+  overflow-x: auto;
+}
+
+.gdc-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gdc-table th,
+.gdc-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.gdc-table tbody th {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.gdc-table thead th a {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.gdc-table thead th a > span {
+  display: grid;
+  text-align: left;
+}
+
+.gdc-table thead th a strong {
+  font-weight: 900;
+}
+
+.gdc-table thead th a span span {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.gdc-table td {
+  font-weight: 700;
+}
+
+.gdc-table td.is-win {
+  color: var(--success);
+  font-weight: 900;
+}
+
+.gdc-table td.is-win::after {
+  content: " ▲";
+  font-size: 0.75em;
+}
+
+.gdc-classes {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.gdc-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .card.gdc-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gdc-vs {
+    justify-self: center;
+    padding: 0;
+  }
+
+  .gdc-go {
+    width: 100%;
+  }
+
+  .gdc-table th,
+  .gdc-table td {
+    padding: 8px 4px;
+    font-size: var(--fs-12);
+  }
+
+  .gdc-table tbody th {
+    white-space: normal;
+    word-break: keep-all;
+  }
+}

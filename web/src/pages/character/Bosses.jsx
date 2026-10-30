@@ -2,13 +2,18 @@
 // 입장 가능 = 레벨 ≥ 입장 레벨 그리고 전투력 ≥ 입장 전투력. 권장 전투력을 넘으면 따로 표시한다.
 // 권장 포스(아케인·어센틱)는 심볼 포스 합과 견주고, 권장 포스가 모자란 첫 보스까지 심볼을 가장 적게 쓰는 레벨업을 보여 준다.
 // 보스마다 모은 캐릭터 중 입장 가능한 비율(GET /api/v2/stats/boss-reach, 서버가 6시간마다 센다).
+// 다음 보스가 전투력에 막혀 있으면, 누르면 스펙업 추천 계산(computePlans)으로 모자란 만큼 채우는 경로(planToTarget, 추정).
 import bossData from "../../../../src/game-data/boss-entry.json";
 import symbolCosts from "../../../../src/game-data/symbol-costs.json";
 import { useEffect, useState } from "preact/hooks";
 import { EmptyState } from "../../components/States.jsx";
+import { Segmented } from "../../components/Tabs.jsx";
 import { getJson } from "../../lib/api.js";
+import { Icon } from "../../components/Icon.jsx";
 import { forcePlan, totalForce } from "../../lib/bossForce.mjs";
-import { combatPowerOf, shortSymbolName } from "../../lib/character.js";
+import { combatPowerOf, presetByNo, shortSymbolName } from "../../lib/character.js";
+import { planToTarget, swapText } from "../../lib/upgradePlan.mjs";
+import { StarCost, computePlans } from "./Upgrades.jsx";
 import { formatComma, formatDecimal, formatKoreanUnits, toNumber } from "../../lib/format.js";
 
 /** 1억 아래는 "455만", 위는 "1억 1,230만" */
@@ -41,6 +46,94 @@ function useBossReach() {
     };
   }, []);
   return reach;
+}
+
+/**
+ * 다음 보스까지 스펙업 경로: 누르면 보스 세팅 장비로 스펙업 추천을 재고, 모자란 비율을 채울 때까지 장비마다 하나씩.
+ * @param {{ data: any, power: number, boss: any }} props
+ */
+const PATH_KINDS = [
+  { value: "all", label: "전체" },
+  { value: "star", label: "★ 강화만" }
+];
+
+function NextBossPath({ data, power, boss }) {
+  const [state, setState] = useState(/** @type {{ status: "idle" | "loading" | "ready" | "error", plans?: { star: any[], swap: any[] } }} */ ({ status: "idle" }));
+  const [kind, setKind] = useState("all");
+  const need = boss.power / power - 1;
+  const bossNo = data.profile?.statSetting?.dimensions?.find((dim) => dim.key === "equipment")?.boss;
+  const items = presetByNo(data.tabs?.equipment, bossNo)?.data?.itemEquipment || [];
+  useEffect(() => setState({ status: "idle" }), [boss, power]);
+
+  const run = () => {
+    setState({ status: "loading" });
+    computePlans({ items, ocid: data.ocid, majorStats: data.profile?.majorStats || {}, attackType: data.profile?.attackType || "physical" }).then(
+      (plans) => setState({ status: "ready", plans }),
+      () => setState({ status: "error" })
+    );
+  };
+
+  const percent = (/** @type {number} */ value) => `+${formatDecimal(value * 100, value < 0.1 ? 1 : 0)}%`;
+  const result = state.plans ? planToTarget(kind === "star" ? state.plans.star : [...state.plans.star, ...state.plans.swap], need) : null;
+  return (
+    <div class="boss-path">
+      <p class="boss-force__title">
+        <strong>
+          {boss.name} {boss.difficulty}까지
+        </strong>
+        전투력 <span class="num">{shortPower(boss.power - power)}</span> 부족
+        <span class="boss-force__have num">{percent(need)} 필요</span>
+      </p>
+      {state.status === "idle" ? (
+        <button type="button" class="btn btn--secondary btn--sm boss-path__go" onClick={run}>
+          <Icon name="bolt" size={16} />
+          스펙업 경로 찾기
+        </button>
+      ) : null}
+      {state.status === "loading" ? <p class="boss-force__cost">장비마다 재는 중…</p> : null}
+      {state.status === "error" ? <p class="boss-force__cost">재지 못했어요.</p> : null}
+      {state.status === "ready" ? <Segmented name="boss-path-kind" legend="경로 종류" value={kind} onChange={setKind} options={PATH_KINDS} class="boss-path__kinds" /> : null}
+      {result ? (
+        result.steps.length ? (
+          <>
+            <ol class="boss-path__steps">
+              {result.steps.map((step, index) => {
+                const star = Number(step.item.starforceUpgrade) || 0;
+                return (
+                  <li key={`${step.kind}-${step.item.fingerprint || step.item.itemName}`}>
+                    <span class="boss-path__no num">{index + 1}</span>
+                    <span class="boss-path__text">
+                      <span class="boss-path__slot">
+                        {step.item.slotName} · {step.item.itemName}
+                        {star ? ` ★${star}` : ""}
+                      </span>
+                      <strong>
+                        {step.kind === "star"
+                          ? `스타포스 ★${star} → ★${step.toStar}`
+                          : swapText(step.other)}
+                      </strong>
+                      {step.kind === "star" ? <StarCost plan={step} /> : null}
+                    </span>
+                    <span class="boss-path__gain num">
+                      <strong>{percent(step.gain)}</strong>
+                      <span>{shortPower(Math.round(power * (1 + step.total)))}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+            <p class="boss-force__cost num">
+              {result.reached
+                ? `${result.steps.length}개면 추정 ${shortPower(Math.round(power * (1 + result.total)))}으로 입장 가능`
+                : `추천 ${result.steps.length}개를 다 해도 ${percent(need - result.total)} 모자라요(추정)`}
+            </p>
+          </>
+        ) : (
+          <p class="boss-force__cost">{kind === "star" ? "★ 강화로 오를 장비를 찾지 못했어요." : "지금 장비에서 오를 곳을 찾지 못했어요."}</p>
+        )
+      ) : null}
+    </div>
+  );
 }
 
 const sharePercent = (/** @type {number} */ share) => (share > 0 && share < 0.001 ? "0.1% 미만" : `${formatDecimal(share * 100, share >= 0.1 ? 0 : 1)}%`);
@@ -133,6 +226,7 @@ export function BossTab({ data }) {
           </p>
         ) : null}
       </div>
+      {next && next.levelOk && !next.powerOk ? <NextBossPath data={data} power={power} boss={next.boss} /> : null}
       {knowForce ? <ForcePlan rows={rows} symbols={symbols} force={force} /> : null}
       <ul class="boss-list">
         {rows.map(({ boss, levelOk, powerOk, open, recommended }, index) => {

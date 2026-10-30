@@ -32,4 +32,15 @@ function historyDates(today, floor = RANKING_FLOOR) {
   return [...dates].sort();
 }
 
-module.exports = { historyDates, RANKING_FLOOR };
+/** 어제부터 7일 간격으로 weeks 개(오래된 날부터, 첫날 이전은 뺀다). @param {string} today */
+function weeklyDates(today, weeks = 12, floor = RANKING_FLOOR) {
+  const last = shiftDate(today, -1);
+  const dates = [];
+  for (let week = weeks - 1; week >= 0; week -= 1) {
+    const date = shiftDate(last, -7 * week);
+    if (date >= floor) dates.push(date);
+  }
+  return dates;
+}
+
+module.exports = { historyDates, weeklyDates, RANKING_FLOOR };

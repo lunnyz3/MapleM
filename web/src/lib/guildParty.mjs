@@ -59,3 +59,32 @@ export function defaultBoss(members, bosses, size = 6) {
     });
   return pick;
 }
+
+/**
+ * 길드 비교 요약(순수 함수). members: [{ name, level, power, itemScore, className }] (power 0 = 모름)
+ * @param {Array<{ name: string, level: number, power: number, itemScore?: number, className?: string }>} members
+ * @param {Array<{ name: string, difficulty: string, level: number, power: number }>} bosses 입장 인원을 셀 보스
+ */
+export function guildSummary(members, bosses) {
+  const levels = members.map((member) => Number(member.level) || 0).filter((level) => level > 0);
+  const known = members.filter((member) => member.power > 0).sort((a, b) => b.power - a.power);
+  const top = known.slice(0, 10);
+  const scored = members.filter((member) => Number(member.itemScore) > 0);
+  const classes = new Map();
+  members.forEach((member) => member.className && classes.set(member.className, (classes.get(member.className) || 0) + 1));
+  const average = (values) => (values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0);
+  return {
+    count: members.length,
+    known: known.length,
+    avgLevel: average(levels),
+    powerSum: known.reduce((sum, member) => sum + member.power, 0),
+    top10: average(top.map((member) => member.power)),
+    best: known[0] || null,
+    avgItemScore: average(scored.map((member) => Number(member.itemScore))),
+    classes: [...classes]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko"))
+      .slice(0, 5)
+      .map(([className, count]) => ({ className, count })),
+    bosses: bosses.map((boss) => ({ boss, count: bossRoster(members, boss).ready.length }))
+  };
+}
