@@ -331,6 +331,11 @@
 - 기간: 제목의 "(10/29 ~ 11/11)"(붙여 쓴 물결·해 넘김 포함), 없으면 상세 공지 본문의 "기간" 뒤 범위(`/maplestorym/v1/notice-event/detail`, 공지마다 하루 보관). 20개 중 19개 읽음(10/31 기준 진행 중 15·곧 시작 1). `src/domain/community/event-calendar.js`, `src/services/event-calendar.service.js`(달력 10분 보관), `GET /api/v2/events`, `web/src/lib/eventCalendar.mjs`, 테스트 `test/event-calendar.test.js`.
 - 첫 화면 소식 카드의 이벤트 탭은 남은 날 순(D-day, 3일 안이면 빨강) + "이벤트 달력 전체 보기". 랭킹 하위 메뉴에 "이벤트 달력".
 
+### 48. 멀티서치 (작업 사본, 운영 반영 전)
+- 운영자 요청(다른 사이트 참고: 메이플 PC 쪽 멀티서치). `/multi?q=이름,월드/이름&world=`: 닉네임 목록(줄바꿈·쉼표·띄어쓰기)이나 카톡 대화(모바일 복사 "[보낸 사람] [오후 3:21]" · PC 내보내기 "2026. 10. 30. 오후 3:21, 보낸 사람 :", 대화명 "몬밀/캡틴/295"는 앞부분)를 붙여 넣으면 최대 30명을 모은 기록으로 한 표에 — 레벨·전투력(plausible)·템환산·잠재·에디·갈 수 있는 가장 어려운 보스, 전투력 합, 기록 없는 이름, 목록 복사·엑셀. 월드를 모르면 7월드 모두(같은 이름이 여러 월드면 안내). 주소로 다시 열 수 있다.
+- `POST /api/v2/multi-search`(월드마다 색인 `{worldName, characterName}` `$in`, IP 30/분), `multiSearch`(`src/services/character-record.service.js`), `web/src/lib/multiSearch.mjs`(`parseNames`·`hardestBoss`), 테스트 `test/multi-search.test.js`. 표는 내 캐릭터 한눈에와 같은 모양.
+- 상단 "비교"를 묶음으로: 캐릭터 비교 · 길드 비교 · 멀티서치.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

@@ -42,7 +42,17 @@ const NAV = [
       ...RANKING_TYPES.filter((type) => type.subject === "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) }))
     ]
   },
-  { key: "compare", label: "비교", icon: "swords", href: urls.compare() },
+  {
+    key: "compare",
+    label: "비교",
+    icon: "swords",
+    href: urls.compare(),
+    children: [
+      { label: "캐릭터 비교", href: urls.compare() },
+      { label: "길드 비교", href: "/guild/compare" },
+      { label: "멀티서치", href: urls.multi }
+    ]
+  },
   {
     key: "stats",
     label: "통계",

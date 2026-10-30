@@ -62,6 +62,7 @@ const Events = lazyPage(() => import("./pages/Events.jsx"), "Events");
 const MyCharacters = lazyPage(() => import("./pages/MyCharacters.jsx"), "MyCharacters");
 const Calc = lazyPage(() => import("./pages/Calc.jsx"), "Calc");
 const Compare = lazyPage(() => import("./pages/Compare.jsx"), "Compare");
+const MultiSearch = lazyPage(() => import("./pages/MultiSearch.jsx"), "MultiSearch");
 const Licenses = lazyPage(() => import("./pages/Licenses.jsx"), "Licenses");
 const DesignSystem = lazyPage(() => import("./pages/DesignSystem.jsx"), "DesignSystem");
 
@@ -85,6 +86,7 @@ function resolveRoute() {
   if (rest === "/hall") return { title: "명예의 전당 · 메이플M 플러스", nav: "ranking", Page: Ranking };
   if (rest === "/calc") return { title: "계산기 · 메이플M 플러스", nav: "calc", Page: Calc };
   if (rest === "/compare") return { title: "캐릭터 비교 · 메이플M 플러스", nav: "compare", Page: Compare };
+  if (rest === "/multi") return { title: "멀티서치 · 메이플M 플러스", nav: "compare", Page: MultiSearch };
   if (rest === "/guild") return { title: "길드 · 메이플M 플러스", nav: "guild", Page: Guild };
   if (rest === "/guild/compare") return { title: "길드 비교 · 메이플M 플러스", nav: "guild", Page: GuildCompare };
   const guild = rest.match(/^\/guild\/([^/]+)\/([^/]+)$/);

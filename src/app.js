@@ -26,7 +26,9 @@ const rateLimiters = {
   // 검색 자동완성은 글자를 칠 때마다 부른다
   suggest: createRateLimiter({ name: "suggest", windowMs: minute, max: 120 }),
   // 공식 랭킹 1년 기록은 한 번에 넥슨 과거 랭킹을 약 16번 읽는다(캐릭터마다 6시간 보관)
-  rankingHistory: createRateLimiter({ name: "ranking-history", windowMs: minute, max: 10 })
+  rankingHistory: createRateLimiter({ name: "ranking-history", windowMs: minute, max: 10 }),
+  // 멀티서치는 한 번에 최대 30명(월드를 모르면 7월드)을 읽는다
+  multiSearch: createRateLimiter({ name: "multi-search", windowMs: minute, max: 30 })
 };
 
 const publicDir = path.join(__dirname, "..", "public");
@@ -128,6 +130,7 @@ function createApp() {
   app.get(["/api/v2/fortune", "/api/v2/match", "/api/v2/fun/nicknames"], rateLimiters.fortunes);
   app.get("/api/v2/suggest", rateLimiters.suggest);
   app.get(["/api/v2/ranking-history", "/api/v2/ranking-cuts"], rateLimiters.rankingHistory);
+  app.post("/api/v2/multi-search", rateLimiters.multiSearch);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

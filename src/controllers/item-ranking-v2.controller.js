@@ -14,6 +14,7 @@
 //   GET /api/v2/character-history?ocid=                  → { ok, events: [{ field: "name"|"guild"|"class"|"world", from, to, at }] }
 //   GET /api/v2/character-record?ocid=                   → { ok, record: { best, journal, since, updatedAt } | null }
 //   GET /api/v2/ranking-history?ocid=&type=power|level   → { ok, type, points: [{ date, ranking, value }] } (넥슨 과거 랭킹 약 16일)
+//   POST /api/v2/multi-search { entries: [{ world?, name }], world_name? } → { ok, rows: [{ world, name, className, level, power, itemScore, … }] } (최대 30명)
 //   GET /api/v2/ranking-cuts?type=combat-power|level      → { ok, type, cuts: [{ rank, points: [{ date, value }] }] } (1·100·1,000·10,000위, 12주)
 //   GET /api/v2/collection-summary                        → { ok, characters } (모은 캐릭터 수)
 const { normalizeWorldName } = require("../config/worlds");
@@ -33,7 +34,7 @@ const {
 
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
-const { findRecord, recordBriefs, suggestCharacters } = require("../services/character-record.service");
+const { findRecord, multiSearch, recordBriefs, suggestCharacters } = require("../services/character-record.service");
 const { plausiblePowers } = require("../services/stats.service");
 const { rankingHistory } = require("../services/ranking-history.service");
 const { rankingCuts } = require("../services/ranking-cuts.service");
@@ -247,6 +248,37 @@ async function getRankingHistory(req, res) {
   }
 }
 
+const MULTI_NAME = /^[가-힣A-Za-z0-9]{2,12}$/;
+
+async function postMultiSearch(req, res) {
+  let worldName = "";
+  if (text(req.body?.world_name)) {
+    const world = normalizeWorldName(text(req.body.world_name));
+    if (!world.ok) return res.status(400).json({ ok: false, message: "world_name must be one of the supported worlds." });
+    worldName = world.worldNameCanonical;
+  }
+  const entries = [];
+  for (const entry of Array.isArray(req.body?.entries) ? req.body.entries.slice(0, 30) : []) {
+    const name = text(entry?.name, 24);
+    if (!MULTI_NAME.test(name)) continue;
+    let world = "";
+    if (text(entry?.world)) {
+      const normalized = normalizeWorldName(text(entry.world));
+      if (!normalized.ok) continue;
+      world = normalized.worldNameCanonical;
+    }
+    entries.push({ world, name });
+  }
+  if (!entries.length) return res.status(400).json({ ok: false, message: "entries must have 1 to 30 names" });
+  try {
+    const rows = await multiSearch(entries, worldName);
+    res.set("Cache-Control", "private, max-age=60");
+    return res.json({ ok: true, rows });
+  } catch (error) {
+    return fail(res, error);
+  }
+}
+
 async function getRankingCuts(req, res) {
   try {
     const cuts = await rankingCuts({ type: req.query.type === "level" ? "level" : "combat-power" });
@@ -312,6 +344,7 @@ module.exports = {
   getCharacterRecord,
   getRankingHistory,
   getRankingCuts,
+  postMultiSearch,
   postRecordBriefs,
   getSuggest
 };

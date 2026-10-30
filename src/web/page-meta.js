@@ -17,6 +17,7 @@ const STATIC_PAGES = {
   "/news": { title: "강화 소식", description: "메이플스토리M 오늘 스타포스 최대 달성·옵션 대박·새 장비를 맞춘 캐릭터 소식." },
   "/hall": { title: "명예의 전당", description: "메이플스토리M 전투력·템환산·무기 잠재·추옵·최종 대미지 추옵 최고 기록 보유자." },
   "/calc": { title: "계산기", description: "메이플스토리M HEXA 강화 기간, HEXA 스탯 기댓값, 심볼 비용, 무기 해방 날짜 계산기." },
+  "/multi": { title: "멀티서치", description: "메이플스토리M 캐릭터 여러 명을 한 번에: 닉네임 목록이나 카톡 대화를 붙여 넣으면 전투력·템환산·갈 수 있는 보스를 한 표로." },
   "/compare": { title: "캐릭터 비교", description: "메이플스토리M 두 캐릭터의 전투력·스탯·장비 템환산 비교." },
   "/guild": { title: "길드", description: "메이플스토리M 길드 검색과 길드원 전투력 순위." },
   "/guild/compare": { title: "길드 비교", description: "메이플스토리M 두 길드의 길드원 수·평균 레벨·상위 10명 전투력·보스 입장 인원 비교." },

@@ -233,7 +233,44 @@ async function suggestCharacters({ q, world = "" }) {
   return rows;
 }
 
+const MULTI_MAX = 30;
+
+/**
+ * 멀티서치: [{ world, name }](월드를 모르면 worldName, 그것도 없으면 7월드 모두)에서 모은 스펙과 전투력(사냥 프리셋으로
+ * 잰 듯하면 0). 같은 이름이 여러 월드에 있으면 모두. → [{ world, name, className, level, power, itemScore, potential, additionalPotential, checkedAt }]
+ */
+async function multiSearch(entries, worldName = "") {
+  if (!isMongoConnected()) return [];
+  const byWorld = new Map();
+  for (const { world, name } of entries.slice(0, MULTI_MAX)) {
+    for (const target of world ? [world] : worldName ? [worldName] : allowedWorldNames) {
+      if (!byWorld.has(target)) byWorld.set(target, new Set());
+      byWorld.get(target).add(name);
+    }
+  }
+  const specs = (
+    await Promise.all(
+      [...byWorld].map(([target, names]) =>
+        CharacterSpec.find({ worldName: target, characterName: { $in: [...names] } }, BRIEF_SPEC_FIELDS).maxTimeMS(DB_TIMEOUT_MS).lean()
+      )
+    )
+  ).flat();
+  const powers = await plausiblePowers(specs).catch(() => specs.map(() => 0));
+  return specs.map((spec, index) => ({
+    world: spec.worldName,
+    name: spec.characterName,
+    className: spec.characterClass || "",
+    level: spec.characterLevel || 0,
+    power: powers[index] || 0,
+    itemScore: spec.itemScore || 0,
+    potential: spec.potential || 0,
+    additionalPotential: spec.additionalPotential || 0,
+    checkedAt: spec.checkedAt
+  }));
+}
+
 module.exports = {
+  multiSearch,
   recordSnapshot,
   findRecord,
   bestRecentCombatPower,
