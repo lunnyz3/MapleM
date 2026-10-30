@@ -232,6 +232,7 @@ export const urls = {
   stats: "/stats",
   hall: "/ranking?view=hall",
   itemSearch: "/ranking?view=search",
+  game: "/game",
   /** @param {string} [world] @param {string} [name] 왼쪽에 넣어 둘 캐릭터 */
   compare: (world = "", name = "") => (world && name ? `/compare?${new URLSearchParams({ a: `${world}/${name}` })}` : "/compare"),
   legacyHome: "/legacy",

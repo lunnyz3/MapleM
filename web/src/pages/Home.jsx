@@ -197,6 +197,17 @@ function RankingShortcuts() {
             </Tilt>
           </li>
         ))}
+        <li style={{ "--stagger": RANKING_TYPES.length }}>
+          <Tilt maxDeg={12} scale={1.04} class="ranking-tile__tilt">
+            <a class="ranking-tile tone-peach spotlight" href={urls.game} {...spotlightHandlers()}>
+              <span class="ranking-tile__icon">
+                <Icon name="swords" size={22} />
+              </span>
+              <strong class="ranking-tile__name">누가 더 셀까?</strong>
+              <Icon name="arrowRight" size={18} class="ranking-tile__go" />
+            </a>
+          </Tilt>
+        </li>
       </ul>
     </Card>
   );

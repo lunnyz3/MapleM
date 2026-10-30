@@ -9,7 +9,7 @@ import { Sheet } from "./Sheet.jsx";
 import { ToastHost } from "./Toast.jsx";
 
 /**
- * @typedef {"home" | "ranking" | "guild" | "compare" | "stats" | "calc" | "bot" | "my" | ""} NavKey
+ * @typedef {"home" | "ranking" | "guild" | "compare" | "stats" | "calc" | "game" | "bot" | "my" | ""} NavKey
  */
 
 /** 상단 메뉴. */
@@ -52,6 +52,7 @@ const NAV = [
     ]
   },
   { key: "calc", label: "계산기", icon: "hourglass", href: urls.calc, children: CALC_VIEWS.map((view) => ({ label: view.label, href: `/calc?view=${view.value}` })) },
+  { key: "game", label: "미니게임", icon: "swords", href: urls.game },
   { key: "bot", label: "카톡 봇", icon: "chat", href: urls.bot, highlight: true }
 ];
 

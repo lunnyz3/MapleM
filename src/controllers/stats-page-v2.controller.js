@@ -4,8 +4,9 @@
 //   GET /api/v2/stats/job-meta?world_name=&class=     → { ok, className, classes, count, damageName, summary, weapon, accessories }
 //   GET /api/v2/stats/hall-of-fame                     → { ok, updatedAt, records: [{ key, title, unit, rows, leaders }] }
 //   GET /api/v2/stats/job-top?class=&ocid=             → { ok, className, me, leader, average } (칸별 템환산 원점수)
+//   GET /api/v2/game/pool                              → { ok, pool: [{ name, world, className, level, power, itemScore, potential, additionalPotential, maxDamage }] }
 const { normalizeWorldName } = require("../config/worlds");
-const { classStats, levelStats, jobMeta, jobTop, hallOfFame } = require("../services/stats.service");
+const { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool } = require("../services/stats.service");
 
 /** "" for 전체, the canonical world name, or null (400 already sent). */
 function parseWorld(req, res) {
@@ -44,4 +45,6 @@ const getJobTop = handler((req) =>
   jobTop({ className: String(req.query.class || "").trim().slice(0, 20), ocid: String(req.query.ocid || "").trim().slice(0, 80) })
 );
 
-module.exports = { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame };
+const getGamePool = handler(() => gamePool());
+
+module.exports = { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getGamePool };

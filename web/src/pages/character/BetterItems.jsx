@@ -40,7 +40,7 @@ export function BetterItems({ item, rank, ocid, majorStats, attackType, onClose 
   const [order, setOrder] = useState("near");
   const [pages, setPages] = useState(1);
   const [state, setState] = useState(
-    /** @type {{ status: "loading" | "ready" | "error", rows: any[], hasMore: boolean }} */ ({ status: "loading", rows: [], hasMore: false })
+    /** @type {{ status: "loading" | "ready" | "error", rows: any[], hasMore: boolean, partial?: boolean }} */ ({ status: "loading", rows: [], hasMore: false })
   );
   const [openKey, setOpenKey] = useState("");
 
@@ -60,7 +60,12 @@ export function BetterItems({ item, rank, ocid, majorStats, attackType, onClose 
       ({ response, body }) => {
         if (!alive) return;
         if (!response.ok || !body?.ok) return setState((prev) => ({ ...prev, status: "error" }));
-        setState((prev) => ({ status: "ready", rows: uniqueRows(pages === 1 ? body.rows : [...prev.rows, ...body.rows]), hasMore: Boolean(body.hasMore) }));
+        setState((prev) => ({
+          status: "ready",
+          rows: uniqueRows(pages === 1 ? body.rows : [...prev.rows, ...body.rows]),
+          hasMore: Boolean(body.hasMore),
+          partial: Boolean(body.partial)
+        }));
       },
       () => alive && setState((prev) => ({ ...prev, status: "error" }))
     );
@@ -108,7 +113,11 @@ export function BetterItems({ item, rank, ocid, majorStats, attackType, onClose 
       </div>
       {state.status === "loading" ? <p class="better__note">찾는 중…</p> : null}
       {state.status === "error" ? <p class="better__note">불러오지 못했어요.</p> : null}
-      {state.status === "ready" && !state.rows.length ? <p class="better__note">이보다 좋은 장비가 없어요.</p> : null}
+      {state.status === "ready" && !state.rows.length ? (
+        <p class="better__note">
+          {state.partial ? `시간 안에 다 찾지 못했어요.${scope === "item" ? " 같은 부위로 바꿔 보세요." : ""}` : "이보다 좋은 장비가 없어요."}
+        </p>
+      ) : null}
       {state.rows.length ? (
         <ol class="better__list">
           {state.rows.map((row) => {

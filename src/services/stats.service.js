@@ -280,4 +280,41 @@ async function hallOfFame() {
   return hall.value || hall.pending;
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, TOP_CHOICES };
+// ---------------- 누가 더 셀까?(미니게임) ----------------
+
+const GAME_POOL_SIZE = 300;
+const GAME_MIN_POWER = 1e7;
+const GAME_TTL_MS = 10 * 60 * 1000;
+
+/** 전투력 1천만 이상인 캐릭터를 무작위로 300명(10분마다 새로). 화면이 둘씩 짝지어 묻는다. */
+async function gamePool() {
+  if (!isMongoConnected()) return { pool: [] };
+  return cached(
+    "game-pool",
+    async () => {
+      const rows = await CharacterSpec.aggregate([
+        { $match: { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_MIN_POWER } } },
+        { $sample: { size: GAME_POOL_SIZE } },
+        {
+          $project: {
+            _id: 0,
+            name: "$characterName",
+            world: "$worldName",
+            className: "$characterClass",
+            level: "$characterLevel",
+            power: "$combatPower",
+            itemScore: 1,
+            potential: 1,
+            additionalPotential: 1,
+            maxDamage: 1
+          }
+        }
+      ]).option({ maxTimeMS: TIMEOUT_MS });
+      return { pool: rows.filter((row) => row.name && row.power > 0) };
+    },
+    GAME_TTL_MS,
+    64 * 1024
+  );
+}
+
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, TOP_CHOICES };

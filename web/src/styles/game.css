@@ -1,0 +1,290 @@
+/* 누가 더 셀까?(/game) */
+.game {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.card.game-score {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: var(--sp-6);
+  padding: 12px 16px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.game-score strong {
+  margin-left: 4px;
+  color: var(--text);
+  font-size: var(--fs-18);
+}
+
+.game-arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: stretch;
+}
+
+.game-vs {
+  align-self: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-22);
+  font-weight: 900;
+}
+
+.game-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  width: 100%;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-hero);
+  background: radial-gradient(120% 80% at 100% 0%, var(--sky-bg), transparent 60%), var(--surface);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  animation: game-card-in 360ms var(--ease-spring) both;
+}
+
+.game-arena > .game-card:last-child {
+  animation-delay: 80ms;
+}
+
+button.game-card {
+  cursor: pointer;
+  transition:
+    transform var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease);
+}
+
+button.game-card:hover,
+button.game-card:focus-visible {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+button.game-card:active {
+  transform: scale(0.98);
+}
+
+.game-card.is-win {
+  border-color: var(--success);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--success) 22%, transparent),
+    var(--shadow-2);
+}
+
+.game-card.is-lose {
+  opacity: 0.78;
+}
+
+.game-card.is-picked.is-lose {
+  border-color: var(--danger);
+  opacity: 1;
+}
+
+.game-card__world {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.game-card__job {
+  font-size: clamp(18px, 2.6vw, 24px);
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+.game-card__lv {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.game-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0 0;
+}
+
+.game-card__stats > div {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.game-card__stats dt {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.game-card__stats dd {
+  margin: 0;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.game-card__cta {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-weight: 800;
+}
+
+.game-card__key {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: var(--fs-12);
+}
+
+.game-card__reveal {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.game-card.is-win .game-card__reveal {
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+}
+
+.game-card__power {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 900;
+}
+
+.game-card__name {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  color: var(--primary-strong);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.card.game-result {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  animation: game-card-in 300ms var(--ease-spring) both;
+}
+
+.game-result strong {
+  font-size: var(--fs-18);
+}
+
+.game-result.is-right strong {
+  color: var(--success);
+}
+
+.game-result.is-over strong {
+  color: var(--danger);
+}
+
+.game-result__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@keyframes game-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-card,
+  .card.game-result {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .card.game-score {
+    gap: var(--sp-4);
+    font-size: var(--fs-14);
+  }
+
+  .game-arena {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .game-vs {
+    display: none;
+  }
+
+  .game-card {
+    gap: 4px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .game-card__stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .game-card__stats > div {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+    align-items: baseline;
+    padding: 6px 8px;
+  }
+
+  .game-card__stats dd {
+    text-align: right;
+    font-size: var(--fs-14);
+  }
+
+  .game-card__cta {
+    padding: 8px 6px;
+    font-size: var(--fs-14);
+  }
+
+  .game-card__key {
+    display: none;
+  }
+
+  .card.game-result {
+    padding: 12px 14px;
+  }
+
+  .game-result__actions {
+    width: 100%;
+  }
+
+  .game-result__actions > .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
