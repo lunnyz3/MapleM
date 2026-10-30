@@ -7,6 +7,7 @@ const { EquipmentItem } = require("../models/equipment-item.model");
 const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-meta");
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { fairCharacters, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
+const { buildCard, cardScale } = require("../domain/stats/character-card");
 const { SCORE_VERSION } = require("../domain/items/score");
 const { TtlLruCache } = require("../nexon/client");
 
@@ -388,4 +389,53 @@ async function gameGear(ids) {
   return { gear: Object.fromEntries(entries) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, TOP_CHOICES };
+// ---------------- 캐릭터 카드 ----------------
+
+const CARD_TTL_MS = 6 * 60 * 60 * 1000;
+// 추옵·스타포스 분포는 직업마다 무작위 400명의 장비로 낸다(전원을 읽으면 직업마다 수십만 줄).
+const CARD_GEAR_SAMPLE = 400;
+const CARD_GEAR_FIELDS = { _id: 0, ocid: 1, score: 1, starforce: 1, "parts.additional": 1, "item.item_equipment_slot_name": 1 };
+
+/** 직업 분포(6시간 보관). */
+function jobCardScale(className) {
+  return cached(
+    `card|${className}`,
+    async () => {
+      const match = { scoreVersion: SCORE_VERSION, characterClass: className, combatPower: { $gt: 0 } };
+      const [specs, sample] = await Promise.all([
+        CharacterSpec.find(match, { _id: 0, combatPower: 1, itemScore: 1, potential: 1, additionalPotential: 1 }).lean().maxTimeMS(TIMEOUT_MS),
+        CharacterSpec.aggregate([{ $match: match }, { $sample: { size: CARD_GEAR_SAMPLE } }, { $project: { _id: 0, ocid: 1 } }]).option({ maxTimeMS: TIMEOUT_MS })
+      ]);
+      const docs = await EquipmentItem.find({ ocid: { $in: sample.map((row) => row.ocid) }, scoreVersion: SCORE_VERSION }, CARD_GEAR_FIELDS)
+        .lean()
+        .maxTimeMS(TIMEOUT_MS);
+      return cardScale(specs, docs);
+    },
+    CARD_TTL_MS,
+    512 * 1024
+  );
+}
+
+/**
+ * 캐릭터 카드: 같은 직업 안에서 여섯 능력치 점수·종합 점수·등급. power 는 화면에 보이는 전투력.
+ * → { card: { className, count, ovr, tier, tierLabel, stats: [{ key, label, name, value, top, rating }] } | null }
+ */
+async function characterCard({ ocid = "", power } = {}) {
+  const key = String(ocid || "").trim();
+  if (!OCID_PATTERN.test(key) || !isMongoConnected()) return { card: null };
+  const spec = await CharacterSpec.findOne(
+    { ocid: key, scoreVersion: SCORE_VERSION },
+    { _id: 0, characterClass: 1, combatPower: 1, itemScore: 1, potential: 1, additionalPotential: 1 }
+  )
+    .lean()
+    .maxTimeMS(TIMEOUT_MS);
+  if (!spec?.characterClass) return { card: null };
+  const [scale, docs] = await Promise.all([
+    jobCardScale(spec.characterClass),
+    EquipmentItem.find({ ocid: key, scoreVersion: SCORE_VERSION }, CARD_GEAR_FIELDS).lean().maxTimeMS(TIMEOUT_MS)
+  ]);
+  if (!scale.count) return { card: null };
+  return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
+}
+
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, characterCard, TOP_CHOICES };

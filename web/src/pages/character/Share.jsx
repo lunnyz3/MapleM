@@ -1,11 +1,14 @@
-// 캐릭터 화면 공유: 프로필 카드(이미지 저장·카카오톡·공유창·링크 복사) · 장비 카드(잠재 확률 자랑 문구).
+// 캐릭터 화면 공유: 능력치 카드(직업 안 백분위로 매긴 능력치·종합 점수) · 프로필 카드(이미지 저장·카카오톡·공유창·링크 복사)
+// · 장비 카드(잠재 확률 자랑 문구).
 import "../../styles/share.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { BrandMark } from "../../components/Decor.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { Skeleton } from "../../components/Skeleton.jsx";
+import { Segmented } from "../../components/Tabs.jsx";
 import { toast } from "../../components/Toast.jsx";
+import { getJson } from "../../lib/api.js";
 import { combatPowerOf } from "../../lib/character.js";
 import { formatComma, formatDecimal, formatKoreanUnits } from "../../lib/format.js";
 import { urls, worldIconSrc } from "../../lib/game.js";
@@ -23,6 +26,7 @@ import {
   topPercentCaption,
   webShare
 } from "../../lib/share.js";
+import { setScoreText } from "../../lib/itemScore.js";
 import { useShareCaption } from "../../lib/shareSettings.js";
 import { readManual, withManual } from "../../lib/manual.js";
 import { EquipDetail } from "./Equipment.jsx";
@@ -48,6 +52,58 @@ function CardFoot() {
   );
 }
 
+/** 이름이 길면 글자를 줄여 한 줄에 둔다(영문 12자·한글 8자 안팎까지). */
+function nameSizeClass(name) {
+  const width = [...name].reduce((sum, char) => sum + (/[\u3131-\uD79D]/.test(char) ? 1 : 0.62), 0);
+  return width > 9 ? " is-longer" : width > 6.5 ? " is-long" : "";
+}
+
+/**
+ * 능력치 카드(600px): 같은 직업으로 모은 캐릭터 안의 순위로 매긴 여섯 능력치(40~99)와 종합 점수.
+ * 등급(레어·에픽·유니크·레전더리)마다 색이 다르다. 서버 GET /api/v2/stats/card.
+ * @param {{ profile: any, world: string, card: any }} props
+ */
+export function StatShareCard({ profile, world, card }) {
+  const name = profile.name || "";
+  const worldIcon = worldIconSrc(world);
+  return (
+    <article class={`sc sc-fut is-${card.tier}`}>
+      <span class="sc-fut__shine" aria-hidden="true" />
+      <div class="sc-fut__top">
+        <div class="sc-fut__ovr">
+          <b class="sc-fut__score">{card.ovr}</b>
+          <span class="sc-fut__tier">{card.tierLabel}</span>
+          <span class="sc-fut__job">{card.className}</span>
+        </div>
+        <div class="sc-fut__stage">
+          {profile.imageUrl ? <img src={profile.imageUrl} alt="" width={196} height={196} crossOrigin={CORS} /> : <b>{name.slice(0, 1)}</b>}
+        </div>
+      </div>
+      <h2 class={`sc-fut__name${nameSizeClass(name)}`}>{name}</h2>
+      <p class="sc-fut__meta">
+        {worldIcon ? <img src={worldIcon} alt="" width={18} height={18} /> : null}
+        {world} · Lv.{profile.level ?? "-"}
+      </p>
+      <div class="sc-fut__stats">
+        {[card.stats.slice(0, 3), card.stats.slice(3)].map((column, index) => (
+          <ul key={index} class="sc-fut__col">
+            {column.map((stat) => (
+              <li key={stat.key}>
+                <b>{stat.rating}</b>
+                <span>{stat.label}</span>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+      <p class="sc-fut__note">
+        {card.className} {formatComma(card.count)}명 중
+      </p>
+      <CardFoot />
+    </article>
+  );
+}
+
 /**
  * 프로필 공유 카드(600px, 정사각형에 가까운 판). 캡처와 미리보기에 같이 쓴다.
  * html2canvas 로 찍으므로 share.css 의 캡처 안전 규칙(gap 없음, 줄 높이 고정)을 지킨다.
@@ -60,9 +116,7 @@ export function ProfileShareCard({ profile, world }) {
   const overall = Number(profile.overallRanking) || 0;
   const guild = profile.guildName && profile.guildName !== "-" ? profile.guildName : "";
   const worldIcon = worldIconSrc(world);
-  // 이름이 길면 글자를 줄여 한 줄에 둔다(영문 12자·한글 8자 안팎까지).
-  const nameWidth = [...name].reduce((sum, char) => sum + (/[\u3131-\uD79D]/.test(char) ? 1 : 0.62), 0);
-  const nameClass = nameWidth > 9 ? " is-longer" : nameWidth > 6.5 ? " is-long" : "";
+  const nameClass = nameSizeClass(name);
   return (
     <article class="sc sc-profile">
       <span class="sc-cloud sc-cloud--1" aria-hidden="true" />
@@ -265,17 +319,17 @@ export function ShareActions({ spec, compact = false, class: className = "" }) {
 }
 
 /**
- * 프로필 카드 시트 내용: 열면 카드를 찍어 미리보기로 보여주고, 버튼은 그 이미지를 그대로 쓴다.
- * @param {{ profile: any, world: string }} props
+ * 카드 시트 내용: 열면 카드를 찍어 미리보기로 보여주고, 버튼은 그 이미지를 그대로 쓴다.
+ * @param {{ profile: any, world: string, card: any, mode: string, children?: any }} props card: 찍을 카드(JSX)
  */
-function ProfileSharePanel({ profile, world }) {
+function CardSharePanel({ profile, world, card, mode, children }) {
   const [preview, setPreview] = useState(/** @type {{ status: "loading" } | { status: "ready", url: string } | { status: "error" }} */ ({ status: "loading" }));
   const blobRef = useRef(/** @type {Promise<Blob> | null} */ (null));
   const name = profile.name || "";
 
   const getBlob = () => {
     if (!blobRef.current) {
-      blobRef.current = captureCard(<ProfileShareCard profile={profile} world={world} />);
+      blobRef.current = captureCard(card);
       blobRef.current.catch(() => {
         blobRef.current = null;
       });
@@ -303,7 +357,7 @@ function ProfileSharePanel({ profile, world }) {
   /** @type {ShareSpec} */
   const spec = {
     getBlob,
-    fileName: shareFileName(`${world}-${name}`, "profile"),
+    fileName: shareFileName(`${world}-${name}`, mode),
     meta: { itemName: name, worldName: world, characterName: name },
     // 직접 입력값이 있으면 링크에 담아 받는 사람도 같은 전투력을 본다.
     path: withManual(urls.character(world, name), readManual(world, name)),
@@ -318,9 +372,7 @@ function ProfileSharePanel({ profile, world }) {
         {preview.status === "ready" ? (
           <img class="share-preview__img" src={preview.url} alt={`${name} 캐릭터 카드`} />
         ) : preview.status === "error" ? (
-          <div class="share-preview__live">
-            <ProfileShareCard profile={profile} world={world} />
-          </div>
+          <div class="share-preview__live">{card}</div>
         ) : (
           <div class="share-preview__wait">
             <Skeleton height={320} radius={20} />
@@ -328,10 +380,73 @@ function ProfileSharePanel({ profile, world }) {
           </div>
         )}
       </div>
+      {children}
       <ShareActions spec={spec} />
     </div>
   );
 }
+
+const STAT_VALUE = {
+  power: (value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 }),
+  itemScore: (value) => `${setScoreText(value)}점`,
+  potential: (value) => `${formatDecimal(value, 1)}%`,
+  additional: (value) => `${formatDecimal(value, 1)}%`,
+  flame: (value) => `평균 ${formatDecimal(value, 1)}점`,
+  starforce: (value) => `합 ★${formatComma(value)}`
+};
+
+/**
+ * 능력치 카드: 카드 숫자를 서버에서 받아 찍고, 아래에 능력치마다 실제 값·직업 안 순위를 적는다.
+ * @param {{ ocid: string, profile: any, world: string }} props
+ */
+function StatSharePanel({ ocid, profile, world }) {
+  const power = combatPowerOf(profile.combatPower).value;
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "empty" | "error", card?: any }} */ ({ status: "loading" }));
+  useEffect(() => {
+    let alive = true;
+    const params = new URLSearchParams({ ocid: ocid || "" });
+    if (power) params.set("power", String(power));
+    getJson(`/api/v2/stats/card?${params}`).then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok ? (body.card ? { status: "ready", card: body.card } : { status: "empty" }) : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [ocid, power]);
+
+  if (state.status === "loading") {
+    return (
+      <div class="share-preview__wait">
+        <Skeleton height={320} radius={20} />
+        <span>능력치 매기는 중…</span>
+      </div>
+    );
+  }
+  if (state.status !== "ready") {
+    return <p class="share-empty">{state.status === "empty" ? "아직 모은 장비 기록이 없어 능력치 카드를 만들 수 없어요." : "능력치를 불러오지 못했어요."}</p>;
+  }
+  const card = state.card;
+  return (
+    <CardSharePanel profile={profile} world={world} mode="card" card={<StatShareCard profile={profile} world={world} card={card} />}>
+      <ul class="share-stats">
+        {card.stats.map((stat) => (
+          <li key={stat.key}>
+            <span class={`share-stats__rating is-${card.tier}`}>{stat.rating}</span>
+            <span class="share-stats__name">{stat.name}</span>
+            <span class="share-stats__value num">{STAT_VALUE[stat.key]?.(stat.value) ?? stat.value}</span>
+            <span class="share-stats__top num">상위 {formatDecimal(stat.top, stat.top < 10 ? 1 : 0)}%</span>
+          </li>
+        ))}
+      </ul>
+    </CardSharePanel>
+  );
+}
+
+const CARD_STYLES = [
+  { value: "stat", label: "능력치 카드" },
+  { value: "profile", label: "프로필 카드" }
+];
 
 /**
  * 프로필 머리의 "공유" 버튼 + 카드 시트.
@@ -339,6 +454,8 @@ function ProfileSharePanel({ profile, world }) {
  */
 export function ProfileShareButton({ data, world }) {
   const [open, setOpen] = useState(false);
+  const [style, setStyle] = useState("stat");
+  const profile = { ...data.profile, name: data.profile?.name || data.query?.characterName || "" };
   return (
     <>
       <button type="button" class="btn btn--primary btn--sm share-open" onClick={() => setOpen(true)}>
@@ -346,7 +463,16 @@ export function ProfileShareButton({ data, world }) {
         공유
       </button>
       <Sheet open={open} title="캐릭터 카드" class="share-sheet" onClose={() => setOpen(false)}>
-        {open ? <ProfileSharePanel profile={{ ...data.profile, name: data.profile?.name || data.query?.characterName || "" }} world={world} /> : null}
+        {open ? (
+          <>
+            <Segmented name="share-style" legend="카드 종류" value={style} onChange={setStyle} options={CARD_STYLES} class="share-style" />
+            {style === "stat" ? (
+              <StatSharePanel key="stat" ocid={data.ocid} profile={profile} world={world} />
+            ) : (
+              <CardSharePanel key="profile" profile={profile} world={world} mode="profile" card={<ProfileShareCard profile={profile} world={world} />} />
+            )}
+          </>
+        ) : null}
       </Sheet>
     </>
   );
