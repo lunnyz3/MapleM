@@ -413,7 +413,8 @@ function readCollectedQuery() {
     section: String(params.get("section") || "").slice(0, 30),
     option: String(params.get("option") || "").slice(0, 20),
     lines: Math.max(1, Math.min(3, Math.floor(Number(params.get("lines")) || 1))),
-    metric: SPEC_METRICS.some((entry) => entry.id === metric) ? metric : SPEC_METRICS[0].id
+    metric: SPEC_METRICS.some((entry) => entry.id === metric) ? metric : SPEC_METRICS[0].id,
+    job: String(params.get("class") || "").slice(0, 20)
   };
 }
 
@@ -432,6 +433,7 @@ function collectedUrl(view, query) {
     }
   } else {
     params.set("metric", query.metric);
+    if (query.job) params.set("class", query.job);
   }
   if (query.world) params.set("world_name", query.world);
   if (query.page > 1) params.set("page", String(query.page));

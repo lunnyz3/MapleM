@@ -1,15 +1,16 @@
-// 미니게임(/game): 모은 캐릭터의 장비창만 보고 맞히는 두 가지 놀이. 문제는 장비에 맞는 전투력인 캐릭터만
-// (GET /api/v2/game/pool), 장비창은 GET /api/v2/game/gear. 최고 기록은 이 브라우저에 남는다.
-//  - 누가 더 셀까?: 둘 중 전투력이 더 높은 쪽. 연속이 길수록 두 전투력이 비슷한 짝(web/src/lib/powerGame.mjs), 템환산 힌트는 한 판에 세 번.
-//  - 전투력 맞히기(?mode=guess): 한 명의 전투력을 슬라이더로. 다섯 문제, 가까울수록 점수가 높다.
+// 미니게임 오락실(/game): 게임 목록과 ?mode= 로 고른 게임. 최고 기록은 이 브라우저에 남는다.
+//  - 누가 더 셀까?(vs) · 전투력 맞히기(guess): 모은 캐릭터의 장비창(GET /api/v2/game/pool · /api/v2/game/gear, 장비에 맞는
+//    전투력인 캐릭터만). vs 는 연속이 길수록 두 전투력이 비슷한 짝(web/src/lib/powerGame.mjs), 템환산 힌트 세 번.
+//    guess 는 슬라이더 다섯 문제, 가까울수록 점수가 높다.
+//  - 레전더리 반응속도 · 스타캐치 · 짝 맞추기 · 아이템 이름 맞히기 · 아이템 줍기: web/src/pages/game/*.jsx.
 import "../styles/game.css";
+import "../styles/arcade.css";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { WorldIcon } from "../components/GameIcons.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { Aurora, CountUp, SplitText } from "../components/Motion.jsx";
+import { Aurora, CountUp, SplitText, spotlightHandlers } from "../components/Motion.jsx";
 import { Skeleton } from "../components/Skeleton.jsx";
 import { ErrorState } from "../components/States.jsx";
-import { Segmented } from "../components/Tabs.jsx";
 import { toast } from "../components/Toast.jsx";
 import { getJson, toApiError } from "../lib/api.js";
 import { gradeInfo } from "../lib/character.js";
@@ -18,32 +19,31 @@ import { urls } from "../lib/game.js";
 import { setScoreText } from "../lib/itemScore.js";
 import { GUESS_ROUNDS, guessPoints, guessTitle, pickOne, pickPair, roundPower, sliderRange } from "../lib/powerGame.mjs";
 import { copyText } from "../lib/share.js";
+import { ItemCatch } from "./game/ItemCatch.jsx";
+import { ItemQuiz } from "./game/ItemQuiz.jsx";
+import { Memory } from "./game/Memory.jsx";
+import { Reaction } from "./game/Reaction.jsx";
+import { StarCatch } from "./game/StarCatch.jsx";
+import { readBest, useWindowKey, writeBest } from "./game/shared.jsx";
 
 const VS_KEY = "mmp.game.vs";
 const GUESS_KEY = "mmp.game.guess";
 const HINTS = 3;
-const MODES = [
-  { value: "vs", label: "누가 더 셀까?" },
-  { value: "guess", label: "전투력 맞히기" }
+
+const GAMES = [
+  { mode: "vs", title: "누가 더 셀까?", line: "장비창만 보고 더 센 캐릭터 고르기", icon: "swords", tone: "gold", key: VS_KEY, best: (v) => `연속 ${v}` },
+  { mode: "guess", title: "전투력 맞히기", line: "장비창 보고 전투력 어림하기", icon: "chart", tone: "sky", key: GUESS_KEY, best: (v) => `${formatComma(v)}점` },
+  { mode: "reaction", title: "레전더리 반응속도", line: "레전더리가 뜨는 순간 누르기", icon: "bolt", tone: "mint", key: "mmp.game.reaction", best: (v) => `${formatComma(v)}ms` },
+  { mode: "star", title: "스타캐치", line: "별을 초록 칸에 멈춰 ★35까지", icon: "sparkle", tone: "peach", key: "mmp.game.star", best: (v) => `★${v}` },
+  { mode: "memory", title: "짝 맞추기", line: "같은 장비 카드 두 장 찾기", icon: "medal", tone: "lavender", key: "mmp.game.memory", best: (v) => `${v}번` },
+  { mode: "quiz", title: "아이템 이름 맞히기", line: "아이콘 보고 이름 고르기", icon: "search", tone: "sky", key: "mmp.game.quiz", best: (v) => `${v}/10` },
+  { mode: "catch", title: "아이템 줍기", line: "30초 동안 떨어지는 장비 줍기", icon: "download", tone: "gold", key: "mmp.game.catch", best: (v) => `${formatComma(v)}점` }
 ];
 
-function readBest(key) {
-  try {
-    return Math.max(0, Math.floor(Number(window.localStorage.getItem(key)) || 0));
-  } catch {
-    return 0;
-  }
-}
-
-function writeBest(key, value) {
-  try {
-    window.localStorage.setItem(key, String(value));
-  } catch {
-    // 저장할 수 없으면 이번 판만
-  }
-}
-
-const readMode = () => (new URLSearchParams(window.location.search).get("mode") === "guess" ? "guess" : "vs");
+const readMode = () => {
+  const mode = new URLSearchParams(window.location.search).get("mode") || "";
+  return GAMES.some((game) => game.mode === mode) ? mode : "";
+};
 const keyOf = (/** @type {any} */ entry) => `${entry.world}/${entry.name}`;
 const power = (value) => formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 });
 
@@ -300,23 +300,19 @@ function VsGame({ pool }) {
   };
 
   // 키보드: ←/1 왼쪽, →/2 오른쪽, Enter·Space 다음
-  useEffect(() => {
-    const onKey = (/** @type {KeyboardEvent} */ event) => {
-      if (typingTarget(event.target)) return;
-      if (picked === null && (event.key === "ArrowLeft" || event.key === "1")) choose(0);
-      else if (picked === null && (event.key === "ArrowRight" || event.key === "2")) choose(1);
-      else if (picked !== null && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        if (over) restart();
-        else show(streak);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  useWindowKey((event) => {
+    if (typingTarget(event.target)) return;
+    if (picked === null && (event.key === "ArrowLeft" || event.key === "1")) choose(0);
+    else if (picked === null && (event.key === "ArrowRight" || event.key === "2")) choose(1);
+    else if (picked !== null && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      if (over) restart();
+      else show(streak);
+    }
   });
 
   const share = async () => {
-    const ok = await copyText(`메이플M 플러스 '누가 더 셀까?' 장비창만 보고 연속 ${streak}번 맞혔어요! (최고 ${best}번)\nhttps://maplem.co.kr/game`);
+    const ok = await copyText(`메이플M 플러스 '누가 더 셀까?' 장비창만 보고 연속 ${streak}번 맞혔어요! (최고 ${best}번)\nhttps://maplem.co.kr/game?mode=vs`);
     toast(ok ? "결과를 복사했어요" : "복사하지 못했어요", ok ? "success" : "error");
   };
 
@@ -496,17 +492,13 @@ function GuessGame({ pool }) {
   const nudge = (/** @type {number} */ step) => setValue((prev) => Math.min(range.max, Math.max(range.min, Math.round((prev + step) * 1000) / 1000)));
 
   // 키보드: Enter 로 확정·다음(슬라이더는 ←/→ 로 움직인다)
-  useEffect(() => {
-    const onKey = (/** @type {KeyboardEvent} */ event) => {
-      if (event.key !== "Enter" || typingTarget(event.target)) return;
-      if (event.target instanceof HTMLElement && /^(BUTTON|A)$/.test(event.target.tagName)) return;
-      event.preventDefault();
-      if (!submitted) submit();
-      else if (finished) restart();
-      else showNext();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  useWindowKey((event) => {
+    if (event.key !== "Enter" || typingTarget(event.target)) return;
+    if (event.target instanceof HTMLElement && /^(BUTTON|A)$/.test(event.target.tagName)) return;
+    event.preventDefault();
+    if (!submitted) submit();
+    else if (finished) restart();
+    else showNext();
   });
 
   const share = async () => {
@@ -642,12 +634,73 @@ function GuessGame({ pool }) {
   );
 }
 
+/** 게임 목록 */
+function Lobby({ onOpen }) {
+  return (
+    <div class="game">
+      <header class="page-head page-head--rank tone-gold">
+        <Aurora tone="dusk" />
+        <span class="page-head__icon" aria-hidden="true">
+          <Icon name="swords" size={28} />
+        </span>
+        <h1 class="page-head__title display">
+          <SplitText text="미니게임" />
+        </h1>
+      </header>
+      <ul class="arc-lobby">
+        {GAMES.map((game, index) => {
+          const best = readBest(game.key);
+          return (
+            <li key={game.mode} style={{ "--stagger": index }}>
+              <a
+                class={`arc-tile tone-${game.tone} spotlight`}
+                href={`${urls.game}?mode=${game.mode}`}
+                onClick={(event) => {
+                  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  event.preventDefault();
+                  onOpen(game.mode);
+                }}
+                {...spotlightHandlers()}
+              >
+                <span class="arc-tile__icon" aria-hidden="true">
+                  <Icon name={game.icon} size={24} />
+                </span>
+                <span class="arc-tile__text">
+                  <strong class="arc-tile__title">{game.title}</strong>
+                  <span class="arc-tile__line">{game.line}</span>
+                </span>
+                {best ? <span class="arc-tile__best num">최고 {game.best(best)}</span> : null}
+                <Icon name="arrowRight" size={18} class="arc-tile__go" />
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function Game() {
   const [mode, setMode] = useState(readMode);
-  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", pool?: any[], error?: any }} */ ({ status: "loading" }));
+  const [state, setState] = useState(/** @type {{ status: "idle" | "loading" | "ready" | "error", pool?: any[], error?: any }} */ ({ status: "idle" }));
   const [attempt, setAttempt] = useState(0);
+  const game = GAMES.find((entry) => entry.mode === mode) || null;
+  const needsPool = mode === "vs" || mode === "guess";
 
   useEffect(() => {
+    const onPop = () => setMode(readMode());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  useEffect(() => {
+    document.title = `${game ? game.title : "미니게임"} · 메이플M 플러스`;
+    window.scrollTo(0, 0);
+  }, [mode]);
+
+  // 캐릭터 무리는 장비창 게임에서만 읽는다(한 번 읽으면 계속 쓴다)
+  useEffect(() => {
+    if (!needsPool || state.status === "ready") return undefined;
     let alive = true;
     setState({ status: "loading" });
     getJson("/api/v2/game/pool").then(
@@ -663,30 +716,42 @@ export function Game() {
     return () => {
       alive = false;
     };
-  }, [attempt]);
+  }, [needsPool, attempt]);
 
-  const changeMode = (/** @type {string} */ next) => {
-    setMode(next === "guess" ? "guess" : "vs");
-    window.history.replaceState(null, "", next === "guess" ? `${urls.game}?mode=guess` : urls.game);
+  const open = (/** @type {string} */ next) => {
+    setMode(next);
+    const url = next ? `${urls.game}?mode=${next}` : urls.game;
+    if (`${window.location.pathname}${window.location.search}` !== url) window.history.pushState(null, "", url);
   };
 
+  if (!game) return <Lobby onOpen={open} />;
+
+  let content = null;
+  if (needsPool) {
+    if (state.status === "error") content = <ErrorState title="불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} />;
+    else if (state.status !== "ready") content = <Skeleton height={420} radius={20} />;
+    else content = mode === "guess" ? <GuessGame key="guess" pool={state.pool || []} /> : <VsGame key="vs" pool={state.pool || []} />;
+  } else if (mode === "reaction") content = <Reaction />;
+  else if (mode === "star") content = <StarCatch />;
+  else if (mode === "memory") content = <Memory />;
+  else if (mode === "quiz") content = <ItemQuiz />;
+  else if (mode === "catch") content = <ItemCatch />;
+
   return (
-    <div class="game">
-      <header class="page-head page-head--rank tone-gold">
-        <Aurora tone="dusk" />
-        <span class="page-head__icon" aria-hidden="true">
-          <Icon name="swords" size={28} />
-        </span>
-        <h1 class="page-head__title display">
-          <SplitText text="미니게임" />
+    <div class={`game game--${mode}`}>
+      <div class={`arc-bar tone-${game.tone}`}>
+        <button type="button" class="btn btn--ghost btn--sm arc-bar__back" onClick={() => open("")}>
+          <Icon name="chevronRight" size={18} class="arc-bar__back-icon" />
+          게임 목록
+        </button>
+        <h1 class="arc-bar__title display">
+          <span class="arc-bar__icon" aria-hidden="true">
+            <Icon name={game.icon} size={20} />
+          </span>
+          {game.title}
         </h1>
-      </header>
-
-      <Segmented name="game-mode" legend="게임 고르기" value={mode} onChange={changeMode} options={MODES} class="game-modes" />
-
-      {state.status === "loading" ? <Skeleton height={420} radius={20} /> : null}
-      {state.status === "error" ? <ErrorState title="불러오지 못했어요" description={state.error?.message} onRetry={() => setAttempt((n) => n + 1)} /> : null}
-      {state.status === "ready" ? mode === "guess" ? <GuessGame key="guess" pool={state.pool || []} /> : <VsGame key="vs" pool={state.pool || []} /> : null}
+      </div>
+      {content}
     </div>
   );
 }

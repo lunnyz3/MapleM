@@ -425,13 +425,43 @@ export function ItemRanking({ query, onQuery }) {
 }
 
 /**
- * @typedef {{ metric: string, world: string, page: number }} SpecQuery
+ * 직업 고르기(모은 캐릭터에 있는 직업, 가나다순).
+ * @param {{ id: string, job: string, onJob: (job: string) => void }} props
+ */
+function JobSelect({ id, job, onJob }) {
+  const classes = useJson("/api/v2/stats/classes?top=0", "classes-all");
+  const names = (classes.data?.classes || []).map((entry) => entry.className).sort((a, b) => a.localeCompare(b, "ko"));
+  // 목록이 오기 전·목록에 없는 직업(주소로 들어온 값)도 고른 채로 보인다
+  if (job && !names.includes(job)) names.unshift(job);
+  return (
+    <div class="field">
+      <label class="field__label" for={id}>
+        직업
+      </label>
+      <span class="select">
+        <select id={id} value={job} onChange={(event) => onJob(/** @type {HTMLSelectElement} */ (event.currentTarget).value)}>
+          <option value="">전체 직업</option>
+          {names.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <Icon name="chevronDown" size={18} class="select__icon" />
+      </span>
+    </div>
+  );
+}
+
+/**
+ * @typedef {{ metric: string, world: string, job: string, page: number }} SpecQuery
  * @param {{ query: SpecQuery, onQuery: (patch: Partial<SpecQuery>) => void }} props
  */
 export function SpecRanking({ query, onQuery }) {
   const metric = SPEC_METRICS.find((entry) => entry.id === query.metric) || SPEC_METRICS[0];
   const params = new URLSearchParams({ metric: metric.id, page: String(query.page) });
   if (query.world) params.set("world_name", query.world);
+  if (query.job) params.set("class", query.job);
   const url = `/api/v2/spec-ranking?${params}`;
   const list = useJson(url, url);
   const rows = list.data?.rows || [];
@@ -450,6 +480,7 @@ export function SpecRanking({ query, onQuery }) {
       <section class="rk-filters card crk-filters" aria-label="스펙 랭킹 조건">
         <div class="crk-filters__row">
           <WorldSelect id="crk-spec-world" world={query.world} onWorld={(world) => onQuery({ world, page: 1 })} />
+          <JobSelect id="crk-spec-job" job={query.job} onJob={(job) => onQuery({ job, page: 1 })} />
         </div>
       </section>
 

@@ -230,6 +230,17 @@
 - 직업 분포는 6시간 보관: 스펙 4개는 그 직업 전원, 추옵·스타포스는 무작위 400명의 장비(첫 계산 약 1초). 시트 아래에 능력치마다 실제 값과 직업 안 상위 %.
 - `src/domain/stats/character-card.js`, 테스트 `test/character-card.test.js`.
 
+### 34. 스펙 랭킹 직업 고르기 · 미니게임 오락실 (서버 재시작 필요, 운영 반영 전)
+- 스펙 랭킹: 월드 옆에 직업 고르기(모은 캐릭터에 있는 직업 가나다순, `GET /api/v2/stats/classes?top=0`), 주소 `&class=`. 서버는 이미 `class` 를 받았다. 직업을 고르면 개수 세기가 색인을 못 써 0.5~1.4초라 그 개수를 10분 보관(첫 쪽 뒤로는 줄만 읽는다, 첫 쪽 0.07~0.3초). 직업별 색인 `{scoreVersion, characterClass, 지표}` 를 만들면 개수도 바로 나오지만 DB 변경이라 하지 않았다.
+- `/game` 은 게임 목록(타일 7개, 최고 기록 배지), `?mode=` 로 게임: 누가 더 셀까?(vs) · 전투력 맞히기(guess) · 레전더리 반응속도(reaction) · 스타캐치(star) · 짝 맞추기(memory) · 아이템 이름 맞히기(quiz) · 아이템 줍기(catch). 게임 위 막대에 "게임 목록", 뒤로 가기 지원.
+- 레전더리 반응속도: 잠재 등급 아이콘(`/assets/ico-potential-*.png`)이 0.42초마다 레어·에픽·유니크로 바뀌다 1.2~4초 뒤 레전더리, 누르기까지 ms. 먼저 누르면 실수(그 회는 평균에서 뺌). 5회 평균, 3회 이상 잰 판만 최고 기록(낮을수록).
+- 스타캐치: 막대 위 왕복하는 별을 초록 칸에서 멈추면 ★+1, 칸 너비 22% → 6%, 빠르기 0.7 → 2.2(막대/초). 목숨 3, ★35 끝. 강화 무기는 모은 장비에서 무작위.
+- 짝 맞추기: 아이콘이 다른 장비 8짝 16장, 뒤집은 횟수(낮을수록)·시간.
+- 아이템 이름 맞히기: 10문제, 보기 넷(오답은 같은 부위 먼저, 이름·아이콘 겹침 없음), 키보드 1~4·Enter.
+- 아이템 줍기: 30초, 떨어지는 장비를 누르면 등급 점수(레전더리 50 · 유니크 30 · 에픽 20 · 레어 10 · 그 밖 5) × 연속 배수(8개 1.5 · 15개 2), 놓치면 연속 처음부터. 갈수록 더 자주(0.9 → 0.4초)·더 빨리.
+- `GET /api/v2/game/items`: 장비 3,000개를 무작위로 읽어 이름이 다른 것(대여 제외) 300개 `{ name, icon, slot, grade }`, 10분 보관(0.7초).
+- 규칙은 `web/src/lib/miniGames.mjs`(테스트 `test/mini-games.test.js`), 화면 `web/src/pages/game/*.jsx`, `web/src/styles/arcade.css`. 키보드 처리는 그릴 때마다 처리 함수를 바꿔 끼우는 `useWindowKey`(새 문제가 그려진 바로 그때 누른 키도 새 상태로).
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

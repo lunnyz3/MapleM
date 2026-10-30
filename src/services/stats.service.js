@@ -389,6 +389,37 @@ async function gameGear(ids) {
   return { gear: Object.fromEntries(entries) };
 }
 
+const GAME_ITEM_SAMPLE = 3000;
+const GAME_ITEM_LIMIT = 300;
+
+/**
+ * 장비 놀이(이름 맞히기·짝 맞추기·줍기·스타캐치)에 쓸 장비: 무작위로 읽은 장비에서 이름이 다른 것(대여 제외) 300개, 10분마다 새로.
+ * → { items: [{ name, icon, slot, grade }] } (slot 은 "반지 (2번째 슬롯)" → "반지")
+ */
+async function gameItems() {
+  if (!isMongoConnected()) return { items: [] };
+  return cached(
+    "game-items",
+    async () => {
+      const rows = await EquipmentItem.aggregate([
+        { $sample: { size: GAME_ITEM_SAMPLE } },
+        { $project: { _id: 0, itemName: 1, "item.item_icon": 1, "item.item_grade": 1, "item.item_equipment_slot_name": 1 } }
+      ]).option({ maxTimeMS: TIMEOUT_MS });
+      const byName = new Map();
+      for (const row of rows) {
+        const name = String(row.itemName || "").trim();
+        const icon = String(row.item?.item_icon || "");
+        if (!name || !icon || name.startsWith("[") || byName.has(name)) continue;
+        const slot = String(row.item?.item_equipment_slot_name || "").replace(/\s*\(.*\)\s*$/, "");
+        byName.set(name, { name, icon, slot, grade: String(row.item?.item_grade || "") });
+      }
+      return { items: sampleOf([...byName.values()], GAME_ITEM_LIMIT) };
+    },
+    GAME_TTL_MS,
+    160 * 1024
+  );
+}
+
 // ---------------- 캐릭터 카드 ----------------
 
 const CARD_TTL_MS = 6 * 60 * 60 * 1000;
@@ -438,4 +469,4 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, characterCard, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, TOP_CHOICES };

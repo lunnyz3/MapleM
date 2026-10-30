@@ -1,0 +1,805 @@
+/* 미니게임 오락실: 게임 목록 · 게임 위 막대 · 공용 장비 아이콘·끝난 판 · 반응속도 · 스타캐치 · 짝 맞추기 · 이름 맞히기 · 아이템 줍기 */
+
+/* ================= 게임 목록 ================= */
+.arc-lobby {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arc-lobby > li {
+  min-width: 0;
+  animation: game-card-in 420ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--stagger, 0) * 40ms);
+}
+
+.arc-tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  min-height: 84px;
+  padding: 14px 16px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background:
+    linear-gradient(100deg, var(--tone-bg) 0%, transparent 70%),
+    var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    transform var(--dur-hover) var(--ease),
+    box-shadow 240ms var(--ease);
+}
+
+.arc-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.arc-tile__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--tone-fg);
+  box-shadow: var(--shadow-1);
+  transition: transform 320ms var(--ease-spring);
+}
+
+.arc-tile:hover .arc-tile__icon {
+  transform: rotate(-8deg) scale(1.1);
+}
+
+.arc-tile__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arc-tile__title {
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+.arc-tile__line {
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.arc-tile__best {
+  flex: none;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--tone-fg);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.arc-tile__go {
+  flex: none;
+  color: var(--text-subtle);
+}
+
+.arc-tile__best + .arc-tile__go {
+  margin-left: 0;
+}
+
+.arc-tile__text + .arc-tile__go {
+  margin-left: auto;
+}
+
+/* ================= 게임 위 막대 ================= */
+.arc-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.arc-bar__back-icon {
+  transform: rotate(180deg);
+}
+
+.arc-bar__title {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-22);
+  font-weight: 800;
+}
+
+.arc-bar__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+}
+
+/* ================= 공용: 장비 아이콘 · 끝난 판 ================= */
+.arc-item {
+  --g: var(--border);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 6px;
+  border: 2px solid var(--g);
+  border-radius: 14px;
+  background:
+    radial-gradient(80% 80% at 50% 30%, color-mix(in srgb, var(--g) 22%, transparent), transparent),
+    var(--surface);
+}
+
+.arc-item img {
+  display: block;
+  object-fit: contain;
+}
+
+.arc-item.is-rare {
+  --g: #4ea3ff;
+}
+
+.arc-item.is-epic {
+  --g: #b36bff;
+}
+
+.arc-item.is-unique {
+  --g: #ffc933;
+}
+
+.arc-item.is-legendary {
+  --g: #7ee05c;
+}
+
+.card.arc-over {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 22px 18px;
+  text-align: center;
+  animation: game-card-in 320ms var(--ease-spring) both;
+}
+
+.arc-over__title {
+  color: var(--text-muted);
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+.arc-over__value {
+  font-size: clamp(34px, 7vw, 52px);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.arc-over__best {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+  font-weight: 800;
+}
+
+.arc-over__lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-weight: 700;
+  list-style: none;
+}
+
+.arc-over__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* ================= 레전더리 반응속도 ================= */
+.arc-react {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  align-content: center;
+  width: 100%;
+  min-height: 340px;
+  padding: 24px;
+  border: 0;
+  border-radius: var(--radius-hero);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms linear;
+}
+
+.arc-react.is-waiting {
+  background: #23264a;
+  color: #e9ecff;
+}
+
+.arc-react.is-go {
+  background: #1f8f4e;
+  color: #ffffff;
+}
+
+.arc-react.is-early {
+  background: #b8323a;
+  color: #ffffff;
+}
+
+.arc-react.is-done {
+  cursor: default;
+}
+
+.arc-react__cube {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+  animation: arc-pop 180ms var(--ease-spring);
+}
+
+.arc-react__cube img {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.arc-react__cube.is-legendary {
+  box-shadow:
+    0 0 0 6px rgba(126, 224, 92, 0.55),
+    0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+.arc-react__grade {
+  font-weight: 800;
+  opacity: 0.85;
+}
+
+.arc-react__message {
+  font-size: clamp(26px, 5vw, 38px);
+  font-weight: 900;
+}
+
+.arc-react__hint {
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.arc-react__tries {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arc-react__tries li {
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text-subtle);
+  font-weight: 800;
+  text-align: center;
+}
+
+.arc-react__tries li.is-done {
+  background: var(--mint-bg);
+  color: var(--mint-fg);
+}
+
+.arc-react__tries li.is-miss {
+  background: var(--peach-bg);
+  color: var(--peach-fg);
+}
+
+@keyframes arc-pop {
+  from {
+    transform: scale(0.86);
+  }
+}
+
+/* ================= 스타캐치 ================= */
+.card.arc-star {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 22px 18px;
+}
+
+.arc-star__item {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.arc-star__name {
+  color: var(--text-muted);
+  font-weight: 800;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.arc-stars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: center;
+  max-width: 420px;
+  color: var(--border-strong);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.arc-stars__group {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.arc-stars .is-on {
+  color: #f5b301;
+  text-shadow: 0 0 6px rgba(245, 179, 1, 0.45);
+}
+
+.arc-star__bar {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--surface-soft), var(--surface));
+  box-shadow: inset 0 0 0 2px var(--border);
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arc-star__zone {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #7ee05c, #3fb950);
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.35);
+}
+
+.arc-star__marker {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 0;
+  height: 0;
+  color: #f5b301;
+  font-size: 34px;
+  line-height: 1;
+  text-shadow:
+    0 0 2px #7a5200,
+    0 0 10px rgba(245, 179, 1, 0.6);
+  pointer-events: none;
+}
+
+.arc-star__marker::before {
+  content: "";
+  position: absolute;
+  top: -26px;
+  left: -1px;
+  width: 2px;
+  height: 52px;
+  background: rgba(35, 36, 63, 0.35);
+}
+
+.arc-star.is-hit .arc-star__zone {
+  background: linear-gradient(180deg, #a6f08b, #4fd06a);
+}
+
+.arc-star.is-miss .arc-star__bar {
+  box-shadow: inset 0 0 0 2px var(--danger);
+  animation: arc-shake 320ms var(--ease);
+}
+
+.arc-star__result {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.arc-star.is-hit .arc-star__result {
+  color: var(--success);
+}
+
+.arc-star.is-miss .arc-star__result {
+  color: var(--danger);
+}
+
+.arc-star__stop {
+  min-width: 200px;
+  touch-action: manipulation;
+}
+
+@keyframes arc-shake {
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* ================= 짝 맞추기 ================= */
+.arc-memory {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.arc-card {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  perspective: 600px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arc-card__inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 360ms var(--ease-spring);
+}
+
+.arc-card.is-up .arc-card__inner {
+  transform: rotateY(180deg);
+}
+
+.arc-card__back,
+.arc-card__front {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.arc-card__back {
+  border: 2px solid var(--primary-soft);
+  background:
+    repeating-linear-gradient(45deg, transparent 0 10px, color-mix(in srgb, var(--primary) 8%, transparent) 10px 20px),
+    var(--sky-bg);
+  box-shadow: var(--shadow-1);
+}
+
+.arc-card__front {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transform: rotateY(180deg);
+}
+
+.arc-card__front .arc-item {
+  border-width: 0;
+  background: transparent;
+}
+
+.arc-card.is-matched .arc-card__front {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+}
+
+.arc-card:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+/* ================= 아이템 이름 맞히기 ================= */
+.card.arc-quiz {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding: 22px 18px;
+  animation: game-card-in 300ms var(--ease-spring) both;
+}
+
+.arc-quiz__icon {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.arc-quiz__ask {
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+.arc-quiz__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.arc-quiz__option {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  word-break: keep-all;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
+}
+
+.arc-quiz__option:not(:disabled):hover {
+  border-color: var(--primary);
+}
+
+.arc-quiz__option:disabled {
+  cursor: default;
+}
+
+.arc-quiz__option.is-right {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+}
+
+.arc-quiz__option.is-wrong {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+}
+
+.arc-quiz__option.is-dim {
+  opacity: 0.55;
+}
+
+.arc-quiz__key {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.arc-quiz__after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.arc-quiz__after strong {
+  font-size: var(--fs-18);
+}
+
+.arc-quiz__after .is-right {
+  color: var(--success);
+}
+
+.arc-quiz__after .is-wrong {
+  color: var(--danger);
+}
+
+/* ================= 아이템 줍기 ================= */
+.card.arc-catch {
+  position: relative;
+  height: min(480px, 62vh);
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 0%, var(--sky-bg), transparent 70%),
+    linear-gradient(180deg, transparent 80%, var(--mint-bg)),
+    var(--surface);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.arc-catch__drop {
+  position: absolute;
+  top: -60px;
+  width: 60px;
+  height: 60px;
+  margin-left: -6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  will-change: transform;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arc-catch__drop .arc-item {
+  padding: 4px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+}
+
+.arc-catch__pop {
+  position: absolute;
+  z-index: 2;
+  color: var(--primary-strong);
+  font-size: var(--fs-18);
+  font-weight: 900;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: arc-float 700ms var(--ease) forwards;
+}
+
+@keyframes arc-float {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -150%);
+  }
+}
+
+.arc-catch__start {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 16px;
+  place-content: center;
+  justify-items: center;
+}
+
+.arc-catch__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 320px;
+}
+
+.arc-catch__legend span {
+  padding: 4px 10px;
+  border: 2px solid var(--g);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--fs-14);
+  font-weight: 800;
+}
+
+.arc-catch__legend .is-legendary {
+  --g: #7ee05c;
+}
+
+.arc-catch__legend .is-unique {
+  --g: #ffc933;
+}
+
+.arc-catch__legend .is-epic {
+  --g: #b36bff;
+}
+
+.arc-catch__legend .is-rare {
+  --g: #4ea3ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc-lobby > li,
+  .arc-react__cube,
+  .card.arc-over,
+  .card.arc-quiz,
+  .arc-star.is-miss .arc-star__bar {
+    animation: none;
+  }
+
+  .arc-card__inner {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .arc-lobby {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .arc-tile {
+    min-height: 72px;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .arc-tile__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .arc-tile__title {
+    font-size: var(--fs-16, 16px);
+  }
+
+  .arc-tile__line {
+    font-size: var(--fs-12);
+  }
+
+  .arc-tile__go {
+    display: none;
+  }
+
+  .arc-bar__title {
+    font-size: var(--fs-18);
+  }
+
+  .arc-react {
+    min-height: 300px;
+  }
+
+  .arc-react__tries li {
+    font-size: var(--fs-12);
+  }
+
+  .arc-memory {
+    gap: 8px;
+  }
+
+  .arc-quiz__options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arc-star__stop {
+    width: 100%;
+  }
+}

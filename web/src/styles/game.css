@@ -670,8 +670,13 @@
   }
 
   .card.game-score {
-    gap: var(--sp-4);
+    flex-wrap: wrap;
+    gap: 4px 14px;
     font-size: var(--fs-14);
+  }
+
+  .game-score strong {
+    font-size: var(--fs-16, 16px);
   }
 
   .game-arena {

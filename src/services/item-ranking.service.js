@@ -298,6 +298,20 @@ async function listItemRanking({ slot, family, worldName, sort = "score", page =
   };
 }
 
+// A class filter cannot use an index for the count (0.5~1.4s over ~150k rows), so the total of a
+// filtered list is kept for ten minutes; the page rows themselves stay fresh.
+const specCountCache = new TtlLruCache({ maxEntries: 500, maxBytes: 64 * 1024 });
+const SPEC_COUNT_TTL_MS = 10 * 60 * 1000;
+
+async function countSpecs(filter) {
+  const key = JSON.stringify(filter);
+  const hit = specCountCache.get(key);
+  if (hit !== undefined) return hit;
+  const total = await CharacterSpec.countDocuments(filter).maxTimeMS(DB_TIMEOUT_MS);
+  specCountCache.set(key, total, SPEC_COUNT_TTL_MS, 64);
+  return total;
+}
+
 /** One page of the spec ranking for `metric` (see SPEC_METRICS). */
 async function listSpecRanking({ metric = "itemScore", worldName, characterClass, page = 1 } = {}) {
   const definition = SPEC_METRICS[metric] || SPEC_METRICS.itemScore;
@@ -314,7 +328,7 @@ async function listSpecRanking({ metric = "itemScore", worldName, characterClass
       .select({ ocid: 0, _id: 0 })
       .maxTimeMS(DB_TIMEOUT_MS)
       .lean(),
-    CharacterSpec.countDocuments(filter).maxTimeMS(DB_TIMEOUT_MS)
+    characterClass ? countSpecs(filter) : CharacterSpec.countDocuments(filter).maxTimeMS(DB_TIMEOUT_MS)
   ]);
   return {
     rows: rows.map((row, index) => ({ rank: (current - 1) * PAGE_SIZE + index + 1, ...row })),
