@@ -61,7 +61,6 @@ const NAV = [
     children: [
       { label: "직업별 전투력", href: "/stats" },
       { label: "직업 메타", href: "/stats?view=meta" },
-      { label: "직업 티어", href: "/stats?view=tier" },
       { label: "월드 대항전", href: "/stats?view=world" },
       { label: "레벨 분포", href: "/stats?view=level" },
       { label: "코디 구경", href: urls.looks }

@@ -8,7 +8,7 @@ const { jobMeta: buildJobMeta, jobTopCompare } = require("../domain/stats/job-me
 const { hallOfFame: buildHallOfFame, ACCESSORY_SLOTS } = require("../domain/stats/hall-of-fame");
 const { fairCharacters, fairRatio, gearWindow, peerMedians, sampleOf } = require("../domain/stats/game-pool");
 const { buildCard, cardScale } = require("../domain/stats/character-card");
-const { classRatios, tierList, worldBoard } = require("../domain/stats/tiers");
+const { worldBoard } = require("../domain/stats/world-board");
 const { reachShares } = require("../domain/stats/boss-reach");
 const bossEntry = require("../game-data/boss-entry.json");
 const { allowedWorldNames } = require("../config/worlds");
@@ -424,38 +424,7 @@ async function gameItems() {
   );
 }
 
-// ---------------- 직업 티어 · 월드 대항전 ----------------
-
-/** 같은 템 대비 전투력(직업별, 전체·월드별). 미니게임 예상 전투력과 같은 무리로 6시간마다 다시 센다. */
-function classEfficiency() {
-  return cached(
-    "class-efficiency",
-    async () => {
-      const rows = await CharacterSpec.find(
-        { scoreVersion: SCORE_VERSION, combatPower: { $gte: GAME_PEER_MIN_POWER }, itemScore: { $gt: 0 } },
-        { _id: 0, itemScore: 1, characterLevel: 1, combatPower: 1, characterClass: 1, worldName: 1 }
-      )
-        .lean()
-        .maxTimeMS(TIMEOUT_MS);
-      return classRatios(rows, peerMedians(rows));
-    },
-    GAME_PEERS_TTL_MS,
-    64 * 1024
-  );
-}
-
-/**
- * 직업 티어표(월드를 고르면 그 월드만). basis "power" = 상위 100명 평균 전투력(직업 메타와 같은 묶음, 1시간 보관),
- * "gear" = 같은 템 대비 전투력.
- */
-async function jobTiers({ worldName = "", basis = "power" } = {}) {
-  const byGear = basis === "gear";
-  if (!isMongoConnected()) return { basis: byGear ? "gear" : "power", tiers: [] };
-  const groups = await topByClass(worldName);
-  if (!byGear) return { basis: "power", tiers: tierList(groups) };
-  const ratios = (await classEfficiency())[worldName] || {};
-  return { basis: "gear", tiers: tierList(groups.map((group) => ({ ...group, gear: ratios[group.className] || null })), "gear") };
-}
+// ---------------- 월드 대항전 ----------------
 
 const WORLD_TOP = 100;
 const WORLD_CUT = 1000;
@@ -639,4 +608,4 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, jobTiers, worldStats, bossReach, TOP_CHOICES };
+module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, worldStats, bossReach, TOP_CHOICES };

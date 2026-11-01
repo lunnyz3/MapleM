@@ -524,75 +524,6 @@
 }
 
 
-/* 직업 티어 */
-.tier-board {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 12px;
-  list-style: none;
-}
-
-.tier-row {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  gap: 12px;
-  align-items: stretch;
-  padding: 8px;
-  border-radius: 16px;
-  background: var(--surface-soft);
-}
-
-.tier-row__label {
-  display: grid;
-  place-items: center;
-  min-height: 56px;
-  border-radius: 12px;
-  background: var(--tone-bg);
-  color: var(--tone-ink);
-  font-size: 28px;
-  font-weight: 900;
-}
-
-.tier-row__classes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-content: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tier-chip {
-  display: inline-flex;
-  gap: 6px;
-  align-items: baseline;
-  min-height: 36px;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--fs-14);
-  cursor: pointer;
-}
-
-.tier-chip:hover {
-  border-color: var(--tone-fg);
-}
-
-.tier-chip strong {
-  font-weight: 800;
-}
-
-.tier-chip span {
-  color: var(--text-muted);
-  font-size: var(--fs-12);
-  font-weight: 700;
-}
-
 /* 월드 대항전 */
 .world-board {
   display: grid;
@@ -718,28 +649,13 @@
     grid-column: 1 / -1;
     gap: 8px 12px;
   }
-
-  .tier-row {
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 8px;
-    padding: 6px;
-  }
-
-  .tier-row__label {
-    min-height: 44px;
-    font-size: 22px;
-  }
-
-  .tier-chip {
-    padding: 6px 10px;
-  }
 }
 
-/* 통계 종류 5개: 좁은 화면에서는 다섯 칸 격자로 모두 보이게 */
+/* 통계 종류 4개: 좁은 화면에서는 네 칸 격자로 모두 보이게 */
 @media (max-width: 600px) {
   .stats-switch .segmented {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
   }
 
