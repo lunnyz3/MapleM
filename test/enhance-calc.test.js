@@ -56,26 +56,45 @@ test("스타포스: 방지를 모두 켜면 기대 횟수 = 단계마다 1/성�
   const result = starforceExpectation(rules, 30, 35, options);
   assert.ok(Math.abs(result.tries - sum) < 1e-6, `${result.tries} vs ${sum}`);
   assert.equal(result.destroyChance, 0);
-  // 20성 이상 성공 1% + 기본 5%p = 6%, 남는 94%는 유지·하락·파괴 79:15:5 비율
-  const odds = starforceOdds(rules, 25, {});
-  assert.equal(odds.success, 6);
-  assert.ok(Math.abs(odds.stay + odds.drop + odds.destroy - 94) < 1e-9);
-  assert.ok(Math.abs(odds.destroy - (5 * 94) / 99) < 1e-9);
+  // 20성 이상은 공식 표 그대로 성공 6·유지 74·하락 15·파괴 5
+  assert.deepEqual(starforceOdds(rules, 25, {}), { success: 6, stay: 74, drop: 15, destroy: 5 });
+  // 럭키데이 +10%p: 남는 84%를 유지·하락·파괴 74:15:5 비율로
+  const lucky = starforceOdds(rules, 25, { lucky: 10 });
+  assert.equal(lucky.success, 16);
+  assert.ok(Math.abs(lucky.destroy - (5 * 84) / 94) < 1e-9);
+});
+
+test("스타포스: 2026-07-30 공식 확률표(스타캐치 삭제) — 15성까지 파괴 0%, 16성 15·65·15·5", async () => {
+  const { starforceOdds } = await load();
+  // 패치노트 '장비 강화 15성까지 파괴 확률이 0%로 변경, 삭제된 파괴 확률만큼 유지 확률 증가'
+  for (let star = 0; star < 15; star += 1) assert.equal(starforceOdds(rules, star, {}).destroy, 0, `${star}→${star + 1}`);
+  assert.deepEqual(starforceOdds(rules, 10, {}), { success: 40, stay: 45, drop: 15, destroy: 0 });
+  assert.deepEqual(starforceOdds(rules, 14, {}), { success: 20, stay: 65, drop: 15, destroy: 0 });
+  assert.deepEqual(starforceOdds(rules, 15, {}), { success: 15, stay: 65, drop: 15, destroy: 5 });
+  assert.deepEqual(starforceOdds(rules, 0, {}), { success: 100, stay: 0, drop: 0, destroy: 0 });
+  assert.equal(Object.keys(rules.starforce.rates).length, 36);
+  for (const [key, row] of Object.entries(rules.starforce.rates)) assert.equal(row.reduce((a, b) => a + b, 0), 100, `키 ${key} 합`);
 });
 
 test("스타포스: 하락·파괴가 있으면 기대 횟수가 늘고 파괴 확률이 생긴다, 시뮬레이션은 같은 규칙", async () => {
   const { starforceExpectation, simulateStarforce } = await load();
-  const safe = starforceExpectation(rules, 10, 15, { protectDrop: true, protectDestroy: true });
-  const risky = starforceExpectation(rules, 10, 15, {});
+  const safe = starforceExpectation(rules, 15, 20, { protectDrop: true, protectDestroy: true });
+  const dropping = starforceExpectation(rules, 15, 20, { protectDestroy: true });
+  const risky = starforceExpectation(rules, 15, 20, {});
+  assert.ok(dropping.tries > safe.tries, "하락이 있으면 더 오래 걸린다");
+  assert.equal(dropping.destroyChance, 0);
   assert.ok(risky.destroyChance > 0 && risky.destroyChance < 1);
   assert.ok(risky.tries > 0);
+  // 15성까지는 파괴가 없다
+  assert.equal(starforceExpectation(rules, 0, 15, {}).destroyChance, 0);
   // 무작위 수를 고정하면 결과가 정해진다: 항상 0 → 매번 성공
   const lucky = simulateStarforce(rules, 10, 15, { protectDrop: true, protectDestroy: true }, () => 0);
   assert.deepEqual(lucky, { star: 15, tries: 5, destroyed: false, drops: 0, dropProtections: 5, destroyProtections: 5 });
-  // 항상 0.9999 → 파괴 칸(방지 없음)
-  const broken = simulateStarforce(rules, 12, 15, {}, () => 0.9999);
+  // 항상 0.9999 → 파괴 칸(방지 없음, 16성부터)
+  const broken = simulateStarforce(rules, 16, 20, {}, () => 0.9999);
   assert.equal(broken.destroyed, true);
-  assert.ok(safe.tries > 0);
+  // 12→15 는 파괴가 없어 같은 수에서 하락만 한다
+  assert.equal(simulateStarforce(rules, 12, 15, {}, () => 0.9999, 50).destroyed, false);
 });
 
 test("스타포스: 장신구(최대 10성)는 연마 표 확률, 실패하면 유지", async () => {

@@ -10,6 +10,7 @@ const { getLevelRace, getClimbers } = require("../controllers/race-v2.controller
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
+const { getItemLevels } = require("../controllers/item-levels-v2.controller");
 const {
   getItemRanks,
   getItemRankingGroups,
@@ -41,6 +42,7 @@ router.get("/item-ranking/groups", getItemRankingGroups);
 router.get("/item-ranking", getItemRanking);
 router.get("/item-search/slots", getItemSearchSlots);
 router.get("/item-search", getItemSearch);
+router.get("/item-levels", getItemLevels);
 router.get("/spec-ranking", getSpecRanking);
 router.post("/specs", postSpecs);
 router.get("/spec-summary", getSpecSummary);

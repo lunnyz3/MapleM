@@ -2,8 +2,8 @@
 // 표는 src/game-data/enhance.json 을 인자로 받는다.
 
 /**
- * 한 번 강화할 때 결과 확률(%). 일반 장비: 표의 성공 + 기본 보정 + 럭키데이, 남는 확률은 유지·하락·파괴에
- * 원래 비율대로 나눈다. 방지를 켜면 하락·파괴가 유지가 된다. 장신구(최대 10성): 연마 표 확률, 실패하면 유지.
+ * 한 번 강화할 때 결과 확률(%). 일반 장비: 공식 확률표(2026-07-30 스타캐치 삭제 뒤) 그대로, 럭키데이는 성공에 더하고
+ * 남는 확률을 유지·하락·파괴에 원래 비율대로 나눈다. 방지를 켜면 하락·파괴가 유지가 된다. 장신구(최대 10성): 연마 표 확률, 실패하면 유지.
  * @param {any} rules enhance.json 전체
  * @param {number} star 지금 성(0부터) @param {{ lucky?: number, protectDrop?: boolean, protectDestroy?: boolean, accessory?: boolean }} options
  * @returns {{ success: number, stay: number, drop: number, destroy: number }}
@@ -14,7 +14,7 @@ export function starforceOdds(rules, star, { lucky = 0, protectDrop = false, pro
     return { success, stay: 100 - success, drop: 0, destroy: 0 };
   }
   const [base, stay, drop, destroy] = rules.starforce.rates[String(star + 1)] || [0, 100, 0, 0];
-  const success = Math.min(100, base + rules.starforce.bonusSuccess + lucky);
+  const success = Math.min(100, base + lucky);
   const rest = 100 - base;
   const scale = rest > 0 ? (100 - success) / rest : 0;
   const odds = { success, stay: stay * scale, drop: drop * scale, destroy: destroy * scale };
