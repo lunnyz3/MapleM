@@ -1,4 +1,4 @@
-/* 동급 비교 카드(캐릭터 화면): 넓으면 칩 여섯 개 한 줄, 좁으면 두 칸. 칩 위 띠 색은 장비 잠재 등급 색. 누른 칩의 분포는 아래 판에 */
+/* 동급 비교 카드(캐릭터 화면): 넓으면 칩 여섯 개 한 줄, 좁으면 두 칸. 칩 바탕 물·점 색은 장비 잠재 등급 색. 누른 칩의 분포는 아래 판에 */
 .peer-chips {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -6,7 +6,7 @@
 }
 
 .peer-chip {
-  --grade: var(--border);
+  --grade: transparent;
   display: grid;
   gap: 2px;
   align-content: start;
@@ -14,9 +14,8 @@
   min-height: 104px;
   padding: 12px 14px;
   border: 1px solid var(--border);
-  border-top: 4px solid var(--grade);
   border-radius: 14px;
-  background: var(--surface-soft);
+  background: color-mix(in srgb, var(--grade) 14%, var(--surface-soft));
   color: var(--text);
   font: inherit;
   text-align: left;
@@ -27,7 +26,7 @@
 }
 
 .peer-chip:hover {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--grade) 8%, var(--surface));
 }
 
 .peer-chip:focus-visible {
@@ -36,7 +35,7 @@
 }
 
 .peer-chip[aria-expanded="true"] {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--grade) 8%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--primary);
 }
 
@@ -68,9 +67,20 @@
 }
 
 .peer-chip__kind {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
   color: var(--text-muted);
   font-size: var(--fs-12);
   font-weight: 700;
+}
+
+:is(.is-legendary, .is-unique, .is-epic, .is-rare) > .peer-chip__kind::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grade);
 }
 
 .peer-chip__label {
