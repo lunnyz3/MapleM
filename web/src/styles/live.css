@@ -1,0 +1,71 @@
+/* 실시간 표시: 상단 메뉴 'Lv.300 레이스'와 모바일 상단 LIVE 알약의 점. 몇 번만 퍼지고 멈춘다(반복 효과 줄이기) */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4d4f;
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: #ff4d4f;
+  opacity: 0;
+  animation: live-pulse 1.6s ease-out 6;
+}
+
+@keyframes live-pulse {
+  from {
+    transform: scale(0.4);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.topnav__link--live {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 800;
+}
+
+.live-pill {
+  display: none;
+  gap: 6px;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-12);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.live-pill:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 719px) {
+  .live-pill {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after {
+    animation: none;
+  }
+}

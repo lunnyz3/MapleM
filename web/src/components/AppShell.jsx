@@ -1,3 +1,4 @@
+import "../styles/live.css";
 import { useEffect, useState } from "preact/hooks";
 import { CALC_VIEWS, GAME_MODES, RANKING_TYPES, urls } from "../lib/game.js";
 import { syncPush } from "../lib/push.js";
@@ -10,13 +11,14 @@ import { Sheet } from "./Sheet.jsx";
 import { ToastHost } from "./Toast.jsx";
 
 /**
- * @typedef {"home" | "ranking" | "guild" | "compare" | "stats" | "calc" | "game" | "bot" | "my" | ""} NavKey
+ * @typedef {"home" | "race" | "ranking" | "guild" | "compare" | "stats" | "calc" | "game" | "bot" | "my" | ""} NavKey
  */
 
 /** 상단 메뉴. */
 // 마우스를 올리거나 키보드로 들어가면 하위 메뉴가 열린다.
 const NAV = [
   { key: "home", label: "홈", href: urls.home },
+  { key: "race", label: "Lv.300 레이스", icon: "trophy", href: urls.race, live: true },
   {
     key: "ranking",
     label: "랭킹",
@@ -151,7 +153,7 @@ function AllMenu({ open, onClose }) {
         <div class="allmenu__singles">
           {singles.map((item) => (
             <a key={item.key} class={`allmenu__single${item.highlight ? " is-bot" : ""}`} href={item.href} onClick={onClose}>
-              <Icon name={item.icon} size={20} />
+              {item.live ? <span class="live-dot" aria-hidden="true" /> : <Icon name={item.icon} size={20} />}
               {item.label}
               {item.highlight ? <span class="topnav__free">무료</span> : null}
             </a>
@@ -234,7 +236,12 @@ export function AppShell({ current = "", children }) {
           <nav class="topnav" aria-label="주요 메뉴">
             {NAV.map((item) => (
               <div key={item.key} class={`topnav__item${item.children ? " has-menu" : ""}`}>
-                <a class={`topnav__link${item.highlight ? " topnav__link--bot" : ""}`} href={item.href} aria-current={item.key === current ? "page" : undefined}>
+                <a
+                  class={`topnav__link${item.highlight ? " topnav__link--bot" : ""}${item.live ? " topnav__link--live" : ""}`}
+                  href={item.href}
+                  aria-current={item.key === current ? "page" : undefined}
+                >
+                  {item.live ? <span class="live-dot" aria-hidden="true" /> : null}
                   {item.label}
                   {item.highlight ? <span class="topnav__free">무료</span> : null}
                 </a>
@@ -256,6 +263,10 @@ export function AppShell({ current = "", children }) {
           </nav>
 
           <div class="topbar__actions">
+            <a class="live-pill" href={urls.race} aria-label="레벨 300 레이스 중계">
+              <span class="live-dot" aria-hidden="true" />
+              Lv.300
+            </a>
             <button type="button" class="icon-btn topbar__search" aria-label="검색" onClick={() => requestSearchFocus()}>
               <Icon name="search" size={22} />
             </button>

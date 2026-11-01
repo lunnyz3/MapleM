@@ -124,7 +124,7 @@ function createApp() {
   app.post("/api/v2/character-stats", rateLimiters.characterPages);
   // One ranking page with ▲▼ costs up to ~5 Nexon calls (most are cached for hours).
   app.use("/api/v2/ranking", rateLimiters.nexonData);
-  app.get("/api/v2/stats/peers", rateLimiters.nexonData);
+  app.get(["/api/v2/stats/peers", "/api/v2/level-race", "/api/v2/climbers"], rateLimiters.nexonData);
   app.post("/api/v2/game/start", rateLimiters.gameStarts);
   app.post("/api/v2/game/score", rateLimiters.gameScores);
   app.post("/api/v2/megaphone", rateLimiters.megaphones);

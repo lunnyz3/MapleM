@@ -87,16 +87,16 @@ async function getGuildBasic(oguildId) {
   });
 }
 
-async function getRankingLevel(params) {
-  return requestNexon(rankingLevelEndpointPath, params);
+async function getRankingLevel(params, options) {
+  return requestNexon(rankingLevelEndpointPath, params, options);
 }
 
-async function getRankingUnion(params) {
-  return requestNexon(rankingUnionEndpointPath, params);
+async function getRankingUnion(params, options) {
+  return requestNexon(rankingUnionEndpointPath, params, options);
 }
 
-async function getRankingAchievement(params) {
-  return requestNexon(rankingAchievementEndpointPath, params);
+async function getRankingAchievement(params, options) {
+  return requestNexon(rankingAchievementEndpointPath, params, options);
 }
 
 async function getRankingSharenianBattlefield(params) {
@@ -111,8 +111,8 @@ async function getRankingRootOfTime(params) {
   return requestNexon(rankingRootOfTimeEndpointPath, params);
 }
 
-async function getRankingCombatPower(params) {
-  return requestNexon(rankingCombatPowerEndpointPath, params);
+async function getRankingCombatPower(params, options) {
+  return requestNexon(rankingCombatPowerEndpointPath, params, options);
 }
 
 async function getRankingDojang(params) {

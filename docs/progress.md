@@ -384,6 +384,13 @@
 - 30일 자동 삭제 해제: `character_specs`·`equipment_items`의 `checkedAt_ttl`(30일) 색인을 모델에서 빼고 스펙엔 일반 `checkedAt` 색인(코디 모으기가 최근 확인 순으로 읽음). 운영 DB는 `node scripts/data/sync-ranking-indexes.js`로 맞춘다 — 운영 미리보기(diffIndexes): 장비는 `checkedAt_ttl`만 지움, 스펙은 `checkedAt_ttl` 지우고 `checkedAt_1` 만듦(옛 색인은 운영에 없음, 스테이징엔 옛 색인이 남아 있어 함께 지워졌다). 코디(`character_looks`) 30일 삭제는 그대로.
 - 운영 데이터 읽기 전용 시험: 울보루팡(카데나 269, 1.65억) 직업 1,822명 중 20위(상위 1.1%)·Lv.265~269 상위 0.9%·스카니아 상위 4.0%, 내실 지수(Lv.260~279·±8점 30명) 상위 13.3%·중앙값 +5,859만. 스테이징 1280·390(밝게·어둡게) 칩·분포·내실 판 오류·넘침 0. 테스트 307개 통과.
 
+### 56. 레벨 300 레이스 중계와 이번 주 가장 많이 오른 사람(기획 I2-11·I2-06) — 커밋 대기 (운영 반영 전)
+- 운영자 요청: "I2-06이랑 만렙 300 레이스 중계를 크게, 레벨 300 레이스".
+- `/race`(상단 메뉴 "Lv.300 레이스" — 홈 다음 자리, 깜빡이는 점은 여섯 번만 / 모바일은 상단 LIVE 알약): 공식 레벨 랭킹 상위 20명의 레이스 중계. 선두는 크게(레벨·경험치 %, 297~300 레벨 눈금 막대, 다음 레벨까지, 오늘 증가, Lv.299·300 도달 예상), 2~20위는 줄(24시간 전 대비 순위 변화, 오늘 증가, 다음 레벨 예상, 오늘 가장 빠른 사람 표시), 처음 Lv.299·300을 확인한 기록. 화면은 1분마다 다시 읽는다. 시간대별 기록은 내보내지 않는다(접속 시간이 드러나지 않게), 반영 지연(약 10분)은 한 줄로.
+- 서버: `src/domain/race/level-race.js`(레벨 단위 = 레벨 + 경험치 %, 오늘·24시간 증가, 48시간 평균 속도(3시간 미만 기록이면 속도 없음), 예상 시각, 순위 변화), `src/services/level-race.service.js`(레벨 랭킹 1쪽에서 상위 20명, 1시간 보관 → character/basic 을 캐시 없이 읽어 한 줄씩), `src/jobs/level-race.job.js`(기동 2분 뒤, 15분마다 — 하루 약 2천 회), 새 컬렉션 `level_race`(kind point 는 14일 뒤 TTL 삭제, kind first 는 보관), `GET /api/v2/level-race`. 빼 달라는 캐릭터는 `LEVEL_RACE_EXCLUDE="월드/이름,…"`, 끄기는 `LEVEL_RACE_ENABLED=false`.
+- 이번 주 가장 많이 오른 사람(같은 화면 아래): 공식 랭킹 최신 날짜와 7일 전 상위 1만 명(50쪽씩, 공용 넥슨 캐시를 쓰지 않음)을 월드·이름으로 맞춰 레벨은 순위 계단, 유니온·업적은 값 오름폭 순 상위 50, 새로 1만 위 안에 든 수, 오른 사람 많은 직업, 월드·직업 거르기. `src/domain/race/climbers.js`, `src/services/weekly-climbers.service.js`(종류마다 3시간 보관), `GET /api/v2/climbers?type=level|union|achievement`. 전투력은 뺐다 — 공식 랭킹 전투력이 집계 시각에 낀 세팅에 따라 날마다 ±10~20% 흔들려(같은 캐릭터 10/23 대비 25% 지점 0.81~0.93), 사흘 최고값끼리 견줘도 상위가 '사냥 세팅 → 보스 세팅'으로 채워졌다. 전투력 순찰의 날짜별 최고값이 7일치 쌓이면(11/5 이후) 그걸로 붙인다.
+- 실데이터 시험: 레이스 20명 확인 0.7초(1위 유니온 피카츄 Lv.298 92.1%), 주간 상승 종류마다 0.5~1초(10/25 → 11/1, 레벨 ▲883계단 등). 스테이징 1280·390(밝게·어둡게) 오류·넘침 0. 테스트 312개 통과.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

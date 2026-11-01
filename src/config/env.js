@@ -36,6 +36,9 @@ const env = {
   guildRosterEnabled: parseBoolean(process.env.GUILD_ROSTER_ENABLED, true),
   // 코디 채우기: 하루 한 번 모은 캐릭터 중 코디가 없거나 7일 지난 캐릭터를 4만 명까지 읽는다.
   lookCollectionEnabled: parseBoolean(process.env.LOOK_COLLECTION_ENABLED, true),
+  // 레벨 300 레이스: 15분마다 레벨 랭킹 상위 20명의 레벨·경험치를 읽는다. 빼 달라는 캐릭터는 "월드/이름,월드/이름".
+  levelRaceEnabled: parseBoolean(process.env.LEVEL_RACE_ENABLED, true),
+  levelRaceExclude: String(process.env.LEVEL_RACE_EXCLUDE || "").trim(),
   // 즐겨찾기 알림(웹 푸시) 서명 키. 없으면 알림을 끈다.
   vapidPublicKey: String(process.env.VAPID_PUBLIC_KEY || "").trim(),
   vapidPrivateKey: String(process.env.VAPID_PRIVATE_KEY || "").trim(),

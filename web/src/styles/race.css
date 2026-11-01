@@ -1,0 +1,480 @@
+/* 레벨 300 레이스(/race): 위는 중계판(선두를 크게, 2~20위는 줄), 아래는 이번 주 가장 많이 오른 사람. 막대는 레벨 단위(눈금 = 레벨) */
+.race {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.race .page-head {
+  flex-wrap: wrap;
+}
+
+.race .page-head__title {
+  word-break: keep-all;
+}
+
+.race-live {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: var(--fs-14);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.race-board {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.race-section-title {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-size: var(--fs-18);
+  font-weight: 800;
+}
+
+/* 처음 도달 기록 */
+.race-firsts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.race-firsts li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--gold-bg);
+  color: var(--gold-ink);
+  font-size: var(--fs-14);
+}
+
+.race-firsts a {
+  color: inherit;
+  font-weight: 900;
+}
+
+/* 선두 */
+.race-lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) auto;
+  gap: var(--sp-4) var(--sp-5);
+  align-items: center;
+  padding: var(--sp-5);
+  border-radius: 20px;
+  background: var(--peach-bg);
+}
+
+.race-lead__who {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  min-width: 0;
+}
+
+.race-lead__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 4px;
+}
+
+.race-lead__crown {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--peach-ink);
+  font-size: var(--fs-14);
+  font-weight: 900;
+}
+
+.race-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--mint-bg);
+  color: var(--mint-ink);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.race-lead__name {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--fs-28);
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.race-lead__name:hover {
+  text-decoration: underline;
+}
+
+.race-lead__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+}
+
+.race-lead__level {
+  display: grid;
+  justify-items: end;
+}
+
+.race-lead__level strong {
+  font-size: var(--fs-40);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.race-lead__level span {
+  color: var(--peach-ink);
+  font-size: var(--fs-22);
+  font-weight: 800;
+}
+
+.race-lead .race-track {
+  grid-column: 1 / -1;
+  height: 16px;
+}
+
+.race-lead__facts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.race-lead__facts div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.race-lead__facts dt {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.race-lead__facts dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+/* 막대 */
+.race-track {
+  position: relative;
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.race-track__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--peach-ink), #ff8a5c);
+}
+
+.race-track__tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--at);
+  width: 2px;
+  background: var(--surface);
+  opacity: 0.85;
+}
+
+/* 2~20위 */
+.race-rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.race-row {
+  display: grid;
+  grid-template-columns: 2.2em 3em minmax(0, 1.6fr) 7.5em minmax(0, 1.4fr) 5em minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.race-row.is-fastest {
+  box-shadow: inset 0 0 0 2px var(--mint-ink);
+}
+
+.race-row__rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-align: center;
+}
+
+.race-change {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+}
+
+.race-change.is-up {
+  color: var(--mint-ink);
+}
+
+.race-change.is-down {
+  color: var(--peach-ink);
+}
+
+.race-row__who,
+.race-climb__who {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.race-row__who > span,
+.race-climb__who {
+  display: grid;
+  min-width: 0;
+}
+
+.race-row__who strong,
+.race-climb__who strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.race-row__meta {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.race-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.race-row__level {
+  font-weight: 800;
+}
+
+.race-row__level small {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.race-row__today {
+  color: var(--mint-ink);
+  font-weight: 800;
+  text-align: right;
+}
+
+.race-row__eta {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.race-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+/* 이번 주 가장 많이 오른 사람 */
+.race-climb {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.race-climb__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--sp-3);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.race-climb__dates {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.race-climb__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.race-climb__controls .select {
+  min-width: 140px;
+}
+
+.race-climb__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.race-climb__chips li {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+}
+
+.race-climb__chips strong {
+  color: var(--text);
+}
+
+.race-climb__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.race-climb__list li {
+  display: grid;
+  grid-template-columns: 6em minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.race-climb__gain {
+  color: var(--mint-ink);
+  font-weight: 900;
+}
+
+.race-climb__value {
+  font-weight: 700;
+}
+
+.race-climb__rank {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  text-align: right;
+}
+
+@media (max-width: 719px) {
+  .race-live {
+    padding: 4px 10px;
+    font-size: var(--fs-12);
+  }
+
+  .race-lead {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--sp-4);
+  }
+
+  .race-lead__level {
+    justify-items: start;
+  }
+
+  .race-lead__level strong {
+    font-size: var(--fs-28);
+  }
+
+  .race-lead__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .race-row {
+    grid-template-columns: 2em minmax(0, 1fr) auto;
+    grid-template-areas:
+      "rank who level"
+      "change track today";
+    gap: 6px 10px;
+  }
+
+  .race-row__rank {
+    grid-area: rank;
+  }
+
+  .race-row .race-change {
+    grid-area: change;
+    text-align: center;
+  }
+
+  .race-row__who {
+    grid-area: who;
+  }
+
+  .race-row__level {
+    grid-area: level;
+    text-align: right;
+  }
+
+  .race-row .race-track {
+    grid-area: track;
+  }
+
+  .race-row__today {
+    grid-area: today;
+  }
+
+  .race-row__eta {
+    display: none;
+  }
+
+  .race-climb__list li {
+    grid-template-columns: 5em minmax(0, 1fr) auto;
+  }
+
+  .race-climb__rank {
+    display: none;
+  }
+}

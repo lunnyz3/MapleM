@@ -6,6 +6,7 @@ const { getLookStats, getLookWearers, getRandomLooks } = require("../controllers
 const { getPushKey, postPushTest, postSubscribe, postUnsubscribe } = require("../controllers/push-v2.controller");
 const { getPartyPost, getPartyPosts, postPartyApply, postPartyCancel, postPartyHost, postPartyPost } = require("../controllers/party-v2.controller");
 const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getPeerLens, getWorldStats, getBossReach, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
+const { getLevelRace, getClimbers } = require("../controllers/race-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
 const { itemCollector } = require("../jobs/item-collection.job");
@@ -77,6 +78,8 @@ router.get("/stats/job-top", getJobTop);
 router.get("/stats/card", getCharacterCard);
 router.get("/stats/twins", getSpecTwins);
 router.get("/stats/peers", getPeerLens);
+router.get("/level-race", getLevelRace);
+router.get("/climbers", getClimbers);
 router.get("/stats/worlds", getWorldStats);
 router.get("/stats/boss-reach", getBossReach);
 router.get("/game/pool", getGamePool);

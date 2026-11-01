@@ -16,6 +16,7 @@ const STATIC_PAGES = {
   "/party": { title: "보스 파티 모집", description: "메이플스토리M 보스 파티 모집: 월드·보스·조건 전투력으로 글을 올리고, 지원자의 전투력과 입장 가능을 바로 확인." },
   "/looks": { title: "코디 구경", description: "메이플스토리M 인기 헤어·성형·캐시 아이템 순위와 그 코디를 한 캐릭터, 무작위 코디 구경." },
   "/events": { title: "이벤트 달력", description: "메이플스토리M 진행 중인 이벤트와 끝나는 날(D-day), 곧 시작하는 이벤트." },
+  "/race": { title: "레벨 300 레이스", description: "메이플스토리M 레벨 랭킹 상위 20명의 Lv.300 레이스 실시간 중계와 이번 주 가장 많이 오른 사람." },
   "/news": { title: "강화 소식", description: "메이플스토리M 오늘 스타포스 최대 달성·옵션 대박·새 장비를 맞춘 캐릭터 소식." },
   "/hall": { title: "명예의 전당", description: "메이플스토리M 전투력·템환산·무기 잠재·추옵·최종 대미지 추옵 최고 기록 보유자." },
   "/calc": { title: "계산기", description: "메이플스토리M HEXA 강화 기간, HEXA 스탯 기댓값, 심볼 비용, 무기 해방 날짜 계산기." },
