@@ -18,6 +18,9 @@ import { WhatIf } from "./WhatIf.jsx";
 import { Luck } from "./Luck.jsx";
 import { JobTop } from "./JobTop.jsx";
 import { BetterItems } from "./BetterItems.jsx";
+import { GearSwitch } from "./GearSwitch.jsx";
+import { GENESIS, upgradeFamily } from "../../lib/gearSwitch.mjs";
+import { withRo } from "../../lib/upgradePlan.mjs";
 import { Twins } from "./Twins.jsx";
 import { Upgrades } from "./Upgrades.jsx";
 import { combatPowerOf } from "../../lib/character.js";
@@ -305,7 +308,7 @@ export function Equipment({ data, world, mode, presetNo }) {
   const profile = useMemo(() => ({ ...(data.profile || {}), ocid: data.ocid }), [data]);
   const [captionOn, setCaptionOn] = useShareCaption();
   // 장비 시트에서 "옵션 넣어 보기"를 눌렀는지(다른 장비를 열면 닫는다).
-  // 장비 시트 안의 체험: "" | "whatif"(옵션 넣어 보기) | "cube"(큐브 돌려 보기) | "better"(더 좋은 장비)
+  // 장비 시트 안의 체험: "" | "whatif"(옵션 넣어 보기) | "cube"(큐브 돌려 보기) | "better"(더 좋은 장비) | "switch"(상위 장비로 바꾸면)
   const [trial, setTrial] = useState("");
   useEffect(() => setTrial(""), [sheetItem]);
   // 나보다 좋은 장비: 시트에 연 장비의 부위·계열·점수
@@ -329,6 +332,10 @@ export function Equipment({ data, world, mode, presetNo }) {
   const currentNo = chosen ?? presetNo ?? activeNo;
   const preset = presetByNo(tab, currentNo);
   const items = Array.isArray(preset?.data?.itemEquipment) ? preset.data.itemEquipment : [];
+  // 보스 세팅 장비(주요 스탯이 이 프리셋 기준이라 갈아타기 손익은 이 프리셋 장비만 잰다)
+  const bossPreset = presetByNo(tab, bossNo ?? activeNo);
+  const bossItems = Array.isArray(bossPreset?.data?.itemEquipment) ? bossPreset.data.itemEquipment : [];
+  const switchFamily = sheetItem && bossItems.includes(sheetItem) ? upgradeFamily(sheetItem) : "";
 
   /** @type {Map<string, any>} */
   const bySlot = new Map();
@@ -548,6 +555,16 @@ export function Equipment({ data, world, mode, presetNo }) {
             onClose={() => setTrial("")}
           />
         ) : null}
+        {sheetItem && trial === "switch" ? (
+          <GearSwitch
+            item={sheetItem}
+            items={bossItems}
+            majorStats={data.profile?.majorStats || {}}
+            attackType={data.profile?.attackType || "physical"}
+            basePower={Number(data.profile?.statSetting?.combatPower?.boss) || null}
+            onClose={() => setTrial("")}
+          />
+        ) : null}
         {sheetItem && trial === "whatif" ? (
           <WhatIf
             item={sheetItem}
@@ -572,6 +589,12 @@ export function Equipment({ data, world, mode, presetNo }) {
                 <Icon name="trophy" size={16} />
                 더 좋은 장비
               </button>
+              {switchFamily ? (
+                <button type="button" class="btn btn--secondary btn--sm eq-switch-open" onClick={() => setTrial("switch")}>
+                  <Icon name="chart" size={16} />
+                  {withRo(switchFamily === GENESIS ? "제네시스" : "아케인")} 바꾸면
+                </button>
+              ) : null}
             </span>
             <EquipDetail item={sheetItem} profile={profile} />
           </ItemShare>
