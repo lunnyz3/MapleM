@@ -1,6 +1,6 @@
 "use strict";
 
-// 동급 비교(순수 함수): 오름차순 정렬 배열에서 내 값이 위에서 몇 %인지, 무리의 분포(둥근 경계 10칸 안팎)와 다음 칸까지 남은 값,
+// 동급 비교(순수 함수): 오름차순 정렬 배열에서 내 값이 위에서 몇 %인지, 무리의 분포(같은 간격 또는 1·2·5 단계 구간)와 다음 칸까지 남은 값,
 // 내실 지수 — 같은 직업·레벨대(5레벨)·템환산 ±2점 무리 안에서 전투력이 위에서 몇 %인지(30명이 안 되면 ±4점·10레벨, ±8점·20레벨로 넓힌다).
 
 const MIN_SAMPLE = 30;
@@ -63,31 +63,70 @@ function niceStep(raw) {
   return [1, 2, 5, 10].map((m) => m * pow).find((step) => step >= raw);
 }
 
-/**
- * 분포: 2~98% 범위를 둥근 간격으로 10칸 안팎(최대 14칸)으로 나누고 내 칸·다음 칸까지 남은 값을 낸다. 양끝 바깥 값은 끝 칸에 넣는다.
- * @returns {{ from: number, step: number, counts: number[], mine: number, next: number | null } | null}
- */
-function distribution(sorted, value) {
-  if (!sorted || sorted.length < 2) return null;
-  const lo = quantile(sorted, 0.02);
-  const hi = quantile(sorted, 0.98);
+// 넓게 퍼진 무리(98% 값이 2% 값의 이 배수를 넘음)의 전투력은 같은 간격 대신 1·2·5 단계 구간으로 나눈다
+const LOG_SPREAD = 20;
+
+/** 같은 간격(둥근 값) 경계: 10칸 안팎, 최대 14칸 */
+function linearEdges(lo, hi, value) {
   let step = niceStep(Math.max(hi - lo, hi * 0.05, 1) / 10);
-  const range = () => {
+  const bounds = () => {
     const from = Math.floor(Math.min(lo, value > 0 ? value : lo) / step) * step;
     const to = (Math.floor(Math.max(hi, value > 0 ? value : hi) / step) + 1) * step;
     return { from, size: Math.round((to - from) / step) };
   };
-  let { from, size } = range();
+  let { from, size } = bounds();
   while (size > MAX_BUCKETS) {
     step = niceStep(step * 1.5);
-    ({ from, size } = range());
+    ({ from, size } = bounds());
   }
-  const slot = (v) => Math.min(size - 1, Math.max(0, Math.floor((v - from) / step)));
+  return Array.from({ length: size + 1 }, (_, index) => from + index * step);
+}
+
+/** 1·2·5 × 10ⁿ 경계로 [low, high]를 덮는다(low 이하 가장 큰 값부터 high 보다 큰 첫 값까지) */
+function logEdges(low, high) {
+  const values = [];
+  for (let exp = Math.floor(Math.log10(low)); ; exp += 1) {
+    for (const m of [1, 2, 5]) {
+      const value = Math.round(m * 10 ** exp);
+      values.push(value);
+      if (value > high) {
+        let first = 0;
+        while (first + 1 < values.length && values[first + 1] <= low) first += 1;
+        return values.slice(first);
+      }
+    }
+  }
+}
+
+/**
+ * 분포: 2~98% 범위를 구간으로 나누고(양끝 바깥 값은 끝 칸에) 내 칸·다음 칸까지 남은 값을 낸다.
+ * log 가 참이고 넓게 퍼진 무리면 1·2·5 단계 구간, 아니면 같은 간격.
+ * @returns {{ edges: number[], counts: number[], mine: number, next: number | null } | null} edges 는 칸 수 + 1개
+ */
+function distribution(sorted, value, { log = false } = {}) {
+  if (!sorted || sorted.length < 2) return null;
+  const lo = quantile(sorted, 0.02);
+  const hi = quantile(sorted, 0.98);
+  const low = Math.min(lo, value > 0 ? value : lo);
+  const high = Math.max(hi, value > 0 ? value : hi);
+  const edges = log && lo > 0 && hi / lo > LOG_SPREAD ? logEdges(low, high) : linearEdges(lo, hi, value);
+  const size = edges.length - 1;
+  // edges[i] <= v 인 가장 큰 칸(0 ~ size-1)
+  const slot = (v) => {
+    let left = 0;
+    let right = size - 1;
+    while (left < right) {
+      const mid = (left + right + 1) >> 1;
+      if (edges[mid] <= v) left = mid;
+      else right = mid - 1;
+    }
+    return left;
+  };
   const counts = new Array(size).fill(0);
   for (const v of sorted) counts[slot(v)] += 1;
   const mine = value > 0 ? slot(value) : -1;
-  const next = mine >= 0 && mine < size - 1 ? from + (mine + 1) * step - value : null;
-  return { from, step, counts, mine, next };
+  const next = mine >= 0 && mine < size - 1 ? edges[mine + 1] - value : null;
+  return { edges, counts, mine, next };
 }
 
 /**
@@ -102,7 +141,7 @@ function lensOf(group, me, minSample = MIN_SAMPLE) {
   const item = standing(group.item, me.score);
   if (!power && !item) return null;
   const metric = power ? "power" : "item";
-  const dist = distribution(metric === "power" ? group.power : group.item, metric === "power" ? me.power : me.score);
+  const dist = distribution(metric === "power" ? group.power : group.item, metric === "power" ? me.power : me.score, { log: metric === "power" });
   const sample = (power || item).total;
   return {
     sample,

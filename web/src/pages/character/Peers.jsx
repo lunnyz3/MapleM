@@ -97,7 +97,7 @@ function LensPanel({ lens, me, world }) {
   const isItem = dist.metric === "item";
   const format = isItem ? (value) => `${setScoreText(value)}점` : powerText;
   const most = Math.max(...dist.counts, 1);
-  const edge = (index) => dist.from + dist.step * index;
+  const edge = (index) => dist.edges[index];
   const middle = Math.floor(dist.counts.length / 2);
   let link = null;
   const metric = isItem ? "itemScore" : "combatPower";

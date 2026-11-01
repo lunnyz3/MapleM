@@ -22,8 +22,9 @@ test("동급 비교: 잠재 등급 색 경계와 둥근 간격", () => {
 test("동급 비교: 분포 10칸 안팎·내 칸·다음 칸까지 남은 값", () => {
   const values = asc(Array.from({ length: 100 }, (_, i) => (i + 1) * 1e6));
   const dist = distribution(values, 55e6);
-  assert.equal(dist.step, 1e7);
+  assert.equal(dist.edges[1] - dist.edges[0], 1e7);
   assert.equal(dist.counts.length, 10);
+  assert.equal(dist.edges.length, 11);
   assert.equal(dist.counts.reduce((a, b) => a + b, 0), 100);
   assert.equal(dist.mine, 5);
   assert.equal(dist.next, 5e6);
@@ -31,6 +32,19 @@ test("동급 비교: 분포 10칸 안팎·내 칸·다음 칸까지 남은 값",
   assert.equal(distribution(values, 99e6).next, null);
   // 아주 넓게 퍼진 값은 14칸을 넘지 않게 간격을 키운다
   assert.ok(distribution(values, 5e9).counts.length <= 14);
+});
+
+test("동급 비교: 넓게 퍼진 전투력은 1·2·5 단계 구간", () => {
+  // 100만 ~ 5억 사이에 고르게(로그) 퍼진 무리
+  const values = asc(Array.from({ length: 300 }, (_, i) => Math.round(1e6 * 500 ** (i / 299))));
+  const dist = distribution(values, 1.65e8, { log: true });
+  assert.deepEqual(dist.edges, [1e6, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8, 2e8, 5e8]);
+  assert.equal(dist.counts.reduce((a, b) => a + b, 0), 300);
+  assert.equal(dist.mine, 6);
+  assert.equal(dist.next, 2e8 - 1.65e8);
+  // 좁게 모인 무리는 log 를 줘도 같은 간격
+  const narrow = distribution(asc(Array.from({ length: 50 }, (_, i) => 1e8 + i * 1e6)), 1.2e8, { log: true });
+  assert.equal(narrow.edges[2] - narrow.edges[1], narrow.edges[1] - narrow.edges[0]);
 });
 
 test("동급 비교: 무리 하나(전투력을 모르면 템환산으로), 적은 무리는 흐리게", () => {
