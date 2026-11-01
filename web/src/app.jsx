@@ -60,6 +60,7 @@ const Game = lazyPage(() => import("./pages/Game.jsx"), "Game");
 const News = lazyPage(() => import("./pages/News.jsx"), "News");
 const Events = lazyPage(() => import("./pages/Events.jsx"), "Events");
 const Looks = lazyPage(() => import("./pages/Looks.jsx"), "Looks");
+const PartyBoard = lazyPage(() => import("./pages/PartyBoard.jsx"), "PartyBoard");
 const MyCharacters = lazyPage(() => import("./pages/MyCharacters.jsx"), "MyCharacters");
 const Calc = lazyPage(() => import("./pages/Calc.jsx"), "Calc");
 const Compare = lazyPage(() => import("./pages/Compare.jsx"), "Compare");
@@ -82,6 +83,7 @@ function resolveRoute() {
   if (rest === "/stats") return { title: "통계 · 메이플M 플러스", nav: "stats", Page: Stats };
   if (rest === "/game") return { title: "미니게임 · 메이플M 플러스", nav: "game", Page: Game };
   if (rest === "/news") return { title: "강화 소식 · 메이플M 플러스", nav: "ranking", Page: News };
+  if (rest === "/party") return { title: "보스 파티 모집 · 메이플M 플러스", nav: "guild", Page: PartyBoard };
   if (rest === "/looks") return { title: "코디 구경 · 메이플M 플러스", nav: "stats", Page: Looks };
   if (rest === "/events") return { title: "이벤트 달력 · 메이플M 플러스", nav: "ranking", Page: Events };
   if (rest === "/my") return { title: "내 캐릭터 한눈에 · 메이플M 플러스", nav: "home", Page: MyCharacters };

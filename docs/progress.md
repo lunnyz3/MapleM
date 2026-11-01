@@ -362,6 +362,12 @@
 - API: `GET /api/v2/push/key`, `POST /api/v2/push/subscribe·unsubscribe·test`(IP 30/분).
 - 시험: 헤드리스 브라우저는 알림 권한을 늘 차단으로 보고해 화면 끝까지는 못 돌리고, 가짜 HTTPS 푸시 서버로 서버 쪽을 끝까지 확인(구독 저장·잘못된 주소 거절, 보낸 내용을 구독 키로 풀어 문구 확인, VAPID·aes128gcm·TTL 12시간, 같은 날 두 번째는 안 보냄, 410이면 구독 삭제, 저녁 묶음 길드 소식). 스테이징 시험 자료는 지움.
 
+### 53. 보스 파티 모집 게시판 (작업 사본, 운영 반영 전)
+- 운영자 요청(서비스형 기능). `/party?world=&boss=`(길드 메뉴 "보스 파티 모집"): 열린 모집 글(최근 순, 월드·보스로 거르기), 글 쓰기 시트(월드·내 캐릭터·보스·조건: 입장 전투력/권장/1.2배/1.5배·인원 2~6·시간(3일 안, 비우면 협의)·한마디 60자), 지원(같은 월드 캐릭터 이름)·지원 취소, 글쓴이는 내보내기·마감/다시 열기·지우기. 글쓴이·지원자 줄에 직업·레벨·전투력과 입장 가능/레벨 부족/전투력 부족/기록 없음.
+- 로그인이 없어서 글을 쓰거나 지원하면 관리 키를 이 브라우저(localStorage `mmp.party`)에 주고 서버에는 해시만 남긴다. 캐릭터는 모은 스펙(plausible 전투력)을 먼저, 없으면 넥슨에서 있는지·레벨·지금 전투력을 읽는다(없는 캐릭터는 거절). 한마디는 전광판과 같은 필터(욕설·링크·전화번호·반복). 방문자마다 하루 글 5개·지원 30번, 캐릭터마다 열린 글 3개, 글마다 지원 12명, IP 제한(글 5/분, 지원·관리 30/분).
+- 새 컬렉션 `party_posts`(운영자 승인, 끝나는 때 = 3일 또는 시작 6시간 뒤에 자동 삭제, 색인 `{world, createdAt}`). `src/domain/community/party.js`(테스트 `test/party.test.js`), `src/services/party.service.js`, `GET/POST /api/v2/party…`. 관리: `scripts/ops/community.js parties · remove-party · remove-party-visitor`.
+- 스테이징: 글쓴이(1280)·지원자(390) 두 브라우저로 쓰기 → 지원 → 내보내기 → 마감 → 지우기, 링크 한마디·없는 캐릭터 거절 확인(오류·넘침 0). 공통 `.card`가 세로 배치라 거르기 줄이 세로로 쌓이던 것을 고침.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

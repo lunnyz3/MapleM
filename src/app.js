@@ -135,6 +135,9 @@ function createApp() {
   // 코디 모아 보기·무작위 구경은 부를 때마다 무작위로 읽는다
   app.get(["/api/v2/looks/wearers", "/api/v2/looks/random"], rateLimiters.fortunes);
   app.post(["/api/v2/push/subscribe", "/api/v2/push/unsubscribe", "/api/v2/push/test"], rateLimiters.fortunes);
+  // 파티 모집: 글 쓰기는 전광판과 같은 제한, 지원·관리는 운세와 같은 제한(방문자마다 하루 횟수는 서비스가 따로 센다)
+  app.post("/api/v2/party", rateLimiters.megaphones);
+  app.post("/api/v2/party/:id/:action", rateLimiters.fortunes);
 
   app.use("/api/v2", v2Router);
   app.use("/api", apiRouter);

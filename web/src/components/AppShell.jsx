@@ -40,6 +40,7 @@ const NAV = [
     children: [
       { label: "길드 검색", href: urls.guildSearch },
       { label: "길드 비교", href: "/guild/compare" },
+      { label: "보스 파티 모집", href: urls.party },
       ...RANKING_TYPES.filter((type) => type.subject === "guild").map((type) => ({ label: `${type.name} 랭킹`, href: urls.ranking(type.id) }))
     ]
   },
