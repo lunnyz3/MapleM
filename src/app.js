@@ -28,7 +28,7 @@ const rateLimiters = {
   // 공식 랭킹 1년 기록은 한 번에 넥슨 과거 랭킹을 약 16번 읽는다(캐릭터마다 6시간 보관)
   rankingHistory: createRateLimiter({ name: "ranking-history", windowMs: minute, max: 10 }),
   // 멀티서치는 한 번에 최대 30명(월드를 모르면 7월드)을 읽는다
-  multiSearch: createRateLimiter({ name: "multi-search", windowMs: minute, max: 30 })
+  multiSearch: createRateLimiter({ name: "multi-search", windowMs: minute, max: 12 })
 };
 
 const publicDir = path.join(__dirname, "..", "public");

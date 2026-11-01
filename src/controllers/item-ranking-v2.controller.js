@@ -36,7 +36,8 @@ const {
 
 const { mapEquipmentItemForView } = require("./maplestorym.controller");
 const { characterHistory } = require("../services/character-history.service");
-const { findRecord, multiSearch, recordBriefs, suggestCharacters } = require("../services/character-record.service");
+const { findRecord, recordBriefs, suggestCharacters } = require("../services/character-record.service");
+const { multiSearch, MAX_CANDIDATES } = require("../services/multi-search.service");
 const { plausiblePowers } = require("../services/stats.service");
 const { rankingHistory } = require("../services/ranking-history.service");
 const { rankingCuts } = require("../services/ranking-cuts.service");
@@ -284,30 +285,32 @@ async function getGuildRoster(req, res) {
 
 const MULTI_NAME = /^[가-힣A-Za-z0-9]{2,12}$/;
 
+/** 월드 이름 → 정식 이름, 비었으면 "", 모르는 월드면 null */
+function optionalWorld(value) {
+  if (!text(value)) return "";
+  const world = normalizeWorldName(text(value));
+  return world.ok ? world.worldNameCanonical : null;
+}
+
+// POST /api/v2/multi-search { entries: [{ world, name, alts? }], world_name?, hint? } → { ok, rows: [{ input, world, name, ... }], partial }
 async function postMultiSearch(req, res) {
-  let worldName = "";
-  if (text(req.body?.world_name)) {
-    const world = normalizeWorldName(text(req.body.world_name));
-    if (!world.ok) return res.status(400).json({ ok: false, message: "world_name must be one of the supported worlds." });
-    worldName = world.worldNameCanonical;
-  }
+  const worldName = optionalWorld(req.body?.world_name);
+  if (worldName === null) return res.status(400).json({ ok: false, message: "world_name must be one of the supported worlds." });
   const entries = [];
   for (const entry of Array.isArray(req.body?.entries) ? req.body.entries.slice(0, 30) : []) {
     const name = text(entry?.name, 24);
-    if (!MULTI_NAME.test(name)) continue;
-    let world = "";
-    if (text(entry?.world)) {
-      const normalized = normalizeWorldName(text(entry.world));
-      if (!normalized.ok) continue;
-      world = normalized.worldNameCanonical;
-    }
-    entries.push({ world, name });
+    const world = optionalWorld(entry?.world);
+    if (!MULTI_NAME.test(name) || world === null) continue;
+    const alts = (Array.isArray(entry?.alts) ? entry.alts : [])
+      .map((alt) => text(alt, 24))
+      .filter((alt) => MULTI_NAME.test(alt) && alt !== name)
+      .slice(0, MAX_CANDIDATES - 1);
+    entries.push({ world, name, alts });
   }
   if (!entries.length) return res.status(400).json({ ok: false, message: "entries must have 1 to 30 names" });
   try {
-    const rows = await multiSearch(entries, worldName);
-    res.set("Cache-Control", "private, max-age=60");
-    return res.json({ ok: true, rows });
+    const { rows, partial } = await multiSearch(entries, { worldName, hint: optionalWorld(req.body?.hint) || "" });
+    return res.json({ ok: true, rows, partial });
   } catch (error) {
     return fail(res, error);
   }

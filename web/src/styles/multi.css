@@ -75,3 +75,26 @@
     width: 100%;
   }
 }
+
+/* 붙여 넣은 글에서 뽑은 이름 */
+.multi-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.multi-names li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}

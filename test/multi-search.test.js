@@ -15,6 +15,7 @@ test("멀티서치: 줄·쉼표·공백으로 나눈 이름, 월드/이름, 중�
     { world: "루나", name: "디올" }
   ]);
   assert.equal(result.fromChat, false);
+  assert.equal(result.hint, "스카니아");
   const many = parseNames(Array.from({ length: 35 }, (_, i) => `캐릭${i}`).join(" "), WORLDS);
   assert.equal(many.entries.length, 30);
   assert.equal(many.skipped, 5);
@@ -34,6 +35,39 @@ test("멀티서치: 카톡 대화는 보낸 사람만(대화명 앞부분)", asy
     parseNames(pc, WORLDS).entries.map((entry) => entry.name),
     ["몬밀", "디올"]
   );
+});
+
+test("멀티서치: 꾸민 대화명은 월드·직업·레벨을 빼고 남는 이름(직업 이름뿐이면 뺌), 대화 내용은 안 봄", async () => {
+  const { parseNames } = await load();
+  const chat = [
+    "[🦋 울보루팡 카데나 269 스카] [오후 3:39] 팬텀 무기 전수해서 팔지 그냥 처분할지 고민이네요",
+    "[스카 𝓑 푱둉 나로] [오후 3:40] 거래소가격보고정하시는게",
+    "[🚀마쎄 스카] [오후 3:40] 문신이면",
+    "[🆚️냠도일²⁹ⁿ카데나,팔,엔🥪] [오후 3:40] 마쎄님 체인 사냥용 매물좀요",
+    "[🦋 울보루팡 카데나 269 스카] [오후 3:40] 아델 나로 비숍 구해요",
+    "[아델] [오후 3:41] 저요",
+    "[디올269루나] [오후 3:41] ㅇㅇ"
+  ].join("\n");
+  const result = parseNames(chat, WORLDS);
+  assert.equal(result.fromChat, true);
+  assert.deepEqual(result.entries, [
+    { world: "스카니아", name: "울보루팡" },
+    { world: "스카니아", name: "푱둉" },
+    { world: "스카니아", name: "마쎄" },
+    { world: "", name: "냠도일" },
+    { world: "", name: "디올269루나", alts: ["디올"] }
+  ]);
+  assert.equal(result.hint, "스카니아");
+  // 한 줄만 붙여 넣어도, 여러 줄 메시지의 이어진 줄이 있어도 대화 내용은 안 봄
+  const one = parseNames("[🦋 울보루팡 카데나 269 스카] [오후 3:39] 팬텀 무기 전수해서 팔지 그냥 처분할지 고민이네요\n잠재 다 완작인데\n2026년 11월 1일 일요일", WORLDS);
+  assert.equal(one.fromChat, true);
+  assert.deepEqual(one.entries, [{ world: "스카니아", name: "울보루팡" }]);
+  // 목록: 직업·레벨·월드가 섞인 줄은 한 사람, 아니면 띄어 쓴 이름마다
+  assert.deepEqual(parseNames("몬밀 캡틴 295 스카\n디올 브룩", WORLDS).entries, [
+    { world: "스카니아", name: "몬밀" },
+    { world: "", name: "디올" },
+    { world: "", name: "브룩" }
+  ]);
 });
 
 test("멀티서치: 들어갈 수 있는 가장 어려운 보스", async () => {

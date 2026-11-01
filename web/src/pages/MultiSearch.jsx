@@ -1,6 +1,6 @@
-// 멀티서치(/multi?q=): 닉네임 목록이나 카톡 대화를 붙여 넣으면 모은 캐릭터 기록을 한 표로(최대 30명) — 레벨·전투력·템환산·
-// 잠재·에디·들어갈 수 있는 가장 어려운 보스. 월드를 모르면 7월드 모두에서 찾는다. 엑셀(CSV)·목록 복사.
-// POST /api/v2/multi-search. 이름 뽑기·보스는 web/src/lib/multiSearch.mjs.
+// 멀티서치(/multi?q=): 닉네임 목록이나 카톡 대화(보낸 사람만)를 붙여 넣으면 한 표로(최대 30명) — 레벨·전투력·템환산·
+// 잠재·에디·들어갈 수 있는 가장 어려운 보스. 모은 기록에 없으면 서버가 넥슨에서 바로 찾는다. 월드를 모르면 7월드 모두.
+// 엑셀(CSV)·목록 복사. POST /api/v2/multi-search. 이름 뽑기·보스는 web/src/lib/multiSearch.mjs.
 import "../styles/my.css";
 import "../styles/multi.css";
 import bossData from "../../../src/game-data/boss-entry.json";
@@ -31,19 +31,34 @@ function readQuery() {
 
 export function MultiSearch() {
   const [form, setForm] = useState(readQuery);
-  const [state, setState] = useState(/** @type {{ status: "idle" | "loading" | "ready" | "error", rows?: any[], entries?: any[] }} */ ({ status: "idle" }));
+  const [state, setState] = useState(
+    /** @type {{ status: "idle" | "loading" | "ready" | "error", rows?: any[], entries?: any[], partial?: boolean }} */ ({ status: "idle" })
+  );
   const parsed = parseNames(form.text, WORLDS);
 
   const search = (/** @type {typeof form} */ next) => {
-    const { entries } = parseNames(next.text, WORLDS);
+    const { entries, hint } = parseNames(next.text, WORLDS);
     if (!entries.length) return;
     setState({ status: "loading" });
-    const params = new URLSearchParams({ q: entries.map((entry) => (entry.world ? `${entry.world}/${entry.name}` : entry.name)).join(",") });
-    if (next.world) params.set("world", next.world);
-    const url = `/multi?${params}`;
-    if (`${window.location.pathname}${window.location.search}` !== url) window.history.replaceState(null, "", url);
-    postJson("/api/v2/multi-search", { entries, world_name: next.world }).then(
-      ({ response, body }) => setState(response.ok && body?.ok ? { status: "ready", rows: body.rows || [], entries } : { status: "error" }),
+    postJson("/api/v2/multi-search", { entries, world_name: next.world, hint }).then(
+      ({ response, body }) => {
+        if (!response.ok || !body?.ok) return setState({ status: "error" });
+        const rows = body.rows || [];
+        setState({ status: "ready", rows, entries, partial: Boolean(body.partial) });
+        // 주소에는 찾은 이름(한 월드면 "월드/이름")
+        const params = new URLSearchParams({
+          q: entries
+            .map((entry, index) => {
+              const hits = rows.filter((row) => row.input === index);
+              if (hits.length === 1) return `${hits[0].world}/${hits[0].name}`;
+              return entry.world ? `${entry.world}/${entry.name}` : entry.name;
+            })
+            .join(",")
+        });
+        if (next.world) params.set("world", next.world);
+        const url = `/multi?${params}`;
+        if (`${window.location.pathname}${window.location.search}` !== url) window.history.replaceState(null, "", url);
+      },
       () => setState({ status: "error" })
     );
   };
@@ -54,8 +69,8 @@ export function MultiSearch() {
   const rows = [...(state.rows || [])]
     .map((row) => ({ ...row, boss: hardestBoss(row, bossData.bosses) }))
     .sort((a, b) => b.power - a.power || b.itemScore - a.itemScore);
-  const found = new Set(rows.map((row) => row.name.toLowerCase()));
-  const missing = (state.entries || []).filter((entry) => !found.has(entry.name.toLowerCase()));
+  const found = new Set(rows.map((row) => row.input));
+  const missing = (state.entries || []).filter((_, index) => !found.has(index));
   const total = rows.reduce((sum, row) => sum + (row.power || 0), 0);
   const names = rows.map((row) => row.name.toLowerCase());
   const repeated = new Set(names.filter((name, index) => names.indexOf(name) !== index));
@@ -114,6 +129,16 @@ export function MultiSearch() {
           value={form.text}
           onInput={(event) => setForm({ ...form, text: /** @type {HTMLTextAreaElement} */ (event.currentTarget).value })}
         />
+        {parsed.entries.length ? (
+          <ul class="multi-names" aria-label="찾을 이름">
+            {parsed.entries.map((entry) => (
+              <li key={`${entry.world}/${entry.name}`}>
+                {entry.world ? <WorldIcon world={entry.world} size={14} /> : null}
+                {entry.name}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <button type="submit" class="btn btn--primary multi-form__go" disabled={!parsed.entries.length || state.status === "loading"}>
           <Icon name="search" size={18} />
           {state.status === "loading" ? "찾는 중" : "한 번에 찾기"}
@@ -131,7 +156,7 @@ export function MultiSearch() {
               </li>
               {missing.length ? (
                 <li>
-                  기록 없음 <strong class="num">{formatComma(missing.length)}</strong>명
+                  못 찾음 <strong class="num">{formatComma(missing.length)}</strong>명
                 </li>
               ) : null}
               {total ? (
@@ -153,13 +178,19 @@ export function MultiSearch() {
               </span>
             ) : null}
           </div>
+          {state.partial ? (
+            <p class="multi-note">
+              <Icon name="info" size={16} />
+              이름이 많아 일부는 다 찾지 못했어요. 월드를 고르고 다시 찾으면 더 찾아요.
+            </p>
+          ) : null}
           {repeated.size ? (
             <p class="multi-note">
               <Icon name="info" size={16} />
               같은 이름이 여러 월드에 있어요({[...repeated].slice(0, 3).join(", ")}{repeated.size > 3 ? " …" : ""}). 월드를 고르면 좁혀져요.
             </p>
           ) : null}
-          {!rows.length ? <EmptyState compact title="모은 기록이 있는 캐릭터가 없어요" /> : null}
+          {!rows.length ? <EmptyState compact title="찾은 캐릭터가 없어요" /> : null}
           {rows.length ? (
             <div class="my-table" role="table" aria-label="멀티서치 결과">
               <div class="my-table__row my-table__head" role="row">
@@ -203,7 +234,7 @@ export function MultiSearch() {
           ) : null}
           {missing.length ? (
             <div class="my-missing">
-              <p>모은 기록이 없는 이름(캐릭터를 한 번 열어 보면 생겨요)</p>
+              <p>찾지 못한 이름</p>
               <ul>
                 {missing.map((entry) => {
                   const world = entry.world || form.world;
