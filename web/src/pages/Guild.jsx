@@ -3,6 +3,7 @@
 // 길드원 스펙(전투력 순위·보스 파티): POST /api/v2/specs(사이트가 모은 길드원만, power = 사냥 프리셋으로 잰 듯하면 0).
 // 길드 비교(/guild/compare?a=월드/길드&b=월드/길드): 두 길드의 인원·평균 레벨·전투력·템환산·보스 입장 인원·직업.
 // 들고 난 기록: GET /api/v2/guild-roster(길드 화면을 열 때와 하루 한 번 랭킹 상위 길드를 훑을 때 서버가 남긴 날짜별 들어옴·나감).
+// 관리(길드장 도구): GET /api/v2/guild-manage — 오래 안 들어온 길드원, 이번 주 성장·들고 남, 길드 활동 낮은 순, 단톡방용 주간 요약 복사.
 import "../styles/guild.css";
 import bossData from "../../../src/game-data/boss-entry.json";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -26,7 +27,8 @@ import { RankRow, useRanking } from "./Home.jsx";
 import { useInView } from "../lib/motion.js";
 import { copyText, sharePageUrl } from "../lib/share.js";
 import { addRecent, entryKey, toggleFavorite, useSaved } from "../lib/storage.js";
-import { setScoreText } from "../lib/itemScore.js";
+import { setScorePoints, setScoreText } from "../lib/itemScore.js";
+import { weeklySummary } from "../lib/guildManage.mjs";
 import { bossRoster, defaultBoss, guildSummary, splitParties } from "../lib/guildParty.mjs";
 
 /** 길드 건물 5종(기존 화면과 같은 이름 규칙·그림) */
@@ -43,6 +45,7 @@ const TAB_ITEMS = [
   { id: "power", label: "전투력 순위", icon: "bolt" },
   { id: "boss", label: "보스 파티", icon: "swords" },
   { id: "roster", label: "들고 난 기록", icon: "clock" },
+  { id: "manage", label: "관리", icon: "crown" },
   { id: "skills", label: "길드 스킬", icon: "sparkle" },
   { id: "buildings", label: "건물", icon: "home" },
   { id: "abilities", label: "어빌리티", icon: "medal" }
@@ -700,6 +703,163 @@ function RosterPanel({ guild }) {
   );
 }
 
+// ---------------- 관리(길드장 도구) ----------------
+
+const AWAY_DAYS = 3;
+const INACTIVE_DAYS = 7;
+
+/** 템환산 100점 기준 증가와 전투력(오른 경우만)·레벨 글 */
+function growthOf(member) {
+  const growth = member.growth;
+  if (!growth) return null;
+  const points = growth.scoreFrom > 0 && growth.scoreTo > 0 ? setScorePoints(growth.scoreTo) - setScorePoints(growth.scoreFrom) : 0;
+  const parts = [];
+  if (points >= 0.05) parts.push(`템환산 +${points.toFixed(1)}점`);
+  if (growth.power > 0.005) parts.push(`전투력 +${(growth.power * 100).toFixed(1)}%`);
+  if (growth.level > 0) parts.push(`Lv +${growth.level}`);
+  return parts.length ? { points, text: parts.join(" · ") } : null;
+}
+
+/** @param {{ guild: GuildView }} props */
+function ManagePanel({ guild }) {
+  const [state, setState] = useState(/** @type {{ status: "loading" | "ready" | "error", manage?: any }} */ ({ status: "loading" }));
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setState({ status: "loading" });
+    getJson(`/api/v2/guild-manage?${new URLSearchParams({ world_name: guild.world, guild_name: guild.name })}`).then(
+      ({ response, body }) => alive && setState(response.ok && body?.ok && body.manage ? { status: "ready", manage: body.manage } : { status: "error" }),
+      () => alive && setState({ status: "error" })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [guild, attempt]);
+
+  if (state.status === "loading") return <SkeletonList rows={6} />;
+  if (state.status === "error") return <ErrorState compact title="길드원 정보를 불러오지 못했어요" onRetry={() => setAttempt((n) => n + 1)} />;
+  const manage = state.manage;
+  const members = manage.members;
+  const away = members.filter((member) => member.daysAway !== null && member.daysAway >= AWAY_DAYS).sort((a, b) => b.daysAway - a.daysAway);
+  const inactive = away.filter((member) => member.daysAway >= INACTIVE_DAYS);
+  const growing = members
+    .map((member) => ({ member, growth: growthOf(member) }))
+    .filter((row) => row.growth)
+    .sort((a, b) => b.growth.points - a.growth.points)
+    .slice(0, 5);
+  const quiet = [...members].sort((a, b) => a.activity - b.activity).slice(0, 5);
+  const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+
+  const copySummary = async () => {
+    const text = weeklySummary({
+      guildName: manage.guild.name,
+      count: members.length,
+      joined: manage.week.joined,
+      left: manage.week.left,
+      growth: growing.slice(0, 3).map((row) => ({ name: row.member.name, text: row.growth.text })),
+      inactive: inactive.map((member) => ({ name: member.name, days: member.daysAway })),
+      today
+    });
+    toast((await copyText(text)) ? "주간 요약을 복사했어요" : "복사하지 못했어요", "success");
+  };
+  const person = (member, detail, tone = "") => (
+    <li key={member.name}>
+      <a class="gd-manage__row" href={urls.character(guild.world, member.name)}>
+        <Avatar world={guild.world} name={member.name} size={32} lazy />
+        <span class="gd-manage__who">
+          <strong>{member.name}</strong>
+          <span class="num">
+            {member.className ? `${member.className} · ` : ""}Lv.{member.level || "-"}
+          </span>
+        </span>
+        <span class={`gd-manage__detail num${tone ? ` is-${tone}` : ""}`}>{detail}</span>
+      </a>
+    </li>
+  );
+
+  return (
+    <div class="gd-manage">
+      <div class="gd-boss__head">
+        <ul class="gd-boss__summary">
+          <li>
+            길드원 <strong class="num">{formatComma(members.length)}</strong>명
+          </li>
+          <li>
+            {INACTIVE_DAYS}일 넘게 안 들어옴 <strong class="num">{formatComma(inactive.length)}</strong>명
+          </li>
+          <li>
+            이번 주 <strong class="num is-up">+{formatComma(manage.week.joined.length)}</strong> <strong class="num is-down">−{formatComma(manage.week.left.length)}</strong>
+          </li>
+        </ul>
+        <button type="button" class="btn btn--secondary btn--sm" onClick={copySummary}>
+          <Icon name="chat" size={16} />
+          주간 요약 복사
+        </button>
+      </div>
+
+      <section class="gd-manage__section">
+        <h3 class="gd-manage__title">
+          오래 안 들어온 길드원 <span class="num">{AWAY_DAYS}일 이상</span>
+        </h3>
+        {away.length ? (
+          <ol class="gd-manage__list">{away.slice(0, 15).map((member) => person(member, `${member.daysAway}일 전`, member.daysAway >= 14 ? "bad" : member.daysAway >= INACTIVE_DAYS ? "warn" : ""))}</ol>
+        ) : (
+          <p class="gd-manage__empty">모두 {AWAY_DAYS}일 안에 들어왔어요.</p>
+        )}
+      </section>
+
+      <section class="gd-manage__section">
+        <h3 class="gd-manage__title">이번 주 성장</h3>
+        {growing.length ? (
+          <ol class="gd-manage__list">{growing.map((row) => person(row.member, row.growth.text, "good"))}</ol>
+        ) : (
+          <p class="gd-manage__empty">이번 주 모은 기록에서 오른 길드원이 없어요.</p>
+        )}
+      </section>
+
+      {manage.week.joined.length || manage.week.left.length ? (
+        <section class="gd-manage__section">
+          <h3 class="gd-manage__title">이번 주 들고 남</h3>
+          <div class="gd-roster__changes">
+            {manage.week.joined.length ? (
+              <div class="gd-roster__group is-joined">
+                <span class="gd-roster__label">들어옴 {manage.week.joined.length}</span>
+                <ul>
+                  {manage.week.joined.map((name) => (
+                    <li key={name}>
+                      <a href={urls.character(guild.world, name)}>{name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {manage.week.left.length ? (
+              <div class="gd-roster__group is-left">
+                <span class="gd-roster__label">나감 {manage.week.left.length}</span>
+                <ul>
+                  {manage.week.left.map((name) => (
+                    <li key={name}>
+                      <a href={urls.character(guild.world, name)}>{name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <section class="gd-manage__section">
+        <h3 class="gd-manage__title">길드 활동 낮은 순</h3>
+        <ol class="gd-manage__list">{quiet.map((member) => person(member, `활동 ${formatComma(member.activity)}`))}</ol>
+      </section>
+      <p class="gd-boss__note num">
+        {formatRelativeTime(Math.min(Date.parse(manage.generatedAt) || Date.now(), Date.now()))} 기준
+      </p>
+    </div>
+  );
+}
+
 // ---------------- 길드 비교 ----------------
 
 const COMPARE_BOSSES = [
@@ -1181,7 +1341,7 @@ export function Guild({ world = "", name = "" }) {
   }
 
   const guild = state.guild;
-  const counts = { power: undefined, boss: undefined, roster: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
+  const counts = { power: undefined, boss: undefined, roster: undefined, manage: undefined, members: guild.members.length, skills: guild.skills.length, buildings: guild.buildings.length, abilities: guild.abilities.length };
 
   return (
     <div class="gd">
@@ -1203,6 +1363,7 @@ export function Guild({ world = "", name = "" }) {
           {tab === "power" ? <PowerPanel guild={guild} /> : null}
           {tab === "boss" ? <BossPanel guild={guild} /> : null}
           {tab === "roster" ? <RosterPanel guild={guild} /> : null}
+          {tab === "manage" ? <ManagePanel guild={guild} /> : null}
           {tab === "skills" ? <SkillsPanel guild={guild} /> : null}
           {tab === "buildings" ? <BuildingsPanel guild={guild} /> : null}
           {tab === "abilities" ? <AbilitiesPanel guild={guild} /> : null}

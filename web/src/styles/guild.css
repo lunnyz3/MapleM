@@ -1304,3 +1304,106 @@
     padding-top: 0;
   }
 }
+
+/* 관리(길드장 도구) */
+.gd-manage {
+  display: grid;
+  gap: 16px;
+}
+
+.gd-manage .is-up {
+  color: var(--success);
+}
+
+.gd-manage .is-down {
+  color: var(--danger);
+}
+
+.gd-manage__section {
+  display: grid;
+  gap: 6px;
+}
+
+.gd-manage__title {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: var(--fs-14);
+  font-weight: 900;
+}
+
+.gd-manage__title span {
+  color: var(--text-subtle);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.gd-manage__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gd-manage__row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.gd-manage__who {
+  display: grid;
+  min-width: 0;
+}
+
+.gd-manage__who strong {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gd-manage__who span {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gd-manage__detail {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 800;
+  text-align: right;
+}
+
+.gd-manage__detail.is-warn {
+  color: var(--peach-fg);
+}
+
+.gd-manage__detail.is-bad {
+  color: var(--danger);
+}
+
+.gd-manage__detail.is-good {
+  color: var(--success);
+}
+
+.gd-manage__empty {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--fs-14);
+  font-weight: 700;
+}

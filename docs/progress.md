@@ -351,6 +351,10 @@
 - 운영 확인(2026-10-31 07:59 재시작): 이벤트 달력·첫 화면 이벤트 탭·멀티서치·길드 들고 난 기록 1280·390(오류·넘침 0). 첫 길드 훑기 1,000개 32초(실패 0), 첫 코디 채우기 4만 명 중 39,539명 544초(실패 0). 저장: character_looks 39,603건 데이터 20.7MB·디스크 12.0MB·색인 7.2MB(한 건 약 520바이트 → 14.8만 명이면 디스크 약 45MB + 색인 약 27MB), cosmetic_items 5,477건 0.9MB, guild_rosters 1,000건 1.2MB. 재시작 직후 코디가 0명일 때 부른 빈 순위가 1시간 보관된 문제를 고침(0명이면 보관 안 함, 운영은 09시에 저절로 풀림).
 - 디스크(10-31 08:30): 남은 9.2GiB(전날 18시 10.4GiB). 14시간 사이 백업 294MB(10/28 80MB → 10/29 190MB → 10/30 294MB로 커지는 중), seoul-crowd 236MB, 새 컬렉션 약 25MB 등. 백업이 날마다 커지면 14일치 보관 총량이 처음 계산(약 2.6GiB)보다 커질 수 있다.
 
+### 51. 길드장 도구 (작업 사본, 운영 반영 전)
+- 운영자 요청(서비스형 기능). 길드 화면 "관리" 탭: 오래 안 들어온 길드원(마지막 접속 3일 이상, 7일 주황·14일 빨강), 이번 주 성장 다섯(날짜별 기록 처음·끝의 템환산 100점 기준 증가 순, 전투력은 오른 경우만·레벨), 이번 주 들어옴·나감(들고 난 기록), 길드 활동 낮은 다섯, 단톡방용 "주간 요약 복사"(길드원 수 ±, 들어옴·나감, 성장 셋, 7일 넘게 안 들어온 길드원).
+- `GET /api/v2/guild-manage`(`src/services/guild-manage.service.js`): 넥슨 guild/basic → 길드원마다 ocid(모은 스펙 먼저, 없으면 id 6시간 보관) → character/basic 마지막 접속(캐릭터마다 12시간 보관, 동시 4), 모은 스펙 전투력(plausible), 날짜별 기록 최근 14줄, 들고 난 기록 7일. 길드마다 1시간 보관, IP 10/분. 레전드 56명 첫 호출 약 3초. `src/domain/guild/manage.js`(`daysSince`·`memberGrowth`), `web/src/lib/guildManage.mjs`(`weeklySummary`), 테스트 `test/guild-manage.test.js`.
+
 ### 작업 사본에만 있는 변경(운영 반영 전)
 - 전투력 = 최근 24시간 최고 관측값: `profile.combatPower` = `{ value, observedAt }`(page-data·`/api/v2/character-stats` 공통). 관측원은 조회 때 stat API '전투력'과 전투력 랭킹(그날 02:30 KST로 간주). 저장 `combat_power_observations`(TTL 3일, MongoDB 없으면 메모리), 쓰기는 best-effort. `src/services/combat-power.service.js`, 테스트 `test/combat-power.test.js`.
 - 외부 조사 자료 정리: 규칙 추출·대조 원자료와 대조 보고 스크립트를 저장소 밖으로 옮김. `GET /api/v2/manual-inputs`는 설명·출처 필드를 빼고 라벨·범위·단위·단계·appliesTo만 내보냄. `src/game-data/*.json` `_meta`는 규칙 설명·검증 방법만.

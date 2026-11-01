@@ -129,7 +129,8 @@ function createApp() {
   app.post("/api/v2/megaphone", rateLimiters.megaphones);
   app.get(["/api/v2/fortune", "/api/v2/match", "/api/v2/fun/nicknames"], rateLimiters.fortunes);
   app.get("/api/v2/suggest", rateLimiters.suggest);
-  app.get(["/api/v2/ranking-history", "/api/v2/ranking-cuts"], rateLimiters.rankingHistory);
+  // 길드장 도구는 길드원마다 넥슨 기본 정보를 읽는다(길드마다 1시간 보관)
+  app.get(["/api/v2/ranking-history", "/api/v2/ranking-cuts", "/api/v2/guild-manage"], rateLimiters.rankingHistory);
   app.post("/api/v2/multi-search", rateLimiters.multiSearch);
   // 코디 모아 보기·무작위 구경은 부를 때마다 무작위로 읽는다
   app.get(["/api/v2/looks/wearers", "/api/v2/looks/random"], rateLimiters.fortunes);
