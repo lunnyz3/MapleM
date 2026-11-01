@@ -114,19 +114,6 @@
   font-weight: 700;
 }
 
-.ch-hero__tier {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--tone-bg);
-  color: var(--tone-ink);
-  font-size: var(--fs-12);
-  font-weight: 900;
-  text-decoration: none;
-}
-
 .ch-hero__name {
   font-size: clamp(2rem, 1.3rem + 2.6vw, 3rem);
   font-weight: 800;

@@ -58,33 +58,6 @@ function topText(rank) {
   return `상위 ${percent < 1 ? formatDecimal(percent, 2) : formatDecimal(percent, 1)}%`;
 }
 
-const TIER_TONES = { S: "gold", A: "peach", B: "mint", C: "sky", D: "lavender" };
-/** @type {Promise<Map<string, string>> | null} */
-let tierRequest = null;
-
-/** 직업 티어(통계 직업 티어와 같은 값: 상위 100명 평균 전투력, 1시간 보관) — 한 번만 읽는다. @param {string} className */
-function useClassTier(className) {
-  const [tier, setTier] = useState("");
-  useEffect(() => {
-    if (!className) return undefined;
-    let alive = true;
-    tierRequest ||= getJson("/api/v2/stats/tiers").then(({ response, body }) => {
-      if (!response.ok || !body?.ok) throw new Error("tiers");
-      return new Map((body.tiers || []).flatMap((row) => row.classes.map((entry) => [entry.className, row.tier])));
-    });
-    tierRequest.then(
-      (map) => alive && setTier(map.get(className) || ""),
-      () => {
-        tierRequest = null;
-      }
-    );
-    return () => {
-      alive = false;
-    };
-  }, [className]);
-  return tier;
-}
-
 /**
  * 프로필 머리: 오로라 배경 · 캐릭터 그림(틸트) · 이름(글자 등장) · 레벨·경험치 · 전투력 칩 · 갱신 시각.
  * @param {{ data: any, world: string, onRefresh: () => void, refreshing: boolean, refreshLocked: boolean }} props
@@ -99,7 +72,6 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
   const expRate = Math.max(0, Math.min(100, Number(profile.expRate) || 0));
   const overall = Number(profile.overallRanking) || 0;
   const summary = useSpecSummary(world, name);
-  const tier = useClassTier(profile.className || "");
   const specChips = summary
     ? [
         { key: "itemScore", label: "템환산", value: `${setScoreText(summary.spec.itemScore)}점` },
@@ -131,11 +103,6 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
             {world}
           </span>
           <span>{profile.jobName || profile.className || "직업 정보 없음"}</span>
-          {tier ? (
-            <a class={`ch-hero__tier tone-${TIER_TONES[tier] || "sky"}`} href="/stats?view=tier" aria-label={`직업 티어 ${tier}`}>
-              {tier} 티어
-            </a>
-          ) : null}
         </p>
         <h1 id="ch-name" class="ch-hero__name display">
           <SplitText text={name} stagger={55} />
