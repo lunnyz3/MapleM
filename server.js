@@ -7,6 +7,7 @@ const { guildRosterJob } = require("./src/jobs/guild-roster.job");
 const { lookCollectionJob } = require("./src/jobs/look-collection.job");
 const { pushDigestJob } = require("./src/jobs/push-digest.job");
 const { bossReach, hallOfFame } = require("./src/services/stats.service");
+const { peerSnapshot } = require("./src/services/peer-lens.service");
 const { upgradeNews } = require("./src/services/news.service");
 
 const app = createApp();
@@ -25,6 +26,8 @@ app.listen(env.port, (error) => {
   setTimeout(() => upgradeNews().catch(() => {}), 20000).unref();
   // 보스 입장 가능 비율(캐릭터 보스 탭)은 모은 캐릭터를 다 읽어 몇 초 걸린다
   setTimeout(() => bossReach().catch(() => {}), 40000).unref();
+  // 동급 비교(캐릭터 화면) 분포도 모은 캐릭터를 다 읽는다
+  setTimeout(() => peerSnapshot().catch(() => {}), 50000).unref();
   if (env.itemCollectionEnabled && env.nexonApiKey) {
     itemCollector.start();
   }

@@ -764,6 +764,7 @@ async function recordLookupItems({ ocid, characterName, worldNameCanonical, deta
       worldName: worldNameCanonical,
       characterClass: basic.character_class,
       characterLevel: basic.character_level,
+      characterCreatedAt: basic.character_date_create,
       itemData: details.itemEquipment.data,
       combatPower,
       maxDamage,

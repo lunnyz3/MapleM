@@ -8,10 +8,12 @@
 //   GET /api/v2/stats/boss-reach                       → { ok, total, bosses: [{ name, difficulty, count, share }] } (모은 캐릭터 중 입장 가능 비율)
 //   GET /api/v2/stats/twins?ocid=                      → { ok, me, twins: [{ world, name, className, level, power, itemScore, potential, additionalPotential }] }
 //   GET /api/v2/stats/card?ocid=&power=                → { ok, card: { className, count, ovr, tier, tierLabel, stats: [{ key, label, name, value, top, rating }] } | null }
+//   GET /api/v2/stats/peers?ocid=&guild_name=          → { ok, peers: { me, lenses: [{ key, label, sample, thin, power, item, dist }], inner, collected } | null } (동급 비교·내실 지수)
 //   GET /api/v2/game/pool                              → { ok, pool: [{ id, name, world, className, level, power, itemScore, potential, additionalPotential, maxDamage }] }
 //   GET /api/v2/game/items                             → { ok, items: [{ name, icon, slot, grade }] } (장비 놀이용 300개)
 //   GET /api/v2/game/gear?ids=id,id                    → { ok, gear: { [id]: [{ slot, name, icon, star, grade, potential, additional }] } }
 const { normalizeWorldName } = require("../config/worlds");
+const { peerLens } = require("../services/peer-lens.service");
 const { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, worldStats, bossReach } = require("../services/stats.service");
 
 /** "" for 전체, the canonical world name, or null (400 already sent). */
@@ -55,8 +57,25 @@ const getWorldStats = handler(() => worldStats());
 const getBossReach = handler(() => bossReach());
 const getSpecTwins = handler((req) => specTwins({ ocid: String(req.query.ocid || "").trim().slice(0, 100) }));
 const getCharacterCard = handler((req) => characterCard({ ocid: String(req.query.ocid || "").trim().slice(0, 100), power: req.query.power }));
+const getPeerLens = handler(async (req) => ({
+  peers: await peerLens({ ocid: String(req.query.ocid || "").trim().slice(0, 100), guildName: String(req.query.guild_name || "").trim().slice(0, 24) })
+}));
 const getGamePool = handler(() => gamePool());
 const getGameItems = handler(() => gameItems());
 const getGameGear = handler((req) => gameGear(String(req.query.ids || "").slice(0, 200).split(",")));
 
-module.exports = { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getWorldStats, getBossReach, getGamePool, getGameGear, getGameItems };
+module.exports = {
+  getClassStats,
+  getLevelStats,
+  getJobMeta,
+  getJobTop,
+  getHallOfFame,
+  getCharacterCard,
+  getSpecTwins,
+  getPeerLens,
+  getWorldStats,
+  getBossReach,
+  getGamePool,
+  getGameGear,
+  getGameItems
+};

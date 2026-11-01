@@ -52,7 +52,7 @@ async function recordFromNexon(ocid, world, name) {
     characterLevel: Number(basic?.character_level) || 0
   };
   if (itemData) {
-    await recordCharacterItems({ ...owner, itemData, combatPower: power, source: "lookup" }).catch(() => null);
+    await recordCharacterItems({ ...owner, characterCreatedAt: basic?.character_date_create, itemData, combatPower: power, source: "lookup" }).catch(() => null);
     const spec = await CharacterSpec.findOne({ ocid }, SPEC_FIELDS).maxTimeMS(DB_TIMEOUT_MS).lean();
     if (spec) return spec;
   }

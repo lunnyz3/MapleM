@@ -608,4 +608,21 @@ async function characterCard({ ocid = "", power } = {}) {
   return { card: buildCard(spec, docs, scale, { power: Number(power) }) };
 }
 
-module.exports = { classStats, levelStats, jobMeta, jobTop, hallOfFame, gamePool, gameGear, gameItems, characterCard, specTwins, plausiblePowers, worldStats, bossReach, TOP_CHOICES };
+module.exports = {
+  classStats,
+  levelStats,
+  jobMeta,
+  jobTop,
+  hallOfFame,
+  gamePool,
+  gameGear,
+  gameItems,
+  characterCard,
+  specTwins,
+  plausiblePowers,
+  gamePeers,
+  worldStats,
+  bossReach,
+  TOP_CHOICES,
+  PLAUSIBLE_RATIO
+};

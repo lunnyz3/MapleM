@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 // Items owned by characters seen on the site (lookups) or in the daily combat-power ranking
 // collection. One row per character and distinct item (worn + presets, deduplicated by
-// fingerprint). Rows not seen again for 30 days expire.
-const ITEM_TTL_SECONDS = 30 * 24 * 60 * 60;
+// fingerprint). Rows are kept (no expiry); items a character no longer owns are removed when
+// that character is read again.
 
 const equipmentItemSchema = new mongoose.Schema(
   {
@@ -41,8 +41,7 @@ equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, scoreVersion: 1, s
 equipmentItemSchema.index({ worldName: 1, slot: 1, family: 1, scoreVersion: 1, scoreWithoutEmblem: -1 });
 // Slot and family counts (item ranking chips) read only this index.
 equipmentItemSchema.index({ scoreVersion: 1, family: 1, slot: 1, worldName: 1 });
-equipmentItemSchema.index({ checkedAt: 1 }, { name: "checkedAt_ttl", expireAfterSeconds: ITEM_TTL_SECONDS });
 
 const EquipmentItem = mongoose.model("EquipmentItem", equipmentItemSchema);
 
-module.exports = { EquipmentItem, ITEM_TTL_SECONDS };
+module.exports = { EquipmentItem };

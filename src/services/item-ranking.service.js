@@ -56,6 +56,8 @@ async function recordCharacterItems({
   itemData,
   combatPower = null,
   maxDamage = null,
+  // character/basic 의 생성일(알 때만 넣는다)
+  characterCreatedAt = null,
   // 날짜별 기록에 남길 전투력(스펙과 다를 때만: 사냥 프리셋이면 스펙은 2주 최고, 기록은 관측값)
   recordPower,
   source = "lookup",
@@ -120,6 +122,8 @@ async function recordCharacterItems({
   // Unknown values keep what an earlier lookup stored.
   if (finiteOrNull(combatPower)) spec.combatPower = finiteOrNull(combatPower);
   if (finiteOrNull(maxDamage)) spec.maxDamage = finiteOrNull(maxDamage);
+  const created = characterCreatedAt ? new Date(characterCreatedAt) : null;
+  if (created && Number.isFinite(created.getTime())) spec.characterCreatedAt = created;
   const before = await CharacterSpec.findOneAndUpdate({ ocid: key }, { $set: spec }, { upsert: true, returnDocument: "before", projection: { characterName: 1, characterClass: 1, worldName: 1 } }).lean();
   const changes = [];
   if (before) {

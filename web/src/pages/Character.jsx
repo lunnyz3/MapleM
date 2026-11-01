@@ -27,6 +27,7 @@ import { ManualPanel } from "./character/ManualPanel.jsx";
 import { ExpTab, GuildTab, HexaTab, StatsTab, SymbolTab, UnionTab } from "./character/Sections.jsx";
 import { ProfileShareButton } from "./character/Share.jsx";
 import { RecordsSection } from "./character/Records.jsx";
+import { Peers } from "./character/Peers.jsx";
 import { setScoreText } from "../lib/itemScore.js";
 
 /** @typedef {"boss" | "current"} StatMode */
@@ -130,7 +131,7 @@ function ProfileHeader({ data, world, onRefresh, refreshing, refreshLocked }) {
               <a class="chip" href={`/ranking?${new URLSearchParams({ view: "spec", metric: chip.key, world_name: world })}`}>
                 <span class="chip__label">{chip.label}</span>
                 <strong class="chip__value num">{chip.value}</strong>
-                {summary.ranks[chip.key] ? <span class="chip__sub num">{topText(summary.ranks[chip.key])}</span> : null}
+                {summary.ranks[chip.key] && chip.key !== "itemScore" ? <span class="chip__sub num">{topText(summary.ranks[chip.key])}</span> : null}
               </a>
             </li>
           ))}
@@ -543,6 +544,18 @@ export function Character({ world, name }) {
           <Equipment data={data} world={world} mode={mode} presetNo={bossPresets.equipment} />
         </Reveal>
       </div>
+
+      <Reveal class="ch-peers">
+        <Peers
+          ocid={data.ocid || ""}
+          world={world}
+          guildName={data.profile?.guildName || ""}
+          onOpenTab={(next) => {
+            setTab(next);
+            requestAnimationFrame(() => document.querySelector(".ch-tabs")?.scrollIntoView({ block: "start" }));
+          }}
+        />
+      </Reveal>
 
       <div class="ch-stats-row">
         <Reveal class="ch-stats-row__main">
