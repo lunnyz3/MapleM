@@ -107,4 +107,4 @@ function renderIndex(html, meta) {
     .replace("</head>", `    ${tags}\n  </head>`);
 }
 
-module.exports = { pageMeta, renderIndex, escapeHtml };
+module.exports = { pageMeta, renderIndex, escapeHtml, koreanUnits };

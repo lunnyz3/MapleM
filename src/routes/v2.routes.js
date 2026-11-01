@@ -3,6 +3,7 @@ const { getManualInputs, postCharacterStats } = require("../controllers/stats-v2
 const { getRankingV2 } = require("../controllers/ranking-v2.controller");
 const { getEvents, getNotices } = require("../controllers/notices-v2.controller");
 const { getLookStats, getLookWearers, getRandomLooks } = require("../controllers/looks-v2.controller");
+const { getPushKey, postPushTest, postSubscribe, postUnsubscribe } = require("../controllers/push-v2.controller");
 const { getClassStats, getLevelStats, getJobMeta, getJobTop, getHallOfFame, getCharacterCard, getSpecTwins, getWorldStats, getBossReach, getGamePool, getGameGear, getGameItems } = require("../controllers/stats-page-v2.controller");
 const { getPopular } = require("../controllers/popular-v2.controller");
 const { postGameStart, postGameScore, getLeaderboard, getMegaphones, postMegaphones, getFortune, getMatch, getNicknames, getNews } = require("../controllers/arcade-v2.controller");
@@ -56,6 +57,10 @@ router.get("/events", getEvents);
 router.get("/looks/stats", getLookStats);
 router.get("/looks/wearers", getLookWearers);
 router.get("/looks/random", getRandomLooks);
+router.get("/push/key", getPushKey);
+router.post("/push/subscribe", postSubscribe);
+router.post("/push/unsubscribe", postUnsubscribe);
+router.post("/push/test", postPushTest);
 router.get("/popular", getPopular);
 router.get("/stats/classes", getClassStats);
 router.get("/stats/levels", getLevelStats);

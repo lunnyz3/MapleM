@@ -1,5 +1,6 @@
 // 내 캐릭터 한눈에(/my): 즐겨찾기한 캐릭터(없으면 최근 검색)를 한 표로 — 레벨·전투력·템환산·잠재·에디와 최근 7일 변화,
 // 전투력 합. 모은 적 없는 캐릭터는 아래에 따로. 엑셀(CSV)로 받기. POST /api/v2/records/brief(최대 12명).
+// 즐겨찾기 알림(웹 푸시) 켜고 끄기: web/src/lib/push.js.
 import "../styles/my.css";
 import { useEffect, useState } from "preact/hooks";
 import { Avatar } from "../components/Avatar.jsx";
@@ -14,6 +15,8 @@ import { formatComma, formatDecimal, formatKoreanUnits, kstToday } from "../lib/
 import { urls } from "../lib/game.js";
 import { setScoreText } from "../lib/itemScore.js";
 import { useSaved } from "../lib/storage.js";
+import { disablePush, enablePush, currentSubscription, eventsWanted, pushSupported, setEventsWanted, syncPush } from "../lib/push.js";
+import { toast } from "../components/Toast.jsx";
 
 const LIMIT = 12;
 const power = (value) => (value > 0 ? formatKoreanUnits(value, { maxGroups: value >= 1e8 ? 2 : 1 }) : "-");
@@ -35,6 +38,80 @@ function Change({ brief }) {
   if (brief.level && brief.level.to > brief.level.from) parts.push(<span key="lv">Lv +{brief.level.to - brief.level.from}</span>);
   if (brief.highlights?.[0]) parts.push(<span key="news" class="is-news">{brief.highlights[0]}</span>);
   return <span class="my-change num">{parts.length ? parts : "변화 없음"}</span>;
+}
+
+const PUSH_TOPICS = ["전투력 상승", "★ 달성·새 장비", "길드 들고 남", "이벤트 종료"];
+
+/** 즐겨찾기 알림 켜고 끄기 @param {{ favorites: any[] }} props */
+function PushCard({ favorites }) {
+  const [state, setState] = useState(/** @type {"checking" | "unsupported" | "denied" | "off" | "on" | "busy"} */ ("checking"));
+  const [events, setEvents] = useState(eventsWanted);
+  const characters = favorites.filter((entry) => entry.kind === "character").length;
+  const guilds = favorites.filter((entry) => entry.kind === "guild").length;
+  useEffect(() => {
+    if (!pushSupported()) return setState("unsupported");
+    if (Notification.permission === "denied") return setState("denied");
+    currentSubscription().then(
+      (subscription) => setState(subscription && Notification.permission === "granted" ? "on" : "off"),
+      () => setState("off")
+    );
+  }, []);
+
+  const turnOn = async () => {
+    setState("busy");
+    try {
+      await enablePush(favorites);
+      setState("on");
+      toast("알림을 켰어요", "success");
+    } catch (error) {
+      setState(error?.message === "denied" ? "denied" : "off");
+      if (error?.message !== "denied") toast("알림을 켜지 못했어요", "error");
+    }
+  };
+  const turnOff = async () => {
+    setState("busy");
+    await disablePush();
+    setState("off");
+  };
+  const toggleEvents = async () => {
+    setEvents(!events);
+    setEventsWanted(!events);
+    await syncPush(favorites).catch(() => {});
+  };
+
+  return (
+    <section class="card my-push" aria-label="즐겨찾기 알림">
+      <div class="my-push__head">
+        <span class="my-push__icon" aria-hidden="true">
+          <Icon name="chat" size={20} />
+        </span>
+        <div class="my-push__text">
+          <strong>즐겨찾기 알림</strong>
+          <span>
+            {state === "on" ? `켜짐 · 캐릭터 ${characters}명 · 길드 ${guilds}개` : null}
+            {state === "off" || state === "busy" || state === "checking" ? PUSH_TOPICS.join(" · ") : null}
+            {state === "denied" ? "브라우저 설정에서 이 사이트 알림을 허용해 주세요" : null}
+            {state === "unsupported" ? "이 브라우저는 알림을 받을 수 없어요(아이폰은 사파리에서 홈 화면에 추가)" : null}
+          </span>
+        </div>
+        {state === "on" ? (
+          <button type="button" class="btn btn--secondary btn--sm" onClick={turnOff}>
+            끄기
+          </button>
+        ) : state === "off" || state === "busy" ? (
+          <button type="button" class="btn btn--primary btn--sm" onClick={turnOn} disabled={state === "busy"}>
+            {state === "busy" ? "켜는 중" : "알림 켜기"}
+          </button>
+        ) : null}
+      </div>
+      {state === "on" ? (
+        <label class="my-push__option">
+          <input type="checkbox" checked={events} onChange={toggleEvents} />
+          내일 끝나는 이벤트도 알려 주기
+        </label>
+      ) : null}
+    </section>
+  );
 }
 
 export function MyCharacters() {
@@ -80,6 +157,8 @@ export function MyCharacters() {
           <SplitText text="내 캐릭터 한눈에" />
         </h1>
       </header>
+
+      <PushCard favorites={favorites} />
 
       {!list.length ? (
         <EmptyState

@@ -1,5 +1,6 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { CALC_VIEWS, GAME_MODES, RANKING_TYPES, urls } from "../lib/game.js";
+import { syncPush } from "../lib/push.js";
 import { entryKey, useSaved } from "../lib/storage.js";
 import { useTheme } from "../lib/theme.js";
 import { BrandMark } from "./Decor.jsx";
@@ -201,8 +202,19 @@ function SiteFooter() {
  * 공통 틀: 상단바(로고·메뉴·테마) · 본문 · 푸터(데이터 출처 한 줄) · 모바일 하단 탭바.
  * @param {{ current?: NavKey, children?: any }} props
  */
+/** 알림을 켠 브라우저면 즐겨찾기가 바뀔 때(그리고 화면을 열 때) 서버 목록을 맞춘다 */
+function usePushSync() {
+  const { favorites } = useSaved();
+  const key = favorites.map(entryKey).join("|");
+  useEffect(() => {
+    const timer = setTimeout(() => syncPush(favorites).catch(() => {}), 1500);
+    return () => clearTimeout(timer);
+  }, [key]);
+}
+
 export function AppShell({ current = "", children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  usePushSync();
   return (
     <div class="shell">
       <a class="skip-link" href="#main">

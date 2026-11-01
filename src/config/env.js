@@ -36,6 +36,10 @@ const env = {
   guildRosterEnabled: parseBoolean(process.env.GUILD_ROSTER_ENABLED, true),
   // 코디 채우기: 하루 한 번 모은 캐릭터 중 코디가 없거나 7일 지난 캐릭터를 4만 명까지 읽는다.
   lookCollectionEnabled: parseBoolean(process.env.LOOK_COLLECTION_ENABLED, true),
+  // 즐겨찾기 알림(웹 푸시) 서명 키. 없으면 알림을 끈다.
+  vapidPublicKey: String(process.env.VAPID_PUBLIC_KEY || "").trim(),
+  vapidPrivateKey: String(process.env.VAPID_PRIVATE_KEY || "").trim(),
+  vapidSubject: String(process.env.VAPID_SUBJECT || "https://maplem.co.kr").trim(),
   powerPatrolIntervalMinutes: Math.max(5, parseNumber(process.env.POWER_PATROL_INTERVAL_MINUTES, 60)),
   powerPatrolConcurrency: Math.min(32, Math.max(1, parseNumber(process.env.POWER_PATROL_CONCURRENCY, 10))),
   guildCollectionMemberDelayMs: Math.max(0, parseNumber(process.env.GUILD_COLLECTION_MEMBER_DELAY_MS, 1000)),

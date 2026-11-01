@@ -5,6 +5,7 @@ const { itemCollector } = require("./src/jobs/item-collection.job");
 const { powerPatrol } = require("./src/jobs/power-patrol.job");
 const { guildRosterJob } = require("./src/jobs/guild-roster.job");
 const { lookCollectionJob } = require("./src/jobs/look-collection.job");
+const { pushDigestJob } = require("./src/jobs/push-digest.job");
 const { bossReach, hallOfFame } = require("./src/services/stats.service");
 const { upgradeNews } = require("./src/services/news.service");
 
@@ -38,5 +39,9 @@ app.listen(env.port, (error) => {
   // 코디 채우기: 서버 시작 20분 뒤, 그다음 하루마다 코디가 없거나 7일 지난 캐릭터를 4만 명까지.
   if (env.lookCollectionEnabled && env.nexonApiKey) {
     lookCollectionJob.start();
+  }
+  // 즐겨찾기 알림 저녁 묶음(20시): 따라가는 길드 들고 남, 내일 끝나는 이벤트
+  if (env.vapidPublicKey && env.vapidPrivateKey) {
+    pushDigestJob.start();
   }
 });

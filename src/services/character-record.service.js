@@ -2,7 +2,10 @@
 // (site lookups, the daily ranking collection, sweeps). Needs MongoDB; without it nothing is kept.
 const mongoose = require("mongoose");
 const { CharacterRecord } = require("../models/character-record.model");
-const { mergeRecord, kstDate } = require("../domain/records/journal");
+const { gearChanges, mergeRecord, kstDate } = require("../domain/records/journal");
+const { classifyChange } = require("../domain/stats/upgrade-news");
+const { bestGearEvent, gearMessage, powerMessage } = require("../domain/community/push-messages");
+const { notifyCharacter } = require("./push.service");
 const { recordBrief } = require("../domain/records/brief");
 const { CharacterSpec } = require("../models/character-spec.model");
 const { plausiblePowers } = require("./stats.service");
@@ -30,6 +33,11 @@ async function recordSnapshot({ ocid, worldName = "", characterName = "", snapsh
     { $set: { ...next, worldName: String(worldName || ""), characterName: String(characterName || ""), updatedAt: now } },
     { upsert: true }
   );
+  // 즐겨찾기 알림: 강화 소식과 같은 기준의 장비 변화(최대 별 달성 먼저)
+  if (previous?.gear?.length && previous.scoreVersion === snapshot.scoreVersion && Array.isArray(snapshot.gear) && snapshot.gear.length && worldName && characterName) {
+    const event = bestGearEvent(gearChanges(previous.gear, snapshot.gear).map(classifyChange).filter(Boolean));
+    if (event) notifyCharacter({ worldName, characterName, ...gearMessage({ world: worldName, name: characterName, event }) }).catch(() => {});
+  }
   return next;
 }
 
@@ -93,7 +101,7 @@ function peakPlan(previous, power, now, seed = null) {
   const stale = !previous?.recentPeak?.at || now.getTime() - new Date(previous.recentPeak.at).getTime() >= DAY_MS;
   const peak = power > current || (power === current && stale) ? { value: power, at: now } : null;
   const journal = todayBefore > 0 ? power > todayBefore : power > (Number(last?.combatPower) || 0);
-  return { peak, journal, todayMax: Math.max(power, todayBefore), specPower: Math.max(power, current) };
+  return { peak, journal, todayMax: Math.max(power, todayBefore), specPower: Math.max(power, current), previousBest: current };
 }
 
 /**
@@ -119,6 +127,10 @@ async function recordPeakPower({ ocid, worldName = "", characterName = "", value
   }
   if (Object.keys(set).length) await CharacterRecord.updateOne({ ocid: key }, { $set: { ...set, updatedAt: now } }, { upsert: true });
   await CharacterSpec.updateOne({ ocid: key, combatPower: { $ne: plan.specPower } }, { $set: { combatPower: plan.specPower } }).maxTimeMS(DB_TIMEOUT_MS);
+  // 즐겨찾기 알림: 최근 14일 최고가 1% 넘게 올랐을 때(처음 seed·세 배 넘는 튀는 값은 빼고)
+  if (plan.peak && plan.previousBest > 0 && power >= plan.previousBest * 1.01 && power <= plan.previousBest * 3 && worldName && characterName) {
+    notifyCharacter({ worldName, characterName, ...powerMessage({ world: worldName, name: characterName, from: plan.previousBest, to: power }) }).catch(() => {});
+  }
   return { todayMax: plan.todayMax, specPower: plan.specPower, wrote: plan.journal || Boolean(plan.peak) };
 }
 

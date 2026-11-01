@@ -1,5 +1,5 @@
 // 로컬 개발 서버 실행기.
-// 운영 .env 에서 넥슨 API 관련 값만 읽어오고, 챗봇은 끈 상태로 server.js 를 띄운다.
+// 운영 .env 에서 넥슨 API·알림 서명 키 값만 읽어오고, 챗봇은 끈 상태로 server.js 를 띄운다.
 // 운영 DB(maplem)에는 절대 연결하지 않는다: 기본은 MongoDB 끔, --staging 이면 스테이징 DB(maplem_staging).
 //
 //   node scripts/dev/run-local.js              # http://localhost:3200, MongoDB 없음
@@ -19,7 +19,7 @@ const candidates = [
 const envFile = candidates.find((file) => fs.existsSync(file));
 const fileEnv = envFile ? dotenv.parse(fs.readFileSync(envFile)) : {};
 
-const passThroughKeys = ["NEXON_OPEN_API_KEY", "NEXON_API_BASE_URL"];
+const passThroughKeys = ["NEXON_OPEN_API_KEY", "NEXON_API_BASE_URL", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT"];
 for (const key of passThroughKeys) {
   if (!process.env[key] && fileEnv[key]) {
     process.env[key] = fileEnv[key];

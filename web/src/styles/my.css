@@ -181,3 +181,59 @@ a.my-table__row:hover {
     font-weight: 700;
   }
 }
+
+/* 즐겨찾기 알림 */
+.card.my-push {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.my-push__head {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.my-push__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sky-bg);
+  color: var(--sky-fg);
+}
+
+.my-push__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.my-push__text strong {
+  font-weight: 900;
+}
+
+.my-push__text span {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  font-weight: 700;
+}
+
+.my-push__option {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  color: var(--text-muted);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.my-push__option input {
+  width: 18px;
+  height: 18px;
+}
